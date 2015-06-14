@@ -1,0 +1,5 @@
+config PLATFORM_BRAIN_2015
+  bool "Brain 2015"
+	
+config PLATFORM_BRAIN_2016
+  bool "Brain 2016"
