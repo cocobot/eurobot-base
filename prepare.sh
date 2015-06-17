@@ -11,7 +11,6 @@ git clone git@github.com:cocobot/ausbee.git
 #getting ausbee custom platforms
 git clone git@github.com:cocobot/ausbee-platforms.git
 
-
 #getting projects
 mkdir projects
 
