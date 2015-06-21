@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_MCUAL_GPIO
+
 #include <stdlib.h>
 #include <stm32f4xx.h>
 #include <mcual.h>
@@ -121,3 +124,4 @@ uint32_t mcual_gpio_get(mcual_gpio_port_t port, mcual_gpio_pin_t pin)
 
   return reg->IDR & pin;
 }
+#endif

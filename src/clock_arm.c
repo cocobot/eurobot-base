@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_MCUAL_CLOCK
+
 #include <stm32f4xx.h>
 #include <mcual.h>
 
@@ -131,3 +134,5 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
   RCC->CFGR &= ~((uint32_t)(0x3F << 10));
   RCC->CFGR |= ((uint32_t)((pre1 << 10) | (pre2 << 13)));
 }
+
+#endif
