@@ -135,4 +135,116 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
   RCC->CFGR |= ((uint32_t)((pre1 << 10) | (pre2 << 13)));
 }
 
+uint32_t mcual_clock_get_frequency_Hz(mcual_clock_id_t clock_id)
+{
+  uint32_t clock_Hz = 0;
+
+  switch(RCC->CFGR & RCC_CFGR_SW_0)
+  {
+    case 0:
+      clock_Hz = 16000;
+      break;
+
+    case 1:
+      clock_Hz = HSE_VALUE;
+      break;
+  }
+
+  if(RCC->CFGR & RCC_CFGR_SW_1)
+  {
+    uint32_t pll_m = (RCC->PLLCFGR & RCC_PLLCFGR_PLLM) >> 0;
+    uint32_t pll_n = (RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6;
+    uint32_t pll_p = (RCC->PLLCFGR & RCC_PLLCFGR_PLLP) >> 16;
+
+    clock_Hz /= pll_m;
+    clock_Hz *= pll_n;
+    clock_Hz /= pll_p;
+  }
+
+  switch(RCC->CFGR & RCC_CFGR_HPRE)
+  {
+    case RCC_CFGR_HPRE_DIV2:
+      clock_Hz /= 2;
+      break;
+
+    case RCC_CFGR_HPRE_DIV4:
+      clock_Hz /= 4;
+      break;
+
+    case RCC_CFGR_HPRE_DIV8:
+      clock_Hz /= 8;
+      break;
+
+    case RCC_CFGR_HPRE_DIV16:
+      clock_Hz /= 16;
+      break;
+
+    case RCC_CFGR_HPRE_DIV64:
+      clock_Hz /= 64;
+      break;
+
+    case RCC_CFGR_HPRE_DIV128:
+      clock_Hz /= 128;
+      break;
+
+    case RCC_CFGR_HPRE_DIV256:
+      clock_Hz /= 256;
+      break;
+
+    case RCC_CFGR_HPRE_DIV512:
+      clock_Hz /= 512;
+      break;
+  }
+
+  if(clock_id == MCUAL_CLOCK_PERIPHERAL_1)
+  {
+    switch(RCC->CFGR & RCC_CFGR_PPRE1)
+    {
+      case RCC_CFGR_PPRE1_DIV2:
+        clock_Hz /= 2;
+        break;
+
+      case RCC_CFGR_PPRE1_DIV4:
+        clock_Hz /= 4;
+        break;
+
+      case RCC_CFGR_PPRE1_DIV8:
+        clock_Hz /= 8;
+        break;
+
+      case RCC_CFGR_PPRE1_DIV16:
+        clock_Hz /= 16;
+        break;
+    }
+
+    return clock_Hz;
+  }
+  
+  if(clock_id == MCUAL_CLOCK_PERIPHERAL_2)
+  {
+    switch(RCC->CFGR & RCC_CFGR_PPRE2)
+    {
+      case RCC_CFGR_PPRE2_DIV2:
+        clock_Hz /= 2;
+        break;
+
+      case RCC_CFGR_PPRE2_DIV4:
+        clock_Hz /= 4;
+        break;
+
+      case RCC_CFGR_PPRE2_DIV8:
+        clock_Hz /= 8;
+        break;
+
+      case RCC_CFGR_PPRE2_DIV16:
+        clock_Hz /= 16;
+        break;
+    }
+
+    return clock_Hz;
+  }
+
+  return 0;
+}
+
 #endif
