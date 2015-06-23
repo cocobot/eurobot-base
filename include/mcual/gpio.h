@@ -58,5 +58,6 @@ void mcual_gpio_clear(mcual_gpio_port_t port, mcual_gpio_pin_t pin);
 void mcual_gpio_toogle(mcual_gpio_port_t port, mcual_gpio_pin_t pin);
 uint32_t mcual_gpio_get(mcual_gpio_port_t port, mcual_gpio_pin_t pin);
 
+void mcual_gpio_set_function(mcual_gpio_port_t port, mcual_gpio_pin_t pin, int function_id);
 
 #endif // MCUAL_GPIO_H

@@ -173,7 +173,7 @@ void mcual_usart_init(mcual_usart_id_t usart_id, uint32_t baudrate)
   //enable clock
   switch(usart_id)
   {
-    case 1:
+    case MCUAL_USART1:
       RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
       clock = MCUAL_CLOCK_PERIPHERAL_2;
       break;
@@ -218,6 +218,7 @@ void mcual_usart_init(mcual_usart_id_t usart_id, uint32_t baudrate)
   float pres = (float)(mcual_clock_get_frequency_Hz(clock)) / (baudrate * 16.0);
   int pres_i = (pres * 16.0);
 
+ // pres_i = 0x2480;
   //set baudrate
   reg->BRR = pres_i;
 
@@ -239,7 +240,10 @@ void mcual_usart_init(mcual_usart_id_t usart_id, uint32_t baudrate)
 void mcual_usart_send(mcual_usart_id_t usart_id, uint8_t byte)
 {
 #ifdef CONFIG_MCUAL_USART_USE_FREERTOS_QUEUES
-  xQueueSend(tx_queues[usart_id], &byte, portMAX_DELAY);
+  USART_TypeDef * reg = mcual_usart_get_register(usart_id);
+  while(!(reg->SR & (1 << 7)));
+  reg->DR = byte;
+ // xQueueSend(tx_queues[usart_id], &byte, portMAX_DELAY);
 #else
   (void)usart_id;
   (void)byte;

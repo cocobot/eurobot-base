@@ -72,6 +72,7 @@ void mcual_gpio_init(mcual_gpio_port_t port, mcual_gpio_pin_t pin, mcual_gpio_di
       else
       {
         //set output
+        moder &= ~(0x03 << (2 * i));
         moder |= (0x01 << (2 * i));
       }
 
@@ -124,4 +125,39 @@ uint32_t mcual_gpio_get(mcual_gpio_port_t port, mcual_gpio_pin_t pin)
 
   return reg->IDR & pin;
 }
+
+void mcual_gpio_set_function(mcual_gpio_port_t port, mcual_gpio_pin_t pin, int function_id)
+{
+  GPIO_TypeDef * reg = mcual_gpio_get_register(port);
+
+  uint32_t afrl = reg->AFR[0];
+  uint32_t afrh = reg->AFR[1];
+  uint32_t moder = reg->MODER;
+  
+  int i;
+  for(i = 0; i < 16; i += 1)
+  {
+    if(pin & (1 << i))
+    {
+      moder &= ~(0x03 << (2 * i));
+      moder |= (0x02 << (2 * i));
+
+      if(i < 8)
+      {
+        afrl &= ~(0x03 << (4 * i));
+        afrl |=  (function_id << (4 * i));
+      }
+      else
+      {
+        afrh &= ~(0x03 << (4 * (i - 8)));
+        afrh |=  (function_id << (4 * (i - 8)));
+      }
+    }
+  }
+
+  reg->MODER = moder;
+  reg->AFR[0] = afrl;
+  reg->AFR[1] = afrh;
+}
+
 #endif
