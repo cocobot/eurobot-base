@@ -106,30 +106,45 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
     target_freq_kHz = source_freq_kHz;
   }
 
+
   int32_t i;
 
   //set Prescaler1
   int32_t pre1 = 2;
-  for(i = 0; i < 4; i += 1)
+  if(target_freq_kHz <= 45000)
   {
-    if((target_freq_kHz / (pre1 << i)) < 45000)
-    {
-      pre1 = i;
-      break;
-    }
+    pre1 = 0;
   }
-  pre1 |= (1 << 3);
+  else
+  {
+    for(i = 0; i < 4; i += 1)
+    {
+      if((target_freq_kHz / (pre1 << i)) <= 45000)
+      {
+        pre1 = i;
+        break;
+      }
+    }
+    pre1 |= (1 << 2);
+  }
   
   int32_t pre2 = 2;
-  for(i = 0; i < 4; i += 1)
+  if(target_freq_kHz <= 90000)
   {
-    if((target_freq_kHz / (pre2 << i)) < 90000)
-    {
-      pre2 = i;
-      break;
-    }
+    pre2 = 0;
   }
-  pre2 |= (1 << 2);
+  else
+  {
+    for(i = 0; i < 4; i += 1)
+    {
+      if((target_freq_kHz / (pre2 << i)) <= 90000)
+      {
+        pre2 = i;
+        break;
+      }
+    }
+    pre2 |= (1 << 2);
+  }
 
   RCC->CFGR &= ~((uint32_t)(0x3F << 10));
   RCC->CFGR |= ((uint32_t)((pre1 << 10) | (pre2 << 13)));
@@ -139,26 +154,38 @@ uint32_t mcual_clock_get_frequency_Hz(mcual_clock_id_t clock_id)
 {
   uint32_t clock_Hz = 0;
 
-  switch(RCC->CFGR & RCC_CFGR_SW_0)
+  switch(RCC->CFGR & RCC_CFGR_SWS)
   {
-    case 0:
-      clock_Hz = 16000;
+    case RCC_CFGR_SWS_HSI:
+      clock_Hz = HSI_VALUE;
       break;
 
-    case 1:
+    case RCC_CFGR_SWS_HSE:
       clock_Hz = HSE_VALUE;
       break;
-  }
 
-  if(RCC->CFGR & RCC_CFGR_SW_1)
-  {
-    uint32_t pll_m = (RCC->PLLCFGR & RCC_PLLCFGR_PLLM) >> 0;
-    uint32_t pll_n = (RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6;
-    uint32_t pll_p = (RCC->PLLCFGR & RCC_PLLCFGR_PLLP) >> 16;
+    case RCC_CFGR_SWS_PLL:
+      {
+        if((RCC->PLLCFGR & RCC_PLLCFGR_PLLSRC) == RCC_PLLCFGR_PLLSRC_HSE)
+        {
+          clock_Hz = HSE_VALUE;
+        }
+        else
+        {
+          clock_Hz = HSI_VALUE;
+        }
 
-    clock_Hz /= pll_m;
-    clock_Hz *= pll_n;
-    clock_Hz /= pll_p;
+        uint32_t pll_m = (RCC->PLLCFGR & RCC_PLLCFGR_PLLM) >> 0;
+        uint32_t pll_n = (RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6;
+        uint32_t pll_p = (RCC->PLLCFGR & RCC_PLLCFGR_PLLP) >> 16;
+
+        pll_p = 2 + pll_p * 2;
+
+        clock_Hz /= pll_m;
+        clock_Hz *= pll_n;
+        clock_Hz /= pll_p;
+      }
+      break;
   }
 
   switch(RCC->CFGR & RCC_CFGR_HPRE)
@@ -194,6 +221,11 @@ uint32_t mcual_clock_get_frequency_Hz(mcual_clock_id_t clock_id)
     case RCC_CFGR_HPRE_DIV512:
       clock_Hz /= 512;
       break;
+  }
+
+  if(clock_id == MCUAL_CLOCK_SYSTEM)
+  {
+    return clock_Hz;
   }
 
   if(clock_id == MCUAL_CLOCK_PERIPHERAL_1)

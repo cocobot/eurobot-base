@@ -13,6 +13,7 @@ typedef enum
 
 typedef enum
 {
+  MCUAL_CLOCK_SYSTEM,
   MCUAL_CLOCK_PERIPHERAL_1,
   MCUAL_CLOCK_PERIPHERAL_2,
 } mcual_clock_id_t;
