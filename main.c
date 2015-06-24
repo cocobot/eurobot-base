@@ -1,6 +1,9 @@
+#include <stdio.h>
 #include <platform.h>
 #include <FreeRTOS.h>
 #include <task.h>
+#include <mcual.h>
+#include <cocobot.h>
 //#include <position.h>
 //#include <asserv.h>
 //#include <pcm9685.h>
@@ -14,27 +17,20 @@
 //#include "meca.h"
 //#include "strat.h"
 
-void position_computed_hook(void)
-{
- // asservCompute();
-}
-
 void blink(void * arg)
 {
   (void)arg;
   while(1)
   {
     platform_led_toggle(PLATFORM_LED0 | PLATFORM_LED1);
-
     vTaskDelay(500 / portTICK_RATE_MS);
   }
 }
 
-
 int main(void) 
 {
   platform_init();
-  //asserv_init();
+  cocobot_console_init(MCUAL_USART1, 1);
 
   xTaskCreate(blink, (const signed char *)"blink", 200, NULL, 1, NULL );
 
