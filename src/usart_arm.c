@@ -17,6 +17,63 @@ xQueueHandle tx_queues[MCUAL_USART_NUMBER];
 xQueueHandle rx_queues[MCUAL_USART_NUMBER];
 #endif
 
+
+#ifdef CONFIG_MCUAL_USART_USE_FREERTOS_QUEUES
+#define generateIRQHandler(id, name)  \
+void name ## _IRQHandler(void)\
+{\
+  uint32_t sr = name->SR;\
+\
+  if(sr & USART_SR_TXE)\
+  {\
+\
+    uint8_t byte;\
+    if(xQueueReceiveFromISR(tx_queues[id], &byte, NULL) == pdTRUE)\
+    {\
+      name->DR = byte;\
+    }\
+    else\
+    {\
+      name->CR1 &= ~USART_CR1_TXEIE;\
+    }\
+  }\
+\
+  if(sr & (USART_SR_RXNE | USART_SR_ORE)) \
+  {\
+    name->SR &= ~(USART_SR_RXNE | USART_SR_ORE);\
+    uint8_t byte = name->DR;\
+    xQueueSendFromISR(rx_queues[id], &byte, NULL);\
+  }\
+}
+#else
+#error not implemented yet
+#endif
+
+#ifdef CONFIG_MCUAL_USART_1
+generateIRQHandler(MCUAL_USART1, USART1);
+#endif
+#ifdef CONFIG_MCUAL_USART_2
+generateIRQHandler(MCUAL_USART2, USART2);
+#endif
+#ifdef CONFIG_MCUAL_USART_3
+generateIRQHandler(MCUAL_USART3, USART3);
+#endif
+#ifdef CONFIG_MCUAL_USART_4
+generateIRQHandler(MCUAL_USART4, UART4);
+#endif
+#ifdef CONFIG_MCUAL_USART_5
+generateIRQHandler(MCUAL_USART5, UART5);
+#endif
+#ifdef CONFIG_MCUAL_USART_6
+generateIRQHandler(MCUAL_USART6, USART6);
+#endif
+#ifdef CONFIG_MCUAL_USART_7
+generateIRQHandler(MCUAL_USART7, UART7);
+#endif
+#ifdef CONFIG_MCUAL_USART_8
+generateIRQHandler(MCUAL_USART8, UART8);
+#endif
+
 static USART_TypeDef * mcual_usart_get_register(mcual_usart_id_t usart_id)
 {
   switch(usart_id)
@@ -165,8 +222,47 @@ static int mcual_usart_get_rx_buffer_size(mcual_usart_id_t usart_id)
   return 0;
 }
 
+static int mcual_usart_get_irq_id(mcual_usart_id_t usart_id)
+{
+  switch(usart_id)
+  {
+    case MCUAL_USART1:
+      return USART1_IRQn;
+
+    case MCUAL_USART2:
+      return USART2_IRQn;
+
+    case MCUAL_USART3:
+      return USART3_IRQn;
+
+    case MCUAL_USART4:
+      return UART4_IRQn;
+
+    case MCUAL_USART5:
+      return UART5_IRQn;
+
+    case MCUAL_USART6:
+      return USART6_IRQn;
+
+    case MCUAL_USART7:
+      return UART7_IRQn;
+
+    case MCUAL_USART8:
+      return UART8_IRQn;
+  }
+
+  return 0;
+}
+
 void mcual_usart_init(mcual_usart_id_t usart_id, uint32_t baudrate)
 {
+#ifdef CONFIG_MCUAL_USART_USE_FREERTOS_QUEUES
+  tx_queues[usart_id] = xQueueCreate(mcual_usart_get_tx_buffer_size(usart_id) + 1000 , sizeof(uint8_t));
+  rx_queues[usart_id] = xQueueCreate(mcual_usart_get_rx_buffer_size(usart_id) + 1000 , sizeof(uint8_t));
+#else
+#error not implemented yet
+#endif
+
   USART_TypeDef * reg = mcual_usart_get_register(usart_id);
   mcual_clock_id_t clock = MCUAL_CLOCK_PERIPHERAL_1;
 
@@ -227,28 +323,33 @@ void mcual_usart_init(mcual_usart_id_t usart_id, uint32_t baudrate)
   reg->CR3 = 0;
   
   //enable usart tx and rx
-  reg->CR1 = USART_CR1_UE | USART_CR1_TE | USART_CR1_RE;
-
-#ifdef CONFIG_MCUAL_USART_USE_FREERTOS_QUEUES
-  tx_queues[usart_id] = xQueueCreate(mcual_usart_get_tx_buffer_size(usart_id), sizeof(uint8_t));
-  rx_queues[usart_id] = xQueueCreate(mcual_usart_get_rx_buffer_size(usart_id), sizeof(uint8_t));
-#else
-#error not implemented yet
-#endif
+  reg->CR1 = USART_CR1_UE | USART_CR1_RXNEIE | USART_CR1_TE | USART_CR1_RE;
+  
+  int irq_id = mcual_usart_get_irq_id(usart_id);
+  NVIC->IP[irq_id] = 15 << 4;
+  NVIC->ISER[irq_id / 32] |= (1 << (USART1_IRQn % 32));
 }
+
+
 
 void mcual_usart_send(mcual_usart_id_t usart_id, uint8_t byte)
 {
-#ifdef CONFIG_MCUAL_USART_USE_FREERTOS_QUEUES
   USART_TypeDef * reg = mcual_usart_get_register(usart_id);
-  while(!(reg->SR & (1 << 7)));
-  reg->DR = byte;
- // xQueueSend(tx_queues[usart_id], &byte, portMAX_DELAY);
+
+#ifdef CONFIG_MCUAL_USART_USE_FREERTOS_QUEUES
+  xQueueSend(tx_queues[usart_id], &byte, portMAX_DELAY);
+  reg->CR1 |= USART_CR1_TXEIE;
+
 #else
   (void)usart_id;
   (void)byte;
+  (void)reg;
 #error not implemented yet
 #endif
+
+  (void)usart_id;
+  (void)byte;
+  (void)reg;
 }
 
 uint8_t mcual_usart_recv(mcual_usart_id_t usart_id)
