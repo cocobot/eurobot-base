@@ -226,29 +226,45 @@ static int mcual_usart_get_irq_id(mcual_usart_id_t usart_id)
 {
   switch(usart_id)
   {
+#ifdef CONFIG_MCUAL_USART_1
     case MCUAL_USART1:
       return USART1_IRQn;
+#endif
 
+#ifdef CONFIG_MCUAL_USART_2
     case MCUAL_USART2:
       return USART2_IRQn;
+#endif
 
+#ifdef CONFIG_MCUAL_USART_3
     case MCUAL_USART3:
       return USART3_IRQn;
+#endif
 
+#ifdef CONFIG_MCUAL_USART_4
     case MCUAL_USART4:
       return UART4_IRQn;
+#endif
 
+#ifdef CONFIG_MCUAL_USART_5
     case MCUAL_USART5:
       return UART5_IRQn;
+#endif
 
+#ifdef CONFIG_MCUAL_USART_6
     case MCUAL_USART6:
       return USART6_IRQn;
+#endif
 
+#ifdef CONFIG_MCUAL_USART_7
     case MCUAL_USART7:
       return UART7_IRQn;
+#endif
 
+#ifdef CONFIG_MCUAL_USART_8
     case MCUAL_USART8:
       return UART8_IRQn;
+#endif
   }
 
   return 0;
