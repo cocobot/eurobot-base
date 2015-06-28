@@ -1,15 +1,26 @@
 #include <include/generated/autoconf.h>
 #ifdef CONFIG_MCUAL_CLOCK
 
+#if 0
+#define APB1_CLOCK_MAX_FREQUECY_KHZ 45000
+#define APB2_CLOCK_MAX_FREQUECY_KHZ 90000
+#elif defined(STM32F40_41xxx)
+# define APB1_CLOCK_MAX_FREQUECY_KHZ 42000
+# define APB2_CLOCK_MAX_FREQUECY_KHZ 84000
+#else
+# error Architecture not supported
+#endif
+
 #include <stm32f4xx.h>
 #include <mcual.h>
 
 void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
 {
-  double source_freq_kHz = 0;
+  int32_t source_freq_kHz = 0;
+  uint32_t cfgr = RCC->CFGR;
 
   //set internal clock as source for confiuration
-  RCC->CFGR &= ~((uint32_t)((1 << 0) | (1 << 1)));
+  cfgr &= ~RCC_CFGR_SW;
 
   //disable PLL
   RCC->CR &= ~((uint32_t)(1 << 24));
@@ -34,7 +45,7 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
         while(!(RCC->CR & (uint32_t)(1 << 17)));
 
         //set external clock as main clock
-        RCC->CFGR |= (uint32_t)(1 << 0);
+        cfgr |= (uint32_t)(1 << 0);
 
         source_freq_kHz = HSE_VALUE / 1000; 
       }
@@ -43,6 +54,14 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
 
   if(target_freq_kHz > 0)
   {
+    //set flash wait states
+    uint32_t wait = target_freq_kHz / 30000;
+    uint32_t acr = FLASH->ACR;
+    acr &= ~FLASH_ACR_LATENCY;
+    acr |= (wait & FLASH_ACR_LATENCY);
+    FLASH->ACR = acr;
+
+    
     //set VCO input frequency to 2Mhz (or lower)
     int32_t pll_m = (source_freq_kHz / 2001)+1;
 
@@ -78,10 +97,12 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
         }
       }
     }
-
+    
     //find pll q in order to have a 48Mhz output
     int32_t fvco = (source_freq_kHz * pll_n) / pll_m;
     int32_t pll_q = fvco / 48001 + 1;
+
+
 
     //set pll register
     RCC->PLLCFGR = ((uint32_t)((pll_q & 0x0F) << 24) | (((pll_p / 2 - 1) & 0x03) << 16) | ((pll_n & 0x1FF) << 6) | (pll_m & 0x3F));
@@ -89,6 +110,10 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
     if(source == MCUAL_CLOCK_SOURCE_EXTERNAL)
     {
       RCC->PLLCFGR |= ((uint32_t)(1 << 22));
+    }
+    else
+    {
+      RCC->PLLCFGR &= ~((uint32_t)(1 << 22));
     }
 
     //enable PLL
@@ -98,8 +123,8 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
     while(!(RCC->CR & (uint32_t)(1 << 25)));
 
     //set PLL output as main clock
-    RCC->CFGR &= ~((uint32_t)((1 << 0) | (1 << 1)));
-    RCC->CFGR |= (uint32_t)(1 << 1);
+    cfgr &= ~RCC_CFGR_SW;
+    cfgr |= RCC_CFGR_SW_PLL;
   }
   else
   {
@@ -111,7 +136,7 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
 
   //set Prescaler1
   int32_t pre1 = 2;
-  if(target_freq_kHz <= 45000)
+  if(target_freq_kHz <= APB1_CLOCK_MAX_FREQUECY_KHZ)
   {
     pre1 = 0;
   }
@@ -119,7 +144,7 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
   {
     for(i = 0; i < 4; i += 1)
     {
-      if((target_freq_kHz / (pre1 << i)) <= 45000)
+      if((target_freq_kHz / (pre1 << i)) <= APB1_CLOCK_MAX_FREQUECY_KHZ)
       {
         pre1 = i;
         break;
@@ -129,7 +154,7 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
   }
   
   int32_t pre2 = 2;
-  if(target_freq_kHz <= 90000)
+  if(target_freq_kHz <= APB2_CLOCK_MAX_FREQUECY_KHZ)
   {
     pre2 = 0;
   }
@@ -137,7 +162,7 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
   {
     for(i = 0; i < 4; i += 1)
     {
-      if((target_freq_kHz / (pre2 << i)) <= 90000)
+      if((target_freq_kHz / (pre2 << i)) <= APB2_CLOCK_MAX_FREQUECY_KHZ)
       {
         pre2 = i;
         break;
@@ -146,8 +171,10 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
     pre2 |= (1 << 2);
   }
 
-  RCC->CFGR &= ~((uint32_t)(0x3F << 10));
-  RCC->CFGR |= ((uint32_t)((pre1 << 10) | (pre2 << 13)));
+  cfgr &= ~((uint32_t)(0x3F << 10));
+  cfgr |= ((uint32_t)((pre1 << 10) | (pre2 << 13)));
+
+  RCC->CFGR = cfgr;
 }
 
 uint32_t mcual_clock_get_frequency_Hz(mcual_clock_id_t clock_id)
