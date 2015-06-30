@@ -1,5 +1,5 @@
 choice
-  prompt " + mcual version"
+  prompt "+ mcual version"
   depends on MCUAL
   config MCUAL_USE_GIT
     bool "git"
@@ -15,3 +15,47 @@ config MCUAL_GPIO
 	bool "+ GPIO"
 	default n
 	depends on MCUAL
+
+config MCUAL_USART
+	bool "+ USART"
+	default n
+	depends on MCUAL && MCUAL_CLOCK
+
+
+config MCUAL_USART_USE_FREERTOS_QUEUES
+  bool "+ use FreeRTOS queues"
+  depends on MCUAL_USART
+  default n
+
+config MCUAL_USART_0
+  bool "+ Compile USART 0"
+  depends on MCUAL_USART
+  default n
+
+config MCUAL_USART_0_RX_SIZE
+  int "+ USART 0 Rx buffer size"
+  depends on MCUAL_USART_0
+  default 8
+
+config MCUAL_USART_0_TX_SIZE
+  int "+ USART 0 Tx buffer size"
+  depends on MCUAL_USART_0
+  default 8
+
+config MCUAL_USART_1
+  bool "+ Compile USART 1"
+  depends on MCUAL_USART
+  default n
+
+config MCUAL_USART_1_RX_SIZE
+  int "+ USART 1 Rx buffer size"
+  depends on MCUAL_USART_1
+  default 8
+
+config MCUAL_USART_1_TX_SIZE
+  int "+ USART 1 Tx buffer size"
+  depends on MCUAL_USART_1
+  default 8
+
+comment "USART need clock module"
+depends on MCUAL && !MCUAL_CLOCK

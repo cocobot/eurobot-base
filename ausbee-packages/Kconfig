@@ -7,3 +7,5 @@ source "$AUSBEE_CUSTOM_PACKAGES_PATH/mcual/Kconfig"
 config LIBCOCOBOT
   bool "libcocobot"
   default n
+
+source "$AUSBEE_CUSTOM_PACKAGES_PATH/libcocobot/Kconfig"
