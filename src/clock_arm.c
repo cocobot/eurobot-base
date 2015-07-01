@@ -14,6 +14,61 @@
 #include <stm32f4xx.h>
 #include <mcual.h>
 
+extern int main(void);
+extern unsigned int _sdata;
+extern unsigned int _sidata;
+extern unsigned int _edata;
+extern unsigned int _sbss;
+extern unsigned int _ebss;
+
+void Reset_Handler(void)
+{
+  unsigned int *src, *dst;
+
+  /* Copy data section from flash to RAM */
+  src = &_sidata;
+  dst = &_sdata;
+  while (dst < &_edata)
+    *dst++ = *src++;
+
+  /* Clear the bss section */
+  dst = &_sbss;
+  while (dst < &_ebss)
+    *dst++ = 0;
+
+  /* FPU settings ------------------------------------------------------------*/
+#if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
+  SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));  /* set CP10 and CP11 Full Access */
+#endif
+  RCC->CR |= RCC_CR_HSION;
+  RCC->CFGR = 0x00000000;
+  RCC->CFGR |= RCC_CFGR_MCO2PRE;
+  RCC->CR &= ~(RCC_CR_HSEON | RCC_CR_CSSON | RCC_CR_PLLON | RCC_CR_HSEBYP);
+  RCC->CIR = 0x00000000;
+  RCC->APB1ENR |= RCC_APB1ENR_PWREN;
+  PWR->CR |= PWR_CR_VOS;
+  RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
+  RCC->CFGR |= RCC_CFGR_PPRE2_DIV16;
+  RCC->CFGR |= RCC_CFGR_PPRE1_DIV16;
+
+#if defined (STM32F427_437xx) || defined (STM32F429_439xx)
+  /* Enable the Over-drive to extend the clock frequency to 180 Mhz */
+  PWR->CR |= PWR_CR_ODEN;
+  while((PWR->CSR & PWR_CSR_ODRDY) == 0)
+  {
+  }
+  PWR->CR |= PWR_CR_ODSWEN;
+  while((PWR->CSR & PWR_CSR_ODSWRDY) == 0)
+  {
+  }      
+#endif /* STM32F427_437x || STM32F429_439xx  */
+
+  FLASH->ACR = FLASH_ACR_PRFTEN | FLASH_ACR_ICEN |FLASH_ACR_DCEN |FLASH_ACR_LATENCY_2WS;
+  SCB->VTOR = FLASH_BASE;
+
+  main();
+}
+
 void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
 {
   int32_t source_freq_kHz = 0;
@@ -21,9 +76,6 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
 
   //set internal clock as source for confiuration
   cfgr &= ~RCC_CFGR_SW;
-
-  //disable PLL
-  RCC->CR &= ~((uint32_t)(1 << 24));
 
   switch(source)
   {
@@ -61,9 +113,11 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
     acr |= (wait & FLASH_ACR_LATENCY);
     FLASH->ACR = acr;
 
-    
+
     //set VCO input frequency to 2Mhz (or lower)
-    int32_t pll_m = (source_freq_kHz / 2001)+1;
+    int32_t pll_m = (source_freq_kHz / 1001)+1;
+
+    pll_m = 4;
 
     int32_t pll_n = 1;
     int32_t pll_p = 1;
@@ -97,30 +151,23 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
         }
       }
     }
-    
+
     //find pll q in order to have a 48Mhz output
     int32_t fvco = (source_freq_kHz * pll_n) / pll_m;
     int32_t pll_q = fvco / 48001 + 1;
 
+   
+    /* Configure the main PLL */
+    RCC->PLLCFGR = pll_m | (pll_n << 6) | (((pll_p >> 1) -1) << 16) |
+                   (source == MCUAL_CLOCK_SOURCE_EXTERNAL ? RCC_PLLCFGR_PLLSRC_HSE : 0) | (pll_q << 24);
 
+    /* Enable the main PLL */
+    RCC->CR |= RCC_CR_PLLON;
 
-    //set pll register
-    RCC->PLLCFGR = ((uint32_t)((pll_q & 0x0F) << 24) | (((pll_p / 2 - 1) & 0x03) << 16) | ((pll_n & 0x1FF) << 6) | (pll_m & 0x3F));
-
-    if(source == MCUAL_CLOCK_SOURCE_EXTERNAL)
+    /* Wait till the main PLL is ready */
+    while((RCC->CR & RCC_CR_PLLRDY) == 0)
     {
-      RCC->PLLCFGR |= ((uint32_t)(1 << 22));
     }
-    else
-    {
-      RCC->PLLCFGR &= ~((uint32_t)(1 << 22));
-    }
-
-    //enable PLL
-    RCC->CR = ((uint32_t)(1 << 24));
-    
-    //wait until PLL is locked
-    while(!(RCC->CR & (uint32_t)(1 << 25)));
 
     //set PLL output as main clock
     cfgr &= ~RCC_CFGR_SW;
@@ -152,7 +199,7 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
     }
     pre1 |= (1 << 2);
   }
-  
+
   int32_t pre2 = 2;
   if(target_freq_kHz <= APB2_CLOCK_MAX_FREQUECY_KHZ)
   {
@@ -171,6 +218,7 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
     pre2 |= (1 << 2);
   }
 
+  cfgr &= ~RCC_CFGR_HPRE;
   cfgr &= ~((uint32_t)(0x3F << 10));
   cfgr |= ((uint32_t)((pre1 << 10) | (pre2 << 13)));
 
@@ -211,9 +259,12 @@ uint32_t mcual_clock_get_frequency_Hz(mcual_clock_id_t clock_id)
         clock_Hz /= pll_m;
         clock_Hz *= pll_n;
         clock_Hz /= pll_p;
+
       }
       break;
   }
+
+
 
   switch(RCC->CFGR & RCC_CFGR_HPRE)
   {
@@ -278,7 +329,7 @@ uint32_t mcual_clock_get_frequency_Hz(mcual_clock_id_t clock_id)
 
     return clock_Hz;
   }
-  
+
   if(clock_id == MCUAL_CLOCK_PERIPHERAL_2)
   {
     switch(RCC->CFGR & RCC_CFGR_PPRE2)
