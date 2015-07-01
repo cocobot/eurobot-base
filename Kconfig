@@ -12,3 +12,9 @@ config PLATFORM_BRAIN_2016
   select PLATFORM_ARM_CORE_CORTEX_M4
   select USE_FPU
   select PLATFORM_DEVICE_STM32F429_439xx
+
+config PLATFORM_PRISM_V1
+  bool "Prism v1"
+  #select device
+  select PLATFORM_AVR_CORE
+  select PLATFORM_DEVICE_ATXMEGA128A1
