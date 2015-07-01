@@ -5,7 +5,7 @@ git clone git@github.com:cocobot/hardware.git
 
 
 #getting aussbee fork
-git clone git@github.com:cocobot/ausbee.git
+git clone -b cocobot git@github.com:cocobot/ausbee.git
 
 
 #getting ausbee custom platforms
