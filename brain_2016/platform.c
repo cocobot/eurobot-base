@@ -12,7 +12,7 @@ void platform_init(void)
   mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN4, MCUAL_GPIO_OUTPUT);
   mcual_gpio_init(MCUAL_GPIOB, MCUAL_GPIO_PIN5, MCUAL_GPIO_OUTPUT);
   mcual_gpio_init(MCUAL_GPIOB, MCUAL_GPIO_PIN12, MCUAL_GPIO_OUTPUT);
-  mcual_gpio_set(MCUAL_GPIOC, MCUAL_GPIO_PIN4);
+  mcual_gpio_clear(MCUAL_GPIOC, MCUAL_GPIO_PIN4);
   mcual_gpio_clear(MCUAL_GPIOB, MCUAL_GPIO_PIN5);
   mcual_gpio_clear(MCUAL_GPIOB, MCUAL_GPIO_PIN12);
   

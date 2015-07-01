@@ -25,6 +25,17 @@
 
 #define PLATFORM_USART_DEBUG MCUAL_USART1
 
+#define PLATFORM_ADC_VBAT   MCUAL_ADC0
+#define PLATFORM_ADC_IR0    MCUAL_ADC1
+#define PLATFORM_ADC_IR1    MCUAL_ADC2
+#define PLATFORM_ADC_IR2    MCUAL_ADC3
+#define PLATFORM_ADC_IR3    MCUAL_ADC4
+#define PLATFORM_ADC_CH0    MCUAL_ADC5
+#define PLATFORM_ADC_CH1    MCUAL_ADC6
+#define PLATFORM_ADC_CH2    MCUAL_ADC7
+#define PLATFORM_ADC_CH3    MCUAL_ADC16
+#define PLATFORM_ADC_CH4    MCUAL_ADC17
+
 void platform_init(void);
 void platform_led_toggle(uint8_t led);
 void platform_led_set(uint8_t led);
