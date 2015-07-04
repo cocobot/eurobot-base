@@ -114,11 +114,29 @@ void mcual_usart_##num##_send(uint8_t byte)\
   }\
   while (nx_write_ptr == mcual_usart_##num##_tx_read)\
   {\
-    USART##port.CTRLA |= USART_DREINTLVL_MED_gc;\
+    USART##port.CTRLA |= USART_DREINTLVL_LO_gc;\
   }\
-  tx_buffer[nx_write_ptr + MCUAL_USART_##num##_TX_START] = byte;\
+  tx_buffer[mcual_usart_##num##_tx_write + MCUAL_USART_##num##_TX_START] = byte;\
   mcual_usart_##num##_tx_write = nx_write_ptr;\
-  USART##port.CTRLA |= USART_DREINTLVL_MED_gc;\
+  USART##port.CTRLA |= USART_DREINTLVL_LO_gc;\
+}\
+int16_t mcual_usart_##num##_recv_no_wait(void)\
+{\
+  if (mcual_usart_##num##_rx_read == mcual_usart_##num##_rx_write)\
+  {\
+    return -1;\
+  }\
+  else\
+  {\
+    uint8_t byte = rx_buffer[mcual_usart_##num##_rx_read + MCUAL_USART_##num##_RX_START];\
+    uint8_t nx_read_ptr = mcual_usart_##num##_rx_read + 1;\
+    if(nx_read_ptr >= CONFIG_MCUAL_USART_##num##_TX_SIZE)\
+    {\
+      nx_read_ptr = 0;\
+    }\
+    mcual_usart_##num##_rx_read = nx_read_ptr;\
+    return byte;\
+  }\
 }\
 ISR(USART##port##_DRE_vect)\
 {\
@@ -135,6 +153,19 @@ ISR(USART##port##_DRE_vect)\
     }\
     USART##port.DATA = tx_buffer[mcual_usart_##num##_tx_read + MCUAL_USART_##num##_TX_START];\
     mcual_usart_##num##_tx_read = nx_read_ptr;\
+  }\
+}\
+ISR(USART##port##_RXC_vect)\
+{\
+  uint8_t nx_write_ptr = mcual_usart_##num##_rx_write + 1;\
+  if(nx_write_ptr >= CONFIG_MCUAL_USART_##num##_RX_SIZE)\
+  {\
+    nx_write_ptr = 0;\
+  }\
+  if (mcual_usart_##num##_rx_read != nx_write_ptr)\
+  {\
+    rx_buffer[mcual_usart_##num##_rx_write + MCUAL_USART_##num##_RX_START] = USART##port.DATA;\
+    mcual_usart_##num##_rx_write = nx_write_ptr;\
   }\
 }
 
@@ -272,7 +303,7 @@ void mcual_usart_init(mcual_usart_id_t usart_id, uint32_t baudrate)
   reg->BAUDCTRLA = (uint8_t)baudrate_raw;
   reg->CTRLC = USART_CHSIZE_8BIT_gc;
   reg->CTRLB = USART_RXEN_bm | USART_TXEN_bm;
-  reg->CTRLA = 0; //USART_RXCINTLVL_MED_gc;
+  reg->CTRLA = USART_RXCINTLVL_LO_gc;
 }
 
 #ifdef CONFIG_MCUAL_USART_0
