@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <mcual.h>
 #include <avr/io.h>
+#include <avr/interrupt.h>
 
 
 #ifdef CONFIG_MCUAL_USART_USE_FREERTOS_QUEUES
@@ -11,73 +12,73 @@
 #else
 
 #ifdef CONFIG_MCUAL_USART_0
-uint16_t mcual_usart_0_rx_write; 
-uint16_t mcual_usart_0_rx_read; 
-uint16_t mcual_usart_0_tx_write; 
-uint16_t mcual_usart_0_tx_read; 
+volatile uint16_t mcual_usart_0_rx_write; 
+volatile uint16_t mcual_usart_0_rx_read; 
+volatile uint16_t mcual_usart_0_tx_write; 
+volatile uint16_t mcual_usart_0_tx_read; 
 #else
 # define CONFIG_MCUAL_USART_0_RX_SIZE 0
 # define CONFIG_MCUAL_USART_0_TX_SIZE 0
 #endif
 #ifdef CONFIG_MCUAL_USART_1
-uint16_t mcual_usart_1_rx_write; 
-uint16_t mcual_usart_1_rx_read; 
-uint16_t mcual_usart_1_tx_write; 
-uint16_t mcual_usart_1_tx_read; 
+volatile uint16_t mcual_usart_1_rx_write; 
+volatile uint16_t mcual_usart_1_rx_read; 
+volatile uint16_t mcual_usart_1_tx_write; 
+volatile uint16_t mcual_usart_1_tx_read; 
 #else
 # define CONFIG_MCUAL_USART_1_RX_SIZE 0
 # define CONFIG_MCUAL_USART_1_TX_SIZE 0
 #endif
 #ifdef CONFIG_MCUAL_USART_2
-uint16_t mcual_usart_2_rx_write; 
-uint16_t mcual_usart_2_rx_read; 
-uint16_t mcual_usart_2_tx_write; 
-uint16_t mcual_usart_2_tx_read; 
+volatile uint16_t mcual_usart_2_rx_write; 
+volatile uint16_t mcual_usart_2_rx_read; 
+volatile uint16_t mcual_usart_2_tx_write; 
+volatile uint16_t mcual_usart_2_tx_read; 
 #else
 # define CONFIG_MCUAL_USART_2_RX_SIZE 0
 # define CONFIG_MCUAL_USART_2_TX_SIZE 0
 #endif
 #ifdef CONFIG_MCUAL_USART_3
-uint16_t mcual_usart_3_rx_write; 
-uint16_t mcual_usart_3_rx_read; 
-uint16_t mcual_usart_3_tx_write; 
-uint16_t mcual_usart_3_tx_read; 
+volatile uint16_t mcual_usart_3_rx_write; 
+volatile uint16_t mcual_usart_3_rx_read; 
+volatile uint16_t mcual_usart_3_tx_write; 
+volatile uint16_t mcual_usart_3_tx_read; 
 #else
 # define CONFIG_MCUAL_USART_3_RX_SIZE 0
 # define CONFIG_MCUAL_USART_3_TX_SIZE 0
 #endif
 #ifdef CONFIG_MCUAL_USART_4
-uint16_t mcual_usart_4_rx_write; 
-uint16_t mcual_usart_4_rx_read; 
-uint16_t mcual_usart_4_tx_write; 
-uint16_t mcual_usart_4_tx_read; 
+volatile uint16_t mcual_usart_4_rx_write; 
+volatile uint16_t mcual_usart_4_rx_read; 
+volatile uint16_t mcual_usart_4_tx_write; 
+volatile uint16_t mcual_usart_4_tx_read; 
 #else
 # define CONFIG_MCUAL_USART_4_RX_SIZE 0
 # define CONFIG_MCUAL_USART_4_TX_SIZE 0
 #endif
 #ifdef CONFIG_MCUAL_USART_5
-uint16_t mcual_usart_5_rx_write; 
-uint16_t mcual_usart_5_rx_read; 
-uint16_t mcual_usart_5_tx_write; 
-uint16_t mcual_usart_5_tx_read; 
+volatile uint16_t mcual_usart_5_rx_write; 
+volatile uint16_t mcual_usart_5_rx_read; 
+volatile uint16_t mcual_usart_5_tx_write; 
+volatile uint16_t mcual_usart_5_tx_read; 
 #else
 # define CONFIG_MCUAL_USART_5_RX_SIZE 0
 # define CONFIG_MCUAL_USART_5_TX_SIZE 0
 #endif
 #ifdef CONFIG_MCUAL_USART_6
-uint16_t mcual_usart_6_rx_write; 
-uint16_t mcual_usart_6_rx_read; 
-uint16_t mcual_usart_6_tx_write; 
-uint16_t mcual_usart_6_tx_read; 
+volatile uint16_t mcual_usart_6_rx_write; 
+volatile uint16_t mcual_usart_6_rx_read; 
+volatile uint16_t mcual_usart_6_tx_write; 
+volatile uint16_t mcual_usart_6_tx_read; 
 #else
 # define CONFIG_MCUAL_USART_6_RX_SIZE 0
 # define CONFIG_MCUAL_USART_6_TX_SIZE 0
 #endif
 #ifdef CONFIG_MCUAL_USART_7
-uint16_t mcual_usart_7_rx_write; 
-uint16_t mcual_usart_7_rx_read; 
-uint16_t mcual_usart_7_tx_write; 
-uint16_t mcual_usart_7_tx_read; 
+volatile uint16_t mcual_usart_7_rx_write; 
+volatile uint16_t mcual_usart_7_rx_read; 
+volatile uint16_t mcual_usart_7_tx_write; 
+volatile uint16_t mcual_usart_7_tx_read; 
 #else
 # define CONFIG_MCUAL_USART_7_RX_SIZE 0
 # define CONFIG_MCUAL_USART_7_TX_SIZE 0
@@ -103,7 +104,7 @@ uint16_t mcual_usart_7_tx_read;
 #define MCUAL_USART_7_TX_START  (MCUAL_USART_6_TX_START + CONFIG_MCUAL_USART_6_TX_SIZE)
 #define MCUAL_USART_TX_TOTAL    (MCUAL_USART_7_TX_START + CONFIG_MCUAL_USART_7_TX_SIZE)
 
-#define generateUSART(num) \
+#define generateUSART(num, port) \
 void mcual_usart_##num##_send(uint8_t byte)\
 {\
   uint8_t nx_write_ptr = mcual_usart_##num##_tx_write + 1;\
@@ -111,27 +112,31 @@ void mcual_usart_##num##_send(uint8_t byte)\
   {\
     nx_write_ptr = 0;\
   }\
-  while (nx_write_ptr == mcual_usart_##num##_tx_read);\
+  while (nx_write_ptr == mcual_usart_##num##_tx_read)\
+  {\
+    USART##port.CTRLA |= USART_DREINTLVL_MED_gc;\
+  }\
   tx_buffer[nx_write_ptr + MCUAL_USART_##num##_TX_START] = byte;\
   mcual_usart_##num##_tx_write = nx_write_ptr;\
-  USART_t * reg = mcual_usart_get_register(num);\
-  reg->CTRLA |= USART_TXCINTLVL_MED_gc;\
+  USART##port.CTRLA |= USART_DREINTLVL_MED_gc;\
 }\
-ISR(USART##port##num##_DRE_vect)\
+ISR(USART##port##_DRE_vect)\
 {\
-  uint8_t nx_read_ptr = mcual_usart_##num##_tx_read + 1;\
-  if(nx_read_ptr >= CONFIG_MCUAL_USART_##num##_TX_SIZE)\
+  if (mcual_usart_##num##_tx_read == mcual_usart_##num##_tx_write)\
   {\
-    nx_read_ptr = 0;\
+    USART##port.CTRLA &= ~USART_DREINTLVL_gm;\
   }\
-                                                                                                                              if (usart_##usart_port##usart_nb##_send_irq_ptr == usart_##usart_port##usart_nb##_send_user_ptr)\
-                                                                                                                                  USART##usart_port##usart_nb.CTRLA &= ~USART_DREINTLVL_gm;\
-                                                                                                                              else\
-                                                                                                                              {\
-                                                                                                                                                                                                    USART##usart_port##usart_nb.DATA =usart_##usart_port##usart_nb##_send_buf[next_irq_ptr];\
-                                                                                                                                                                                                    usart_##usart_port##usart_nb##_send_irq_ptr = next_irq_ptr;\
-                                                                                                                                                                                                }\
-                                                                                                                          }
+  else\
+  {\
+    uint8_t nx_read_ptr = mcual_usart_##num##_tx_read + 1;\
+    if(nx_read_ptr >= CONFIG_MCUAL_USART_##num##_TX_SIZE)\
+    {\
+      nx_read_ptr = 0;\
+    }\
+    USART##port.DATA = tx_buffer[mcual_usart_##num##_tx_read + MCUAL_USART_##num##_TX_START];\
+    mcual_usart_##num##_tx_read = nx_read_ptr;\
+  }\
+}
 
 
 uint8_t rx_buffer[MCUAL_USART_RX_TOTAL];
@@ -261,38 +266,38 @@ void mcual_usart_init(mcual_usart_id_t usart_id, uint32_t baudrate)
 #endif
   USART_t * reg = mcual_usart_get_register(usart_id);
 
-  uint32_t baudrate_raw = mcual_clock_get_frequency_Hz(MCUAL_CLOCK_SYSTEM) / (16 * baudrate);
+  uint32_t baudrate_raw = mcual_clock_get_frequency_Hz(MCUAL_CLOCK_SYSTEM) / (16UL * baudrate) - 1;
 
+  reg->BAUDCTRLB = (uint8_t)(baudrate_raw >> 8) & 0x0F;
   reg->BAUDCTRLA = (uint8_t)baudrate_raw;
-  reg->BAUDCTRLB = (uint8_t)(baudrate_raw >> 8);
-  reg->CTRLC = USART_CMODE_ASYNCHRONOUS_gc;
+  reg->CTRLC = USART_CHSIZE_8BIT_gc;
   reg->CTRLB = USART_RXEN_bm | USART_TXEN_bm;
-  reg->CTRLA = USART_RXCINTLVL_MED_gc;
+  reg->CTRLA = 0; //USART_RXCINTLVL_MED_gc;
 }
 
 #ifdef CONFIG_MCUAL_USART_0
-generateUSART(0);
+generateUSART(0,C0);
 #endif
 #ifdef CONFIG_MCUAL_USART_1
-generateUSART(1);
+generateUSART(1,C1);
 #endif
 #ifdef CONFIG_MCUAL_USART_2
-generateUSART(2);
+generateUSART(2,D0);
 #endif
 #ifdef CONFIG_MCUAL_USART_3
-generateUSART(3);
+generateUSART(3,D1);
 #endif
 #ifdef CONFIG_MCUAL_USART_4
-generateUSART(4);
+generateUSART(4,E0);
 #endif
 #ifdef CONFIG_MCUAL_USART_5
-generateUSART(5);
+generateUSART(5,E1);
 #endif
 #ifdef CONFIG_MCUAL_USART_6
-generateUSART(6);
+generateUSART(6,F0);
 #endif
 #ifdef CONFIG_MCUAL_USART_7
-generateUSART(7);
+generateUSART(7,F1);
 #endif
 
 
