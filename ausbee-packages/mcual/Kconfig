@@ -16,6 +16,19 @@ config MCUAL_GPIO
 	default n
 	depends on MCUAL
 
+config MCUAL_ADC
+	bool "+ ADC"
+	default n
+	depends on MCUAL
+
+config MCUAL_TIMER
+	bool "+ Timer"
+	default n
+	depends on MCUAL && MCUAL_CLOCK
+
+comment "Timer need clock module"
+depends on MCUAL && !MCUAL_CLOCK
+
 config MCUAL_USART
 	bool "+ USART"
 	default n
@@ -55,6 +68,111 @@ config MCUAL_USART_1_RX_SIZE
 config MCUAL_USART_1_TX_SIZE
   int "+ USART 1 Tx buffer size"
   depends on MCUAL_USART_1
+  default 8
+
+config MCUAL_USART_2
+  bool "+ Compile USART 2"
+  depends on MCUAL_USART
+  default n
+
+config MCUAL_USART_2_RX_SIZE
+  int "+ USART 2 Rx buffer size"
+  depends on MCUAL_USART_2
+  default 8
+
+config MCUAL_USART_2_TX_SIZE
+  int "+ USART 2 Tx buffer size"
+  depends on MCUAL_USART_2
+  default 8
+
+config MCUAL_USART_3
+  bool "+ Compile USART 3"
+  depends on MCUAL_USART
+  default n
+
+config MCUAL_USART_3_RX_SIZE
+  int "+ USART 3 Rx buffer size"
+  depends on MCUAL_USART_3
+  default 8
+
+config MCUAL_USART_3_TX_SIZE
+  int "+ USART 3 Tx buffer size"
+  depends on MCUAL_USART_3
+  default 8
+
+config MCUAL_USART_4
+  bool "+ Compile USART 4"
+  depends on MCUAL_USART
+  default n
+
+config MCUAL_USART_4_RX_SIZE
+  int "+ USART 4 Rx buffer size"
+  depends on MCUAL_USART_4
+  default 8
+
+config MCUAL_USART_4_TX_SIZE
+  int "+ USART 5 Tx buffer size"
+  depends on MCUAL_USART_4
+  default 8
+
+config MCUAL_USART_5
+  bool "+ Compile USART 5"
+  depends on MCUAL_USART
+  default n
+
+config MCUAL_USART_5_RX_SIZE
+  int "+ USART 5 Rx buffer size"
+  depends on MCUAL_USART_5
+  default 8
+
+config MCUAL_USART_5_TX_SIZE
+  int "+ USART 5 Tx buffer size"
+  depends on MCUAL_USART_5
+  default 8
+
+config MCUAL_USART_6
+  bool "+ Compile USART 6"
+  depends on MCUAL_USART
+  default n
+
+config MCUAL_USART_6_RX_SIZE
+  int "+ USART 6 Rx buffer size"
+  depends on MCUAL_USART_6
+  default 8
+
+config MCUAL_USART_6_TX_SIZE
+  int "+ USART 6 Tx buffer size"
+  depends on MCUAL_USART_6
+  default 8
+
+config MCUAL_USART_7
+  bool "+ Compile USART 7"
+  depends on MCUAL_USART
+  default n
+
+config MCUAL_USART_7_RX_SIZE
+  int "+ USART 7 Rx buffer size"
+  depends on MCUAL_USART_7
+  default 8
+
+config MCUAL_USART_7_TX_SIZE
+  int "+ USART 7 Tx buffer size"
+  depends on MCUAL_USART_7
+  default 8
+
+config MCUAL_USART_8
+  bool "+ Compile USART 8"
+  depends on MCUAL_USART
+  default n
+
+config MCUAL_USART_8_RX_SIZE
+  int "+ USART 8 Rx buffer size"
+  depends on MCUAL_USART_8
+  default 8
+
+config MCUAL_USART_8_TX_SIZE
+  int "+ USART 8 Tx buffer size"
+  depends on MCUAL_USART_8
   default 8
 
 comment "USART need clock module"

@@ -8,6 +8,12 @@ MCUAL_AUTOGEN_INCLUDES=-I"$(CURDIR)"
 
 MCUAL_DEPENDENCIES=system operating_systems mcual_autogen
 
+ifeq ($(CONFIG_AVR_CORE),y)
+MCUAL_ARCH=avr
+else
+MCUAL_ARCH=arm
+endif
+
 # File path
 ifeq ($(CONFIG_MCUAL_USE_GIT),y)
 MCUAL_FILE_PATH=git
@@ -18,8 +24,11 @@ endif
 # Include files
 MCUAL_INCLUDE_PATH=$(MCUAL_FILE_PATH)/include/
 
-MCUAL_SRC_FILES=$(MCUAL_FILE_PATH)/src/clock_arm.c \
-								$(MCUAL_FILE_PATH)/src/gpio_arm.c	 \
-								$(MCUAL_FILE_PATH)/src/usart_arm.c	
+MCUAL_SRC_FILES=$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/clock.c \
+								$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/gpio.c	 \
+								$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/adc.c	 \
+								$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/usart.c \
+								$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/timer.c \
+								$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/arch.c
 
 $(eval $(call pkg-generic,MCUAL))
