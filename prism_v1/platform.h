@@ -26,6 +26,9 @@
 #define PLATFORM_USART_BAL1   MCUAL_USART6
 #define PLATFORM_USART_BAL2   MCUAL_USART7
 
+#define PLATFORM_PWM_M0       (1 << 0)
+#define PLATFORM_PWM_M1       (1 << 1)
+
 void platform_init(void);
 void platform_led_toggle(uint32_t led);
 void platform_led_set(uint32_t led);
@@ -36,5 +39,8 @@ void platform_gpio_set(uint32_t gpio);
 void platform_gpio_clear(uint32_t gpio);
 void platform_gpio_toogle(uint32_t gpio);
 uint32_t platform_gpio_get(uint32_t gpio);
+
+void platform_pwm_init(uint32_t timer, uint32_t freq_kHz);
+void platform_pwm_set(uint32_t timer, int32_t duty_cycle);
 
 #endif// PLATFORM_H
