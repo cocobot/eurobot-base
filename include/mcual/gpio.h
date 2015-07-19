@@ -35,6 +35,7 @@ typedef uint32_t mcual_gpio_pin_t;
 #define MCUAL_GPIO_PIN14  (((mcual_gpio_pin_t)1) << 14)
 #define MCUAL_GPIO_PIN15  (((mcual_gpio_pin_t)1) << 15)
 
+#define MCUAL_GPIO_FUNCTION_ANALOG (-1)
 
 typedef enum
 {

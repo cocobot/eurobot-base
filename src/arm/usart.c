@@ -13,8 +13,8 @@
 #define MCUAL_USART_NUMBER (MCUAL_USART8 + 1)
 
 #ifdef CONFIG_MCUAL_USART_USE_FREERTOS_QUEUES
-xQueueHandle tx_queues[MCUAL_USART_NUMBER];
-xQueueHandle rx_queues[MCUAL_USART_NUMBER];
+QueueHandle_t tx_queues[MCUAL_USART_NUMBER];
+QueueHandle_t rx_queues[MCUAL_USART_NUMBER];
 #endif
 
 

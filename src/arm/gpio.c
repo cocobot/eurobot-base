@@ -140,17 +140,24 @@ void mcual_gpio_set_function(mcual_gpio_port_t port, mcual_gpio_pin_t pin, int f
     if(pin & (1 << i))
     {
       moder &= ~(0x03 << (2 * i));
-      moder |= (0x02 << (2 * i));
-
-      if(i < 8)
+      if(function_id == MCUAL_GPIO_FUNCTION_ANALOG)
       {
-        afrl &= ~(0x03 << (4 * i));
-        afrl |=  (function_id << (4 * i));
+        moder |= (0x03 << (2 * i));
       }
       else
       {
-        afrh &= ~(0x03 << (4 * (i - 8)));
-        afrh |=  (function_id << (4 * (i - 8)));
+        moder |= (0x02 << (2 * i));
+
+        if(i < 8)
+        {
+          afrl &= ~(0x03 << (4 * i));
+          afrl |=  (function_id << (4 * i));
+        }
+        else
+        {
+          afrh &= ~(0x03 << (4 * (i - 8)));
+          afrh |=  (function_id << (4 * (i - 8)));
+        }
       }
     }
   }
