@@ -22,24 +22,31 @@ void blink(void * arg)
   (void)arg;
   while(1)
   {
-    platform_led_toggle(PLATFORM_LED0 | PLATFORM_LED1);
-    vTaskDelay(500 / portTICK_RATE_MS);
+    platform_led_toggle(PLATFORM_LED2 | PLATFORM_LED1);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+
+
+    char buf[64];
+    snprintf(buf, 64, "vbat v%ld i%ld v%ld i%ld i%ld v%ld", platform_adc_get_mV(PLATFORM_ADC_VBAT), platform_adc_get_mV(PLATFORM_ADC_IR0), platform_adc_get_mV(PLATFORM_ADC_VBAT), platform_adc_get_mV(PLATFORM_ADC_IR1), platform_adc_get_mV(PLATFORM_ADC_IR0), platform_adc_get_mV(PLATFORM_ADC_VBAT));
+    //snprintf(buf, 64, "vbat v%ld", platform_adc_get_mV(PLATFORM_ADC_VBAT));
+    cocobot_console_send_asynchronous("test", buf);
   }
+}
+
+int console_handler(const char * cmd)
+{
+  (void)cmd;
+  return 0;
 }
 
 int main(void) 
 {
   platform_init();
-  cocobot_console_init(MCUAL_USART1, 1);
+  cocobot_console_init(MCUAL_USART1, 1, console_handler);
 
-  xTaskCreate(blink, (const signed char *)"blink", 200, NULL, 1, NULL );
+  xTaskCreate(blink, "blink", 200, NULL, 1, NULL );
 
   vTaskStartScheduler();
-
-  while(1) 
-  {
-
-  }
 
   return 0;
   /*
