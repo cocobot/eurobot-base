@@ -38,6 +38,15 @@ void platform_init(void)
   mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN9, 7);
   mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN10, 7);
   mcual_usart_init(PLATFORM_USART_DEBUG, 115200);
+
+  //init adc
+  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN0, MCUAL_GPIO_INPUT);
+  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN1, MCUAL_GPIO_INPUT);
+  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN2, MCUAL_GPIO_INPUT);
+  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN0, MCUAL_GPIO_FUNCTION_ANALOG);
+  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN1, MCUAL_GPIO_FUNCTION_ANALOG);
+  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN2, MCUAL_GPIO_FUNCTION_ANALOG);
+  mcual_adc_init();
 }
 
 void platform_led_toggle(uint8_t led)
@@ -397,4 +406,25 @@ uint32_t platform_gpio_get(uint32_t gpio)
   }
 
   return value;
+}
+
+int32_t platform_adc_get_mV(uint32_t adc)
+{
+  int32_t raw = mcual_adc_get(adc);
+
+  raw *= 3300000 / 4096;
+
+  switch(adc)
+  {
+    case PLATFORM_ADC_VBAT:
+      raw *= 11;
+      break;
+
+    case PLATFORM_ADC_IR0:
+    case PLATFORM_ADC_IR1:
+      raw *= 2;
+      break;
+  }
+
+  return raw / 1000;
 }

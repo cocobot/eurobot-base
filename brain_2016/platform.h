@@ -47,4 +47,6 @@ void platform_gpio_clear(uint32_t gpio);
 void platform_gpio_toogle(uint32_t gpio);
 uint32_t platform_gpio_get(uint32_t gpio);
 
+int32_t platform_adc_get_mV(uint32_t adc);
+
 #endif// PLATFORM_H
