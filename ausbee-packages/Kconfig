@@ -9,3 +9,9 @@ config LIBCOCOBOT
   default n
 
 source "$AUSBEE_CUSTOM_PACKAGES_PATH/libcocobot/Kconfig"
+
+config VREP
+  bool "V-Rep"
+  default n
+
+source "$AUSBEE_CUSTOM_PACKAGES_PATH/vrep/Kconfig"
