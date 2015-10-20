@@ -5,6 +5,10 @@
 extern "C" {
 #endif
 
+#define CONFIG_FREERTOS_USE_IDLE_HOOK 1
+#undef configUSE_IDLE_HOOK
+#define configUSE_IDLE_HOOK 1
+
 /*-----------------------------------------------------------
  * Port specific definitions.
  *
@@ -50,6 +54,23 @@ typedef unsigned long UBaseType_t;
 	#define portBYTE_ALIGNMENT		4
 #endif
 
+#define portSET_INTERRUPT_MASK()  ( vPortDisableInterrupts() )
+#define portCLEAR_INTERRUPT_MASK()  ( vPortEnableInterrupts() )G
+#define portDISABLE_INTERRUPTS()  portSET_INTERRUPT_MASK()
+#define portENABLE_INTERRUPTS()   portCLEAR_INTERRUPT_MASK()
+#define portENTER_CRITICAL()    vPortEnterCritical()
+#define portEXIT_CRITICAL()     vPortExitCritical()
+#define portTASK_FUNCTION_PROTO( vFunction, pvParameters ) void vFunction( void *pvParameters )
+#define portTASK_FUNCTION( vFunction, pvParameters ) void vFunction( void *pvParameters )
+#define portYIELD()         vPortYield()
+#define traceTASK_CREATE( pxNewTCB )      vPortAddTaskHandle( pxNewTCB )
+
+extern void vPortDisableInterrupts( void );
+extern void vPortEnableInterrupts( void );
+extern void vPortEnterCritical( void );
+extern void vPortExitCritical( void );
+extern void vPortYield( void );
+extern void vPortAddTaskHandle( void *pxTaskHandle );
 
 
 ///* Critical section management. */
@@ -63,22 +84,22 @@ typedef unsigned long UBaseType_t;
 //#define portNOP()					asm volatile ( "nop" );
 ///*-----------------------------------------------------------*/
 
-/* Kernel utilities. */
-#define portINTERRUPT_YIELD				( 0UL )
-#define portINTERRUPT_TICK				( 1UL )
-#define portYIELD()					vPortGenerateSimulatedInterrupt( portINTERRUPT_YIELD )
-/*-----------------------------------------------------------*/
-
-#define portTASK_FUNCTION_PROTO( vFunction, pvParameters ) void vFunction( void *pvParameters )
-#define portTASK_FUNCTION( vFunction, pvParameters ) void vFunction( void *pvParameters )
-#define portDISABLE_INTERRUPTS() vPortEnterCritical()
-#define portENABLE_INTERRUPTS() vPortExitCritical()
-#define portENTER_CRITICAL()		vPortEnterCritical()
-#define portEXIT_CRITICAL()			vPortExitCritical()
-
-void vPortEnterCritical( void );
-void vPortExitCritical( void );
-void vPortGenerateSimulatedInterrupt( uint32_t ulInterruptNumber );
+///* Kernel utilities. */
+//#define portINTERRUPT_YIELD				( 0UL )
+//#define portINTERRUPT_TICK				( 1UL )
+//#define portYIELD()					vPortGenerateSimulatedInterrupt( portINTERRUPT_YIELD )
+///*-----------------------------------------------------------*/
+//
+//#define portTASK_FUNCTION_PROTO( vFunction, pvParameters ) void vFunction( void *pvParameters )
+//#define portTASK_FUNCTION( vFunction, pvParameters ) void vFunction( void *pvParameters )
+//#define portDISABLE_INTERRUPTS() vPortEnterCritical()
+//#define portENABLE_INTERRUPTS() vPortExitCritical()
+//#define portENTER_CRITICAL()		vPortEnterCritical()
+//#define portEXIT_CRITICAL()			vPortExitCritical()
+//
+//void vPortEnterCritical( void );
+//void vPortExitCritical( void );
+//void vPortGenerateSimulatedInterrupt( uint32_t ulInterruptNumber );
 
 #endif /* PORTMACRO_H */
 

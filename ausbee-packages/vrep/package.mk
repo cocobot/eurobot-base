@@ -4,15 +4,25 @@ VREP_ARCHIVE=V-REP_SOURCE_V$(VREP_VERSION).zip
 
 VREP_AUTOGEN_INCLUDES=-I"$(CURDIR)"
 
-VREP_DEPENDENCIES=
+VREP_DEPENDENCIES=operating_systems mcual
 
 # File path
 VREP_FILE_PATH=vrep-$(VREP_VERSION)
 
 # Include files
 VREP_INCLUDE_PATH=
+EMPTY=
+SPACE=$(EMPTY) $(EMPTY)
 
-VREP_SRC_FILES=
+VREP_PDIR=$(subst $(SPACE),/,$(foreach ,$(subst /, ,$(BUILD_PATH)),..))
+
+VREP_SRC_FILES=$(VREP_PDIR)/..$(CONFIG_CUSTOM_PACKAGES_PATH)/vrep/utils/FreeRTOS/port.c \
+               $(VREP_PDIR)/..$(CONFIG_CUSTOM_PACKAGES_PATH)/vrep/utils/mcual/adc.c 		\
+               $(VREP_PDIR)/..$(CONFIG_CUSTOM_PACKAGES_PATH)/vrep/utils/mcual/arch.c 		\
+               $(VREP_PDIR)/..$(CONFIG_CUSTOM_PACKAGES_PATH)/vrep/utils/mcual/clock.c 	\
+               $(VREP_PDIR)/..$(CONFIG_CUSTOM_PACKAGES_PATH)/vrep/utils/mcual/gpio.c 		\
+               $(VREP_PDIR)/..$(CONFIG_CUSTOM_PACKAGES_PATH)/vrep/utils/mcual/timer.c 	\
+               $(VREP_PDIR)/..$(CONFIG_CUSTOM_PACKAGES_PATH)/vrep/utils/mcual/usart.c
 
 $(eval $(call pkg-generic,VREP))
 
@@ -33,12 +43,14 @@ HOST_COMMON_FLAGS := $(call remove-in-list,mcpu,$(HOST_COMMON_FLAGS))
 HOST_COMMON_FLAGS := $(call remove-in-list,mfloat-abi,$(HOST_COMMON_FLAGS))
 HOST_COMMON_FLAGS := $(call remove-in-list,mfpu,$(HOST_COMMON_FLAGS))
 
+HOST_LDFLAGS := $(call remove-in-list,start,$(HOST_LDFLAGS))
+HOST_LDFLAGS += -lpthread
+
 OBJ_FILES := $(filter-out $(SYSTEM_OBJ_C_FILES),$(OBJ_FILES))
 OBJ_FILES := $(filter-out $(SYSTEM_OBJ_S_FILES),$(OBJ_FILES))
 OBJ_FILES := $(filter-out $(SYSTEM_OBJ_S_FILES),$(OBJ_FILES))
 OBJ_FILES := $(call remove-in-list,ARM_CM4F,$(OBJ_FILES))
-OBJ_FILES := $(call remove-in-list,mcual,$(OBJ_FILES))
-
+OBJ_FILES := $(call remove-in-list,Build/mcual,$(OBJ_FILES))
 
 OPERATING_SYSTEMS_INCLUDES := $(call remove-in-list,ARM_CM4F,$(OPERATING_SYSTEMS_INCLUDES))
 OPERATING_SYSTEMS_INCLUDES += -I"$(CONFIG_CUSTOM_PACKAGES_PATH)/vrep/utils/FreeRTOS"
@@ -50,11 +62,11 @@ vrep-help:
 	$(ECHO_E) " - vrep-sim-build: build project simulation"
 
 vrep-sim-debug: 
-	$(ECHO_E) $(OPERATING_SYSTEMS_INCLUDES)
+	$(ECHO_E) $(HOST_LDFLAGS)
 	$(ECHO_E)
 	$(ECHO_E) $(FREERTOS_SRC_PORT_PATH)
 	$(ECHO_E)
 	$(ECHO_E) $(OBJ_FILES)
 	$(ECHO_E) $(HOST_CC)
 
-vrep-sim-build: vrep-sim-debug all
+vrep-sim-build: vrep-sim-debug $(OUTPUT_TARGET_OUT)
