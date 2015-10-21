@@ -101,5 +101,9 @@ extern void vPortAddTaskHandle( void *pxTaskHandle );
 //void vPortExitCritical( void );
 //void vPortGenerateSimulatedInterrupt( uint32_t ulInterruptNumber );
 
+#undef configASSERT
+#include <assert.h>
+#define configASSERT( x ) assert(x)
+
 #endif /* PORTMACRO_H */
 
