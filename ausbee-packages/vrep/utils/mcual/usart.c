@@ -1,4 +1,5 @@
 #include <mcual.h>
+#include <FreeRTOS.h>
 
 
 void mcual_usart_init(mcual_usart_id_t usart_id, uint32_t baudrate)
@@ -18,6 +19,7 @@ void mcual_usart_send(mcual_usart_id_t usart_id, uint8_t byte)
 uint8_t mcual_usart_recv(mcual_usart_id_t usart_id)
 {
   (void)usart_id;
+  vTaskSuspend(NULL);
   return 42;
 }
 

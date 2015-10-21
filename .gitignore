@@ -2,3 +2,5 @@ ausbee/
 hardware/
 ausbee-platforms/
 projects/
+
+*.swp
