@@ -40,14 +40,11 @@ int console_handler(const char * cmd)
 int main(void) 
 {
   platform_init();
- // cocobot_console_init(MCUAL_USART1, 1, console_handler);
-  printf("test3\n");
+  cocobot_console_init(MCUAL_USART1, 1, console_handler);
 
   xTaskCreate(blink, "blink", 200, NULL, 1, NULL );
-  printf("test4\n");
 
   vTaskStartScheduler();
-  printf("test5\n");
 
   return 0;
   /*
