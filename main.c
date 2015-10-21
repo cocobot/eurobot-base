@@ -26,10 +26,8 @@ void blink(void * arg)
     vTaskDelay(500 / portTICK_PERIOD_MS);
 
 
-    char buf[64];
-    snprintf(buf, 64, "vbat v%ld i%ld v%ld i%ld i%ld v%ld", platform_adc_get_mV(PLATFORM_ADC_VBAT), platform_adc_get_mV(PLATFORM_ADC_IR0), platform_adc_get_mV(PLATFORM_ADC_VBAT), platform_adc_get_mV(PLATFORM_ADC_IR1), platform_adc_get_mV(PLATFORM_ADC_IR0), platform_adc_get_mV(PLATFORM_ADC_VBAT));
-    //snprintf(buf, 64, "vbat v%ld", platform_adc_get_mV(PLATFORM_ADC_VBAT));
-    cocobot_console_send_asynchronous("test", buf);
+    cocobot_console_send_asynchronous("test", "plop");
+    printf("test\n");
   }
 }
 
@@ -42,11 +40,14 @@ int console_handler(const char * cmd)
 int main(void) 
 {
   platform_init();
-  cocobot_console_init(MCUAL_USART1, 1, console_handler);
+ // cocobot_console_init(MCUAL_USART1, 1, console_handler);
+  printf("test3\n");
 
   xTaskCreate(blink, "blink", 200, NULL, 1, NULL );
+  printf("test4\n");
 
   vTaskStartScheduler();
+  printf("test5\n");
 
   return 0;
   /*

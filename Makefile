@@ -2,7 +2,7 @@
 AUSBEE_DIR=../../ausbee/
 
 #List all source files
-PROJECT_SRC_FILES=$(wildcard *.c)
+PROJECT_LOCAL_SRC_FILES=$(wildcard *.c)
 
 #Include main Makefile
 include $(AUSBEE_DIR)/Makefile
