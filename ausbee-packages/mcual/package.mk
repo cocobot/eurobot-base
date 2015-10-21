@@ -25,7 +25,7 @@ endif
 # Include files
 MCUAL_INCLUDE_PATH=$(MCUAL_FILE_PATH)/include/
 
-MCUAL_SRC_FILES=$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/clock.c \
+MCUAL_TARGET_SRC_FILES=$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/clock.c \
 								$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/gpio.c	 \
 								$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/adc.c	 \
 								$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/usart.c \

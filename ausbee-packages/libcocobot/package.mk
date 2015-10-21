@@ -3,8 +3,6 @@ LIBCOCOBOT_URL = https://github.com/cocobot/libcocobot/archive/$(LIBCOCOBOT_VERS
 LIBCOCOBOT_ARCHIVE = libcocobot-$(LIBCOCOBOT_VERSION).tar.gz
 LIBCOCOBOT_GIT_UPSTREAM_URL = git@github.com:cocobot/libcocobot.git
 
-LIBCOCOBOT_DEPENDENCIES=mcual operating_systems
-
 # File path
 ifeq ($(CONFIG_LIBCOCOBOT_USE_GIT),y)
 LIBCOCOBOT_FILE_PATH=git
