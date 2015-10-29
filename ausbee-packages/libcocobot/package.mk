@@ -13,6 +13,7 @@ endif
 # Include files
 LIBCOCOBOT_INCLUDE_PATH=$(LIBCOCOBOT_FILE_PATH)/include/
 
-LIBCOCOBOT_SRC_FILES=$(LIBCOCOBOT_FILE_PATH)/src/console/console.c
+LIBCOCOBOT_SRC_FILES= $(LIBCOCOBOT_FILE_PATH)/src/console/console.c
+LIBCOCOBOT_SRC_FILES+=$(LIBCOCOBOT_FILE_PATH)/src/lcd/lcd.c
 
 $(eval $(call pkg-generic,LIBCOCOBOT))

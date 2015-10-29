@@ -1,5 +1,6 @@
 #include <mcual.h>
 #include <FreeRTOS.h>
+#include <task.h>
 
 
 void mcual_usart_init(mcual_usart_id_t usart_id, uint32_t baudrate)

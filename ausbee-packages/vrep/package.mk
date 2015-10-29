@@ -14,6 +14,7 @@ VREP_SIM_LOCAL_SRC_FILES=utils/FreeRTOS/port.c \
                					utils/mcual/clock.c 	\
                					utils/mcual/gpio.c 		\
                					utils/mcual/timer.c 	\
+               					utils/mcual/spi.c 	\
                					utils/mcual/usart.c
 
 VREP_SIM_SRC_FILES=V-REP_PRO_EDU_V3_2_2_Linux/programming/remoteApi/extApi.c V-REP_PRO_EDU_V3_2_2_Linux/programming/remoteApi/extApiPlatform.c
