@@ -6,6 +6,7 @@
 #include <mcual/usart.h>
 #include <mcual/adc.h>
 #include <mcual/timer.h>
+#include <mcual/spi.h>
 #include <mcual/arch.h>
 
 #endif// MCUAL_H
