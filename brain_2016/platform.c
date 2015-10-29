@@ -32,6 +32,11 @@ void platform_init(void)
   mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN1, MCUAL_GPIO_INPUT);
   mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN2, MCUAL_GPIO_INPUT);
 
+  mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN4, MCUAL_GPIO_INPUT);
+  mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN8, MCUAL_GPIO_INPUT);
+  mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN9, MCUAL_GPIO_INPUT);
+  mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN7, MCUAL_GPIO_INPUT);
+
   //init uart dbg pins
   mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN9, MCUAL_GPIO_OUTPUT);
   mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN10, MCUAL_GPIO_INPUT);
@@ -47,6 +52,16 @@ void platform_init(void)
   mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN1, MCUAL_GPIO_FUNCTION_ANALOG);
   mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN2, MCUAL_GPIO_FUNCTION_ANALOG);
   mcual_adc_init();
+
+  //init spi
+  mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN0 | MCUAL_GPIO_PIN1 | MCUAL_GPIO_PIN2 | MCUAL_GPIO_PIN3, MCUAL_GPIO_OUTPUT);
+  mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN11, MCUAL_GPIO_INPUT);
+  mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN10 | MCUAL_GPIO_PIN12, MCUAL_GPIO_OUTPUT);
+  platform_spi_slave_select(PLATFORM_SPI_CS_UNSELECT);
+  mcual_gpio_set_function(MCUAL_GPIOC, MCUAL_GPIO_PIN10, 6);
+  mcual_gpio_set_function(MCUAL_GPIOC, MCUAL_GPIO_PIN11, 6);
+  mcual_gpio_set_function(MCUAL_GPIOC, MCUAL_GPIO_PIN12, 6);
+  mcual_spi_master_init(MCUAL_SPI3, MCUAL_SPI_MODE_3, 400000);
 }
 
 void platform_led_toggle(uint8_t led)
@@ -162,6 +177,22 @@ void platform_gpio_set_direction(uint32_t gpio, mcual_gpio_direction_t direction
   {
     mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN2, direction);
   }
+  if(gpio & PLATFORM_GPIO_ALARM0)
+  {
+    mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN4, direction);
+  }
+  if(gpio & PLATFORM_GPIO_ALARM1)
+  {
+    mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN8, direction);
+  }
+  if(gpio & PLATFORM_GPIO_ALARM2)
+  {
+    mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN9, direction);
+  }
+  if(gpio & PLATFORM_GPIO_ALARM3)
+  {
+    mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN7, direction);
+  }
 }
 
 void platform_gpio_set(uint32_t gpio)
@@ -221,6 +252,22 @@ void platform_gpio_set(uint32_t gpio)
   if(gpio & PLATFORM_GPIO_COLOR)
   {
     mcual_gpio_set(MCUAL_GPIOC, MCUAL_GPIO_PIN2);
+  }
+  if(gpio & PLATFORM_GPIO_ALARM0)
+  {
+    mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN4);
+  }
+  if(gpio & PLATFORM_GPIO_ALARM1)
+  {
+    mcual_gpio_set(MCUAL_GPIOC, MCUAL_GPIO_PIN8);
+  }
+  if(gpio & PLATFORM_GPIO_ALARM2)
+  {
+    mcual_gpio_set(MCUAL_GPIOC, MCUAL_GPIO_PIN9);
+  }
+  if(gpio & PLATFORM_GPIO_ALARM3)
+  {
+    mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN7);
   }
 }
 
@@ -282,6 +329,23 @@ void platform_gpio_clear(uint32_t gpio)
   {
     mcual_gpio_clear(MCUAL_GPIOC, MCUAL_GPIO_PIN2);
   }
+  if(gpio & PLATFORM_GPIO_ALARM0)
+  {
+    mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN4);
+  }
+  if(gpio & PLATFORM_GPIO_ALARM1)
+  {
+    mcual_gpio_clear(MCUAL_GPIOC, MCUAL_GPIO_PIN8);
+  }
+  if(gpio & PLATFORM_GPIO_ALARM2)
+  {
+    mcual_gpio_clear(MCUAL_GPIOC, MCUAL_GPIO_PIN9);
+  }
+  if(gpio & PLATFORM_GPIO_ALARM3)
+  {
+    mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN7);
+  }
+
 }
 
 void platform_gpio_toogle(uint32_t gpio)
@@ -342,6 +406,23 @@ void platform_gpio_toogle(uint32_t gpio)
   {
     mcual_gpio_toogle(MCUAL_GPIOC, MCUAL_GPIO_PIN2);
   }
+  if(gpio & PLATFORM_GPIO_ALARM0)
+  {
+    mcual_gpio_toogle(MCUAL_GPIOD, MCUAL_GPIO_PIN4);
+  }
+  if(gpio & PLATFORM_GPIO_ALARM1)
+  {
+    mcual_gpio_toogle(MCUAL_GPIOC, MCUAL_GPIO_PIN8);
+  }
+  if(gpio & PLATFORM_GPIO_ALARM2)
+  {
+    mcual_gpio_toogle(MCUAL_GPIOC, MCUAL_GPIO_PIN9);
+  }
+  if(gpio & PLATFORM_GPIO_ALARM3)
+  {
+    mcual_gpio_toogle(MCUAL_GPIOD, MCUAL_GPIO_PIN7);
+  }
+
 }
 
 uint32_t platform_gpio_get(uint32_t gpio)
@@ -404,6 +485,23 @@ uint32_t platform_gpio_get(uint32_t gpio)
   {
     value |= mcual_gpio_get(MCUAL_GPIOC, MCUAL_GPIO_PIN2) ? PLATFORM_GPIO_COLOR : 0;
   }
+  if(gpio & PLATFORM_GPIO_ALARM0)
+  {
+    value |= mcual_gpio_get(MCUAL_GPIOD, MCUAL_GPIO_PIN4) ? PLATFORM_GPIO_ALARM0 : 0;
+  }
+  if(gpio & PLATFORM_GPIO_ALARM1)
+  {
+    value |= mcual_gpio_get(MCUAL_GPIOC, MCUAL_GPIO_PIN8) ? PLATFORM_GPIO_ALARM1 : 0;
+  }
+  if(gpio & PLATFORM_GPIO_ALARM2)
+  {
+    value |= mcual_gpio_get(MCUAL_GPIOC, MCUAL_GPIO_PIN9) ? PLATFORM_GPIO_ALARM2 : 0;
+  }
+  if(gpio & PLATFORM_GPIO_ALARM3)
+  {
+    value |= mcual_gpio_get(MCUAL_GPIOD, MCUAL_GPIO_PIN7) ? PLATFORM_GPIO_ALARM3 : 0;
+  }
+
 
   return value;
 }
@@ -427,4 +525,15 @@ int32_t platform_adc_get_mV(uint32_t adc)
   }
 
   return raw / 1000;
+}
+
+void platform_spi_slave_select(uint8_t select)
+{
+  mcual_gpio_set(MCUAL_GPIOD, select & 0x0F); 
+  mcual_gpio_clear(MCUAL_GPIOD, (~select) & 0x0F); 
+}
+
+uint8_t platform_spi_slave_transfert(uint8_t data)
+{
+  return mcual_spi_master_transfert(MCUAL_SPI3, data);
 }
