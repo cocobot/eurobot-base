@@ -20,14 +20,26 @@
 void blink(void * arg)
 {
   (void)arg;
+  int test = 0;
   while(1)
   {
-    platform_led_toggle(PLATFORM_LED2 | PLATFORM_LED1);
-    vTaskDelay(500 / portTICK_PERIOD_MS);
+    //update lcd
+    cocobot_lcd_clear();
+    
+    //draw test line
+    cocobot_lcd_draw_line(COCOBOT_LCD_X_MAX / 2, 0, COCOBOT_LCD_X_MAX / 2, COCOBOT_LCD_Y_MAX - 1);
 
+    //draw test text
+    cocobot_lcd_print(12, 12, "Cocobot %u", test++);
 
+    cocobot_lcd_render();
+
+    //toggle led
     cocobot_console_send_asynchronous("test", "plop");
-    printf("test\n");
+    platform_led_toggle(PLATFORM_LED2 | PLATFORM_LED1);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+
+
   }
 }
 
@@ -40,6 +52,7 @@ int console_handler(const char * cmd)
 int main(void) 
 {
   platform_init();
+  cocobot_lcd_init();
   cocobot_console_init(MCUAL_USART1, 1, console_handler);
 
   xTaskCreate(blink, "blink", 200, NULL, 1, NULL );
