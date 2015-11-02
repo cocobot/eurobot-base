@@ -54,6 +54,7 @@ int main(void)
   platform_init();
   cocobot_lcd_init();
   cocobot_console_init(MCUAL_USART1, 1, console_handler);
+  cocobot_trajectory_init(3);
 
   xTaskCreate(blink, "blink", 200, NULL, 1, NULL );
 
@@ -69,7 +70,6 @@ int main(void)
   lcdInit();
   fieldInit();
   posInit(position_computed_hook);
-  trajectoryInit();
   asservInit();
   mecaInit();
   stepInit();
