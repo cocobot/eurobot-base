@@ -53,6 +53,9 @@
 #define PLATFORM_SPI_CS10_SELECT     10
 #define PLATFORM_SPI_CS11_SELECT     11
 #define PLATFORM_SPI_CS12_SELECT     12
+#define PLATFORM_SPI_ENCR_SELECT      1
+#define PLATFORM_SPI_ENCL_SELECT      2
+#define PLATFORM_SPI_ENCG_SELECT      3
 
 void platform_init(void);
 void platform_led_toggle(uint8_t led);
@@ -67,6 +70,9 @@ uint32_t platform_gpio_get(uint32_t gpio);
 
 int32_t platform_adc_get_mV(uint32_t adc);
 
+
+void platform_spi_position_select(uint8_t select);
+uint8_t platform_spi_position_transfert(uint8_t data);
 
 void platform_spi_slave_select(uint8_t select);
 uint8_t platform_spi_slave_transfert(uint8_t data);

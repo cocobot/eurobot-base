@@ -1,10 +1,19 @@
+#include <FreeRTOS.h>
+#include <semphr.h>
 #include "platform.h"
 
 #define PLATFORM_MAIN_CLOCK_KHZ 168000
 
+//mutexes for spi access
+static SemaphoreHandle_t mutex_spi_slave;
+static SemaphoreHandle_t mutex_spi_position;
 
 void platform_init(void)
 {
+  //init mutexes
+  mutex_spi_position = xSemaphoreCreateMutex();
+  mutex_spi_slave = xSemaphoreCreateMutex();
+
   //init clock
   mcual_clock_init(MCUAL_CLOCK_SOURCE_EXTERNAL, PLATFORM_MAIN_CLOCK_KHZ); 
   
@@ -62,6 +71,16 @@ void platform_init(void)
   mcual_gpio_set_function(MCUAL_GPIOC, MCUAL_GPIO_PIN11, 6);
   mcual_gpio_set_function(MCUAL_GPIOC, MCUAL_GPIO_PIN12, 6);
   mcual_spi_master_init(MCUAL_SPI3, MCUAL_SPI_MODE_3, 400000);
+
+  mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN8 | MCUAL_GPIO_PIN9 | MCUAL_GPIO_PIN10, MCUAL_GPIO_OUTPUT);
+  mcual_gpio_init(MCUAL_GPIOB, MCUAL_GPIO_PIN12, MCUAL_GPIO_INPUT);
+  mcual_gpio_init(MCUAL_GPIOB, MCUAL_GPIO_PIN13 | MCUAL_GPIO_PIN15, MCUAL_GPIO_OUTPUT);
+  platform_spi_slave_select(PLATFORM_SPI_CS_UNSELECT);
+  mcual_gpio_set_function(MCUAL_GPIOB, MCUAL_GPIO_PIN12, 5);
+  mcual_gpio_set_function(MCUAL_GPIOB, MCUAL_GPIO_PIN13, 5);
+  mcual_gpio_set_function(MCUAL_GPIOB, MCUAL_GPIO_PIN14, 5);
+  mcual_spi_master_init(MCUAL_SPI2, MCUAL_SPI_MODE_3, 400000);
+
 }
 
 void platform_led_toggle(uint8_t led)
@@ -297,7 +316,7 @@ void platform_gpio_clear(uint32_t gpio)
   {
     mcual_gpio_clear(MCUAL_GPIOE, MCUAL_GPIO_PIN12);
   }
-    if(gpio & PLATFORM_GPIO6)
+  if(gpio & PLATFORM_GPIO6)
   {
     mcual_gpio_clear(MCUAL_GPIOE, MCUAL_GPIO_PIN13);
   }
@@ -529,11 +548,55 @@ int32_t platform_adc_get_mV(uint32_t adc)
 
 void platform_spi_slave_select(uint8_t select)
 {
+  if(select != PLATFORM_SPI_CS_UNSELECT)
+  {
+    xSemaphoreTake(mutex_spi_slave, portMAX_DELAY);
+  }
+
   mcual_gpio_set(MCUAL_GPIOD, select & 0x0F); 
   mcual_gpio_clear(MCUAL_GPIOD, (~select) & 0x0F); 
+
+  if(select == PLATFORM_SPI_CS_UNSELECT)
+  {
+    xSemaphoreGive(mutex_spi_slave);
+  }
 }
 
 uint8_t platform_spi_slave_transfert(uint8_t data)
 {
   return mcual_spi_master_transfert(MCUAL_SPI3, data);
+}
+
+void platform_spi_position_select(uint8_t select)
+{
+  //reset chip select
+  mcual_gpio_set(MCUAL_GPIOD, (1 << 8) | (1 << 9) | (1 << 10));
+
+  //clear the good one
+  switch(select)
+  {
+    case PLATFORM_SPI_ENCR_SELECT:
+      xSemaphoreTake(mutex_spi_position, portMAX_DELAY);
+      mcual_gpio_clear(MCUAL_GPIOD, (1 << 9));
+      break;
+
+    case PLATFORM_SPI_ENCL_SELECT:
+      xSemaphoreTake(mutex_spi_position, portMAX_DELAY);
+      mcual_gpio_clear(MCUAL_GPIOD, (1 << 8));
+      break;
+
+    case PLATFORM_SPI_ENCG_SELECT:
+      xSemaphoreTake(mutex_spi_position, portMAX_DELAY);
+      mcual_gpio_clear(MCUAL_GPIOD, (1 << 10));
+      break;
+
+    default:
+      xSemaphoreGive(mutex_spi_position);
+      break;
+  }
+}
+
+uint8_t platform_spi_position_transfert(uint8_t data)
+{
+  return mcual_spi_master_transfert(MCUAL_SPI2, data);
 }
