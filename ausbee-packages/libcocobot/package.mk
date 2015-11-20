@@ -19,4 +19,6 @@ LIBCOCOBOT_SRC_FILES+=$(LIBCOCOBOT_FILE_PATH)/src/trajectory/trajectory.c
 LIBCOCOBOT_SRC_FILES+=$(LIBCOCOBOT_FILE_PATH)/src/position/position.c
 LIBCOCOBOT_SRC_FILES+=$(LIBCOCOBOT_FILE_PATH)/src/asserv/asserv.c
 
+GLOBAL_LDFLAGS+=-lm
+
 $(eval $(call pkg-generic,LIBCOCOBOT))

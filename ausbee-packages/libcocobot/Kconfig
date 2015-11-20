@@ -5,5 +5,15 @@ choice
     bool "git"
 endchoice
 
+config LIBCOCOBOT_POSITION_TICK_PER_180DEG
+  int " + Tick / 180deg"
+  depends on LIBCOCOBOT
+  default 1
+
+config LIBCOCOBOT_POSITION_TICK_PER_METER
+  int " + Tick / 1m"
+  depends on LIBCOCOBOT
+  default 1000
+
 
 
