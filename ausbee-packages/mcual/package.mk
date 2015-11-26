@@ -33,4 +33,14 @@ MCUAL_TARGET_SRC_FILES=$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/clock.c \
 								$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/spi.c \
 								$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/arch.c
 
+MCUAL_SIM_SRC_FILES=$(MCUAL_FILE_PATH)/src/sim/clock.c \
+								$(MCUAL_FILE_PATH)/src/sim/gpio.c	 \
+								$(MCUAL_FILE_PATH)/src/sim/adc.c	 \
+								$(MCUAL_FILE_PATH)/src/sim/usart.c \
+								$(MCUAL_FILE_PATH)/src/sim/timer.c \
+								$(MCUAL_FILE_PATH)/src/sim/spi.c \
+								$(MCUAL_FILE_PATH)/src/sim/arch.c
+
+
+
 $(eval $(call pkg-generic,MCUAL))
