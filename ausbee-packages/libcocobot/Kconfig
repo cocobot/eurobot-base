@@ -1,19 +1,86 @@
 choice
-  prompt " + libcocobot version"
+  prompt "+ libcocobot version"
   depends on LIBCOCOBOT
   config LIBCOCOBOT_USE_GIT
     bool "git"
 endchoice
 
 config LIBCOCOBOT_POSITION_TICK_PER_180DEG
-  int " + Tick / 180deg"
+  int "+ Tick / 180deg"
   depends on LIBCOCOBOT
   default 1
 
 config LIBCOCOBOT_POSITION_TICK_PER_METER
-  int " + Tick / 1m"
+  int "+ Tick / 1m"
   depends on LIBCOCOBOT
   default 1000
 
+config LIBCOCOBOT_DIST_RAMP_MAX_SPEED
+  int "+ Distance ramp - maximum speed"
+  depends on LIBCOCOBOT
+  default 0
 
+config LIBCOCOBOT_DIST_RAMP_MAX_ACCEL
+  int "+ Distance ramp - maximum acceleration"
+  depends on LIBCOCOBOT
+  default 0
 
+config LIBCOCOBOT_ANGU_RAMP_MAX_SPEED
+  int "+ Angular ramp - maximum speed"
+  depends on LIBCOCOBOT
+  default 0
+
+config LIBCOCOBOT_ANGU_RAMP_MAX_ACCEL
+  int "+ Angular ramp - maximum acceleration"
+  depends on LIBCOCOBOT
+  default 0
+
+config LIBCOCOBOT_DIST_PID_KP
+  int "+ Distance PID - Kp"
+  depends on LIBCOCOBOT
+  default 0
+
+config LIBCOCOBOT_DIST_PID_KI
+  int "+ Distance PID - Ki"
+  depends on LIBCOCOBOT
+  default 0
+
+config LIBCOCOBOT_DIST_PID_KD
+  int "+ Distance PID - Kd"
+  depends on LIBCOCOBOT
+  default 0
+
+config LIBCOCOBOT_DIST_PID_MAX_INTEGRAL
+  int "+ Distance PID - max integral"
+  depends on LIBCOCOBOT
+  default 0
+
+config LIBCOCOBOT_DIST_PID_MAX_ERROR_FOR_INTEGRATION
+  int "+ Distance PID - max error for integration"
+  depends on LIBCOCOBOT
+  default 0
+
+config LIBCOCOBOT_ANGU_PID_KP
+  int "+ Anguar PID - Kp"
+  depends on LIBCOCOBOT
+  default 0
+
+config LIBCOCOBOT_ANGU_PID_KI
+  int "+ Angular PID - Ki"
+  depends on LIBCOCOBOT
+  default 0
+
+config LIBCOCOBOT_ANGU_PID_KD
+  int "+ Angular PID - Kd"
+  depends on LIBCOCOBOT
+  default 0
+
+config LIBCOCOBOT_ANGU_PID_MAX_INTEGRAL
+  int "+ Angular PID - max integral"
+  depends on LIBCOCOBOT
+  default 0
+
+config LIBCOCOBOT_ANGU_PID_MAX_ERROR_FOR_INTEGRATION
+  int "+ Angular PID - max error for integration"
+  depends on LIBCOCOBOT
+  default 0
