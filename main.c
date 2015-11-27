@@ -35,11 +35,8 @@ void blink(void * arg)
     cocobot_lcd_render();
 
     //toggle led
-    cocobot_console_send_asynchronous("test", "plop");
     platform_led_toggle(PLATFORM_LED2 | PLATFORM_LED1);
     vTaskDelay(100 / portTICK_PERIOD_MS);
-
-
   }
 }
 
@@ -54,9 +51,9 @@ int main(void)
   platform_init();
   cocobot_lcd_init();
   cocobot_console_init(MCUAL_USART1, 1, console_handler);
-  cocobot_position_init(5);
+  cocobot_position_init(3);
   cocobot_asserv_init();
-  cocobot_trajectory_init(4);
+  cocobot_trajectory_init(3);
 
   xTaskCreate(blink, "blink", 200, NULL, 1, NULL );
 
