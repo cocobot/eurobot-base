@@ -128,8 +128,8 @@ void mcual_usart_init(mcual_usart_id_t usart_id, uint32_t baudrate)
 {
   (void)baudrate;
 
-  tx_queues[usart_id] = xQueueCreate(mcual_usart_get_tx_buffer_size(usart_id), sizeof(uint8_t));
-  rx_queues[usart_id] = xQueueCreate(mcual_usart_get_rx_buffer_size(usart_id), sizeof(uint8_t));
+  tx_queues[usart_id] = xQueueCreate(4 * mcual_usart_get_tx_buffer_size(usart_id), sizeof(uint8_t));
+  rx_queues[usart_id] = xQueueCreate(4 * mcual_usart_get_rx_buffer_size(usart_id), sizeof(uint8_t));
 }
 
 
