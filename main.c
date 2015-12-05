@@ -50,10 +50,15 @@ int main(void)
 {
   platform_init();
   cocobot_lcd_init();
-  cocobot_console_init(MCUAL_USART1, 1, console_handler);
+  cocobot_console_init(MCUAL_USART1, 1, 1, console_handler);
   cocobot_position_init(3);
   cocobot_asserv_init();
-  cocobot_trajectory_init(3);
+
+  //TODO: remove me after test (hijack trajectory output for asserv test)
+  cocobot_asserv_set_distance_set_point(999999);
+  cocobot_asserv_set_state(COCOBOT_ASSERV_ENABLE);
+  //cocobot_trajectory_init(3);
+
 
   xTaskCreate(blink, "blink", 200, NULL, 1, NULL );
 
