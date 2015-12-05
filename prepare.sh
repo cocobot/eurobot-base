@@ -16,3 +16,6 @@ mkdir projects
 
 # - brain
 git clone git@github.com:cocobot/pbrain.git projects/pbrain
+
+# - cocoui
+git clone git@github.com:cocobot/cocoui.git projects/cocoui
