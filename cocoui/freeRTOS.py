@@ -1,7 +1,7 @@
 import sys
 if sys.version_info[0] < 3:
     import Tkinter as Tk
-    from tkinter import ttk as ttk
+    import ttk
 else:
     import tkinter as Tk
     from tkinter import ttk as ttk

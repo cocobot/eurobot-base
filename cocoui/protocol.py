@@ -1,5 +1,10 @@
+import sys
+if sys.version_info[0] < 3:
+    import Queue as queue
+else:
+    import queue
+
 import socket
-import queue
 import threading
 
 DEBUG = False
@@ -82,7 +87,10 @@ class TCPProtocol(Protocol):
                 buf = ''
                 while True:
                     try:
-                        data = str(chr(self.socket.recv(1)[0]))
+                        if sys.version_info[0] < 3:
+                            data = self.socket.recv(1)[0]
+                        else:
+                            data = str(chr(self.socket.recv(1)[0]))
                         if(data == "\n"):
                             if data[0] == '#':
                                 self.process_async(buf)
@@ -103,7 +111,11 @@ class TCPProtocol(Protocol):
             buf = ''
             while True:
                 try:
-                    data = str(chr(self.socket.recv(1)[0]))
+                    if sys.version_info[0] < 3:
+                        data = self.socket.recv(1)[0]
+                    else:
+                        data = str(chr(self.socket.recv(1)[0]))
+
                     if(data == "\n"):
                         self.process_async(buf)
                         buf = ''
