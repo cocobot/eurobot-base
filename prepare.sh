@@ -19,3 +19,6 @@ git clone git@github.com:cocobot/pbrain.git projects/pbrain
 
 # - cocoui
 git clone git@github.com:cocobot/cocoui.git projects/cocoui
+
+# - cocosim
+git clone git@github.com:shazame/cocosim.git projects/cocosim
