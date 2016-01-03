@@ -35,10 +35,13 @@ class Asserv(UI):
         self.debug_distance_pid = Tk.IntVar()
         self.debug_angular_pid = Tk.IntVar()
         Tk.Checkbutton(group, text="Debug distance ramp", variable=self.debug_distance_ramp, command=self.update_enable).grid(row=0, column=0)
-        Tk.Checkbutton(group, text="Debug angular ramp", variable=self.debug_angular_ramp, command=self.update_enable).grid(row=0, column=1)
+        Tk.Checkbutton(group, text="Debug angular ramp", variable=self.debug_angular_ramp, command=self.update_enable).grid(row=0, column=2)
         Tk.Checkbutton(group, text="Debug distance PID", variable=self.debug_distance_pid, command=self.update_enable).grid(row=1, column=0)
-        Tk.Checkbutton(group, text="Debug angular PID", variable=self.debug_angular_pid, command=self.update_enable).grid(row=1, column=1)
+        Tk.Checkbutton(group, text="Debug angular PID", variable=self.debug_angular_pid, command=self.update_enable).grid(row=1, column=2)
 
+        #create pause button
+        self.pause_animation = False
+        Tk.Button(group, text="Pause", command=self.toggle_pause_animation).grid(row=0, column=1)
 
         #create charts
         self.figure = Figure()
@@ -104,10 +107,18 @@ class Asserv(UI):
             storage['data'][i] = storage['data'][i][1:] + [data[i - 1]]
 
 
+    def toggle_pause_animation(self):
+        if self.pause_animation:
+            self.pause_animation = False
+        else:
+            self.pause_animation = True
+
+
     def animate(self, i):
         now = time.time() - self.start
-        self.animate_ramp(now, self.plot_dr)
-        self.animate_ramp(now, self.plot_ar)
+        if not self.pause_animation:
+            self.animate_ramp(now, self.plot_dr)
+            self.animate_ramp(now, self.plot_ar)
 
     
     def animate_ramp(self, now, storage):
