@@ -55,10 +55,15 @@ int main(void)
   cocobot_asserv_init();
 
   //TODO: remove me after test (hijack trajectory output for asserv test)
-  cocobot_asserv_set_distance_set_point(999999);
+  //cocobot_asserv_set_distance_set_point(-100);
+  //cocobot_asserv_set_angular_set_point(100);
   cocobot_asserv_set_state(COCOBOT_ASSERV_ENABLE);
-  //cocobot_trajectory_init(3);
+  cocobot_trajectory_init(3);
 
+  cocobot_trajectory_goto_d(50,  -1);
+  cocobot_trajectory_goto_d(100, -1);
+  cocobot_trajectory_goto_d(-70, -1);
+  cocobot_trajectory_goto_d(-80, -1);
 
   xTaskCreate(blink, "blink", 200, NULL, 1, NULL );
 
