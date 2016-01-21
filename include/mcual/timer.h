@@ -14,11 +14,14 @@ typedef uint32_t mcual_timer_channel_t;
 #define MCUAL_TIMER5 ((mcual_timer_t) 5)
 #define MCUAL_TIMER6 ((mcual_timer_t) 6)
 #define MCUAL_TIMER7 ((mcual_timer_t) 7)
+#define MCUAL_TIMER8 ((mcual_timer_t) 8)
+#define MCUAL_TIMER9 ((mcual_timer_t) 9)
 
 #define MCUAL_TIMER_CHANNEL0   (((mcual_timer_channel_t)1) << 0)
 #define MCUAL_TIMER_CHANNEL1   (((mcual_timer_channel_t)1) << 1)
 #define MCUAL_TIMER_CHANNEL2   (((mcual_timer_channel_t)1) << 2)
 #define MCUAL_TIMER_CHANNEL3   (((mcual_timer_channel_t)1) << 3)
+#define MCUAL_TIMER_CHANNEL4   (((mcual_timer_channel_t)1) << 4)
 
 
 void mcual_timer_init(mcual_timer_t timer, uint32_t freq_Hz);
