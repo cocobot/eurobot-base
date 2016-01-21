@@ -45,6 +45,23 @@ void platform_init(void)
   mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN8, MCUAL_GPIO_INPUT);
   mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN9, MCUAL_GPIO_INPUT);
   mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN7, MCUAL_GPIO_INPUT);
+  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN2, MCUAL_GPIO_INPUT);
+  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN3, MCUAL_GPIO_INPUT);
+  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN4, MCUAL_GPIO_INPUT);
+  
+  //init motor pwm pins
+  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN5, MCUAL_GPIO_OUTPUT);
+  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN6, MCUAL_GPIO_OUTPUT);
+  mcual_gpio_set_function(MCUAL_GPIOE, MCUAL_GPIO_PIN5, 3);
+  mcual_gpio_set_function(MCUAL_GPIOE, MCUAL_GPIO_PIN6, 3);
+  //set motors default frequency and duty cycle
+  platform_gpio_set_direction(PLATFORM_GPIO_MOTOR_DIR_RIGHT | PLATFORM_GPIO_MOTOR_DIR_LEFT | PLATFORM_GPIO_MOTOR_ENABLE, MCUAL_GPIO_OUTPUT);
+  platform_gpio_clear(PLATFORM_GPIO_MOTOR_DIR_RIGHT | PLATFORM_GPIO_MOTOR_DIR_LEFT | PLATFORM_GPIO_MOTOR_ENABLE);
+  platform_motor_set_frequency(20000);
+  mcual_timer_enable_channel(MCUAL_TIMER9, MCUAL_TIMER_CHANNEL1 | MCUAL_TIMER_CHANNEL2);
+  platform_motor_set_left_duty_cycle(0x7FFF);
+  platform_motor_set_right_duty_cycle(0x7FFF);
+
 
   //init uart dbg pins
   mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN9, MCUAL_GPIO_OUTPUT);
@@ -81,6 +98,7 @@ void platform_init(void)
   mcual_gpio_set_function(MCUAL_GPIOB, MCUAL_GPIO_PIN14, 5);
   mcual_spi_master_init(MCUAL_SPI2, MCUAL_SPI_MODE_3, 400000);
 
+  
 }
 
 void platform_led_toggle(uint8_t led)
@@ -212,6 +230,18 @@ void platform_gpio_set_direction(uint32_t gpio, mcual_gpio_direction_t direction
   {
     mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN7, direction);
   }
+  if(gpio & PLATFORM_GPIO_MOTOR_DIR_RIGHT)
+  {
+    mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN4, direction);
+  }
+  if(gpio & PLATFORM_GPIO_MOTOR_DIR_LEFT)
+  {
+    mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN3, direction);
+  }
+  if(gpio & PLATFORM_GPIO_MOTOR_ENABLE)
+  {
+    mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN2, direction);
+  }
 }
 
 void platform_gpio_set(uint32_t gpio)
@@ -287,6 +317,18 @@ void platform_gpio_set(uint32_t gpio)
   if(gpio & PLATFORM_GPIO_ALARM3)
   {
     mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN7);
+  }
+  if(gpio & PLATFORM_GPIO_MOTOR_DIR_RIGHT)
+  {
+    mcual_gpio_set(MCUAL_GPIOE, MCUAL_GPIO_PIN4);
+  }
+  if(gpio & PLATFORM_GPIO_MOTOR_DIR_LEFT)
+  {
+    mcual_gpio_set(MCUAL_GPIOE, MCUAL_GPIO_PIN3);
+  }
+  if(gpio & PLATFORM_GPIO_MOTOR_ENABLE)
+  {
+    mcual_gpio_set(MCUAL_GPIOE, MCUAL_GPIO_PIN2);
   }
 }
 
@@ -364,7 +406,18 @@ void platform_gpio_clear(uint32_t gpio)
   {
     mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN7);
   }
-
+  if(gpio & PLATFORM_GPIO_MOTOR_DIR_RIGHT)
+  {
+    mcual_gpio_clear(MCUAL_GPIOE, MCUAL_GPIO_PIN4);
+  }
+  if(gpio & PLATFORM_GPIO_MOTOR_DIR_LEFT)
+  {
+    mcual_gpio_clear(MCUAL_GPIOE, MCUAL_GPIO_PIN3);
+  }
+  if(gpio & PLATFORM_GPIO_MOTOR_ENABLE)
+  {
+    mcual_gpio_clear(MCUAL_GPIOE, MCUAL_GPIO_PIN2);
+  }
 }
 
 void platform_gpio_toogle(uint32_t gpio)
@@ -441,7 +494,18 @@ void platform_gpio_toogle(uint32_t gpio)
   {
     mcual_gpio_toogle(MCUAL_GPIOD, MCUAL_GPIO_PIN7);
   }
-
+  if(gpio & PLATFORM_GPIO_MOTOR_DIR_RIGHT)
+  {
+    mcual_gpio_toogle(MCUAL_GPIOE, MCUAL_GPIO_PIN4);
+  }
+  if(gpio & PLATFORM_GPIO_MOTOR_DIR_LEFT)
+  {
+    mcual_gpio_toogle(MCUAL_GPIOE, MCUAL_GPIO_PIN3);
+  }
+  if(gpio & PLATFORM_GPIO_MOTOR_ENABLE)
+  {
+    mcual_gpio_toogle(MCUAL_GPIOE, MCUAL_GPIO_PIN2);
+  }
 }
 
 uint32_t platform_gpio_get(uint32_t gpio)
@@ -520,7 +584,18 @@ uint32_t platform_gpio_get(uint32_t gpio)
   {
     value |= mcual_gpio_get(MCUAL_GPIOD, MCUAL_GPIO_PIN7) ? PLATFORM_GPIO_ALARM3 : 0;
   }
-
+  if(gpio & PLATFORM_GPIO_MOTOR_DIR_RIGHT)
+  {
+    value |= mcual_gpio_get(MCUAL_GPIOE, MCUAL_GPIO_PIN4) ? PLATFORM_GPIO_MOTOR_DIR_RIGHT : 0;
+  }
+  if(gpio & PLATFORM_GPIO_MOTOR_DIR_LEFT)
+  {
+    value |= mcual_gpio_get(MCUAL_GPIOE, MCUAL_GPIO_PIN3) ? PLATFORM_GPIO_MOTOR_DIR_LEFT : 0;
+  }
+  if(gpio & PLATFORM_GPIO_MOTOR_ENABLE)
+  {
+    value |= mcual_gpio_get(MCUAL_GPIOE, MCUAL_GPIO_PIN2) ? PLATFORM_GPIO_MOTOR_ENABLE : 0;
+  }
 
   return value;
 }
@@ -599,4 +674,18 @@ void platform_spi_position_select(uint8_t select)
 uint8_t platform_spi_position_transfert(uint8_t data)
 {
   return mcual_spi_master_transfert(MCUAL_SPI2, data);
+}
+
+void platform_motor_set_frequency(uint32_t freq_Hz)
+{
+  mcual_timer_init(MCUAL_TIMER9, freq_Hz);
+}
+
+void platform_motor_set_left_duty_cycle(uint32_t duty_cycle)
+{
+  mcual_timer_set_duty_cycle(MCUAL_TIMER9, MCUAL_TIMER_CHANNEL1, duty_cycle);
+}
+void platform_motor_set_right_duty_cycle(uint32_t duty_cycle)
+{
+  mcual_timer_set_duty_cycle(MCUAL_TIMER9, MCUAL_TIMER_CHANNEL2, duty_cycle);
 }
