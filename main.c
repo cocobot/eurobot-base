@@ -21,6 +21,9 @@ void blink(void * arg)
 {
   (void)arg;
   int test = 0;
+  platform_gpio_set(PLATFORM_GPIO_MOTOR_ENABLE);
+  platform_gpio_set(PLATFORM_GPIO_MOTOR_DIR_RIGHT);
+  platform_gpio_clear(PLATFORM_GPIO_MOTOR_DIR_LEFT);
   while(1)
   {
     //update lcd
@@ -37,6 +40,21 @@ void blink(void * arg)
     //toggle led
     platform_led_toggle(PLATFORM_LED2 | PLATFORM_LED1);
     vTaskDelay(100 / portTICK_PERIOD_MS);
+
+    if((test * 0x100) & 0x1000)
+    {
+      platform_gpio_clear(PLATFORM_GPIO_MOTOR_DIR_RIGHT);
+      platform_gpio_clear(PLATFORM_GPIO_MOTOR_DIR_LEFT);
+      platform_motor_set_left_duty_cycle((test * 0x100) & 0x0fff);
+      platform_motor_set_right_duty_cycle((test * 0x100) & 0x0fff);
+    }
+    else
+    {
+      platform_gpio_set(PLATFORM_GPIO_MOTOR_DIR_RIGHT);
+      platform_gpio_set(PLATFORM_GPIO_MOTOR_DIR_LEFT);
+      platform_motor_set_left_duty_cycle((test * 0x100) & 0x0fff);
+      platform_motor_set_right_duty_cycle((test * 0x100) & 0x0fff);
+    }
   }
 }
 
