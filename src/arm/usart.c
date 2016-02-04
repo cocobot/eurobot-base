@@ -15,11 +15,18 @@
 #ifdef CONFIG_MCUAL_USART_USE_FREERTOS_QUEUES
 QueueHandle_t tx_queues[MCUAL_USART_NUMBER];
 QueueHandle_t rx_queues[MCUAL_USART_NUMBER];
+#else
+volatile uint8_t * tx_buffer[MCUAL_USART_NUMBER];
+volatile uint8_t * rx_buffer[MCUAL_USART_NUMBER];
+volatile int32_t tx_buffer_read[MCUAL_USART_NUMBER];
+volatile int32_t tx_buffer_write[MCUAL_USART_NUMBER];
+volatile int32_t rx_buffer_read[MCUAL_USART_NUMBER];
+volatile int32_t rx_buffer_write[MCUAL_USART_NUMBER];
 #endif
 
 
 #ifdef CONFIG_MCUAL_USART_USE_FREERTOS_QUEUES
-#define generateIRQHandler(id, name)  \
+#define generateIRQHandler(n, id, name)  \
 void name ## _IRQHandler(void)\
 {\
   uint32_t sr = name->SR;\
@@ -46,32 +53,67 @@ void name ## _IRQHandler(void)\
   }\
 }
 #else
-#error not implemented yet
+#define generateIRQHandler(n, id, name)  \
+uint8_t tx_buffer_##n[CONFIG_MCUAL_USART_ ## n ## _TX_SIZE];\
+uint8_t rx_buffer_##n[CONFIG_MCUAL_USART_ ## n ## _RX_SIZE];\
+void name ## _IRQHandler(void)\
+{\
+  uint32_t sr = name->SR;\
+\
+  if(sr & USART_SR_TXE)\
+  {\
+\
+    if(tx_buffer_read[id] != tx_buffer_write[id])\
+    {\
+      name->DR = tx_buffer_##n[tx_buffer_read[id]];\
+      tx_buffer_read[id] += 1;\
+      if(tx_buffer_read[id] >= CONFIG_MCUAL_USART_##n##_TX_SIZE)\
+      {\
+        tx_buffer_read[id] = 0;\
+      }\
+    }\
+    else\
+    {\
+      name->CR1 &= ~USART_CR1_TXEIE;\
+    }\
+  }\
+\
+  if(sr & (USART_SR_RXNE | USART_SR_ORE)) \
+  {\
+    name->SR &= ~(USART_SR_RXNE | USART_SR_ORE);\
+    rx_buffer_##n[rx_buffer_write[id]] = name->DR;\
+    rx_buffer_write[id] += 1;\
+    if(rx_buffer_write[id] >= CONFIG_MCUAL_USART_##n##_RX_SIZE)\
+    {\
+      rx_buffer_write[id] = 0;\
+    }\
+  }\
+}
 #endif
 
 #ifdef CONFIG_MCUAL_USART_1
-generateIRQHandler(MCUAL_USART1, USART1);
+generateIRQHandler(1, MCUAL_USART1, USART1);
 #endif
 #ifdef CONFIG_MCUAL_USART_2
-generateIRQHandler(MCUAL_USART2, USART2);
+generateIRQHandler(2, MCUAL_USART2, USART2);
 #endif
 #ifdef CONFIG_MCUAL_USART_3
-generateIRQHandler(MCUAL_USART3, USART3);
+generateIRQHandler(3, MCUAL_USART3, USART3);
 #endif
 #ifdef CONFIG_MCUAL_USART_4
-generateIRQHandler(MCUAL_USART4, UART4);
+generateIRQHandler(4, MCUAL_USART4, UART4);
 #endif
 #ifdef CONFIG_MCUAL_USART_5
-generateIRQHandler(MCUAL_USART5, UART5);
+generateIRQHandler(5, MCUAL_USART5, UART5);
 #endif
 #ifdef CONFIG_MCUAL_USART_6
-generateIRQHandler(MCUAL_USART6, USART6);
+generateIRQHandler(6, MCUAL_USART6, USART6);
 #endif
 #ifdef CONFIG_MCUAL_USART_7
-generateIRQHandler(MCUAL_USART7, UART7);
+generateIRQHandler(7, MCUAL_USART7, UART7);
 #endif
 #ifdef CONFIG_MCUAL_USART_8
-generateIRQHandler(MCUAL_USART8, UART8);
+generateIRQHandler(8, MCUAL_USART8, UART8);
 #endif
 
 static USART_TypeDef * mcual_usart_get_register(mcual_usart_id_t usart_id)
@@ -276,7 +318,69 @@ void mcual_usart_init(mcual_usart_id_t usart_id, uint32_t baudrate)
   tx_queues[usart_id] = xQueueCreate(mcual_usart_get_tx_buffer_size(usart_id), sizeof(uint8_t));
   rx_queues[usart_id] = xQueueCreate(mcual_usart_get_rx_buffer_size(usart_id), sizeof(uint8_t));
 #else
-#error not implemented yet
+  switch(usart_id)
+  {
+  #ifdef CONFIG_MCUAL_USART_1
+    case MCUAL_USART1:
+      tx_buffer[usart_id] = tx_buffer_1;
+      rx_buffer[usart_id] = rx_buffer_1;
+      break;
+  #endif
+  
+  #ifdef CONFIG_MCUAL_USART_2
+    case MCUAL_USART2:
+      tx_buffer[usart_id] = tx_buffer_2;
+      rx_buffer[usart_id] = rx_buffer_2;
+      break;
+  #endif
+  
+  #ifdef CONFIG_MCUAL_USART_3
+    case MCUAL_USART3:
+      tx_buffer[usart_id] = tx_buffer_3;
+      rx_buffer[usart_id] = rx_buffer_3;
+      break;
+  #endif
+  
+  #ifdef CONFIG_MCUAL_USART_4
+    case MCUAL_USART4:
+      tx_buffer[usart_id] = tx_buffer_4;
+      rx_buffer[usart_id] = rx_buffer_4;
+      break;
+  #endif
+  
+  #ifdef CONFIG_MCUAL_USART_5
+    case MCUAL_USART5:
+      tx_buffer[usart_id] = tx_buffer_5;
+      rx_buffer[usart_id] = rx_buffer_5;
+      break;
+  #endif
+  
+  #ifdef CONFIG_MCUAL_USART_6
+    case MCUAL_USART6:
+      tx_buffer[usart_id] = tx_buffer_6;
+      rx_buffer[usart_id] = rx_buffer_6;
+      break;
+  #endif
+  
+  #ifdef CONFIG_MCUAL_USART_7
+    case MCUAL_USART7:
+      tx_buffer[usart_id] = tx_buffer_7;
+      rx_buffer[usart_id] = rx_buffer_7;
+      break;
+  #endif
+  
+  #ifdef CONFIG_MCUAL_USART_8
+    case MCUAL_USART8:
+      tx_buffer[usart_id] = tx_buffer_8;
+      rx_buffer[usart_id] = rx_buffer_8;
+      break;
+  #endif
+  }
+
+  tx_buffer_read[usart_id] = 0;
+  tx_buffer_write[usart_id] = 0;
+  rx_buffer_read[usart_id] = 0;
+  rx_buffer_write[usart_id] = 0;
 #endif
 
   USART_TypeDef * reg = mcual_usart_get_register(usart_id);
@@ -351,21 +455,36 @@ void mcual_usart_init(mcual_usart_id_t usart_id, uint32_t baudrate)
 void mcual_usart_send(mcual_usart_id_t usart_id, uint8_t byte)
 {
   USART_TypeDef * reg = mcual_usart_get_register(usart_id);
-
 #ifdef CONFIG_MCUAL_USART_USE_FREERTOS_QUEUES
   xQueueSend(tx_queues[usart_id], &byte, portMAX_DELAY);
-  reg->CR1 |= USART_CR1_TXEIE;
-
 #else
-  (void)usart_id;
-  (void)byte;
-  (void)reg;
-#error not implemented yet
-#endif
+  int done = 0;
+  while(!done)
+  {
+    done = 0;
+    int32_t next_write = tx_buffer_write[usart_id] + 1;
 
-  (void)usart_id;
-  (void)byte;
-  (void)reg;
+    if(next_write >= mcual_usart_get_tx_buffer_size(usart_id))
+    {
+      next_write = 0;
+    }
+
+    __disable_irq();
+    if(next_write != tx_buffer_read[usart_id])
+    {
+      volatile uint8_t * buffer = tx_buffer[usart_id];
+      buffer[tx_buffer_write[usart_id]] = byte;
+      tx_buffer_write[usart_id] = next_write;
+      done = 1;
+    }
+    else
+    {
+      reg->CR1 |= USART_CR1_TXEIE;
+    }
+    __enable_irq();
+  }
+#endif
+  reg->CR1 |= USART_CR1_TXEIE;
 }
 
 uint8_t mcual_usart_recv(mcual_usart_id_t usart_id)
@@ -374,8 +493,12 @@ uint8_t mcual_usart_recv(mcual_usart_id_t usart_id)
 #ifdef CONFIG_MCUAL_USART_USE_FREERTOS_QUEUES
   xQueueReceive(rx_queues[usart_id], &byte, portMAX_DELAY);
 #else
-  (void)usart_id;
-  byte = 0;
+  int16_t r = -1;
+  while(r == -1)
+  {
+    r = mcual_usart_recv_no_wait(usart_id);
+  }
+  byte = r;
 #endif
   return byte;
 }
@@ -390,9 +513,20 @@ int16_t mcual_usart_recv_no_wait(mcual_usart_id_t usart_id)
   }
   return byte;
 #else
-  (void)usart_id;
+  int16_t byte = -1;
+  __disable_irq();
+  if(rx_buffer_read[usart_id] != rx_buffer_write[usart_id])
+  {
+    byte = rx_buffer[usart_id][rx_buffer_read[usart_id]];
+    rx_buffer_read[usart_id] += 1;
+    if(rx_buffer_read[usart_id] >= mcual_usart_get_rx_buffer_size(usart_id))
+    {
+      rx_buffer_read[usart_id] = 0;
+    }
+  }
+  __enable_irq();
+  return byte;
 #endif
-  return -1;
 }
 
 #endif
