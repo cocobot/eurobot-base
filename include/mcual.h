@@ -8,5 +8,6 @@
 #include <mcual/timer.h>
 #include <mcual/spi.h>
 #include <mcual/arch.h>
+#include <mcual/loader.h>
 
 #endif// MCUAL_H
