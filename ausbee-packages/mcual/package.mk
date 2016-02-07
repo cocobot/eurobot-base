@@ -45,3 +45,8 @@ MCUAL_SIM_SRC_FILES=$(MCUAL_FILE_PATH)/src/sim/clock.c \
 
 
 $(eval $(call pkg-generic,MCUAL))
+
+
+#create loader rule
+loader: $(OUTPUT_TARGET_HEX)
+	$(BUILD_PATH)/$(shell echo "MCUAL" | tr A-Z a-z)/$(MCUAL_FILE_PATH)/scripts/mcual_loader.py $(PROGRAM_SERIAL_INTERFACE) $(OUTPUT_TARGET_HEX)
