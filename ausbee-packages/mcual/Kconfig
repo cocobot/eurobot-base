@@ -175,5 +175,13 @@ config MCUAL_USART_8_TX_SIZE
   depends on MCUAL_USART_8
   default 8
 
-comment "USART need clock module"
+comment "USART needs clock module"
 depends on MCUAL && !MCUAL_CLOCK
+
+config MCUAL_LOADER
+	bool "+ Loader"
+	default n
+	depends on MCUAL && MCUAL_USART
+
+comment "Loader needs USART module"
+depends on MCUAL && !MCUAL_USART
