@@ -65,7 +65,7 @@ void platform_init(void)
   platform_gpio_set_direction(PLATFORM_GPIO_MOTOR_DIR_RIGHT | PLATFORM_GPIO_MOTOR_DIR_LEFT | PLATFORM_GPIO_MOTOR_ENABLE, MCUAL_GPIO_OUTPUT);
   platform_gpio_clear(PLATFORM_GPIO_MOTOR_DIR_RIGHT | PLATFORM_GPIO_MOTOR_DIR_LEFT | PLATFORM_GPIO_MOTOR_ENABLE);
 #ifdef CONFIG_MCUAL_TIMER
-  platform_motor_set_frequency(10000);
+  platform_motor_set_frequency(20000);
   mcual_timer_enable_channel(MCUAL_TIMER9, MCUAL_TIMER_CHANNEL1 | MCUAL_TIMER_CHANNEL2);
   platform_motor_set_left_duty_cycle(0x0000);
   platform_motor_set_right_duty_cycle(0x0000);
