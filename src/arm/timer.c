@@ -44,7 +44,58 @@ void mcual_timer_init(mcual_timer_t timer, uint32_t freq_Hz)
 {
   TIM_TypeDef * reg = mcual_timer_get_register(timer);
 
-  reg->ARR = mcual_clock_get_frequency_Hz(MCUAL_CLOCK_PERIPHERAL_1) / freq_Hz;
+  mcual_clock_id_t clock = MCUAL_CLOCK_PERIPHERAL_1;
+  
+  //enable clock
+  switch(timer)
+  {
+    case MCUAL_TIMER1:
+      RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
+      clock = MCUAL_CLOCK_PERIPHERAL_2;
+      break;
+
+    case MCUAL_TIMER2:
+      RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
+      clock = MCUAL_CLOCK_PERIPHERAL_1;
+      break;
+
+    case MCUAL_TIMER3:
+      RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
+      clock = MCUAL_CLOCK_PERIPHERAL_1;
+      break;
+
+    case MCUAL_TIMER4:
+      RCC->APB1ENR |= RCC_APB1ENR_TIM4EN;
+      clock = MCUAL_CLOCK_PERIPHERAL_1;
+      break;
+
+    case MCUAL_TIMER5:
+      RCC->APB1ENR |= RCC_APB1ENR_TIM5EN;
+      clock = MCUAL_CLOCK_PERIPHERAL_1;
+      break;
+
+    case MCUAL_TIMER6:
+      RCC->APB1ENR |= RCC_APB1ENR_TIM6EN;
+      clock = MCUAL_CLOCK_PERIPHERAL_1;
+      break;
+
+    case MCUAL_TIMER7:
+      RCC->APB1ENR |= RCC_APB1ENR_TIM7EN;
+      clock = MCUAL_CLOCK_PERIPHERAL_1;
+      break;
+
+    case MCUAL_TIMER8:
+      RCC->APB2ENR |= RCC_APB2ENR_TIM8EN;
+      clock = MCUAL_CLOCK_PERIPHERAL_2;
+      break;
+
+    case MCUAL_TIMER9:
+      RCC->APB2ENR |= RCC_APB2ENR_TIM9EN;
+      clock = MCUAL_CLOCK_PERIPHERAL_2;
+      break;
+  }
+
+  reg->ARR = mcual_clock_get_frequency_Hz(clock) * 2 / freq_Hz;
   reg->CNT = 0;
   reg->CR1 = TIM_CR1_CEN;
 }
@@ -54,12 +105,12 @@ void mcual_timer_enable_channel(mcual_timer_t timer, mcual_timer_channel_t chann
   TIM_TypeDef * reg = mcual_timer_get_register(timer);
   if(channel & MCUAL_TIMER_CHANNEL1)
   {
-    reg->CCMR1 |= TIM_CCMR1_OC1M_0;
+    reg->CCMR1 |= TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2;
     reg->CCER |= TIM_CCER_CC1E;
   }
   if(channel & MCUAL_TIMER_CHANNEL2)
   {
-    reg->CCMR1 |= TIM_CCMR1_OC2M_0;
+    reg->CCMR1 |= TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_2;
     reg->CCER |= TIM_CCER_CC2E;
   }
 }
@@ -94,7 +145,7 @@ void mcual_timer_set_duty_cycle(mcual_timer_t timer, mcual_timer_channel_t chann
   if(channel & MCUAL_TIMER_CHANNEL4)
   {
     reg->CCR4 = duty_cycle;
-  }
+ }
 }
 
 #endif
