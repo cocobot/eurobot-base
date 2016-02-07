@@ -38,7 +38,7 @@ void blink(void * arg)
     cocobot_lcd_render();
 
     //toggle led
-    platform_led_toggle(PLATFORM_LED2 | PLATFORM_LED1);
+    platform_led_toggle(PLATFORM_LED2 | PLATFORM_LED1 | PLATFORM_LED0);
     vTaskDelay(100 / portTICK_PERIOD_MS);
 
     if((test * 0x100) & 0x1000)
