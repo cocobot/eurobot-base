@@ -21,9 +21,24 @@ void blink(void * arg)
 {
   (void)arg;
   int test = 0;
-  platform_gpio_set(PLATFORM_GPIO_MOTOR_ENABLE);
-  platform_gpio_set(PLATFORM_GPIO_MOTOR_DIR_RIGHT);
-  platform_gpio_clear(PLATFORM_GPIO_MOTOR_DIR_LEFT);
+
+  platform_led_clear(PLATFORM_LED2);
+  vTaskDelay(2000 / portTICK_PERIOD_MS); 
+  while(1)
+  {
+    platform_led_set(PLATFORM_LED2);
+    cocobot_trajectory_goto_d(50, -1);
+    cocobot_trajectory_goto_d(100, -1);
+    cocobot_trajectory_goto_d(-70, -1);
+    cocobot_trajectory_goto_d(-80, -1);
+    vTaskDelay(5000 / portTICK_PERIOD_MS); 
+  }
+
+  //platform_gpio_set(PLATFORM_GPIO_MOTOR_ENABLE);
+  //platform_gpio_clear(PLATFORM_GPIO_MOTOR_DIR_RIGHT);
+
+  //platform_motor_set_left_duty_cycle(0x750);
+  //platform_motor_set_right_duty_cycle(0x750);
   while(1)
   {
     //update lcd
@@ -33,28 +48,16 @@ void blink(void * arg)
     cocobot_lcd_draw_line(COCOBOT_LCD_X_MAX / 2, 0, COCOBOT_LCD_X_MAX / 2, COCOBOT_LCD_Y_MAX - 1);
 
     //draw test text
-    cocobot_lcd_print(12, 12, "Cocobot %u", test++);
+    cocobot_lcd_print(12, 5, "Cocobot %u", test++);
+   // cocobot_lcd_print(0, 20, "d: %ld mm", (int32_t)cocobot_position_get_distance());
+    cocobot_lcd_print(0, 20, "a: %lX deg", (uint32_t)cocobot_position_get_angle());
+    cocobot_lcd_print(0, 35, "a: %ld deg", (int32_t)cocobot_position_get_angle());
 
     cocobot_lcd_render();
 
     //toggle led
-    platform_led_toggle(PLATFORM_LED2 | PLATFORM_LED1 | PLATFORM_LED0);
+    platform_led_toggle(PLATFORM_LED1 | PLATFORM_LED0);
     vTaskDelay(100 / portTICK_PERIOD_MS);
-
-    if((test * 0x100) & 0x1000)
-    {
-      platform_gpio_clear(PLATFORM_GPIO_MOTOR_DIR_RIGHT);
-      platform_gpio_clear(PLATFORM_GPIO_MOTOR_DIR_LEFT);
-      platform_motor_set_left_duty_cycle((test * 0x100) & 0x0fff);
-      platform_motor_set_right_duty_cycle((test * 0x100) & 0x0fff);
-    }
-    else
-    {
-      platform_gpio_set(PLATFORM_GPIO_MOTOR_DIR_RIGHT);
-      platform_gpio_set(PLATFORM_GPIO_MOTOR_DIR_LEFT);
-      platform_motor_set_left_duty_cycle((test * 0x100) & 0x0fff);
-      platform_motor_set_right_duty_cycle((test * 0x100) & 0x0fff);
-    }
   }
 }
 
@@ -68,157 +71,17 @@ int main(void)
 {
   platform_init();
   cocobot_lcd_init();
-  cocobot_console_init(MCUAL_USART1, 1, 1, console_handler);
   cocobot_position_init(3);
   cocobot_asserv_init();
-
-  //TODO: remove me after test (hijack trajectory output for asserv test)
-  //cocobot_asserv_set_distance_set_point(-100);
-  //cocobot_asserv_set_angular_set_point(100);
-  cocobot_asserv_set_state(COCOBOT_ASSERV_ENABLE);
+  platform_led_clear(PLATFORM_LED2);
   cocobot_trajectory_init(3);
+  cocobot_console_init(MCUAL_USART1, 1, 1, console_handler);
 
-  cocobot_trajectory_goto_d(50,  -1);
-  cocobot_trajectory_goto_d(100, -1);
-  cocobot_trajectory_goto_d(-70, -1);
-  cocobot_trajectory_goto_d(-80, -1);
+  cocobot_asserv_set_state(COCOBOT_ASSERV_ENABLE);
 
   xTaskCreate(blink, "blink", 200, NULL, 1, NULL );
 
   vTaskStartScheduler();
 
   return 0;
-  /*
-  //modules and peripherals initialization
-  dcmInit();
-  pcm9685Init();
-  max11628Init();
-  max7317Init();
-  lcdInit();
-  fieldInit();
-  posInit(position_computed_hook);
-  asservInit();
-  mecaInit();
-  stepInit();
-  usirInit();
-  pathfinderInit();
-  //gyroInit();
-  stratInit();
-
-  lcdPrintln(LCD_WARNING, "Start: robot principal");
-
-
-  trajectorySetSafetymm(0);
-
-
-  switch(stratGetColor())
-  {
-    case STRAT_COLOR_GREEN:
-      stepAction(STEP_ACTION_RESET_GREEN);
-      break;
-
-    case STRAT_COLOR_YELLOW:
-      stepAction(STEP_ACTION_RESET_YELLOW);
-      break;
-  }
-  if(0) 
-  {
-    stepWait();
-    stepAction(STEP_ACTION_PRETAKE_FIRST_BALL_RIGHT);
-    stepWait();
-    asservSetEnable(1);
-    TRAJECTORY_D_MM(20);
-    TRAJECTORY_D_MM(-20);
-    trajectoryWait();
-    stepAction(STEP_ACTION_TAKE_FIRST_BALL_RIGHT);
-    stepWait();
-  //  stepAction(STEP_ACTION_PREP_SPOT_LEFT);
-    stepWait();
-
-    while(1)
-    {
-      while((max7317Read() & (1 << IO_SWITCH_BACK_LEFT)))
-      {
-        chThdSleepMilliseconds(100);
-      }
-      lcdPrintln(LCD_INFO, "Click !");
-      stepAction(STEP_ACTION_PRETAKE_SPOT_LEFT);
-      stepWait();
-      TRAJECTORY_D_MM(50);
-      trajectoryWait();
-
-      TRAJECTORY_D_MM(-50);
-      trajectoryWait();
-
-      stepAction(STEP_ACTION_TAKE_SPOT_LEFT);
-      stepWait();
-      lcdPrintln(LCD_INFO, "Done !");
-
-      while(!(max7317Read() & (1 << IO_SWITCH_BACK_LEFT)))
-      {
-        chThdSleepMilliseconds(100);
-      }
-    }
-  }
-
-  trajectorySetSafetymm(0);
-  lcdPrintln(LCD_INFO, "Attente tirette (mise en place)");
-  while(!(max7317Read() & (1 << IO_SWITCH_STARTUP)))
-  {
-    chThdSleepMilliseconds(100);
-  }
-
-  lcdPrintln(LCD_INFO, "Asserv: go");
-  //asservSetEnable(1);
-  //stratWedging();
-  stepWait();
-
-  posSetAdeg(180);
-  posSetYmm(1000);
-  posSetXmm(-1500 + 105 + 90);
-
-  lcdPrintln(LCD_INFO, "Attente du depart");
-
-  while(max7317Read() & (1 << IO_SWITCH_STARTUP))
-  {
-    chThdSleepMilliseconds(100);
-  }
-  trajectorySetSafetymm(470);
-  stratStart();
-
-
-
-
-
-  
-
-
-  //chThdSleepMilliseconds(3000);
-  //  dcmSetWidth(0, 500);
-  //  dcmSetWidth(1, -500);
-  //while (true)
-  //{
-  //  lcdPrintln(LCD_INFO,"l %ld, r %ld", posGetLeftTick(), posGetRightTick());
-  //  chThdSleepMilliseconds(500);
-  //}
-
- 
-  //int i = 0;
-  //int d = 400;
-  //while (true)
-  //{
-  //  lcdPrintln(LCD_INFO, "tour: %d", i);
-  //  i += 1;
-  //  TRAJECTORY_XY_MM(d, 0);
-  //  TRAJECTORY_XY_MM(d, d);
-  //  TRAJECTORY_XY_MM(0, d);
-  //  TRAJECTORY_XY_MM(0, 0);
-  //  trajectoryWait();
-  //}
-
-  while(true)
-  {
-    chThdSleepMilliseconds(3000);
-  }
-  */
 }
