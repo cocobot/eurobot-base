@@ -26,11 +26,25 @@ void blink(void * arg)
   vTaskDelay(2000 / portTICK_PERIOD_MS); 
   while(1)
   {
-    platform_led_set(PLATFORM_LED2);
-    cocobot_trajectory_goto_d(50, -1);
+    platform_led_toggle(PLATFORM_LED2);
+    cocobot_trajectory_goto_d(500, -1);
+    cocobot_trajectory_goto_a(-90, -1);
+    cocobot_trajectory_goto_d(500, -1);
+    cocobot_trajectory_goto_a(180, -1);
+    cocobot_trajectory_goto_d(500, -1);
+    cocobot_trajectory_goto_a(90, -1);
+    cocobot_trajectory_goto_d(500, -1);
+    cocobot_trajectory_goto_a(0, -1);
+    cocobot_trajectory_wait();
+  }
+  while(1)
+  {
+    platform_led_toggle(PLATFORM_LED2);
+    cocobot_trajectory_goto_d(50,  -1);
     cocobot_trajectory_goto_d(100, -1);
     cocobot_trajectory_goto_d(-70, -1);
     cocobot_trajectory_goto_d(-80, -1);
+    cocobot_trajectory_wait();
     vTaskDelay(5000 / portTICK_PERIOD_MS); 
   }
 
