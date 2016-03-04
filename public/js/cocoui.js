@@ -1,4 +1,4 @@
-var socket = io.connect ('http://' + document.domain + ':' + location.port + '/cocoui');
+var socket = io.connect('http://' + document.domain + ':' + location.port);
 
 var Loading = React.createClass({
   getInitialState: function() {
