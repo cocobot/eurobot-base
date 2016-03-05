@@ -4,6 +4,7 @@
   "dependencies": {
     "body-parser": "^1.15.0",
     "express": "^4.13.4",
+    "express-jsx": "0.0.4",
     "optimist": "^0.6.1",
     "serialport": "^2.0.6",
     "socket.io": "^1.4.5"

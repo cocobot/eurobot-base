@@ -58,3 +58,4 @@ target/
 
 #npm
 node_modules
+compiled-js

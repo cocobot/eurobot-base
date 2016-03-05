@@ -27,14 +27,20 @@ SerialProtocol.prototype.connect = function() {
       } else {
         console.log('open');
         self.try = 0;
-        serialPort.on('data', self.receiveData);
+        self.serial.on('data', function (buffer) { self.receiveData(buffer); });
       }
     });
   }
 };
 
+SerialProtocol.prototype.send = function(data) {
+  this.serial.write(data + "\n", function() {});
+};
+
 SerialProtocol.prototype.receiveData = function(buffer) {
-  this.handleReceiveData(buffer);
+  if(this.handleReceiveData != null) {
+    this.handleReceiveData(buffer);
+  }
 };
 
 SerialProtocol.prototype.close = function() {
@@ -45,8 +51,8 @@ SerialProtocol.prototype.close = function() {
   }
 }
 
-var create = function(addr) {
-  return new SerialProtocol(addr);
+var create = function(addr, handleReceiveData) {
+  return new SerialProtocol(addr, handleReceiveData);
 };
 
 exports.create = create;

@@ -4,14 +4,26 @@
 var express = require('express');
 var http = require('http');
 var bodyParser = require('body-parser');
-var argv = require('optimist').argv;
+var optimist = require('optimist');
+var path = require('path');
 var protocol = require('./protocol/protocol.js');
+var jsxCompile = require('express-jsx');
+
+//set defaults
+optimist = optimist.default('http', 3000);
+var argv = optimist.argv;
 
 //create express app
 var app = express()
+app.use(jsxCompile(path.join(__dirname, 'public'), {
+    dest: path.join(__dirname, 'compiled-js')
+}));
+//  app.use(jsxCompile(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'compiled-js')));
 app.use(express.static('public'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
 
 //generate routes
 app.get('/', function(req, res){
@@ -31,13 +43,13 @@ app.delete('/api/protocol', function(req, res) {
 
 //start serveur
 var io = require('socket.io').listen(app.listen(argv.http));
-protocol.configure(io.sockets.emit);
-
-
-//start serial protocol
-//var protocol = require('./serial_protocol');
-//protocol.init(function(data) {
-//  io.sockets.emit('receive', data);
-//});
+protocol.configure(function(chan, data) { io.sockets.emit(chan, data); });
+io.sockets.on('connection', function (socket) {
+  socket.on('send', function(data) { protocol.send(data); });
+});
 
 console.log("HTTP server started: http://localhost:" + argv.http);
+
+if(argv.autoconnect != undefined) {
+  protocol.connect(argv.autoconnect);
+}

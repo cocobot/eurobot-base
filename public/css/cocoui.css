@@ -30,9 +30,6 @@ body {
   margin-left: 5px;
 }
 
-.checkbox+.checkbox {
-  margin-top: 10px;
-}
 
 
 .header-fixed {

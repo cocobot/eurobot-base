@@ -8,6 +8,8 @@ var serialProtocol = require('./serialProtocol.js');
 var emit = function() {};
 var lowLevel = null;
 var recvBuffer = "";
+var recvBufferLines = [];
+var lastCommand = [];
 
 
 var configure = function(emit_func) {
@@ -20,9 +22,9 @@ var getAvailable = function() {
   var files = fs.readdirSync("/dev");
   for(var i in files) {
     var name = files[i];
-    if(!name.indexOf("ttyS")) {
-      res.push({type: 'Serial', addr: '/dev/' + name});
-    }
+    //if(!name.indexOf("ttyS")) {
+    //  res.push({type: 'Serial', addr: '/dev/' + name});
+    //}
     if(!name.indexOf("ttyUSB")) {
       res.push({type: 'Serial', addr: '/dev/' + name});
     }
@@ -57,10 +59,21 @@ var disconnect = function() {
 }
 
 var receiveData = function(buffer) {
-  for(var i = 0, _l = data.length; i < _l; i += 1) {
-    var d = String.fromCharCode(data[i]);
-    if(d == '\n') {
-      handleReceivedData(recvBuffer);
+  for(var i = 0, _l = buffer.length; i < _l; i += 1) {
+    var d = String.fromCharCode(buffer[i]);
+    if(d == '>') {
+      handleReceivedData(recvBufferLines, false);
+      recvBuffer = "";
+      recvBufferLines = []
+    }
+    else if(d == '\n') {
+      if(recvBuffer[0] == "#") {
+        recvBuffer = recvBuffer.substring(1);
+        handleReceivedData([recvBuffer], true);
+      }
+      else {
+        recvBufferLines.push(recvBuffer);
+      }
       recvBuffer = "";
     }
     else {
@@ -69,26 +82,39 @@ var receiveData = function(buffer) {
   }
 }
 
-var handleReceivedData = function(data) {
-  var obj = {}
-  if(data[0] == "#") {
-    obj.async = true;
-    data = data.slice(1);
-  }
-  else {
-    obj.async = false;
-  }
+var handleReceivedData = function(data, async) {
+  var obj = {};
 
-  var splited = data.split('=');
-  obj.command = splited[0];
-  obj.data = splited[1];
-  obj.date = new Date();
+  if(!async) {
+    var request = null;
 
-  emit("received", obj);
+    var now = Date.now();
+    while(lastCommand.length > 0) {
+      var r = lastCommand.shift();
+      if(r.date > now - 2000) {
+        request = r;
+        break;
+      }
+    }
+
+    obj.request = request;
+  }
+  obj.answer = {async: async, data: data, date: Date.now()};
+
+  emit("receive", obj);
 }
+
+var send = function(data) {
+  if(lowLevel != null) {
+    data.date = Date.now();
+    lastCommand.push(data);
+    lowLevel.send(data.command);
+  }
+};
 
 
 exports.getState = getState;
 exports.connect = connect;
 exports.disconnect = disconnect;
 exports.configure = configure
+exports.send = send;

@@ -27,10 +27,12 @@ var TopMenuProtocol = React.createClass({
         if(self.state.selected == null) {
           self.setState({selected: data.available[0].addr});
         }
+        utils.connected = data.connected;
         setTimeout(self.updateProtocolStatus, self.UPDATE_PERIOD_MS);
       },
       error: function(data) {
         self.setState(self.getInitialState());
+        utils.connected = false;
         setTimeout(self.updateProtocolStatus, self.UPDATE_PERIOD_MS);
       }
     });
@@ -113,6 +115,90 @@ var TopMenuProtocol = React.createClass({
   },
 });
 
+var TopMenuInfo = React.createClass({
+  UPDATE_PERIOD_MS: 1000,
+  
+  getInitialState: function() {
+    return {
+      battery : -1,
+      responseTime: -1,
+      name: "",
+    };
+  },
+
+  componentDidMount: function() {
+    utils.onReceiveCommand("info", this.handleReceive);
+    setTimeout(this.updateInfo, this.UPDATE_PERIOD_MS);
+  },
+
+  updateInfo: function() {
+    utils.sendCommand({command: "info", argument: null});
+    this.setState({});
+    setTimeout(this.updateInfo, this.UPDATE_PERIOD_MS);
+  },
+
+  handleReceive: function(data) {
+    if(data.answer.data.length >= 2) {
+      this.setState({
+        name: data.answer.data[0],
+        battery: parseFloat(data.answer.data[1]) / 1000.0,
+        responseTime: utils.responseTime,
+      });
+    }
+  },
+
+  render: function() {
+    var batteryDanger = 10;
+    var batteryWarning = 11;
+    var batteryClass = "label small-margin-right";
+
+    if(this.state.battery < batteryDanger) {
+      batteryClass += " label-danger";
+    }
+    else if(this.state.battery < batteryWarning) {
+      batteryClass += " label-warning";
+    }
+    else {
+      batteryClass += " label-success";
+    }
+
+    var responseTimeDanger = 250;
+    var responseTimeWarning = 75;
+    var responseTimeClass = "label small-margin-right";
+
+    if(this.state.responseTime > responseTimeDanger) {
+      responseTimeClass += " label-danger";
+    }
+    else if(this.state.responseTime > responseTimeWarning) {
+      responseTimeClass += " label-warning";
+    }
+    else {
+      responseTimeClass += " label-success";
+    }
+
+    var generalClasses = "navbar-form navbar-right";
+
+    if(!utils.connected) {
+      generalClasses += " hide";
+    }
+
+    return(
+      <div className={generalClasses}>
+        <span className="label label-info small-margin-right">
+          {this.state.name}
+        </span>      
+        <span className={batteryClass}>
+          Batterie: {this.state.battery} V
+        </span>      
+        <span className={responseTimeClass}>
+          Temps de r&eacute;ponse: {this.state.responseTime} ms
+        </span>      
+      </div>
+    );
+  
+  },
+});
+
 //handle top menu item (layout and action)
 var TopMenuItem = React.createClass({
   //handle click
@@ -152,6 +238,7 @@ var TopMenu = React.createClass({
               {this.props.children}
             </ul>
             <TopMenuProtocol />
+            <TopMenuInfo />
           </div>
         </div>
       </nav>

@@ -21,6 +21,7 @@ var init = function(cb) {
 };
 
 var receiveData = function(data) {
+  console.log(data);
   for(var i = 0, _l = data.length; i < _l; i += 1) {
     var d = String.fromCharCode(data[i]);
     if(d == '\n') {

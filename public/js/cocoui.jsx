@@ -1,8 +1,56 @@
-var socket = io.connect('http://' + document.domain + ':' + location.port);
-
 var fireError = function() {
   //dummy function
 };
+
+var GlobalUtils = function() {
+  var self = this;
+
+  this.receiveHandler = [];
+  this.receiveHandlerFiltered = {};
+  this.connected = false;    
+  this.responseTime = -1;
+  this.socket = io.connect('http://' + document.domain + ':' + location.port);
+  this.socket.on('receive', function(data) { self.handleReceive(data); });
+};
+
+GlobalUtils.prototype.sendCommand = function(command) {
+  this.socket.emit('send', command);
+};
+
+
+GlobalUtils.prototype.handleReceive = function(data) {
+  for(var i in this.receiveHandler) {
+    this.receiveHandler[i](data);
+  }
+
+  if(data.request != null) {
+    if(!data.answer.async) {
+      this.responseTime = data.answer.date - data.request.date;
+    }
+
+    if(data.request.command in this.receiveHandlerFiltered) {
+      var arr = this.receiveHandlerFiltered[data.request.command];
+      for(var i in arr) {
+        arr[i](data);
+      }
+    }
+  }
+};
+
+GlobalUtils.prototype.onReceiveCommand = function(filter, handler) {
+  if(filter == "*") {
+    this.receiveHandler.push(handler);
+  }
+  else {
+    if(!(filter in this.receiveHandlerFiltered)) {
+      this.receiveHandlerFiltered[filter] = [];
+    }
+    this.receiveHandlerFiltered[filter].push(handler);
+  }
+};
+
+
+var utils = new GlobalUtils();
 
 var Loading = React.createClass({
   getInitialState: function() {
