@@ -65,3 +65,7 @@ body {
 .header-fixed > thead > tr > th {
   float: left;
 }
+
+.small-margin-right {
+  margin-right: 5px;
+}

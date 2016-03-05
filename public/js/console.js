@@ -31,7 +31,6 @@ var RConsole = React.createClass({
 
   componentDidUpdate: function() {
     var node = document.getElementById("console-table-body");
-    console.log("scroll");
     node.scrollTop = node.scrollHeight
   },
 

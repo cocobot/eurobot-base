@@ -1,5 +1,9 @@
 var socket = io.connect('http://' + document.domain + ':' + location.port);
 
+var fireError = function() {
+  //dummy function
+};
+
 var Loading = React.createClass({
   getInitialState: function() {
     return {};
@@ -98,9 +102,13 @@ var Cocoui = React.createClass({
       topMenuItem: [
         this.createTopMenuItem('Console', 'console'), 
       ],
+      errors: [],
     };
   },
 
+  componentDidMount: function() {
+    fireError = this.fireError;
+  },
   
   //create valid topMenuItem
   createTopMenuItem: function(name, pkey) {
@@ -157,14 +165,35 @@ var Cocoui = React.createClass({
     return(<TopMenuItem key={item.key} name={item.name} pkey={item.pkey} page={this.state.page} onClick={this.TopMenuChange} />);
   },
 
+
+  fireError: function(title, msg) {
+    var err = this.state.errors;
+    err.push({title: title, msg: msg});
+    this.setState({errors: err});
+  },
+
+  closeError: function(idx) {
+    console.log(idx);
+    var err = this.state.errors;
+    err.splice(idx, 1);
+    this.setState({errors: err});
+  },
   
   //create components
   render: function() {
+    var errors = [];
+    for(var i in this.state.errors) {
+      (function(errors, self, i, data) {
+       errors.push(<Error data={data} key={i} onClose={function() {self.closeError(i)}}/>);
+      })(errors, this, i, this.state.errors[i]);
+    }
+
     return(
       <div>
         <TopMenu>
           { this.state.topMenuItem.map(this.renderTopMenuItem) }
         </TopMenu>
+        {errors}
         <RConsole page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'console'} actionID={this.state.actionID}/>
       </div>
     );
