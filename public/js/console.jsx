@@ -5,7 +5,7 @@ var RConsole = React.createClass({
   cachedLines: [],
 
   getInitialState: function() {
-    utils.onReceiveCommand("*", this.handleReceive);
+    this.key = 1;
 
     return {
       lines: [],
@@ -16,7 +16,9 @@ var RConsole = React.createClass({
   },
 
   componentDidMount: function() {
-    setTimeout(this.updateConsole, this.UPDATE_PERIOD_MS);
+    var self = this;
+    utils.onReceiveCommand("*", this.handleReceive);
+    setTimeout(function() { self.updateConsole()}, this.UPDATE_PERIOD_MS);
   },
 
   updateConsole: function() {
@@ -27,13 +29,16 @@ var RConsole = React.createClass({
     }
 
     this.setState({lines: this.cachedLines});
-    setTimeout(this.updateConsole, this.UPDATE_PERIOD_MS);
+    var self = this;
+    setTimeout(function() { self.updateConsole()}, this.UPDATE_PERIOD_MS);
   },
 
   handleReceive: function(data) {
     if(this.cachedLines.length >= this.MAX_LINES - 1) {
       this.cachedLines.shift();
     }
+    data.key = this.key;
+    this.key += 1;
     this.cachedLines.push(data);
   },
 
@@ -75,8 +80,8 @@ var RConsole = React.createClass({
     }
 
     return (
-      <tr>
-        <td style={{width: 75 + 'px'}}>{{badge}}</td>
+      <tr key={"da_" + line.key}>
+        <td style={{width: 75 + 'px'}}>{badge}</td>
         <td>{dt.toLocaleString('FR')}</td>
         <td style={{width: 75 + '%'}}>{content}</td>
       </tr>

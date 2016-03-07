@@ -21,13 +21,17 @@ app.use(jsxCompile(path.join(__dirname, 'public'), {
 //  app.use(jsxCompile(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'compiled-js')));
 app.use(express.static('public'));
+app.engine('html', require('ejs').renderFile);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 
 //generate routes
 app.get('/', function(req, res){
-  res.redirect('/index.html');
+  res.render('index.html');
+});
+app.get('/page/*', function(req, res){
+  res.render('index.html');
 });
 app.get('/api/protocol', function(req, res) {
   res.json(protocol.getState());

@@ -34,6 +34,7 @@ SerialProtocol.prototype.connect = function() {
 };
 
 SerialProtocol.prototype.send = function(data) {
+  console.log("SEND: " + data);
   this.serial.write(data + "\n", function() {});
 };
 

@@ -19,6 +19,12 @@ GlobalUtils.prototype.sendCommand = function(command) {
 
 
 GlobalUtils.prototype.handleReceive = function(data) {
+  if(data.answer.async) {
+    data.request = {};
+    var cmd = data.answer.data[0].split("=");
+    data.request.command = cmd[0];
+  }
+
   for(var i in this.receiveHandler) {
     this.receiveHandler[i](data);
   }
@@ -150,6 +156,7 @@ var Cocoui = React.createClass({
       topMenuItem: [
         this.createTopMenuItem('Position', 'position'), 
         this.createTopMenuItem('Console', 'console'), 
+        this.createTopMenuItem('Asserv', 'asserv'), 
       ],
       errors: [],
     };
@@ -244,10 +251,11 @@ var Cocoui = React.createClass({
         {errors}
         <Position page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'position'} actionID={this.state.actionID}/>
         <RConsole page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'console'} actionID={this.state.actionID}/>
+        <Asserv page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'asserv'} actionID={this.state.actionID}/>
       </div>
     );
   }
 });
 //render the layout
-React.render(<Cocoui />, document.getElementById('app'));
+ReactDOM.render(<Cocoui />, document.getElementById('app'));
 
