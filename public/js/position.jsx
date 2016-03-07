@@ -280,7 +280,6 @@ var Eurobot2016SeeShell = React.createClass({
         colors.push(color);
       }
     }
-    console.log(this.props.id + ": " + colors.length);
     
     var translate = "translate(" + x + "," + y + ")";
     var render = [];

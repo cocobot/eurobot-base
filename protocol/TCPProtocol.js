@@ -29,9 +29,13 @@ TCPProtocol.prototype.connect = function() {
       self.connected = false;
       setTimeout(function() {self.connect()}, 1000);
     });
+    this.serial.on('data', function(data) {
+      self.receiveData(data);
+    });
     this.serial.connect(10000, "127.0.0.1", function() {
         console.log('open');
         self.try = 0;
+        self.serial.setNoDelay(true);
         self.serial.write("USART1\n");
         self.connected = true;
     });
@@ -40,6 +44,7 @@ TCPProtocol.prototype.connect = function() {
 
 TCPProtocol.prototype.send = function(data) {
   if(this.connected) {
+  console.log("SEND: " + data);
     this.serial.write(data + "\n", function() {});
   }
 };
