@@ -148,8 +148,8 @@ var TopMenuInfo = React.createClass({
   },
 
   render: function() {
-    var batteryDanger = 10;
-    var batteryWarning = 11;
+    var batteryDanger = 11.3;
+    var batteryWarning = 11.6;
     var batteryClass = "label small-margin-right";
 
     if(this.state.battery < batteryDanger) {
@@ -162,8 +162,8 @@ var TopMenuInfo = React.createClass({
       batteryClass += " label-success";
     }
 
-    var responseTimeDanger = 250;
-    var responseTimeWarning = 75;
+    var responseTimeDanger = 80;
+    var responseTimeWarning = 25;
     var responseTimeClass = "label small-margin-right";
 
     if(this.state.responseTime > responseTimeDanger) {

@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "dependencies": {
     "body-parser": "^1.15.0",
+    "ejs": "^2.4.1",
     "express": "^4.13.4",
     "express-jsx": "0.0.4",
     "optimist": "^0.6.1",

@@ -67,6 +67,7 @@ var receiveData = function(buffer) {
       recvBufferLines = []
     }
     else if(d == '\n') {
+      console.log("RECV: " + recvBuffer);
       if(recvBuffer[0] == "#") {
         recvBuffer = recvBuffer.substring(1);
         handleReceivedData([recvBuffer], true);
@@ -91,7 +92,7 @@ var handleReceivedData = function(data, async) {
     var now = Date.now();
     while(lastCommand.length > 0) {
       var r = lastCommand.shift();
-      if(r.date > now - 2000) {
+      if(r.date > now - 500) {
         request = r;
         break;
       }
@@ -108,7 +109,12 @@ var send = function(data) {
   if(lowLevel != null) {
     data.date = Date.now();
     lastCommand.push(data);
-    lowLevel.send(data.command);
+    if(data.argument != undefined) {
+      lowLevel.send(data.command + " " + data.argument);
+    }
+    else {
+      lowLevel.send(data.command);
+    }
   }
 };
 
