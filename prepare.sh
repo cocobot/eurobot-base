@@ -24,6 +24,9 @@ git clone git@github.com:cocobot/pbrain_loader.git projects/brain_loader
 # - brain (main robot)
 git clone git@github.com:cocobot/pbrain.git projects/pbrain
 
+# - brain (secondary robot)
+git clone git@github.com:cocobot/sbrain.git projects/sbrain
+
 # - cocoui
 git clone git@github.com:cocobot/cocoui.git projects/cocoui
 
