@@ -148,6 +148,7 @@ var Cocoui = React.createClass({
       pageArgs: DEFAULT_PAGE_ARGS,
       actionID: 1,
       topMenuItem: [
+        this.createTopMenuItem('Position', 'position'), 
         this.createTopMenuItem('Console', 'console'), 
       ],
       errors: [],
@@ -221,7 +222,6 @@ var Cocoui = React.createClass({
   },
 
   closeError: function(idx) {
-    console.log(idx);
     var err = this.state.errors;
     err.splice(idx, 1);
     this.setState({errors: err});
@@ -242,6 +242,7 @@ var Cocoui = React.createClass({
           { this.state.topMenuItem.map(this.renderTopMenuItem) }
         </TopMenu>
         {errors}
+        <Position page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'position'} actionID={this.state.actionID}/>
         <RConsole page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'console'} actionID={this.state.actionID}/>
       </div>
     );

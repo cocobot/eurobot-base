@@ -66,3 +66,7 @@ body {
 .small-margin-right {
   margin-right: 5px;
 }
+
+svg {
+  background: #000000;
+}

@@ -3,6 +3,7 @@
 //package
 var fs = require('fs');
 var serialProtocol = require('./serialProtocol.js');
+var TCPProtocol = require('./TCPProtocol.js');
 
 //internal storage
 var emit = function() {};
@@ -48,6 +49,9 @@ var getState = function() {
 var connect = function(addr) {
   if(!addr.indexOf("/dev")) {
     lowLevel = serialProtocol.create(addr, receiveData);
+  }
+  else {
+    lowLevel = TCPProtocol.create(addr, receiveData);
   }
 }
 
