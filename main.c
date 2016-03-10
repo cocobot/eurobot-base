@@ -4,6 +4,7 @@
 #include <task.h>
 #include <mcual.h>
 #include <cocobot.h>
+#include "meca_umbrella.h"
 
 void blink(void * arg)
 {
@@ -23,6 +24,36 @@ void blink(void * arg)
     cocobot_trajectory_goto_a(90, -1);
     cocobot_trajectory_goto_d(500, -1);
     cocobot_trajectory_goto_a(0, -1);
+    cocobot_trajectory_wait();
+  }
+  while(0)
+  {
+    platform_led_toggle(PLATFORM_LED2);
+    cocobot_trajectory_goto_d(500, -1);
+    cocobot_trajectory_goto_a(-90, -1);
+    cocobot_trajectory_goto_d(500, -1);
+    cocobot_trajectory_goto_a(180, -1);
+    cocobot_trajectory_goto_d(500, -1);
+    cocobot_trajectory_goto_a(90, -1);
+    cocobot_trajectory_goto_d(1000, -1);
+    cocobot_trajectory_goto_a(180, -1);
+    cocobot_trajectory_goto_d(500, -1);
+    cocobot_trajectory_goto_a(-90, -1);
+    cocobot_trajectory_goto_d(500, -1);
+    cocobot_trajectory_goto_a(0, -1);
+    cocobot_trajectory_goto_d(500, -1);
+    cocobot_trajectory_wait();
+  }
+  while(1)
+  {
+    cocobot_trajectory_goto_d(-300, -1);
+    cocobot_trajectory_goto_xy(500, 750, -1);
+    cocobot_trajectory_goto_xy_backward(300, 200, -1);
+    cocobot_trajectory_goto_d(500, -1);
+    cocobot_trajectory_goto_a(180, -1);
+    cocobot_trajectory_goto_d(500, -1);
+    cocobot_trajectory_goto_a(140, -1);
+    cocobot_trajectory_goto_d(500, -1);
     cocobot_trajectory_wait();
   }
   while(0)
@@ -67,7 +98,10 @@ int console_handler(const char * command)
     cocobot_console_send_answer("%ld", platform_adc_get_mV(PLATFORM_ADC_VBAT));
     return 1;
   }
-  return 0;
+
+  int handled = 0;
+  COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_umbrella_console_handler);
+  return handled;
 }
 
 int main(void) 
@@ -77,11 +111,12 @@ int main(void)
   cocobot_lcd_init();
   cocobot_position_init(3);
   cocobot_asserv_init();
-  //platform_led_clear(PLATFORM_LED2);
-  //cocobot_trajectory_init(3);
+  cocobot_trajectory_init(3);
+
+  meca_umbrella_init();
+  
 
   cocobot_asserv_set_state(COCOBOT_ASSERV_ENABLE);
-
   xTaskCreate(blink, "blink", 200, NULL, 1, NULL );
 
   vTaskStartScheduler();
