@@ -44,6 +44,15 @@ app.delete('/api/protocol', function(req, res) {
   protocol.disconnect();
   res.json(protocol.getState());
 });
+app.get('/api/time/:ct', function(req, res) {
+  var ct = parseInt(req.params.ct);
+  var serverTimestamp = Date.now();
+  var diff = serverTimestamp - ct;
+  res.json({
+    'diff': diff,
+    'serverTimestamp': serverTimestamp,
+  });
+});
 
 //start serveur
 var io = require('socket.io').listen(app.listen(argv.http));

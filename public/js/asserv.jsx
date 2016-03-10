@@ -1,9 +1,25 @@
+var timeOffset = 0;
+var clientTimestamp = (new Date()).valueOf();
+$.getJSON('http://' + document.domain + ':' + location.port + '/api/time/' + clientTimestamp, function( data ) {
+  var nowTimeStamp = (new Date()).valueOf();
+  var serverClientRequestDiffTime = data.diff;
+  var serverTimestamp = data.serverTimestamp;
+  var serverClientResponseDiffTime = nowTimeStamp - serverTimestamp;
+  var responseTime = (serverClientRequestDiffTime - nowTimeStamp + clientTimestamp - serverClientResponseDiffTime )/2
+  
+  var syncedServerTime = new Date((new Date()).valueOf() + (serverClientResponseDiffTime - responseTime));
+  timeOffset = serverClientResponseDiffTime - responseTime;
+});
+
+
+
 var ChartParameter = React.createClass({
   UPDATE_PERIOD_MS: 1000,
 
   getInitialState: function() {
     return {
       value: "",
+      modified_value: null,
     };
   },
 
@@ -25,15 +41,47 @@ var ChartParameter = React.createClass({
     this.setState({value: data.answer.data[0]});
   },
 
+  handleChange: function(event) {
+    this.setState({modified_value: event.target.value});
+  },
+
+  send: function(event) {
+    event.preventDefault();
+
+    if(this.state.modified_value != null) {
+      this.setState({value: this.state.modified_value, modified_value: null});
+      utils.sendCommand({command: this.props.command, argument: this.state.modified_value});
+    }
+  },
+
+  cancel: function(event) {
+    event.preventDefault();
+
+    this.setState({modified_value: null});
+  },
+
   render: function() {
+    var value = this.state.value;
+    var cls = "form-group form-inline pull-right";
+    var btns = "btn btn-success";
+    var btnc = "btn btn-default";
+    if(this.state.modified_value != null) {
+      value = this.state.modified_value;
+      cls += " has-warning";
+    }
+    else {
+      btns += " disabled";
+      btnc += " disabled";
+    }
+
     return (
-     <div className="form-group form-inline pull-right">
+     <div className={cls}>
         <label className="small-margin-right">{this.props.name}</label>
-        <input type="text" className="form-control" value={this.state.value}/>
-        <button type="submit" className="btn btn-success" onClick={this.connect}>
+        <input type="text" className="form-control" value={value} onChange={this.handleChange}/>
+        <button type="submit" className={btns} onClick={this.send}>
           <span className="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>&nbsp;
         </button>
-        <button type="submit" className="btn btn-default" onClick={this.connect}>
+        <button type="submit" className={btnc} onClick={this.cancel}>
           <span className="glyphicon glyphicon-repeat" aria-hidden="true"></span>&nbsp;
         </button>
       </div>
@@ -93,7 +141,10 @@ var Chart = React.createClass({
       if(data.date > c.last - 500) {
  //       c.timeseries.append(data.date, undefined);
       }
-      c.timeseries.append(data.date, data.value);
+      
+      var dt = data.date + timeOffset / 2;
+
+      c.timeseries.append(dt, parseFloat(data.value));
       c.last = data.date;
     }
   },

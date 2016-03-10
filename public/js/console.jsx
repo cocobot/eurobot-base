@@ -34,12 +34,24 @@ var RConsole = React.createClass({
   },
 
   handleReceive: function(data) {
-    if(this.cachedLines.length >= this.MAX_LINES - 1) {
-      this.cachedLines.shift();
+    var canBeAdded = true;
+
+    if((!this.state.showAsync) && (data.answer.async)) {
+      canBeAdded = false;
     }
-    data.key = this.key;
-    this.key += 1;
-    this.cachedLines.push(data);
+
+    if((!data.answer.async) &&(!this.state.showAuto) && ((data.request == null) || (data.request.console == undefined))) {
+      canBeAdded = false;
+    }
+
+    if(canBeAdded) {
+      if(this.cachedLines.length >= this.MAX_LINES - 1) {
+        this.cachedLines.shift();
+      }
+      data.key = this.key;
+      this.key += 1;
+      this.cachedLines.push(data);
+    }
   },
 
   componentDidUpdate: function() {
@@ -66,7 +78,7 @@ var RConsole = React.createClass({
       content.push(
         <div key={content.length}>
           <span className="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>&nbsp;
-          {line.request.command}
+          {line.request.command}&nbsp;{line.request.argument}
         </div>
       );
     }
@@ -95,7 +107,11 @@ var RConsole = React.createClass({
   send: function(event) {
     event.preventDefault();
     if(this.state.command != "") {
-      utils.sendCommand({command: this.state.command, argument: null, console: "12345"});
+      var splited = this.state.command.split(' ');
+      var cmd = splited[0];
+      splited.shift();
+      var arg = splited.join(' ');
+      utils.sendCommand({command: cmd, argument: arg, console: "12345"});
       this.setState({command: ""});
     }
   },
@@ -122,12 +138,12 @@ var RConsole = React.createClass({
     }
 
     var filterList = this.state.lines;
-    if(!this.state.showAsync) {
-      filterList = filterList.filter(function(x) { return !x.answer.async;});
-    }
-    if(!this.state.showAuto) {
-      filterList = filterList.filter(function(x) { return (x.request != null) && (x.request.console != undefined);});
-    }
+    //if(!this.state.showAsync) {
+    //  filterList = filterList.filter(function(x) { return !x.answer.async;});
+    //}
+    //if(!this.state.showAuto) {
+    //  filterList = filterList.filter(function(x) { return (x.request != null) && (x.request.console != undefined);});
+    //}
 
     return (
       <div className={divClasses}>

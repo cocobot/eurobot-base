@@ -59,3 +59,7 @@ target/
 #npm
 node_modules
 compiled-js
+
+# vim
+*.swo
+*.swp
