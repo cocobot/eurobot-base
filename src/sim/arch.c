@@ -139,7 +139,7 @@ static void * mcual_arch_sim_handle_peripherals(void * args)
         {
           //we have a winner !
           char buf[32];
-          int r = read(peripherals_socket[i].socket, buf, sizeof(buf));
+          int r = read(peripherals_socket[i].socket, buf, sizeof(buf) - 1);
           if(r <= 0)
           {
             //he is gone :'(
