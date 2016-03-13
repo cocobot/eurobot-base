@@ -10,32 +10,53 @@ var TrajectoryOrders = React.createClass({
   renderOrder: function(order, key) {
     var args = '';
 
+    var flags = [];
+
     switch(order.type)
     {
       case 'D':
         args = 'distance = ' + order.args[2];
         if(order.args[1] != '-1.000') {
-          args += ' - temps = ' + order.args[1];
+          args += ' t=  ' + order.args[1];
         }
         break;
 
       case 'A':
         args = 'angle = ' + order.args[2];
         if(order.args[1] != '-1.000') {
-          args += ' - temps = ' + order.args[1];
+          args += ' t=  ' + order.args[1];
         }
         break;
+
+      case 'XY':
+      case 'XY BACKWARD':
+        args = 'x = ' + order.args[2];
+        args += ' y = ' + order.args[3];
+        if(order.args[1] != '-1.000') {
+          args += ' t=  ' + order.args[1];
+        }
+        break;
+
 
       default:
         args = '? (' + order.args.join(' ') + ')';
         break;
     }
 
+    below_args = <small>fin: x = {order.end.x} y = {order.end.y} a = {order.end.a}</small>;
+
+    var fl = parseInt(order.args[0]);
+
+    if(fl & (1 << 0))
+    {
+      flags.push(<span key={flags.length} className="label label-space label-warning">Sans ralentissement</span>);
+    }
+
     return (
       <tr key={key}>
         <td>{order.type}</td>
-        <td>{args}</td>
-        <td></td>
+        <td>{args}<br />{below_args}</td>
+        <td>{flags}</td>
       </tr>
     );
   },
@@ -49,9 +70,11 @@ var TrajectoryOrders = React.createClass({
         <div className="panel-body">
           <table className="table table-bordered table-condensed">
               <thead>
-                <th>Type</th>
-                <th>Arguments</th>
-                <th>Flags</th>
+                <tr>
+                  <th>Type</th>
+                  <th>Arguments</th>
+                  <th>Flags</th>
+                </tr>
               </thead>
               <tbody>
                 {this.props.orders.map(this.renderOrder)}
