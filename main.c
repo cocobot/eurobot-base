@@ -6,73 +6,8 @@
 #include <cocobot.h>
 #include "meca_umbrella.h"
 
-void blink(void * arg)
+void update_lcd(void * arg)
 {
-  (void)arg;
-
-  platform_led_clear(PLATFORM_LED2);
-  vTaskDelay(2000 / portTICK_PERIOD_MS); 
-  //cocobot_asserv_set_distance_set_point(2000);
-  while(0)
-  {
-    platform_led_toggle(PLATFORM_LED2);
-    cocobot_trajectory_goto_d(500, -1);
-    cocobot_trajectory_goto_a(-90, -1);
-    cocobot_trajectory_goto_d(500, -1);
-    cocobot_trajectory_goto_a(180, -1);
-    cocobot_trajectory_goto_d(500, -1);
-    cocobot_trajectory_goto_a(90, -1);
-    cocobot_trajectory_goto_d(500, -1);
-    cocobot_trajectory_goto_a(0, -1);
-    cocobot_trajectory_wait();
-  }
-  while(0)
-  {
-    platform_led_toggle(PLATFORM_LED2);
-    cocobot_trajectory_goto_d(500, -1);
-    cocobot_trajectory_goto_a(-90, -1);
-    cocobot_trajectory_goto_d(500, -1);
-    cocobot_trajectory_goto_a(180, -1);
-    cocobot_trajectory_goto_d(500, -1);
-    cocobot_trajectory_goto_a(90, -1);
-    cocobot_trajectory_goto_d(1000, -1);
-    cocobot_trajectory_goto_a(180, -1);
-    cocobot_trajectory_goto_d(500, -1);
-    cocobot_trajectory_goto_a(-90, -1);
-    cocobot_trajectory_goto_d(500, -1);
-    cocobot_trajectory_goto_a(0, -1);
-    cocobot_trajectory_goto_d(500, -1);
-    cocobot_trajectory_wait();
-  }
-  while(1)
-  {
-    cocobot_trajectory_goto_d(-300, -1);
-    cocobot_trajectory_goto_xy(500, 750, -1);
-    cocobot_trajectory_goto_xy_backward(300, 200, -1);
-    cocobot_trajectory_goto_d(500, -1);
-    cocobot_trajectory_goto_a(180, -1);
-    cocobot_trajectory_goto_d(500, -1);
-    cocobot_trajectory_goto_a(140, -1);
-    cocobot_trajectory_goto_d(500, -1);
-    cocobot_trajectory_wait();
-  }
-  while(0)
-  {
-    platform_led_toggle(PLATFORM_LED2);
-    cocobot_trajectory_goto_d(50,  -1);
-    cocobot_trajectory_goto_d(100, -1);
-    cocobot_trajectory_goto_d(-70, -1);
-    cocobot_trajectory_goto_d(-80, -1);
-    cocobot_trajectory_wait();
-    vTaskDelay(5000 / portTICK_PERIOD_MS); 
-  }
-
-  //platform_gpio_set(PLATFORM_GPIO_MOTOR_ENABLE);
-  //platform_gpio_clear(PLATFORM_GPIO_MOTOR_DIR_RIGHT);
-  //platform_gpio_set(PLATFORM_GPIO_MOTOR_DIR_LEFT);
-
-  //platform_motor_set_left_duty_cycle(0x1000);
-  //platform_motor_set_right_duty_cycle(0x1000);
   while(1)
   {
     //update lcd
@@ -87,6 +22,19 @@ void blink(void * arg)
     //toggle led
     platform_led_toggle(PLATFORM_LED1 | PLATFORM_LED0);
     vTaskDelay(100 / portTICK_PERIOD_MS);
+  }
+}
+
+void run_strategy(void * arg)
+{
+  cocobot_asserv_set_state(COCOBOT_ASSERV_ENABLE);
+  while(1)
+  {
+    if(!cocobot_action_scheduler_execute_best_action())
+    {
+      //wait small delay if no action is available (which is a bad thing)
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
   }
 }
 
@@ -112,12 +60,13 @@ int main(void)
   cocobot_position_init(3);
   cocobot_asserv_init();
   cocobot_trajectory_init(3);
+  cocobot_action_scheduler_init();
 
   meca_umbrella_init();
   
 
-  cocobot_asserv_set_state(COCOBOT_ASSERV_ENABLE);
-  xTaskCreate(blink, "blink", 200, NULL, 1, NULL );
+  xTaskCreate(run_strategy, "strat", 200, NULL, 2, NULL );
+  xTaskCreate(update_lcd, "blink", 200, NULL, 1, NULL );
 
   vTaskStartScheduler();
 
