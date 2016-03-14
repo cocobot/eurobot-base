@@ -30,7 +30,7 @@ float strat_hut_get_x(int hut)
 float strat_hut_get_y(int hut)
 {
   (void)hut; //each hut is equal
-  return 800;
+  return 700;
 }
 
 float strat_hut_get_a(int hut)
@@ -54,8 +54,8 @@ int strat_hut_action(void * arg)
 {
   (void)arg; //each hut is equal
 
-  cocobot_trajectory_goto_d(-300, 2);
-  cocobot_trajectory_goto_d(200, -1);
+  cocobot_trajectory_goto_d(-10400, 2);
+  cocobot_trajectory_goto_d(300, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   cocobot_trajectory_wait();
 
   return 1;
