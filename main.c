@@ -5,6 +5,7 @@
 #include <mcual.h>
 #include <cocobot.h>
 #include "meca_umbrella.h"
+#include "strat_hut.h"
 
 void update_lcd(void * arg)
 {
@@ -27,7 +28,38 @@ void update_lcd(void * arg)
 
 void run_strategy(void * arg)
 {
+  cocobot_action_scheduler_add_action(
+    "hut 0",
+    strat_hut_get_score(STRAT_HUT_VIOLET_LEFT),
+    strat_hut_get_x(STRAT_HUT_VIOLET_LEFT),
+    strat_hut_get_y(STRAT_HUT_VIOLET_LEFT),
+    strat_hut_get_a(STRAT_HUT_VIOLET_LEFT),
+    strat_hut_get_exec_time(STRAT_HUT_VIOLET_LEFT),
+    strat_hut_get_success_proba(STRAT_HUT_VIOLET_LEFT),
+    strat_hut_action,
+    (void *)STRAT_HUT_VIOLET_LEFT,
+    NULL);
+
+  cocobot_action_scheduler_add_action(
+    "hut 1",
+    strat_hut_get_score(STRAT_HUT_VIOLET_RIGHT),
+    strat_hut_get_x(STRAT_HUT_VIOLET_RIGHT),
+    strat_hut_get_y(STRAT_HUT_VIOLET_RIGHT),
+    strat_hut_get_a(STRAT_HUT_VIOLET_RIGHT),
+    strat_hut_get_exec_time(STRAT_HUT_VIOLET_RIGHT),
+    strat_hut_get_success_proba(STRAT_HUT_VIOLET_RIGHT),
+    strat_hut_action,
+    (void *)STRAT_HUT_VIOLET_RIGHT,
+    NULL);
+
+
+  //TODO: wait starter
+ 
+  vTaskDelay(2000 / portTICK_PERIOD_MS);
+
   cocobot_asserv_set_state(COCOBOT_ASSERV_ENABLE);
+  cocobot_action_scheduler_start();
+
   while(1)
   {
     if(!cocobot_action_scheduler_execute_best_action())
@@ -55,12 +87,12 @@ int console_handler(const char * command)
 int main(void) 
 {
   platform_init();
-  cocobot_console_init(MCUAL_USART1, 1, 1, console_handler);
+  cocobot_console_init(MCUAL_USART1, 3, 3, console_handler);
   cocobot_lcd_init();
-  cocobot_position_init(3);
-  cocobot_asserv_init();
-  cocobot_trajectory_init(3);
+  cocobot_position_init(4);
   cocobot_action_scheduler_init();
+  cocobot_asserv_init();
+  cocobot_trajectory_init(4);
 
   meca_umbrella_init();
   

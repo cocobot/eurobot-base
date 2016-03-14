@@ -12,6 +12,6 @@ float strat_hut_get_y(int hut);
 float strat_hut_get_a(int hut);
 float strat_hut_get_exec_time(int hut);
 float strat_hut_get_success_proba(int hut);
-int strat_hut_action(int hut);
+int strat_hut_action(void * arg);
 
 #endif// STRAT_HUT_H
