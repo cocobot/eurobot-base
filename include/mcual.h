@@ -7,6 +7,7 @@
 #include <mcual/adc.h>
 #include <mcual/timer.h>
 #include <mcual/spi.h>
+#include <mcual/i2c.h>
 #include <mcual/arch.h>
 #include <mcual/loader.h>
 

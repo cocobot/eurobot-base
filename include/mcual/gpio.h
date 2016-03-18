@@ -50,9 +50,15 @@ typedef enum
   MCUAL_GPIO_PULL_DOWN_RESISTOR,
 } mcual_gpio_pull_resistor_t;
 
+typedef enum
+{
+  MCUAL_GPIO_PUSH_PULL,
+  MCUAL_GPIO_OPEN_DRAIN,
+} mcual_gpio_output_type_t;
 
 void mcual_gpio_init(mcual_gpio_port_t port, mcual_gpio_pin_t pin, mcual_gpio_direction_t direction);
 void mcual_gpio_set_pull_resistor(mcual_gpio_port_t port, mcual_gpio_pin_t pin, mcual_gpio_pull_resistor_t pull);
+void mcual_gpio_set_output_type(mcual_gpio_port_t port, mcual_gpio_pin_t pin, mcual_gpio_output_type_t pull);
 
 void mcual_gpio_set(mcual_gpio_port_t port, mcual_gpio_pin_t pin);
 void mcual_gpio_clear(mcual_gpio_port_t port, mcual_gpio_pin_t pin);

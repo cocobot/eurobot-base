@@ -167,4 +167,24 @@ void mcual_gpio_set_function(mcual_gpio_port_t port, mcual_gpio_pin_t pin, int f
   reg->AFR[1] = afrh;
 }
 
+void mcual_gpio_set_output_type(mcual_gpio_port_t port, mcual_gpio_pin_t pin, mcual_gpio_output_type_t type)
+{
+  GPIO_TypeDef * reg = mcual_gpio_get_register(port);
+  int i;
+  for(i = 0; i < 16; i += 1)
+  {
+    if(pin & (1 << i))
+    {
+      if(type == MCUAL_GPIO_OPEN_DRAIN)
+      {
+        reg->OTYPER |= (1 << i);
+      }
+      else
+      {
+        reg->OTYPER &= ~(1 << i);
+      }
+    }
+  }
+}
+
 #endif

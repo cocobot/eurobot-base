@@ -4,8 +4,9 @@
 #if 0
 #define APB1_CLOCK_MAX_FREQUECY_KHZ 45000
 #define APB2_CLOCK_MAX_FREQUECY_KHZ 90000
+# error Architecture not supported
 #elif defined(STM32F40_41xxx)
-# define APB1_CLOCK_MAX_FREQUECY_KHZ 42000
+# define APB1_CLOCK_MAX_FREQUECY_KHZ 20000 //because of i2c *stupid* peripheral.....
 # define APB2_CLOCK_MAX_FREQUECY_KHZ 84000
 #else
 # error Architecture not supported
@@ -223,6 +224,8 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
   cfgr |= ((uint32_t)((pre1 << 10) | (pre2 << 13)));
 
   RCC->CFGR = cfgr;
+
+  __enable_irq();
 }
 
 uint32_t mcual_clock_get_frequency_Hz(mcual_clock_id_t clock_id)
