@@ -15,4 +15,6 @@ void mcual_arch_sim_handle_uart_peripheral_write(mcual_usart_id_t usart_id, uint
 void mcual_usart_recv_from_network(mcual_usart_id_t usart_id, uint8_t byte);
 #endif //AUSBEE_SIM
 
+void mcual_bootloader(void);
+
 #endif //MCUAL_ARCH_H

@@ -1,4 +1,7 @@
+#define _GNU_SOURCE
 #include <mcual.h>
+#include <errno.h>
+#include <sys/time.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,6 +10,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
 
 #define PERIPHERAL_TCP_PORT 10000
 #define CLIENT_MAX          10
@@ -18,7 +22,9 @@ typedef struct
   mcual_usart_id_t usart_id;
 } mcual_arch_sim_peripheral_socket_t;
 
-mcual_arch_sim_peripheral_socket_t peripherals_socket[CLIENT_MAX];
+static int server_socket = 0;
+
+static mcual_arch_sim_peripheral_socket_t peripherals_socket[CLIENT_MAX];
 
 void mcual_arch_sim_handle_uart_peripheral_write(mcual_usart_id_t usart_id, uint8_t byte)
 {
@@ -39,7 +45,7 @@ static void * mcual_arch_sim_handle_peripherals(void * args)
   (void)args;
 
   //create socket server
-  int server_socket = socket(AF_INET, SOCK_STREAM, 0);
+  server_socket = socket(AF_INET, SOCK_STREAM, 0);
   if(server_socket < 0)
   {
     perror("Unable to create server socket for peripheral");
@@ -59,6 +65,14 @@ static void * mcual_arch_sim_handle_peripherals(void * args)
     perror("Unable to set SO_REUSEADDR for peripheral server");
     exit(EXIT_FAILURE);
   }
+
+  on = 1;
+  if(setsockopt(server_socket, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(int)) < 0)
+  {
+    perror("Unable to set SO_REUSEPORT for peripheral server");
+    exit(EXIT_FAILURE);
+  }
+
 
   //bind socket & storage
   if(bind(server_socket, (struct sockaddr *) &saddr, sizeof (saddr)) < 0)
@@ -139,7 +153,7 @@ static void * mcual_arch_sim_handle_peripherals(void * args)
         {
           //we have a winner !
           char buf[32];
-          int r = read(peripherals_socket[i].socket, buf, sizeof(buf));
+          int r = read(peripherals_socket[i].socket, buf, sizeof(buf) - 1);
           if(r <= 0)
           {
             //he is gone :'(
@@ -232,4 +246,31 @@ void mcual_arch_sim_init_peripherals(void)
     perror("Unable to create thread for peripheral");
     exit(EXIT_FAILURE);
   }
+}
+
+void mcual_bootloader(void)
+{
+  //stop scheduler timer
+  struct itimerval itimer, oitimer;
+  itimer.it_interval.tv_sec = 0;
+  itimer.it_interval.tv_usec = 0;
+  itimer.it_value.tv_sec = 0;
+  itimer.it_value.tv_usec = 0;
+  setitimer(ITIMER_REAL, &itimer, &oitimer );
+
+  //stop server
+  close(server_socket);
+
+  //kill clients
+  int i;
+  for(i = 0; i < CLIENT_MAX; i += 1)
+  {
+    if(peripherals_socket[i].socket != -1)
+    {
+      close(peripherals_socket[i].socket);
+    }
+  }
+
+  //restart
+  execl(program_invocation_name, program_invocation_name, NULL);
 }
