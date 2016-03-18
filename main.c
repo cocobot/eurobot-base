@@ -4,10 +4,13 @@
 #include <task.h>
 #include <mcual.h>
 #include <cocobot.h>
+#include <pcm9685.h>
 
 void blink(void * arg)
 {
   (void)arg;
+
+  pcm9685_init();
 
   platform_led_clear(PLATFORM_LED2);
   vTaskDelay(2000 / portTICK_PERIOD_MS); 
@@ -56,6 +59,10 @@ void blink(void * arg)
     //toggle led
     platform_led_toggle(PLATFORM_LED1 | PLATFORM_LED0);
     vTaskDelay(100 / portTICK_PERIOD_MS);
+    pcm9685_set_channel(0, 0, 200);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    pcm9685_set_channel(0, 0, 400);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
 
