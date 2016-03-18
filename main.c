@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <platform.h>
 #include <FreeRTOS.h>
 #include <task.h>
@@ -6,6 +7,9 @@
 #include <cocobot.h>
 #include "meca_umbrella.h"
 #include "strat_hut.h"
+#include "strat_shell.h"
+
+static unsigned int _shell_configuration;
 
 void update_lcd(void * arg)
 {
@@ -23,70 +27,18 @@ void update_lcd(void * arg)
     //toggle led
     platform_led_toggle(PLATFORM_LED1 | PLATFORM_LED0);
     vTaskDelay(100 / portTICK_PERIOD_MS);
+
   }
 }
 
 void run_strategy(void * arg)
 {
-  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
-  {
-    cocobot_action_scheduler_add_action(
-                                        "hut 0",
-                                        strat_hut_get_score(STRAT_HUT_VIOLET_LEFT),
-                                        strat_hut_get_x(STRAT_HUT_VIOLET_LEFT),
-                                        strat_hut_get_y(STRAT_HUT_VIOLET_LEFT),
-                                        strat_hut_get_a(STRAT_HUT_VIOLET_LEFT),
-                                        strat_hut_get_exec_time(STRAT_HUT_VIOLET_LEFT),
-                                        strat_hut_get_success_proba(STRAT_HUT_VIOLET_LEFT),
-                                        strat_hut_action,
-                                        (void *)STRAT_HUT_VIOLET_LEFT,
-                                        NULL);
-
-    cocobot_action_scheduler_add_action(
-                                        "hut 1",
-                                        strat_hut_get_score(STRAT_HUT_VIOLET_RIGHT),
-                                        strat_hut_get_x(STRAT_HUT_VIOLET_RIGHT),
-                                        strat_hut_get_y(STRAT_HUT_VIOLET_RIGHT),
-                                        strat_hut_get_a(STRAT_HUT_VIOLET_RIGHT),
-                                        strat_hut_get_exec_time(STRAT_HUT_VIOLET_RIGHT),
-                                        strat_hut_get_success_proba(STRAT_HUT_VIOLET_RIGHT),
-                                        strat_hut_action,
-                                        (void *)STRAT_HUT_VIOLET_RIGHT,
-                                        NULL);
-  }
-
-  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_POS)
-  {
-    cocobot_action_scheduler_add_action(
-                                        "hut 2",
-                                        strat_hut_get_score(STRAT_HUT_GREEN_LEFT),
-                                        strat_hut_get_x(STRAT_HUT_GREEN_LEFT),
-                                        strat_hut_get_y(STRAT_HUT_GREEN_LEFT),
-                                        strat_hut_get_a(STRAT_HUT_GREEN_LEFT),
-                                        strat_hut_get_exec_time(STRAT_HUT_GREEN_LEFT),
-                                        strat_hut_get_success_proba(STRAT_HUT_GREEN_LEFT),
-                                        strat_hut_action,
-                                        (void *)STRAT_HUT_GREEN_LEFT,
-                                        NULL);
-
-    cocobot_action_scheduler_add_action(
-                                        "hut 3",
-                                        strat_hut_get_score(STRAT_HUT_GREEN_RIGHT),
-                                        strat_hut_get_x(STRAT_HUT_GREEN_RIGHT),
-                                        strat_hut_get_y(STRAT_HUT_GREEN_RIGHT),
-                                        strat_hut_get_a(STRAT_HUT_GREEN_RIGHT),
-                                        strat_hut_get_exec_time(STRAT_HUT_GREEN_RIGHT),
-                                        strat_hut_get_success_proba(STRAT_HUT_GREEN_RIGHT),
-                                        strat_hut_action,
-                                        (void *)STRAT_HUT_GREEN_RIGHT,
-                                        NULL);
-  }
-
+  strat_shell_register();
+  strat_hut_register();
 
   cocobot_game_state_wait_for_starter_removed();
- 
-  cocobot_action_scheduler_start();
 
+  cocobot_action_scheduler_start();
   while(1)
   {
     if(!cocobot_action_scheduler_execute_best_action())
@@ -103,6 +55,16 @@ int console_handler(const char * command)
   {
     cocobot_console_send_answer("Robot secondaire");
     cocobot_console_send_answer("%ld", platform_adc_get_mV(PLATFORM_ADC_VBAT));
+    if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+    {
+      cocobot_console_send_answer("Violet");
+    }
+    else
+    {
+      cocobot_console_send_answer("Green");
+    }
+    void * ptr = cocobot_game_state_get_userdata(COCOBOT_GS_UD_SHELL_CONFIGURATION);
+    cocobot_console_send_answer("%d", *((unsigned int *)ptr));
     return 1;
   }
 
@@ -119,13 +81,22 @@ void funny_action(void)
 int main(void) 
 {
   platform_init();
-  cocobot_console_init(MCUAL_USART1, 3, 3, console_handler);
+  cocobot_console_init(MCUAL_USART1, 1, 1, console_handler);
   cocobot_lcd_init();
   cocobot_position_init(4);
   cocobot_action_scheduler_init();
   cocobot_asserv_init();
   cocobot_trajectory_init(4);
   cocobot_game_state_init(funny_action);
+
+#ifdef AUSBEE_SIM
+  //random shell config in simu
+  _shell_configuration = rand() % 6; 
+#else
+  //TODO: impl me
+  _shell_configuration = 0;
+#endif
+  cocobot_game_state_set_userdata(COCOBOT_GS_UD_SHELL_CONFIGURATION, &_shell_configuration); 
 
   meca_umbrella_init();
   
