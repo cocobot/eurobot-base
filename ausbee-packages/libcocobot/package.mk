@@ -21,6 +21,7 @@ LIBCOCOBOT_SRC_FILES+=$(LIBCOCOBOT_FILE_PATH)/src/asserv/ramp.c
 LIBCOCOBOT_SRC_FILES+=$(LIBCOCOBOT_FILE_PATH)/src/asserv/pid.c
 LIBCOCOBOT_SRC_FILES+=$(LIBCOCOBOT_FILE_PATH)/src/action_scheduler/action_scheduler.c
 LIBCOCOBOT_SRC_FILES+=$(LIBCOCOBOT_FILE_PATH)/src/position/position.c
+LIBCOCOBOT_SRC_FILES+=$(LIBCOCOBOT_FILE_PATH)/src/game_state/game_state.c
 
 LIBCOCOBOT_TARGET_SRC_FILES+=$(LIBCOCOBOT_FILE_PATH)/src/position/encoders.c
 
