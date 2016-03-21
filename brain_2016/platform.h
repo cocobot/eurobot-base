@@ -60,6 +60,25 @@
 #define PLATFORM_SPI_ENCL_SELECT      2
 #define PLATFORM_SPI_ENCG_SELECT      3
 
+#define PLATFORM_I2C_SERVO            MCUAL_I2C1
+
+#define PLATFORM_SERVO_0_ID               0
+#define PLATFORM_SERVO_1_ID               1
+#define PLATFORM_SERVO_2_ID               2
+#define PLATFORM_SERVO_3_ID               3
+#define PLATFORM_SERVO_4_ID               4
+#define PLATFORM_SERVO_5_ID               5
+#define PLATFORM_SERVO_6_ID               6
+#define PLATFORM_SERVO_7_ID               7
+#define PLATFORM_SERVO_8_ID               8
+#define PLATFORM_SERVO_9_ID               9
+#define PLATFORM_SERVO_10_ID             10
+#define PLATFORM_SERVO_11_ID             11
+#define PLATFORM_SERVO_12_ID             12
+#define PLATFORM_SERVO_13_ID             13
+#define PLATFORM_SERVO_14_ID             14
+#define PLATFORM_SERVO_15_ID             15
+#define PLATFORM_SERVO_16_ID             16
 
 void platform_init(void);
 void platform_led_toggle(uint8_t led);
@@ -83,5 +102,9 @@ uint8_t platform_spi_slave_transfert(uint8_t data);
 void platform_motor_set_frequency(uint32_t freq_Hz);
 void platform_motor_set_left_duty_cycle(uint32_t duty_cycle);
 void platform_motor_set_right_duty_cycle(uint32_t duty_cycle);
+
+void platform_servo_set_value(uint32_t servo_id, uint32_t value);
+
+uint8_t platform_i2c_transmit(mcual_i2c_id_t id, uint8_t addr, uint8_t * txbuf, uint8_t tx_size, uint8_t * rxbuf, uint8_t rx_size);
 
 #endif// PLATFORM_H

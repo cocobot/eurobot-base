@@ -4,6 +4,7 @@
 # include <semphr.h>
 #endif
 #include "platform.h"
+#include "pcm9685.h"
 
 #define PLATFORM_MAIN_CLOCK_KHZ 168000
 
@@ -11,6 +12,7 @@
 //mutexes for spi access
 static SemaphoreHandle_t mutex_spi_slave;
 static SemaphoreHandle_t mutex_spi_position;
+static SemaphoreHandle_t mutex_i2c;
 #endif
 
 void platform_init(void)
@@ -19,6 +21,7 @@ void platform_init(void)
 #ifdef CONFIG_OS_USE_FREERTOS
   mutex_spi_position = xSemaphoreCreateMutex();
   mutex_spi_slave = xSemaphoreCreateMutex();
+  mutex_i2c = xSemaphoreCreateMutex();
 #endif
 
   //init clock
@@ -113,7 +116,13 @@ void platform_init(void)
   mcual_spi_master_init(MCUAL_SPI2, MCUAL_SPI_MODE_3, 400000);
 #endif
 
-  
+  //init i2c
+  mcual_gpio_init(MCUAL_GPIOB, MCUAL_GPIO_PIN6 | MCUAL_GPIO_PIN7, MCUAL_GPIO_INPUT);
+  mcual_gpio_set_function(MCUAL_GPIOB, MCUAL_GPIO_PIN6, 4);
+  mcual_gpio_set_function(MCUAL_GPIOB, MCUAL_GPIO_PIN7, 4);
+  mcual_gpio_set_output_type(MCUAL_GPIOB, MCUAL_GPIO_PIN6, MCUAL_GPIO_OPEN_DRAIN);
+  mcual_gpio_set_output_type(MCUAL_GPIOB, MCUAL_GPIO_PIN7, MCUAL_GPIO_OPEN_DRAIN);
+  mcual_i2c_master_init(MCUAL_I2C1, 100000);
 }
 
 void platform_led_toggle(uint8_t led)
@@ -715,3 +724,17 @@ void platform_motor_set_right_duty_cycle(uint32_t duty_cycle)
   mcual_timer_set_duty_cycle(MCUAL_TIMER9, MCUAL_TIMER_CHANNEL2, duty_cycle);
 }
 #endif
+
+void platform_servo_set_value(uint32_t servo_id, uint32_t value)
+{
+  pcm9685_set_channel(servo_id, 0, value);
+}
+
+uint8_t platform_i2c_transmit(mcual_i2c_id_t id, uint8_t addr, uint8_t * txbuf, uint8_t tx_size, uint8_t * rxbuf, uint8_t rx_size)
+{
+  xSemaphoreTake(mutex_i2c, portMAX_DELAY);
+  uint8_t ret = mcual_i2c_transmit(id, addr, txbuf, tx_size, rxbuf, rx_size);
+  xSemaphoreGive(mutex_i2c);
+
+  return ret;
+}
