@@ -144,7 +144,6 @@ void mcual_loader_run(void)
     }
     else 
     {
-      autoboot = 0;
       no_data_cnt = 0;
       if(recv == MCUAL_LOADER_LINE_END)
       {
@@ -165,6 +164,7 @@ void mcual_loader_run(void)
 
         if(strcmp(cmd, MCUAL_LOADER_SYNC_COMMAND) == 0)
         {
+          autoboot = 0;
           mcual_loader_send_string(MCUAL_LOADER_SYNC_COMMAND);
           mcual_loader_send(MCUAL_LOADER_SEPARATOR);
           mcual_loader_send_string(arg);
