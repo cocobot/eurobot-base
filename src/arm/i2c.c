@@ -2,10 +2,6 @@
 #include <stm32f4xx.h>
 #include <string.h>
 
-#include <FreeRTOS.h>
-#include <cocobot.h>
-#include <task.h>
-
 static I2C_TypeDef * mcual_i2c_get_register(mcual_i2c_id_t i2c_id)
 {
   switch(i2c_id)
@@ -145,7 +141,6 @@ mcual_i2c_status_t mcual_i2c_transmit(mcual_i2c_id_t id, uint8_t addr, uint8_t *
     {
       mcual_i2c_stop(reg);
       mcual_gpio_toogle(MCUAL_GPIOB, MCUAL_GPIO_PIN5);
-      cocobot_console_send_asynchronous("debug", "fail 0x%X 0x%X 0x%X\r\n", sr, I2C_SR1_ADD10, reg->OAR1);
       return MCUAL_I2C_FAIL;
     }
 
@@ -166,7 +161,6 @@ mcual_i2c_status_t mcual_i2c_transmit(mcual_i2c_id_t id, uint8_t addr, uint8_t *
       {
         mcual_i2c_stop(reg);
         mcual_gpio_toogle(MCUAL_GPIOB, MCUAL_GPIO_PIN5);
-        cocobot_console_send_asynchronous("debug", "fail 0x%X 0x%X 0x%X\r\n", sr, I2C_SR1_ADD10, reg->OAR1);
         return MCUAL_I2C_FAIL;
       }
     }
