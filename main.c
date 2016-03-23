@@ -4,65 +4,18 @@
 #include <task.h>
 #include <mcual.h>
 #include <cocobot.h>
-//#include <position.h>
-//#include <asserv.h>
-//#include <pcm9685.h>
-//#include <max11628.h>
-//#include <max7317.h>
-//#include <gyro.h>
-//#include <trajectory.h>
-//#include <usir.h>
-//#include <step.h>
-//#include <pathfinder.h>
-//#include "meca.h"
-//#include "strat.h"
+#include "meca_sucker.h"
 
-void blink(void * arg)
+static unsigned int _shell_configuration;
+
+void update_lcd(void * arg)
 {
   (void)arg;
-  int test = 0;
-
-  platform_led_clear(PLATFORM_LED2);
-  vTaskDelay(2000 / portTICK_PERIOD_MS); 
-  while(1)
-  {
-    platform_led_toggle(PLATFORM_LED2);
-    cocobot_trajectory_goto_d(500, -1);
-    cocobot_trajectory_goto_a(-90, -1);
-    cocobot_trajectory_goto_d(500, -1);
-    cocobot_trajectory_goto_a(180, -1);
-    cocobot_trajectory_goto_d(500, -1);
-    cocobot_trajectory_goto_a(90, -1);
-    cocobot_trajectory_goto_d(500, -1);
-    cocobot_trajectory_goto_a(0, -1);
-    cocobot_trajectory_wait();
-  }
-  while(1)
-  {
-    platform_led_toggle(PLATFORM_LED2);
-    cocobot_trajectory_goto_d(50,  -1);
-    cocobot_trajectory_goto_d(100, -1);
-    cocobot_trajectory_goto_d(-70, -1);
-    cocobot_trajectory_goto_d(-80, -1);
-    cocobot_trajectory_wait();
-    vTaskDelay(5000 / portTICK_PERIOD_MS); 
-  }
-
-  //platform_gpio_set(PLATFORM_GPIO_MOTOR_ENABLE);
-  //platform_gpio_clear(PLATFORM_GPIO_MOTOR_DIR_RIGHT);
-
-  //platform_motor_set_left_duty_cycle(0x750);
-  //platform_motor_set_right_duty_cycle(0x750);
   while(1)
   {
     //update lcd
     cocobot_lcd_clear();
     
-    //draw test line
-    cocobot_lcd_draw_line(COCOBOT_LCD_X_MAX / 2, 0, COCOBOT_LCD_X_MAX / 2, COCOBOT_LCD_Y_MAX - 1);
-
-    //draw test text
-    cocobot_lcd_print(12, 5, "Cocobot %u", test++);
    // cocobot_lcd_print(0, 20, "d: %ld mm", (int32_t)cocobot_position_get_distance());
     cocobot_lcd_print(0, 20, "a: %lX deg", (uint32_t)cocobot_position_get_angle());
     cocobot_lcd_print(0, 35, "a: %ld deg", (int32_t)cocobot_position_get_angle());
@@ -72,28 +25,110 @@ void blink(void * arg)
     //toggle led
     platform_led_toggle(PLATFORM_LED1 | PLATFORM_LED0);
     vTaskDelay(100 / portTICK_PERIOD_MS);
+
+    //meca_sucker_set_state(MECA_SUCKER_RIGHT, MECA_SUCKER_CLOSE);
+    //vTaskDelay(1000 / portTICK_PERIOD_MS);
+    //meca_sucker_set_state(MECA_SUCKER_RIGHT, MECA_SUCKER_PUMP);
+    //vTaskDelay(5000 / portTICK_PERIOD_MS);
   }
 }
 
-int console_handler(const char * cmd)
+void run_strategy(void * arg)
 {
-  (void)cmd;
-  return 0;
+  (void)arg;
+
+  meca_sucker_init();
+  cocobot_asserv_set_state(COCOBOT_ASSERV_ENABLE);
+
+  vTaskDelay(2000 / portTICK_PERIOD_MS);
+  cocobot_trajectory_goto_xy(0, 700, -1);
+  cocobot_trajectory_goto_xy_backward(0, 800, -1);
+  cocobot_trajectory_goto_a(-90, -1);
+  cocobot_trajectory_wait();
+
+  meca_sucker_set_state(MECA_SUCKER_RIGHT, MECA_SUCKER_PUMP);
+  cocobot_trajectory_goto_xy_backward(0, 1200, 1000);
+  cocobot_trajectory_goto_d(700, -1);
+  cocobot_trajectory_wait();
+
+  cocobot_trajectory_wait();
+
+  while(1);
+
+  cocobot_game_state_wait_for_starter_removed();
+
+  cocobot_action_scheduler_start();
+  while(1)
+  {
+    if(!cocobot_action_scheduler_execute_best_action())
+    {
+      //wait small delay if no action is available (which is a bad thing)
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+  }
+}
+
+int console_handler(const char * command)
+{
+  if(strcmp(command,"info") == 0)
+  {
+    cocobot_console_send_answer("Robot principal");
+    cocobot_console_send_answer("%ld", platform_adc_get_mV(PLATFORM_ADC_VBAT));
+    if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+    {
+      cocobot_console_send_answer("Violet");
+    }
+    else
+    {
+      cocobot_console_send_answer("Green");
+    }
+    void * ptr = cocobot_game_state_get_userdata(COCOBOT_GS_UD_SHELL_CONFIGURATION);
+    cocobot_console_send_answer("%d", *((unsigned int *)ptr));
+    return 1;
+  }
+
+  int handled = 0;
+  //COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_umbrella_console_handler);
+  return handled;
+}
+
+void funny_action(void)
+{
+
 }
 
 int main(void) 
 {
   platform_init();
-  cocobot_lcd_init();
-  cocobot_position_init(3);
-  cocobot_asserv_init();
-  platform_led_clear(PLATFORM_LED2);
-  cocobot_trajectory_init(3);
   cocobot_console_init(MCUAL_USART1, 1, 1, console_handler);
+  cocobot_lcd_init();
+  cocobot_position_init(4);
+  cocobot_asserv_init();
+  cocobot_trajectory_init(4);
+  cocobot_game_state_init(funny_action);
 
-  cocobot_asserv_set_state(COCOBOT_ASSERV_ENABLE);
+  //Main robot do not need to know the shell config
+  _shell_configuration = 0;
+  cocobot_game_state_set_userdata(COCOBOT_GS_UD_SHELL_CONFIGURATION, &_shell_configuration); 
+  
+  //set initial position
+  switch(cocobot_game_state_get_color())
+  {
+    case COCOBOT_GAME_STATE_COLOR_NEG:
+      cocobot_position_set_x(-1250);
+      cocobot_position_set_y(300);
+      cocobot_position_set_angle(0);
+      break;
 
-  xTaskCreate(blink, "blink", 200, NULL, 1, NULL );
+    case COCOBOT_GAME_STATE_COLOR_POS:
+      cocobot_position_set_x(1250);
+      cocobot_position_set_y(300);
+      cocobot_position_set_angle(180);
+      break;
+  }
+
+  xTaskCreate(run_strategy, "strat", 200, NULL, 2, NULL );
+  xTaskCreate(update_lcd, "lcd", 200, NULL, 1, NULL );
 
   vTaskStartScheduler();
 
