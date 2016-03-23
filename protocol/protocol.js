@@ -101,7 +101,6 @@ var receiveData = function(buffer) {
 }
 
 var handleReceivedData = function(data, async) {
-<<<<<<< HEAD
   var now = Date.now();
 
   if(!bootloader) {
