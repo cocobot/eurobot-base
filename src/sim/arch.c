@@ -52,10 +52,18 @@ static void * mcual_arch_sim_handle_peripherals(void * args)
     exit(EXIT_FAILURE);
   }
 
+  //get peripheral port
+  char * sport = getenv("PERIPHERAL_TCP_PORT");
+  int port = PERIPHERAL_TCP_PORT;
+  if(sport != NULL)
+  {
+    port = atoi(sport);
+  }
+
   //create socket info storage
   struct sockaddr_in saddr;
   saddr.sin_family = AF_INET;
-  saddr.sin_port = htons(PERIPHERAL_TCP_PORT);
+  saddr.sin_port = htons(port);
   saddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
   //configure socket in order to prevent failed bind in quick(burger king?) restart
