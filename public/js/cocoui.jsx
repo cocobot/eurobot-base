@@ -157,7 +157,7 @@ var Cocoui = React.createClass({
         this.createTopMenuItem('Position', 'position'), 
         this.createTopMenuItem('Console', 'console'), 
         this.createTopMenuItem('Asserv', 'asserv'), 
-        this.createTopMenuItem('Meca', 'meca'), 
+        this.createTopMenuItem('Meca', 'smeca'), 
       ],
       errors: [],
     };
@@ -253,7 +253,7 @@ var Cocoui = React.createClass({
         <Position page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'position'} actionID={this.state.actionID}/>
         <RConsole page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'console'} actionID={this.state.actionID}/>
         <Asserv page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'asserv'} actionID={this.state.actionID}/>
-        <Meca page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'meca'} actionID={this.state.actionID}/>
+        <SMeca page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'smeca'} actionID={this.state.actionID}/>
       </div>
     );
   }
