@@ -6,6 +6,7 @@ import time
 import sys
 import binascii
 import zlib
+import requests
 
 class HexFile():
     def __init__(self, path, pagesize):
@@ -188,9 +189,38 @@ class Loader():
         self.send("BOOT")
         print("Loaded !")
 
-if len(sys.argv) < 3:
-    print("Usage: %s serialport hexfile" % sys.argv[0])
-else:
+
+def bootloader_cocoui():
+    print("*** Trying to bootload with CocoUI ***")
+    try:
+        files = {'file': open(sys.argv[2], 'rb')}
+        r = requests.post("http://127.0.0.1:3000/api/program", files=files, stream=True)
+        if r.status_code != 200:
+            print(" - Unexpected CocoUI answer: " + str(r.status_code))
+            return False
+
+        lastline = ""
+        for line in r.iter_lines():
+            lastline = line
+            print(" - " + line)
+        
+        if lastline != "Done":
+            return False
+        return True
+    except requests.exceptions.ConnectionError:
+        print(" - Unable to connect to CocoUI")
+        return False
+
+
+def bootoader_default_implementation():
+    print("*** Use default python implementation as failback ***") 
     hexf = HexFile(sys.argv[2], 16 * 1024)
     loader = Loader(sys.argv[1], hexf)
     loader.run()
+
+
+if len(sys.argv) < 3:
+    print("Usage: %s serialport hexfile" % sys.argv[0])
+else:
+    if not bootloader_cocoui():
+        bootoader_default_implementation()

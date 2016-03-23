@@ -40,3 +40,10 @@ void mcual_gpio_set_function(mcual_gpio_port_t port, mcual_gpio_pin_t pin, int f
   (void)pin;
   (void)function_id;
 }
+
+void mcual_gpio_set_output_type(mcual_gpio_port_t port, mcual_gpio_pin_t pin, mcual_gpio_output_type_t type)
+{
+  (void)port;
+  (void)pin;
+  (void)type;
+}

@@ -12,6 +12,7 @@
 #define MCUAL_LOADER_FLASH_COMMAND "FLASH"
 #define MCUAL_LOADER_BOOT_COMMAND "BOOT"
 #define MCUAL_LOADER_UNKNOWN_COMMAND "UNKNOWN COMMAND"
+#define MCUAL_LOADER_IN_PROGRESS "IN PROGRESS"
 #define MCUAL_LOADER_OK "OK"
 #define MCUAL_LOADER_KO "KO"
 #define MCUAL_LOADER_LINE_END '\n'
@@ -144,8 +145,7 @@ void mcual_loader_run(void)
     }
     else 
     {
-      autoboot = 0;
-      no_data_cnt = 0;
+      int valid_cmd = 1;
       if(recv == MCUAL_LOADER_LINE_END)
       {
         data[position] = 0;
@@ -165,6 +165,7 @@ void mcual_loader_run(void)
 
         if(strcmp(cmd, MCUAL_LOADER_SYNC_COMMAND) == 0)
         {
+          autoboot = 0;
           mcual_loader_send_string(MCUAL_LOADER_SYNC_COMMAND);
           mcual_loader_send(MCUAL_LOADER_SEPARATOR);
           mcual_loader_send_string(arg);
@@ -184,6 +185,8 @@ void mcual_loader_run(void)
         {
           for(i = 1; i < 12; i += 1)
           {
+            mcual_loader_send_string(MCUAL_LOADER_IN_PROGRESS);
+            mcual_loader_send(MCUAL_LOADER_LINE_END);
             while(FLASH->SR & FLASH_SR_BSY);
             FLASH->CR = (i << 3) | FLASH_CR_SER | FLASH_CR_PSIZE_1;                    
             FLASH->CR |= FLASH_CR_STRT;
@@ -240,8 +243,15 @@ void mcual_loader_run(void)
         }
         else
         {
+          valid_cmd = 0;
           mcual_loader_send_string(MCUAL_LOADER_UNKNOWN_COMMAND);
         }
+
+        if(valid_cmd)
+        {
+          no_data_cnt = 0;
+        }
+
         mcual_loader_send(MCUAL_LOADER_LINE_END);
         position = 0;
       }
