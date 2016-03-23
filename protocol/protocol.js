@@ -5,13 +5,16 @@ var fs = require('fs');
 var serialProtocol = require('./serialProtocol.js');
 var TCPProtocol = require('./TCPProtocol.js');
 
+//consts
+var DEFAULT_COOL_TIME = 1000;
+
 //internal storage
 var emit = function() {};
 var lowLevel = null;
 var recvBuffer = "";
 var recvBufferLines = [];
 var lastCommand = [];
-
+var cooltime = 0;
 
 var configure = function(emit_func) {
   emit = emit_func;
@@ -35,6 +38,7 @@ var getAvailable = function() {
   }
 
   res.push({type: 'TCP', addr: '127.0.0.1:10000'});
+  res.push({type: 'TCP', addr: '127.0.0.1:10001'});
 
   return res;
 };
@@ -88,40 +92,64 @@ var receiveData = function(buffer) {
 }
 
 var handleReceivedData = function(data, async) {
-  var obj = {};
+  var now = Date.now();
 
-  if(!async) {
-    var request = null;
+  if(now - cooltime > DEFAULT_COOL_TIME) {
+    var obj = {};
 
-    var now = Date.now();
-    while(lastCommand.length > 0) {
-      var r = lastCommand.shift();
-      if(r.date > now - 500) {
-        request = r;
-        break;
+    if(!async) {
+      var request = null;
+
+      while(lastCommand.length > 0) {
+        var r = lastCommand.shift();
+        if(r.date > now - 500) {
+          request = r;
+          break;
+        }
+      }
+
+      obj.request = request;
+    }
+    obj.answer = {async: async, data: data, date: Date.now()};
+
+
+    if((obj.request != undefined) && (obj.request.fake_cmd_value != undefined)) {
+      if(obj.answer.data[0] != 'invalid command: \'' + obj.request.command +  '\'') {
+        console.log("*************************** OUT of SYNC *********************");
+        console.log(obj.answer.data[0]);
+        console.log('invalid command \'' + obj.request.command +  '\'');
+        console.log('---');
+        cooltime = now;
       }
     }
-
-    obj.request = request;
+    else {
+      emit("receive", obj);
+    }
   }
-  obj.answer = {async: async, data: data, date: Date.now()};
-
-  emit("receive", obj);
 }
 
 var send = function(data) {
-  if(lowLevel != null) {
-    data.date = Date.now();
-    lastCommand.push(data);
-    if(data.argument != undefined) {
-      lowLevel.send(data.command + " " + data.argument);
-    }
-    else {
-      lowLevel.send(data.command);
+  var now = Date.now();
+  if(now - cooltime > DEFAULT_COOL_TIME) {
+    if(lowLevel != null) {
+      data.date = Date.now();
+      lastCommand.push(data);
+      if(data.argument != undefined) {
+        lowLevel.send(data.command + " " + data.argument);
+      }
+      else {
+        lowLevel.send(data.command);
+      }
     }
   }
 };
 
+var detectOutOfSync = function() {
+  var rnd = Math.floor(Math.random() * 1000);
+  send({command: 'fake_cmd_' + rnd, fake_cmd_value: rnd});
+};
+
+setInterval(detectOutOfSync, 1000);
 
 exports.getState = getState;
 exports.connect = connect;

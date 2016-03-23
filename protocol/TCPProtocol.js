@@ -32,7 +32,10 @@ TCPProtocol.prototype.connect = function() {
     this.serial.on('data', function(data) {
       self.receiveData(data);
     });
-    this.serial.connect(10000, "127.0.0.1", function() {
+
+    var data = this.addr.split(':');
+
+    this.serial.connect(data[1], data[0], function() {
         console.log('open');
         self.try = 0;
         self.serial.setNoDelay(true);
