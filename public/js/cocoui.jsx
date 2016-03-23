@@ -141,6 +141,8 @@ var LoadingLogic = {
 
 //create the page layout
 var Cocoui = React.createClass({
+  UPDATE_PERIOD_MS: 750,
+
   //set default state
   getInitialState: function() {
     var self = this;
@@ -160,11 +162,45 @@ var Cocoui = React.createClass({
         this.createTopMenuItem('Meca', 'smeca'), 
       ],
       errors: [],
+      protocol: this.getProtocolInitialState(),
+      bootloader_msg: '',
+    };
+  },
+
+  getProtocolInitialState: function() {
+    return {
+      connected: false,
+      bootloader: false,
+      available: [],
     };
   },
 
   componentDidMount: function() {
+    var self = this;
+
     fireError = this.fireError;
+    setTimeout(this.updateProtocolStatus, this.UPDATE_PERIOD_MS);
+    utils.socket.on('bootloader', function(data) { self.setState({bootloader_msg: data.msg}); });
+  },
+
+  updateProtocolStatus: function() {
+    var self = this;
+
+    $.ajax({
+      url: '/api/protocol',
+      type: 'GET',
+      success: function(data) {
+        self.setState({protocol: data});
+        utils.connected = data.connected;
+        setTimeout(self.updateProtocolStatus, self.UPDATE_PERIOD_MS);
+      },
+      error: function(data) {
+        self.setState({protocol: self.getProtocolInitialState()});
+        utils.connected = false;
+        setTimeout(self.updateProtocolStatus, self.UPDATE_PERIOD_MS);
+      }
+    });
+
   },
   
   //create valid topMenuItem
@@ -244,11 +280,23 @@ var Cocoui = React.createClass({
       })(errors, this, i, this.state.errors[i]);
     }
 
+    var bloaderCls = "row";
+    if(!this.state.protocol.bootloader) {
+      bloaderCls += " hide";
+    }
+
     return(
       <div>
-        <TopMenu>
+        <TopMenu protocol={this.state.protocol}>
           { this.state.topMenuItem.map(this.renderTopMenuItem) }
         </TopMenu>
+        <div className={bloaderCls}>
+          <div className="col-md-6 col-md-offset-3 main">
+            <div className="alert alert-info" role="alert">
+              <strong>Bootloader in progress:</strong> {this.state.bootloader_msg}
+            </div>
+          </div>
+        </div>
         {errors}
         <Position page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'position'} actionID={this.state.actionID}/>
         <RConsole page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'console'} actionID={this.state.actionID}/>

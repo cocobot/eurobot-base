@@ -1,42 +1,17 @@
 var TopMenuProtocol = React.createClass({
-  UPDATE_PERIOD_MS: 750,
-  
+
   getInitialState: function() {
     return {
-      connected: false,
-      available: [],
       selected: null,
     };
   },
 
-  componentDidMount: function() {
-    setTimeout(this.updateProtocolStatus, this.UPDATE_PERIOD_MS);
-  },
-
-  updateProtocolStatus: function() {
-    var self = this;
-
-    $.ajax({
-      url: '/api/protocol',
-      type: 'GET',
-      success: function(data) {
-        self.setState({
-          connected: data.connected,
-          available: data.available,
-        });
-        if(self.state.selected == null) {
-          self.setState({selected: data.available[0].addr});
-        }
-        utils.connected = data.connected;
-        setTimeout(self.updateProtocolStatus, self.UPDATE_PERIOD_MS);
-      },
-      error: function(data) {
-        self.setState(self.getInitialState());
-        utils.connected = false;
-        setTimeout(self.updateProtocolStatus, self.UPDATE_PERIOD_MS);
+  componentWillReceiveProps: function(nextProp) {
+    if(this.state.selected == null) {
+      if(this.props.protocol.available.length > 0) {
+        this.setState({selected: this.props.protocol.available[0].addr});
       }
-    });
-
+    }
   },
 
   connect: function() {
@@ -92,7 +67,7 @@ var TopMenuProtocol = React.createClass({
   },
 
   render: function() {
-    if(this.state.connected) {
+    if(this.props.protocol.connected) {
       return(
         <div className="navbar-form navbar-right">
           <button type="submit" className="btn btn-danger" onClick={this.disconnect}>Deconnexion</button>
@@ -105,7 +80,7 @@ var TopMenuProtocol = React.createClass({
         <div className="navbar-form navbar-right">
           <div className="form-group">
             <select className="form-control small-margin-right" style={{width: 200 + "px"}} value={this.state.selected} onChange={this.handleChange} >
-            { this.state.available.map(this.renderAvailable) }
+            { this.props.protocol.available.map(this.renderAvailable) }
             </select>
           </div>
           <button type="submit" className="btn btn-success" onClick={this.connect}>Connexion</button>
@@ -237,7 +212,7 @@ var TopMenu = React.createClass({
             <ul className="nav navbar-nav">
               {this.props.children}
             </ul>
-            <TopMenuProtocol />
+            <TopMenuProtocol protocol={this.props.protocol}/>
             <TopMenuInfo />
           </div>
         </div>
