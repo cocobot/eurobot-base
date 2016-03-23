@@ -725,16 +725,22 @@ void platform_motor_set_right_duty_cycle(uint32_t duty_cycle)
 }
 #endif
 
+#ifdef CONFIG_OS_USE_FREERTOS
 void platform_servo_set_value(uint32_t servo_id, uint32_t value)
 {
   pcm9685_set_channel(servo_id, 0, value);
 }
+#endif
 
 uint8_t platform_i2c_transmit(mcual_i2c_id_t id, uint8_t addr, uint8_t * txbuf, uint8_t tx_size, uint8_t * rxbuf, uint8_t rx_size)
 {
+#ifdef CONFIG_OS_USE_FREERTOS
   xSemaphoreTake(mutex_i2c, portMAX_DELAY);
+#endif
   uint8_t ret = mcual_i2c_transmit(id, addr, txbuf, tx_size, rxbuf, rx_size);
+#ifdef CONFIG_OS_USE_FREERTOS
   xSemaphoreGive(mutex_i2c);
+#endif
 
   return ret;
 }
