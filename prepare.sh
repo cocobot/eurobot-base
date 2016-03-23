@@ -19,7 +19,7 @@ git clone git@github.com:cocobot/ausbee-platforms.git
 mkdir projects
 
 # - brain loader
-git clone git@github.com:cocobot/pbrain_loader.git projects/brain_loader
+git clone git@github.com:cocobot/brain_loader.git projects/brain_loader
 
 # - brain (main robot)
 git clone git@github.com:cocobot/pbrain.git projects/pbrain
