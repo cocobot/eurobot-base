@@ -5,6 +5,7 @@
 #include <task.h>
 #include <mcual.h>
 #include <cocobot.h>
+#include <pcm9685.h>
 #include "meca_umbrella.h"
 #include "meca_seashell.h"
 #include "strat_hut.h"
@@ -14,6 +15,8 @@ static unsigned int _shell_configuration;
 
 void update_lcd(void * arg)
 {
+  (void)arg;
+
   while(1)
   {
     //update lcd
@@ -28,15 +31,15 @@ void update_lcd(void * arg)
     //toggle led
     platform_led_toggle(PLATFORM_LED1 | PLATFORM_LED0);
     vTaskDelay(100 / portTICK_PERIOD_MS);
-
   }
 }
 
 void run_strategy(void * arg)
 {
+  (void)arg;
   meca_umbrella_init();
   meca_seashell_init();
-  
+
   strat_shell_register();
   strat_hut_register();
 

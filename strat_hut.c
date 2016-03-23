@@ -53,6 +53,7 @@ static float strat_hut_get_exec_time(int hut)
 
 static float strat_hut_get_success_proba(int hut)
 {
+  (void)hut; //each hut is equal
   return 0.01; //very low. Main robot should have already done the action before us !
 }
 
