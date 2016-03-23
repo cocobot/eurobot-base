@@ -31,6 +31,7 @@ MCUAL_TARGET_SRC_FILES=$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/clock.c \
 								$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/usart.c \
 								$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/timer.c \
 								$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/spi.c \
+								$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/i2c.c \
 								$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/loader.c \
 								$(MCUAL_FILE_PATH)/src/$(MCUAL_ARCH)/arch.c
 
@@ -40,6 +41,7 @@ MCUAL_SIM_SRC_FILES=$(MCUAL_FILE_PATH)/src/sim/clock.c \
 								$(MCUAL_FILE_PATH)/src/sim/usart.c \
 								$(MCUAL_FILE_PATH)/src/sim/timer.c \
 								$(MCUAL_FILE_PATH)/src/sim/spi.c \
+								$(MCUAL_FILE_PATH)/src/sim/i2c.c \
 								$(MCUAL_FILE_PATH)/src/sim/arch.c
 
 
