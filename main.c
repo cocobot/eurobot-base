@@ -6,6 +6,7 @@
 #include <mcual.h>
 #include <cocobot.h>
 #include "meca_umbrella.h"
+#include "meca_seashell.h"
 #include "strat_hut.h"
 #include "strat_shell.h"
 
@@ -33,6 +34,9 @@ void update_lcd(void * arg)
 
 void run_strategy(void * arg)
 {
+  meca_umbrella_init();
+  meca_seashell_init();
+  
   strat_shell_register();
   strat_hut_register();
 
@@ -70,6 +74,7 @@ int console_handler(const char * command)
 
   int handled = 0;
   COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_umbrella_console_handler);
+  COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_seashell_console_handler);
   return handled;
 }
 
@@ -98,8 +103,6 @@ int main(void)
 #endif
   cocobot_game_state_set_userdata(COCOBOT_GS_UD_SHELL_CONFIGURATION, &_shell_configuration); 
 
-  meca_umbrella_init();
-  
   //set initial position
   switch(cocobot_game_state_get_color())
   {

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "strat_shell.h"
+#include "meca_seashell.h"
 
 #define SHELL_NUMBER 22
 #define SHELL_ACTION_NAME_LENGTH 8
@@ -454,6 +455,8 @@ static int strat_shell_action(void * arg)
 {
   (void)arg;
 
+  meca_seashell_take();
+
   switch(cocobot_game_state_get_color())
   {
     case COCOBOT_GAME_STATE_COLOR_POS:
@@ -464,8 +467,15 @@ static int strat_shell_action(void * arg)
       cocobot_trajectory_goto_xy(-SHELL_TARGET_AREA_X, SHELL_TARGET_AREA_Y, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
       break;
   }
+
+  cocobot_trajectory_wait();
+
+  meca_seashell_open();
+
   cocobot_trajectory_goto_d(-200, 5000);
   cocobot_trajectory_result_t res = cocobot_trajectory_wait();
+
+  meca_seashell_close();
 
   if(res == COCOBOT_TRAJECTORY_STOPPED_BEFORE_END)
   {
