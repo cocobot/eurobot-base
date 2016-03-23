@@ -62,19 +62,28 @@ var MecaUmbrella = React.createClass({
         </div>
         <div className="panel-body">
           <div className="row">
-            <div className="col-md-3">
+            <div className="col-md-1">
               <label>&Eacute;tat:</label>
             </div>
-            <div className="col-md-3">
+            <div className="col-md-1">
               {state}
             </div>
+            <div className="col-md-2">
+            </div>
+            <div className="col-md-8">
+              <Parameter name="servo rotation" command="meca_umbrella_rotation_servo" show={this.props.update}/>
+            </div>
+
           </div>
           <div className="row">
-            <div className="col-md-6">
-              <button type="submit" className="btn btn-xs btn-warning" onClick={this.close}>Fermer</button>
+            <div className="col-md-4">
+              <div className="btn-group">
+                <button type="submit" className="btn btn-xs btn-warning small-margin-right" onClick={this.close}>Fermer</button>
+                <button type="submit" className="btn btn-xs btn-warning" onClick={this.open}>Ouvrir</button>
+              </div>
             </div>
-            <div className="col-md-6">
-              <button type="submit" className="btn btn-xs btn-warning" onClick={this.open}>Ouvrir</button>
+            <div className="col-md-8">
+              <Parameter name="servo ouverture" command="meca_umbrella_opening_servo" show={this.props.update}/>
             </div>
           </div>
         </div>
@@ -154,29 +163,27 @@ var MecaSeaShell = React.createClass({
         </div>
         <div className="panel-body">
           <div className="row">
-            <div className="col-md-2">
+            <div className="col-md-1">
               <label>&Eacute;tat:</label>
             </div>
-            <div className="col-md-2">
+            <div className="col-md-1">
               {state}
             </div>
             <div className="col-md-2">
             </div>
-            <div className="col-md-6">
+            <div className="col-md-8">
               <Parameter name="servo droit" command="meca_seashell_right_servo" show={this.props.update}/>
             </div>
           </div>
           <div className="row">
-            <div className="col-md-2">
-              <button type="submit" className="btn btn-xs btn-warning" onClick={this.close}>Fermer</button>
-            </div>
-            <div className="col-md-2">
-              <button type="submit" className="btn btn-xs btn-warning" onClick={this.open}>Ouvrir</button>
-            </div>
-            <div className="col-md-2">
+            <div className="col-md-4">
+              <div className="btn-group">
+              <button type="submit" className="btn btn-xs btn-warning small-margin-right" onClick={this.close}>Fermer</button>
+              <button type="submit" className="btn btn-xs btn-warning small-margin-right" onClick={this.open}>Ouvrir</button>
               <button type="submit" className="btn btn-xs btn-warning" onClick={this.take}>Prendre</button>
+              </div>
             </div>
-            <div className="col-md-6">
+            <div className="col-md-8">
               <Parameter name="servo gauche" command="meca_seashell_left_servo" show={this.props.update}/>
             </div>
           </div>
@@ -222,7 +229,7 @@ var SMeca = React.createClass({
               </div>
               <div className="panel-body">
                 <div className="row">
-                  <div className="col-md-3">
+                  <div className="col-md-6">
                     <MecaUmbrella update={this.props.show}/>
                   </div>
                   <div className="col-md-6">
