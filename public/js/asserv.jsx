@@ -13,7 +13,7 @@ $.getJSON('http://' + document.domain + ':' + location.port + '/api/time/' + cli
 
 
 
-var ChartParameter = React.createClass({
+var Parameter = React.createClass({
   UPDATE_PERIOD_MS: 1000,
 
   getInitialState: function() {
@@ -482,13 +482,13 @@ var Asserv = React.createClass({
                     </Chart>
                   </div>
                   <div className="col-md-4">
-                    <ChartParameter name="Speed" command="ramp_distance_speed" show={this.props.show}/>
-                    <ChartParameter name="Accel" command="ramp_distance_accel" show={this.props.show}/>
-                    <ChartParameter name="Kp" command="pid_distance_kp" show={this.props.show}/>
-                    <ChartParameter name="Ki" command="pid_distance_ki" show={this.props.show}/>
-                    <ChartParameter name="Kd" command="pid_distance_kd" show={this.props.show}/>
-                    <ChartParameter name="Max I" command="pid_distance_max_i" show={this.props.show}/>
-                    <ChartParameter name="Max E" command="pid_distance_max_e" show={this.props.show}/>
+                    <Parameter name="Speed" command="ramp_distance_speed" show={this.props.show}/>
+                    <Parameter name="Accel" command="ramp_distance_accel" show={this.props.show}/>
+                    <Parameter name="Kp" command="pid_distance_kp" show={this.props.show}/>
+                    <Parameter name="Ki" command="pid_distance_ki" show={this.props.show}/>
+                    <Parameter name="Kd" command="pid_distance_kd" show={this.props.show}/>
+                    <Parameter name="Max I" command="pid_distance_max_i" show={this.props.show}/>
+                    <Parameter name="Max E" command="pid_distance_max_e" show={this.props.show}/>
                   </div>
                 </div>
                 <div className="row">
@@ -511,13 +511,13 @@ var Asserv = React.createClass({
                     </Chart>
                   </div>
                   <div className="col-md-4">
-                    <ChartParameter name="Speed" command="ramp_angular_speed" show={this.props.show}/>
-                    <ChartParameter name="Accel" command="ramp_angular_accel" show={this.props.show}/>
-                    <ChartParameter name="Kp" command="pid_angular_kp" show={this.props.show}/>
-                    <ChartParameter name="Ki" command="pid_angular_ki" show={this.props.show}/>
-                    <ChartParameter name="Kd" command="pid_angular_kd" show={this.props.show}/>
-                    <ChartParameter name="Max I" command="pid_angular_max_i" show={this.props.show}/>
-                    <ChartParameter name="Max E" command="pid_angular_max_e" show={this.props.show}/>
+                    <Parameter name="Speed" command="ramp_angular_speed" show={this.props.show}/>
+                    <Parameter name="Accel" command="ramp_angular_accel" show={this.props.show}/>
+                    <Parameter name="Kp" command="pid_angular_kp" show={this.props.show}/>
+                    <Parameter name="Ki" command="pid_angular_ki" show={this.props.show}/>
+                    <Parameter name="Kd" command="pid_angular_kd" show={this.props.show}/>
+                    <Parameter name="Max I" command="pid_angular_max_i" show={this.props.show}/>
+                    <Parameter name="Max E" command="pid_angular_max_e" show={this.props.show}/>
                   </div>
                 </div>
               </div>

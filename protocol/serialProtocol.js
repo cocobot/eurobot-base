@@ -38,6 +38,11 @@ SerialProtocol.prototype.send = function(data) {
   this.serial.write(data + "\n", function() {});
 };
 
+SerialProtocol.prototype.sendRaw = function(data) {
+  this.serial.write(data, function() {});
+};
+
+
 SerialProtocol.prototype.receiveData = function(buffer) {
   if(this.handleReceiveData != null) {
     this.handleReceiveData(buffer);
