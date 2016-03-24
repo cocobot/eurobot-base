@@ -680,6 +680,26 @@ var Eurobot2016SeeShell = React.createClass({
 
 var Eurobot2016 = React.createClass({
 
+  getInitialState: function() {
+    return {
+      conf: "0",
+    };
+  },
+
+  componentDidMount: function() {
+    utils.onReceiveCommand("info", this.handleReceive);
+  },
+
+  handleReceive: function(data) {
+    if(data.answer.data.length >= 4) {
+      console.log(data.answer.data);
+      this.setState({
+        conf: data.answer.data[3] + "",
+      });
+    }
+  },
+
+
   renderBorders: function() {
     var borders = [];
 
@@ -755,7 +775,14 @@ var Eurobot2016 = React.createClass({
 
 
   render: function() {
-    var seeShellConf = ["1", "2", "3", "4", "5"];
+    var seeShellConf = [];
+    
+    if(this.state.conf == "0") {
+      seeShellConf = ["1", "2", "3", "4", "5"];
+    }
+    else {
+      seeShellConf = [this.state.conf];
+    }
 
     return (
       <g>

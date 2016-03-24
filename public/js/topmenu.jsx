@@ -80,6 +80,10 @@ var TopMenuProtocol = React.createClass({
     });
   },
 
+  reboot: function() {
+    utils.sendCommand({command: "system_reboot", argument: null});
+  },
+
 
   renderAvailable: function(pcol, idx) {
     return (
@@ -95,7 +99,8 @@ var TopMenuProtocol = React.createClass({
     if(this.state.connected) {
       return(
         <div className="navbar-form navbar-right">
-          <button type="submit" className="btn btn-danger" onClick={this.disconnect}>Deconnexion</button>
+          <button type="submit" className="btn btn-warning small-margin-right" onClick={this.disconnect}>Deconnexion</button>
+          <button type="submit" className="btn btn-danger" onClick={this.reboot}>Reboot du robot</button>
         </div>
       );
 
