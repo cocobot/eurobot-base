@@ -692,7 +692,6 @@ var Eurobot2016 = React.createClass({
 
   handleReceive: function(data) {
     if(data.answer.data.length >= 4) {
-      console.log(data.answer.data);
       this.setState({
         conf: data.answer.data[3] + "",
       });
