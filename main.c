@@ -95,6 +95,7 @@ int main(void)
   cocobot_action_scheduler_init();
   cocobot_asserv_init();
   cocobot_trajectory_init(4);
+  cocobot_opponent_detection_init(3);
   cocobot_game_state_init(funny_action);
 
 #ifdef AUSBEE_SIM

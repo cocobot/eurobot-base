@@ -12,7 +12,7 @@
 #define SHELL_BASE_PROBA_COLOR 1
 #define SHELL_BASE_PROBA_WHITE 0.9
 
-char action_names[SHELL_ACTION_NAME_LENGTH][SHELL_NUMBER];
+char action_names[SHELL_NUMBER][SHELL_ACTION_NAME_LENGTH];
 
 static unsigned int strat_shell_get_score(int shell)
 {
