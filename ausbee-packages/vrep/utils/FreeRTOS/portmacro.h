@@ -54,8 +54,10 @@ typedef unsigned long UBaseType_t;
 	#define portBYTE_ALIGNMENT		4
 #endif
 
+#define portSET_INTERRUPT_MASK_FROM_ISR()   0; vPortDisableInterrupts()
+#define portCLEAR_INTERRUPT_MASK_FROM_ISR(ux)  ( vPortEnableInterrupts() )
 #define portSET_INTERRUPT_MASK()  ( vPortDisableInterrupts() )
-#define portCLEAR_INTERRUPT_MASK()  ( vPortEnableInterrupts() )G
+#define portCLEAR_INTERRUPT_MASK()  ( vPortEnableInterrupts() )
 #define portDISABLE_INTERRUPTS()  portSET_INTERRUPT_MASK()
 #define portENABLE_INTERRUPTS()   portCLEAR_INTERRUPT_MASK()
 #define portENTER_CRITICAL()    vPortEnterCritical()
