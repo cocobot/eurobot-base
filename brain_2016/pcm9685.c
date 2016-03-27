@@ -9,6 +9,8 @@
 #define PCA9685_LED0_ON_L_REGISTER 0x06
 #define PCA9685_PRE_SCALE_REGISTER 0xFE
 
+static int is_initialized = 0;
+
 static void pcm9685_set_sleep(uint8_t addr, uint8_t sleep)
 {
   uint8_t txbuf[2];
@@ -36,10 +38,17 @@ void pcm9685_init(void)
   pcm9685_set_sleep(PCM9685_ADDR, 1);
   pcm9685_set_frequency(PCM9685_ADDR, 50);
   pcm9685_set_sleep(PCM9685_ADDR, 0);
+
+  is_initialized = 1;
 }
 
 void pcm9685_set_channel(uint8_t id, uint16_t delay, uint16_t width)
 {
+  if(!is_initialized)
+  {
+    pcm9685_init();
+  }
+
   uint8_t txbuf[5];
   txbuf[0] = PCA9685_LED0_ON_L_REGISTER + 4 * (id % 16);
   txbuf[1] = delay & 0xff;

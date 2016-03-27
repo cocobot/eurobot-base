@@ -80,6 +80,11 @@
 #define PLATFORM_SERVO_15_ID             15
 #define PLATFORM_SERVO_16_ID             16
 
+#define PLATFORM_US_0                     0
+#define PLATFORM_US_1                     1
+#define PLATFORM_US_2                     2
+#define PLATFORM_US_3                     3
+
 void platform_init(void);
 void platform_led_toggle(uint8_t led);
 void platform_led_set(uint8_t led);
@@ -88,7 +93,7 @@ void platform_led_clear(uint8_t led);
 void platform_gpio_set_direction(uint32_t gpio, mcual_gpio_direction_t direction);
 void platform_gpio_set(uint32_t gpio);
 void platform_gpio_clear(uint32_t gpio);
-void platform_gpio_toogle(uint32_t gpio);
+void platform_gpio_toggle(uint32_t gpio);
 uint32_t platform_gpio_get(uint32_t gpio);
 
 int32_t platform_adc_get_mV(uint32_t adc);
@@ -106,5 +111,9 @@ void platform_motor_set_right_duty_cycle(uint32_t duty_cycle);
 void platform_servo_set_value(uint32_t servo_id, uint32_t value);
 
 uint8_t platform_i2c_transmit(mcual_i2c_id_t id, uint8_t addr, uint8_t * txbuf, uint8_t tx_size, uint8_t * rxbuf, uint8_t rx_size);
+
+void platform_us_send_trig(uint32_t us_id);
+void platform_us_reset_trig(uint32_t us_id);
+float platform_us_get_value(uint32_t us_id);
 
 #endif// PLATFORM_H
