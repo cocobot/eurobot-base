@@ -27,7 +27,6 @@ static platform_us_t us[4];
 static void platform_us_0_interrupt(void)
 {
   uint16_t now = mcual_timer_get_value(MCUAL_TIMER4);
-  platform_led_set(PLATFORM_LED2);
   if(mcual_gpio_get(MCUAL_GPIOB, MCUAL_GPIO_PIN8))
   {
     us[0].rising_edge = now;
