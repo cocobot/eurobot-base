@@ -29,8 +29,9 @@ void update_lcd(void * arg)
     cocobot_lcd_render();
 
     //toggle led
-    platform_led_toggle(PLATFORM_LED1 | PLATFORM_LED0);
     vTaskDelay(100 / portTICK_PERIOD_MS);
+
+    platform_led_toggle(PLATFORM_LED0);
   }
 }
 
