@@ -1,6 +1,10 @@
 #include <string.h>
 #include <cocobot.h>
+#include <platform.h>
 #include "meca_seashell.h"
+
+#define MECA_SEASHELL_LEFT_SERVO_ID   PLATFORM_SERVO_0_ID
+#define MECA_SEASHELL_RIGHT_SERVO_ID  PLATFORM_SERVO_1_ID
 
 #define MECA_SEASHELL_LEFT_CLOSE  1400
 #define MECA_SEASHELL_LEFT_TAKE   1500
@@ -22,7 +26,8 @@ static unsigned int servo_right_set_point;
 
 static void meca_seashell_update(void)
 {
-  //TODO: this
+  platform_servo_set_value(MECA_SEASHELL_LEFT_SERVO_ID, servo_left_set_point);
+  platform_servo_set_value(MECA_SEASHELL_RIGHT_SERVO_ID, servo_right_set_point);
 }
 
 void meca_seashell_init(void)
@@ -102,7 +107,7 @@ int meca_seashell_console_handler(const char * command)
 
   if(strcmp(command,"meca_seashell_left_servo") == 0)
   {
-    unsigned int set;
+    int set;
     if(cocobot_console_get_iargument(0, &set))
     {
       servo_left_set_point = set;
@@ -114,7 +119,7 @@ int meca_seashell_console_handler(const char * command)
 
   if(strcmp(command,"meca_seashell_right_servo") == 0)
   {
-    unsigned int set;
+    int set;
     if(cocobot_console_get_iargument(0, &set))
     {
       servo_right_set_point = set;
