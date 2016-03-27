@@ -68,7 +68,7 @@ void mcual_gpio_clear(mcual_gpio_port_t port, mcual_gpio_pin_t pin)
   reg->OUTCLR = pin;
 }
 
-void mcual_gpio_toogle(mcual_gpio_port_t port, mcual_gpio_pin_t pin)
+void mcual_gpio_toggle(mcual_gpio_port_t port, mcual_gpio_pin_t pin)
 {
   PORT_t * reg = mcual_gpio_get_register(port);
 

@@ -56,15 +56,26 @@ typedef enum
   MCUAL_GPIO_OPEN_DRAIN,
 } mcual_gpio_output_type_t;
 
+typedef enum
+{
+  MCUAL_GPIO_RISING_EDGE,
+  MCUAL_GPIO_FALLING_EDGE,
+  MCUAL_GPIO_BOTH_EDGE,
+} mcual_gpio_edge_t;
+
+typedef void (*mcual_gpio_interrupt_handler_t)(void);
+
 void mcual_gpio_init(mcual_gpio_port_t port, mcual_gpio_pin_t pin, mcual_gpio_direction_t direction);
 void mcual_gpio_set_pull_resistor(mcual_gpio_port_t port, mcual_gpio_pin_t pin, mcual_gpio_pull_resistor_t pull);
 void mcual_gpio_set_output_type(mcual_gpio_port_t port, mcual_gpio_pin_t pin, mcual_gpio_output_type_t pull);
 
 void mcual_gpio_set(mcual_gpio_port_t port, mcual_gpio_pin_t pin);
 void mcual_gpio_clear(mcual_gpio_port_t port, mcual_gpio_pin_t pin);
-void mcual_gpio_toogle(mcual_gpio_port_t port, mcual_gpio_pin_t pin);
+void mcual_gpio_toggle(mcual_gpio_port_t port, mcual_gpio_pin_t pin);
 uint32_t mcual_gpio_get(mcual_gpio_port_t port, mcual_gpio_pin_t pin);
 
 void mcual_gpio_set_function(mcual_gpio_port_t port, mcual_gpio_pin_t pin, int function_id);
+
+void mcual_gpio_set_interrupt(mcual_gpio_port_t port, mcual_gpio_pin_t pin, mcual_gpio_edge_t edge, mcual_gpio_interrupt_handler_t handler);
 
 #endif // MCUAL_GPIO_H

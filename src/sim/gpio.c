@@ -20,7 +20,7 @@ void mcual_gpio_clear(mcual_gpio_port_t port, mcual_gpio_pin_t pin)
   (void)pin;
 }
 
-void mcual_gpio_toogle(mcual_gpio_port_t port, mcual_gpio_pin_t pin)
+void mcual_gpio_toggle(mcual_gpio_port_t port, mcual_gpio_pin_t pin)
 {
   (void)port;
   (void)pin;
@@ -46,4 +46,12 @@ void mcual_gpio_set_output_type(mcual_gpio_port_t port, mcual_gpio_pin_t pin, mc
   (void)port;
   (void)pin;
   (void)type;
+}
+
+void mcual_gpio_set_interrupt(mcual_gpio_port_t port, mcual_gpio_pin_t pin, mcual_gpio_edge_t edge, mcual_gpio_interrupt_handler_t handler)
+{
+  (void)port;
+  (void)pin;
+  (void)edge;
+  (void)handler;
 }

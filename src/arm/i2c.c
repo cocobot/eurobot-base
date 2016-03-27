@@ -136,11 +136,9 @@ mcual_i2c_status_t mcual_i2c_transmit(mcual_i2c_id_t id, uint8_t addr, uint8_t *
   do
   {
     sr = reg->SR1;
-    mcual_gpio_toogle(MCUAL_GPIOB, MCUAL_GPIO_PIN12);
     if(sr & I2C_SR1_AF)
     {
       mcual_i2c_stop(reg);
-      mcual_gpio_toogle(MCUAL_GPIOB, MCUAL_GPIO_PIN5);
       return MCUAL_I2C_FAIL;
     }
 
@@ -160,7 +158,6 @@ mcual_i2c_status_t mcual_i2c_transmit(mcual_i2c_id_t id, uint8_t addr, uint8_t *
       if(sr & I2C_SR1_AF)
       {
         mcual_i2c_stop(reg);
-        mcual_gpio_toogle(MCUAL_GPIOB, MCUAL_GPIO_PIN5);
         return MCUAL_I2C_FAIL;
       }
     }
@@ -171,7 +168,6 @@ mcual_i2c_status_t mcual_i2c_transmit(mcual_i2c_id_t id, uint8_t addr, uint8_t *
   }
   //while(!(reg->SR1 & I2C_SR1_BTF));
 
-  mcual_gpio_toogle(MCUAL_GPIOC, MCUAL_GPIO_PIN4);
   mcual_i2c_stop(reg);
 
   return 0;

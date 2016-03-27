@@ -40,64 +40,116 @@ static TIM_TypeDef * mcual_timer_get_register(mcual_timer_t timer)
   return NULL;
 }
 
-void mcual_timer_init(mcual_timer_t timer, uint32_t freq_Hz)
+static mcual_clock_id_t mcual_timer_get_clock(mcual_timer_t timer)
+{
+  switch(timer)
+  {
+    case MCUAL_TIMER1:
+      return MCUAL_CLOCK_PERIPHERAL_2;
+
+    case MCUAL_TIMER2:
+      return MCUAL_CLOCK_PERIPHERAL_1;
+
+    case MCUAL_TIMER3:
+      return MCUAL_CLOCK_PERIPHERAL_1;
+
+    case MCUAL_TIMER4:
+      return MCUAL_CLOCK_PERIPHERAL_1;
+
+    case MCUAL_TIMER5:
+      return MCUAL_CLOCK_PERIPHERAL_1;
+
+    case MCUAL_TIMER6:
+      return MCUAL_CLOCK_PERIPHERAL_1;
+
+    case MCUAL_TIMER7:
+      return MCUAL_CLOCK_PERIPHERAL_1;
+
+    case MCUAL_TIMER8:
+      return MCUAL_CLOCK_PERIPHERAL_2;
+
+    case MCUAL_TIMER9:
+      return MCUAL_CLOCK_PERIPHERAL_2;
+  }
+
+  return 0;
+}
+
+void mcual_timer_init(mcual_timer_t timer, int32_t freq_Hz)
 {
   TIM_TypeDef * reg = mcual_timer_get_register(timer);
 
-  mcual_clock_id_t clock = MCUAL_CLOCK_PERIPHERAL_1;
+  mcual_clock_id_t clock = mcual_timer_get_clock(timer);
   
   //enable clock
   switch(timer)
   {
     case MCUAL_TIMER1:
       RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
-      clock = MCUAL_CLOCK_PERIPHERAL_2;
       break;
 
     case MCUAL_TIMER2:
       RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
-      clock = MCUAL_CLOCK_PERIPHERAL_1;
       break;
 
     case MCUAL_TIMER3:
       RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
-      clock = MCUAL_CLOCK_PERIPHERAL_1;
       break;
 
     case MCUAL_TIMER4:
       RCC->APB1ENR |= RCC_APB1ENR_TIM4EN;
-      clock = MCUAL_CLOCK_PERIPHERAL_1;
       break;
 
     case MCUAL_TIMER5:
       RCC->APB1ENR |= RCC_APB1ENR_TIM5EN;
-      clock = MCUAL_CLOCK_PERIPHERAL_1;
       break;
 
     case MCUAL_TIMER6:
       RCC->APB1ENR |= RCC_APB1ENR_TIM6EN;
-      clock = MCUAL_CLOCK_PERIPHERAL_1;
       break;
 
     case MCUAL_TIMER7:
       RCC->APB1ENR |= RCC_APB1ENR_TIM7EN;
-      clock = MCUAL_CLOCK_PERIPHERAL_1;
       break;
 
     case MCUAL_TIMER8:
       RCC->APB2ENR |= RCC_APB2ENR_TIM8EN;
-      clock = MCUAL_CLOCK_PERIPHERAL_2;
       break;
 
     case MCUAL_TIMER9:
       RCC->APB2ENR |= RCC_APB2ENR_TIM9EN;
-      clock = MCUAL_CLOCK_PERIPHERAL_2;
       break;
   }
 
-  reg->ARR = mcual_clock_get_frequency_Hz(clock) * 2 / freq_Hz;
+  if(freq_Hz > 0)
+  {
+    reg->ARR = mcual_clock_get_frequency_Hz(clock) * 2 / freq_Hz;
+    reg->PSC = 0;
+  }
+  else
+  {
+    reg->ARR = 0xFFFFFFFF;
+    int32_t pres = -freq_Hz;
+    reg->PSC = (pres - 1);
+  }
   reg->CNT = 0;
   reg->CR1 = TIM_CR1_CEN;
+}
+
+uint32_t mcual_timer_get_value(mcual_timer_t timer)
+{
+  TIM_TypeDef * reg = mcual_timer_get_register(timer);
+  return reg->CNT;
+}
+
+uint32_t mcual_timer_get_timer_tick(mcual_timer_t timer)
+{
+  TIM_TypeDef * reg = mcual_timer_get_register(timer);
+  mcual_clock_id_t clock = mcual_timer_get_clock(timer);
+
+  uint32_t f_Hz = mcual_clock_get_frequency_Hz(clock) / (reg->PSC + 1);
+
+  return 1000000000 / f_Hz;
 }
 
 void mcual_timer_enable_channel(mcual_timer_t timer, mcual_timer_channel_t channel)

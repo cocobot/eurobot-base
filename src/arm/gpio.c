@@ -5,6 +5,8 @@
 #include <stm32f4xx.h>
 #include <mcual.h>
 
+static mcual_gpio_interrupt_handler_t _itr_handlers[16];
+
 static GPIO_TypeDef * mcual_gpio_get_register(mcual_gpio_port_t port)
 {
   switch(port)
@@ -112,7 +114,7 @@ void mcual_gpio_clear(mcual_gpio_port_t port, mcual_gpio_pin_t pin)
   reg->BSRRH = pin;
 }
 
-void mcual_gpio_toogle(mcual_gpio_port_t port, mcual_gpio_pin_t pin)
+void mcual_gpio_toggle(mcual_gpio_port_t port, mcual_gpio_pin_t pin)
 {
   GPIO_TypeDef * reg = mcual_gpio_get_register(port);
 
@@ -186,5 +188,123 @@ void mcual_gpio_set_output_type(mcual_gpio_port_t port, mcual_gpio_pin_t pin, mc
     }
   }
 }
+
+static int mcual_gpio_get_irq_id(mcual_gpio_pin_t pin)
+{
+  switch(pin)
+  {
+    case MCUAL_GPIO_PIN0:
+      return EXTI0_IRQn;
+
+    case MCUAL_GPIO_PIN1:
+      return EXTI1_IRQn;
+
+    case MCUAL_GPIO_PIN2:
+      return EXTI2_IRQn;
+
+    case MCUAL_GPIO_PIN3:
+      return EXTI3_IRQn;
+
+    case MCUAL_GPIO_PIN4:
+      return EXTI4_IRQn;
+
+    case MCUAL_GPIO_PIN5:
+    case MCUAL_GPIO_PIN6:
+    case MCUAL_GPIO_PIN7:
+    case MCUAL_GPIO_PIN8:
+    case MCUAL_GPIO_PIN9:
+      return EXTI9_5_IRQn;
+
+    case MCUAL_GPIO_PIN10:
+    case MCUAL_GPIO_PIN11:
+    case MCUAL_GPIO_PIN12:
+    case MCUAL_GPIO_PIN13:
+    case MCUAL_GPIO_PIN14:
+    case MCUAL_GPIO_PIN15:
+      return EXTI15_10_IRQn;
+
+  }
+
+  return 0;
+}
+
+void mcual_gpio_set_interrupt(mcual_gpio_port_t port, mcual_gpio_pin_t pin, mcual_gpio_edge_t edge, mcual_gpio_interrupt_handler_t handler)
+{
+  RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+
+  int i;
+  for(i = 0; i < 16; i += 1)
+  {
+    if(pin & (1 << i))
+    {
+      _itr_handlers[i] = handler;
+      SYSCFG->EXTICR[i >> 0x02] &= 0xFF << (4 * (i & 0x03));
+      SYSCFG->EXTICR[i >> 0x02] |= port << (4 * (i & 0x03));
+
+      if((edge == MCUAL_GPIO_RISING_EDGE) || (edge == MCUAL_GPIO_BOTH_EDGE))
+      {
+        EXTI->RTSR |= (1 << i);
+      }
+      else
+      {
+        EXTI->RTSR &= ~(1 << i);
+      }
+
+      if((edge == MCUAL_GPIO_FALLING_EDGE) || (edge == MCUAL_GPIO_BOTH_EDGE))
+      {
+        EXTI->FTSR |= (1 << i);
+      }
+      else
+      {
+        EXTI->FTSR &= ~(1 << i);
+      }
+
+      EXTI->IMR |= (1 << i);
+
+      int irq_id = mcual_gpio_get_irq_id((1 << i));
+      NVIC->IP[irq_id] = 14 << 4;
+      NVIC->ISER[irq_id / 32] |= (1 << (irq_id % 32));
+    }
+  }
+}
+
+#define generateSimpleIRQHandler(pin)  \
+void EXTI ## pin ##_IRQHandler(void) \
+{\
+  if(_itr_handlers[pin] != NULL)\
+  {\
+    _itr_handlers[pin]();\
+  }\
+  EXTI->PR = (1 << pin);\
+}
+
+#define generateComplexIRQHandler(start, end)  \
+void EXTI ## end ##_ ## start ## _IRQHandler(void) \
+{\
+  int i;\
+  mcual_gpio_set(MCUAL_GPIOB, MCUAL_GPIO_PIN12);\
+  for(i = start; i <= end; i += 1)\
+  {\
+    if(EXTI->IMR & (1 << i))\
+    {\
+      if(EXTI->PR & (1 << i))\
+      {\
+        if(_itr_handlers[i] != NULL)\
+        {\
+          _itr_handlers[i]();\
+        }\
+      }\
+    }\
+    EXTI->PR = (1 << i);\
+  }\
+}
+
+generateSimpleIRQHandler(0);
+generateSimpleIRQHandler(1);
+generateSimpleIRQHandler(2);
+generateSimpleIRQHandler(3);
+generateSimpleIRQHandler(4);
+generateComplexIRQHandler(5, 9);
+generateComplexIRQHandler(10, 15);
 
 #endif
