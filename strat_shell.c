@@ -455,8 +455,6 @@ static int strat_shell_action(void * arg)
 {
   (void)arg;
 
-  meca_seashell_take();
-
   switch(cocobot_game_state_get_color())
   {
     case COCOBOT_GAME_STATE_COLOR_POS:

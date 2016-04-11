@@ -8,6 +8,7 @@
 #include <pcm9685.h>
 #include "meca_umbrella.h"
 #include "meca_seashell.h"
+#include "meca_fish.h"
 #include "strat_hut.h"
 #include "strat_shell.h"
 
@@ -40,13 +41,14 @@ void run_strategy(void * arg)
   (void)arg;
   meca_umbrella_init();
   meca_seashell_init();
+  meca_fish_init();
 
   strat_shell_register();
   strat_hut_register();
 
   cocobot_game_state_wait_for_starter_removed();
-
   cocobot_action_scheduler_start();
+
   while(1)
   {
     if(!cocobot_action_scheduler_execute_best_action())
@@ -79,6 +81,7 @@ int console_handler(const char * command)
   int handled = 0;
   COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_umbrella_console_handler);
   COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_seashell_console_handler);
+  COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_fish_console_handler);
   return handled;
 }
 

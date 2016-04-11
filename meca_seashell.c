@@ -3,21 +3,18 @@
 #include <platform.h>
 #include "meca_seashell.h"
 
-#define MECA_SEASHELL_LEFT_SERVO_ID   PLATFORM_SERVO_0_ID
-#define MECA_SEASHELL_RIGHT_SERVO_ID  PLATFORM_SERVO_1_ID
+#define MECA_SEASHELL_LEFT_SERVO_ID   PLATFORM_SERVO_12_ID
+#define MECA_SEASHELL_RIGHT_SERVO_ID  PLATFORM_SERVO_11_ID
 
-#define MECA_SEASHELL_LEFT_CLOSE  1400
-#define MECA_SEASHELL_LEFT_TAKE   1500
-#define MECA_SEASHELL_LEFT_OPEN   1600
-#define MECA_SEASHELL_RIGHT_CLOSE  1400
-#define MECA_SEASHELL_RIGHT_TAKE   1500
-#define MECA_SEASHELL_RIGHT_OPEN   1600
+#define MECA_SEASHELL_LEFT_OPEN  230
+#define MECA_SEASHELL_LEFT_CLOSE   420
+#define MECA_SEASHELL_RIGHT_OPEN  430
+#define MECA_SEASHELL_RIGHT_CLOSE   250
 
 typedef enum
 {
   MECA_SEASHELL_OPEN,
   MECA_SEASHELL_CLOSE,
-  MECA_SEASHELL_TAKE,
 } meca_seashell_state_t;
 
 static meca_seashell_state_t state;
@@ -55,17 +52,6 @@ void meca_seashell_open(void)
   meca_seashell_update();
 }
 
-void meca_seashell_take(void)
-{
-  state = MECA_SEASHELL_TAKE;
-
-  servo_left_set_point = MECA_SEASHELL_LEFT_TAKE;
-  servo_right_set_point = MECA_SEASHELL_RIGHT_TAKE;
-
-
-  meca_seashell_update();
-}
-
 int meca_seashell_console_handler(const char * command)
 {
   if(strcmp(command,"meca_seashell") == 0)
@@ -81,10 +67,6 @@ int meca_seashell_console_handler(const char * command)
       {
         meca_seashell_close();
       }
-      if(strcmp(buf, "take") == 0)
-      {
-        meca_seashell_take();
-      }
     }
 
     switch(state)
@@ -95,10 +77,6 @@ int meca_seashell_console_handler(const char * command)
 
       case MECA_SEASHELL_CLOSE:
         cocobot_console_send_answer("close");
-        break;
-
-      case MECA_SEASHELL_TAKE:
-        cocobot_console_send_answer("take");
         break;
     }
 
