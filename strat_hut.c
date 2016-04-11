@@ -80,7 +80,9 @@ void strat_hut_register(void)
                                         strat_hut_get_a(STRAT_HUT_VIOLET_LEFT),
                                         strat_hut_get_exec_time(STRAT_HUT_VIOLET_LEFT),
                                         strat_hut_get_success_proba(STRAT_HUT_VIOLET_LEFT),
+                                        NULL,
                                         strat_hut_action,
+                                        NULL,
                                         (void *)STRAT_HUT_VIOLET_LEFT,
                                         NULL);
 
@@ -92,7 +94,9 @@ void strat_hut_register(void)
                                         strat_hut_get_a(STRAT_HUT_VIOLET_RIGHT),
                                         strat_hut_get_exec_time(STRAT_HUT_VIOLET_RIGHT),
                                         strat_hut_get_success_proba(STRAT_HUT_VIOLET_RIGHT),
+                                        NULL,
                                         strat_hut_action,
+                                        NULL,
                                         (void *)STRAT_HUT_VIOLET_RIGHT,
                                         NULL);
   }
@@ -107,7 +111,9 @@ void strat_hut_register(void)
                                         strat_hut_get_a(STRAT_HUT_GREEN_LEFT),
                                         strat_hut_get_exec_time(STRAT_HUT_GREEN_LEFT),
                                         strat_hut_get_success_proba(STRAT_HUT_GREEN_LEFT),
+                                        NULL,
                                         strat_hut_action,
+                                        NULL,
                                         (void *)STRAT_HUT_GREEN_LEFT,
                                         NULL);
 
@@ -119,7 +125,9 @@ void strat_hut_register(void)
                                         strat_hut_get_a(STRAT_HUT_GREEN_RIGHT),
                                         strat_hut_get_exec_time(STRAT_HUT_GREEN_RIGHT),
                                         strat_hut_get_success_proba(STRAT_HUT_GREEN_RIGHT),
+                                        NULL,
                                         strat_hut_action,
+                                        NULL,
                                         (void *)STRAT_HUT_GREEN_RIGHT,
                                         NULL);
   }

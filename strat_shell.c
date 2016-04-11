@@ -451,7 +451,25 @@ float strat_shell_get_success_proba(int shell)
   return success;
 }
 
-static int strat_shell_action(void * arg)
+static int strat_shell_preexec(void * arg)
+{
+  (void)arg;
+
+  meca_seashell_open();
+
+  return 0;
+}
+
+static int strat_shell_cleanup(void * arg)
+{
+  (void)arg;
+
+  meca_seashell_close();
+
+  return 0;
+}
+
+static int strat_shell_exec(void * arg)
 {
   (void)arg;
 
@@ -468,12 +486,10 @@ static int strat_shell_action(void * arg)
 
   cocobot_trajectory_wait();
 
-  meca_seashell_open();
+  meca_seashell_close();
 
   cocobot_trajectory_goto_d(-200, 5000);
   cocobot_trajectory_result_t res = cocobot_trajectory_wait();
-
-  meca_seashell_close();
 
   if(res == COCOBOT_TRAJECTORY_STOPPED_BEFORE_END)
   {
@@ -502,7 +518,9 @@ void strat_shell_register(void)
                                         strat_shell_get_a(i),
                                         strat_shell_get_exec_time(i),
                                         success_proba,
-                                        strat_shell_action,
+                                        strat_shell_preexec,
+                                        strat_shell_exec,
+                                        strat_shell_cleanup,
                                         NULL,
                                         NULL);
     }
