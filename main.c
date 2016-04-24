@@ -14,24 +14,108 @@
 
 static unsigned int _shell_configuration;
 
+void display_shell_configuration(void)
+{
+  switch(_shell_configuration)
+  {
+    case 0:
+      platform_gpio_clear(PLATFORM_GPIO2);
+      platform_gpio_clear(PLATFORM_GPIO3);
+      platform_gpio_clear(PLATFORM_GPIO4);
+      platform_gpio_clear(PLATFORM_GPIO5);
+      platform_gpio_clear(PLATFORM_GPIO6);
+      break;
+
+    case 1:
+      platform_gpio_set(PLATFORM_GPIO2);
+      platform_gpio_clear(PLATFORM_GPIO3);
+      platform_gpio_clear(PLATFORM_GPIO4);
+      platform_gpio_clear(PLATFORM_GPIO5);
+      platform_gpio_clear(PLATFORM_GPIO6);
+      break;
+
+    case 2:
+      platform_gpio_set(PLATFORM_GPIO2);
+      platform_gpio_set(PLATFORM_GPIO3);
+      platform_gpio_clear(PLATFORM_GPIO4);
+      platform_gpio_clear(PLATFORM_GPIO5);
+      platform_gpio_clear(PLATFORM_GPIO6);
+      break;
+
+    case 3:
+      platform_gpio_set(PLATFORM_GPIO2);
+      platform_gpio_set(PLATFORM_GPIO3);
+      platform_gpio_set(PLATFORM_GPIO4);
+      platform_gpio_clear(PLATFORM_GPIO5);
+      platform_gpio_clear(PLATFORM_GPIO6);
+      break;
+
+    case 4:
+      platform_gpio_set(PLATFORM_GPIO2);
+      platform_gpio_set(PLATFORM_GPIO3);
+      platform_gpio_set(PLATFORM_GPIO4);
+      platform_gpio_set(PLATFORM_GPIO5);
+      platform_gpio_clear(PLATFORM_GPIO6);
+      break;
+
+    case 5:
+      platform_gpio_set(PLATFORM_GPIO2);
+      platform_gpio_set(PLATFORM_GPIO3);
+      platform_gpio_set(PLATFORM_GPIO4);
+      platform_gpio_set(PLATFORM_GPIO5);
+      platform_gpio_set(PLATFORM_GPIO6);
+      break;
+  }
+}
+
 void update_lcd(void * arg)
 {
   (void)arg;
 
+  //init leds and button
+  platform_gpio_set_direction(PLATFORM_GPIO7, MCUAL_GPIO_INPUT);
+  platform_gpio_set_direction(PLATFORM_GPIO2, MCUAL_GPIO_OUTPUT);
+  platform_gpio_set_direction(PLATFORM_GPIO3, MCUAL_GPIO_OUTPUT);
+  platform_gpio_set_direction(PLATFORM_GPIO4, MCUAL_GPIO_OUTPUT);
+  platform_gpio_set_direction(PLATFORM_GPIO5, MCUAL_GPIO_OUTPUT);
+  platform_gpio_set_direction(PLATFORM_GPIO6, MCUAL_GPIO_OUTPUT);
+
+  //blink for the fun
+  int i;
+  for(i = 0; i < 20; i += 1)
+  {
+    platform_gpio_toggle(PLATFORM_GPIO2);
+    platform_gpio_toggle(PLATFORM_GPIO3);
+    platform_gpio_toggle(PLATFORM_GPIO4);
+    platform_gpio_toggle(PLATFORM_GPIO5);
+    platform_gpio_toggle(PLATFORM_GPIO6);
+
+    vTaskDelay(50 / portTICK_PERIOD_MS);
+  }
+
+  //set shell configuration
+  uint32_t last = platform_gpio_get(PLATFORM_GPIO7);
+  while(!cocobot_game_state_is_starter_removed())
+  {
+    uint32_t current = platform_gpio_get(PLATFORM_GPIO7);
+
+    if(current && (current != last))
+    {
+      _shell_configuration = (_shell_configuration + 1) % 6;
+    }
+    last = current;
+
+    platform_led_toggle(PLATFORM_LED0);
+    display_shell_configuration();
+
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+  }
+
+  //
   while(1)
   {
-    //update lcd
-    cocobot_lcd_clear();
-    
-    //draw test text
-    cocobot_lcd_print(0, 20, "d: %ld mm", (int32_t)cocobot_position_get_distance());
-    cocobot_lcd_print(0, 35, "a: %ld deg", (int32_t)cocobot_position_get_angle());
-
-    cocobot_lcd_render();
-
     //toggle led
     vTaskDelay(100 / portTICK_PERIOD_MS);
-
     platform_led_toggle(PLATFORM_LED0);
   }
 }
@@ -49,6 +133,10 @@ void run_strategy(void * arg)
   cocobot_game_state_wait_for_starter_removed();
   cocobot_action_scheduler_start();
 
+  while(0)
+  {
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+  }
   while(1)
   {
     if(!cocobot_action_scheduler_execute_best_action())
