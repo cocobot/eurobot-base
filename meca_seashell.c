@@ -109,3 +109,7 @@ int meca_seashell_console_handler(const char * command)
 
   return 0;
 }
+
+void meca_seashell_disable(void)
+{
+}

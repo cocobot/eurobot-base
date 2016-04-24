@@ -80,6 +80,26 @@ void update_lcd(void * arg)
   platform_gpio_set_direction(PLATFORM_GPIO5, MCUAL_GPIO_OUTPUT);
   platform_gpio_set_direction(PLATFORM_GPIO6, MCUAL_GPIO_OUTPUT);
 
+  int vbat = platform_adc_get_mV(PLATFORM_ADC_VBAT);
+  if(vbat < COCOBOT_LOW_BAT_THRESHOLD)
+  {
+    while(1)
+    {
+      platform_gpio_toggle(PLATFORM_GPIO2);
+      platform_gpio_toggle(PLATFORM_GPIO3);
+      platform_gpio_toggle(PLATFORM_GPIO4);
+      platform_gpio_toggle(PLATFORM_GPIO5);
+      platform_gpio_toggle(PLATFORM_GPIO6);
+
+      //disable everything
+      meca_fish_disable();
+      meca_seashell_disable();
+      cocobot_asserv_set_state(COCOBOT_ASSERV_DISABLE);
+
+      vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
+  }
+
   //blink for the fun
   int i;
   for(i = 0; i < 20; i += 1)

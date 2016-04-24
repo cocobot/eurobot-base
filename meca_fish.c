@@ -66,7 +66,7 @@ void meca_fish_task(void * arg)
       {
         case MECA_FISH_CLOSE:
           {
-            servo_rot_set_point = MECA_FISH_ROT_HORIZONTAL;
+            servo_rot_set_point = MECA_FISH_ROT_DISABLE;
             servo_lr_set_point = MECA_FISH_LR_CENTER;
             servo_ud_set_point = MECA_FISH_UD_DOWN;
             meca_fish_update();
@@ -359,6 +359,14 @@ void meca_fish_init(void)
   meca_fish_close(0);
 
   xTaskCreate(meca_fish_task, "fish", 200, NULL, 2, NULL);
+}
+
+void meca_fish_disable(void)
+{
+  servo_rot_set_point = MECA_FISH_ROT_DISABLE;
+  servo_lr_set_point = MECA_FISH_LR_DISABLE;
+  servo_ud_set_point = MECA_FISH_UD_DISABLE;
+  meca_fish_update();
 }
 
 int meca_fish_console_handler(const char * command)
