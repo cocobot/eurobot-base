@@ -24,12 +24,14 @@ void update_lcd(void * arg)
 
     //toggle led
     platform_led_toggle(PLATFORM_LED1 | PLATFORM_LED0);
-    vTaskDelay(100 / portTICK_PERIOD_MS);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
 
     //meca_sucker_set_state(MECA_SUCKER_RIGHT, MECA_SUCKER_CLOSE);
     //vTaskDelay(1000 / portTICK_PERIOD_MS);
     //meca_sucker_set_state(MECA_SUCKER_RIGHT, MECA_SUCKER_PUMP);
     //vTaskDelay(5000 / portTICK_PERIOD_MS);
+    platform_gpio_toggle(PLATFORM_GPIO_MOTOR_ENABLE);
+    platform_gpio_toggle(PLATFORM_GPIO_MOTOR_DIR_LEFT);
   }
 }
 
@@ -41,19 +43,22 @@ void run_strategy(void * arg)
   cocobot_asserv_set_state(COCOBOT_ASSERV_ENABLE);
 
   vTaskDelay(2000 / portTICK_PERIOD_MS);
-  cocobot_trajectory_goto_xy(0, 700, -1);
-  cocobot_trajectory_goto_xy_backward(0, 800, -1);
-  cocobot_trajectory_goto_a(-90, -1);
+  //cocobot_trajectory_goto_xy(0, 700, -1);
+  //cocobot_trajectory_goto_xy_backward(0, 800, -1);
+  //cocobot_trajectory_goto_a(-90, -1);
+  //cocobot_trajectory_wait();
+
+  //meca_sucker_set_state(MECA_SUCKER_RIGHT, MECA_SUCKER_PUMP);
+  //cocobot_trajectory_goto_xy_backward(0, 1200, 1000);
+  //cocobot_trajectory_goto_d(700, -1);
+  //cocobot_trajectory_wait();
+
   cocobot_trajectory_wait();
 
-  meca_sucker_set_state(MECA_SUCKER_RIGHT, MECA_SUCKER_PUMP);
-  cocobot_trajectory_goto_xy_backward(0, 1200, 1000);
-  cocobot_trajectory_goto_d(700, -1);
-  cocobot_trajectory_wait();
-
-  cocobot_trajectory_wait();
-
-  while(1);
+  while(1)
+  {
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+  }
 
   cocobot_game_state_wait_for_starter_removed();
 
@@ -88,7 +93,7 @@ int console_handler(const char * command)
   }
 
   int handled = 0;
-  //COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_umbrella_console_handler);
+  COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_sucker_console_handler);
   return handled;
 }
 

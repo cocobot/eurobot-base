@@ -16,5 +16,6 @@ typedef enum
 
 void meca_sucker_init(void);
 void meca_sucker_set_state(meca_sucker_id_t id, meca_sucker_state_t state);
+int meca_sucker_console_handler(const char * command);
 
 #endif// MECA_SUCKER_H
