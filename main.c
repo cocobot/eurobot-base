@@ -11,25 +11,39 @@ static unsigned int _shell_configuration;
 void update_lcd(void * arg)
 {
   (void)arg;
+
+#ifndef AUSBEE_SIM
+  int vbat = platform_adc_get_mV(PLATFORM_ADC_VBAT);
+  if(vbat < COCOBOT_LOW_BAT_THRESHOLD)
+  {
+    while(1)
+    {
+      platform_gpio_toggle(PLATFORM_GPIO0);
+
+      //disable everything
+      meca_sucker_disable();
+      meca_umbrella_disable();
+      cocobot_asserv_set_state(COCOBOT_ASSERV_DISABLE);
+
+      vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
+  }
+#endif
+  
+  //blink for the fun
+  int i;
+  for(i = 0; i < 20; i += 1)
+  {
+    platform_gpio_toggle(PLATFORM_GPIO0);
+
+    vTaskDelay(50 / portTICK_PERIOD_MS);
+  }
+
   while(1)
   {
-    //update lcd
-    cocobot_lcd_clear();
-    
-   // cocobot_lcd_print(0, 20, "d: %ld mm", (int32_t)cocobot_position_get_distance());
-    cocobot_lcd_print(0, 20, "a: %lX deg", (uint32_t)cocobot_position_get_angle());
-    cocobot_lcd_print(0, 35, "a: %ld deg", (int32_t)cocobot_position_get_angle());
-
-    cocobot_lcd_render();
-
     //toggle led
-    platform_led_toggle(PLATFORM_LED1 | PLATFORM_LED0);
     vTaskDelay(100 / portTICK_PERIOD_MS);
-
-    //meca_sucker_set_state(MECA_SUCKER_RIGHT, MECA_SUCKER_CLOSE);
-    //vTaskDelay(1000 / portTICK_PERIOD_MS);
-    //meca_sucker_set_state(MECA_SUCKER_RIGHT, MECA_SUCKER_PUMP);
-    //vTaskDelay(5000 / portTICK_PERIOD_MS);
+    platform_led_toggle(PLATFORM_LED0);
   }
 }
 
@@ -38,26 +52,11 @@ void run_strategy(void * arg)
   (void)arg;
 
   meca_sucker_init();
-  cocobot_asserv_set_state(COCOBOT_ASSERV_ENABLE);
-
-  vTaskDelay(2000 / portTICK_PERIOD_MS);
-  cocobot_trajectory_goto_xy(0, 700, -1);
-  cocobot_trajectory_goto_xy_backward(0, 800, -1);
-  cocobot_trajectory_goto_a(-90, -1);
-  cocobot_trajectory_wait();
-
-  meca_sucker_set_state(MECA_SUCKER_RIGHT, MECA_SUCKER_PUMP);
-  cocobot_trajectory_goto_xy_backward(0, 1200, 1000);
-  cocobot_trajectory_goto_d(700, -1);
-  cocobot_trajectory_wait();
-
-  cocobot_trajectory_wait();
-
-  while(1);
+  meca_umbrella_init();
 
   cocobot_game_state_wait_for_starter_removed();
-
   cocobot_action_scheduler_start();
+
   while(1)
   {
     if(!cocobot_action_scheduler_execute_best_action())
@@ -88,13 +87,15 @@ int console_handler(const char * command)
   }
 
   int handled = 0;
-  //COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_umbrella_console_handler);
+  COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_umbrella_console_handler);
   return handled;
 }
 
 void funny_action(void)
 {
+  meca_umbreall_open();
 
+  meca_sucker_disable();
 }
 
 int main(void) 
@@ -105,7 +106,9 @@ int main(void)
   cocobot_position_init(4);
   cocobot_asserv_init();
   cocobot_trajectory_init(4);
+  cocobot_opponent_detection_init(3);
   cocobot_game_state_init(funny_action);
+  cocobot_pathfinder_init(300, 300);
 
   //Main robot do not need to know the shell config
   _shell_configuration = 0;
@@ -128,7 +131,7 @@ int main(void)
   }
 
   xTaskCreate(run_strategy, "strat", 200, NULL, 2, NULL );
-  xTaskCreate(update_lcd, "lcd", 200, NULL, 1, NULL );
+  xTaskCreate(update_lcd, "blink", 200, NULL, 1, NULL );
 
   vTaskStartScheduler();
 
