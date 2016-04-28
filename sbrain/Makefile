@@ -1,7 +1,7 @@
 # Makefile for configuring and building an AUSBEE project
 #
 #Set ausbee directory path. Can be relative or absolute
-AUSBEE_DIR=../../ausbee
+AUSBEE_DIR=../../../ausbee
 
 #Get project name
 PROJECT_NAME=$(notdir $(patsubst i%/,%,$(lastword $(CURDIR))))
