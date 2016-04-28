@@ -88,12 +88,13 @@ int console_handler(const char * command)
 
   int handled = 0;
   COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_umbrella_console_handler);
+  COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_sucker_console_handler);
   return handled;
 }
 
 void funny_action(void)
 {
-  meca_umbreall_open();
+  meca_umbrella_open();
 
   meca_sucker_disable();
 }
