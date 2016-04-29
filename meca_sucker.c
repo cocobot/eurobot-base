@@ -8,15 +8,15 @@
 #define MECA_SUCKER_RIGHT_PUMP   PLATFORM_GPIO5
 #define MECA_SUCKER_RIGHT_SUCKER PLATFORM_GPIO4
 
-#define MECA_SUCKER_LEFT_SERVO_ID         PLATFORM_SERVO_15_ID
-#define MECA_SUCKER_RIGHT_SERVO_ID        PLATFORM_SERVO_15_ID
+#define MECA_SUCKER_LEFT_SERVO_ID         PLATFORM_SERVO_0_ID
+#define MECA_SUCKER_RIGHT_SERVO_ID         PLATFORM_SERVO_2_ID
 
-#define MECA_SUCKER_LEFT_SERVO_CLOSE 0
-#define MECA_SUCKER_LEFT_SERVO_OPEN 0
+#define MECA_SUCKER_LEFT_SERVO_CLOSE 350
+#define MECA_SUCKER_LEFT_SERVO_OPEN 225
 #define MECA_SUCKER_LEFT_SERVO_DISABLE 0
 
-#define MECA_SUCKER_RIGHT_SERVO_CLOSE 0
-#define MECA_SUCKER_RIGHT_SERVO_OPEN 0
+#define MECA_SUCKER_RIGHT_SERVO_CLOSE 370
+#define MECA_SUCKER_RIGHT_SERVO_OPEN 500
 #define MECA_SUCKER_RIGHT_SERVO_DISABLE 0
 
 static meca_sucker_state_t left_state;
@@ -73,7 +73,7 @@ void meca_sucker_set_state(meca_sucker_id_t id, meca_sucker_state_t state)
 
         case MECA_SUCKER_PUMP:
           platform_gpio_set(MECA_SUCKER_LEFT_PUMP);
-          platform_gpio_clear(MECA_SUCKER_LEFT_PUMP);
+          platform_gpio_clear(MECA_SUCKER_LEFT_SUCKER);
           servo_left_set_point = MECA_SUCKER_LEFT_SERVO_OPEN;
           break;
 
@@ -103,7 +103,7 @@ void meca_sucker_set_state(meca_sucker_id_t id, meca_sucker_state_t state)
 
         case MECA_SUCKER_PUMP:
           platform_gpio_set(MECA_SUCKER_RIGHT_PUMP);
-          platform_gpio_clear(MECA_SUCKER_RIGHT_PUMP);
+          platform_gpio_clear(MECA_SUCKER_RIGHT_SUCKER);
           servo_right_set_point = MECA_SUCKER_RIGHT_SERVO_OPEN;
           break;
 
