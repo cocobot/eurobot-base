@@ -145,7 +145,7 @@ static float strat_shell_get_a(int shell)
 {
   (void)shell; //each shell is equal
 
-  return 0; //TODO: return NAN;
+  return NAN;
 }
 
 float strat_shell_get_exec_time(int shell)

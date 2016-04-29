@@ -6,11 +6,11 @@
 #include <mcual.h>
 #include <cocobot.h>
 #include <pcm9685.h>
-#include "meca_umbrella.h"
 #include "meca_seashell.h"
 #include "meca_fish.h"
 #include "strat_hut.h"
 #include "strat_shell.h"
+#include "strat_sand.h"
 
 static unsigned int _shell_configuration;
 
@@ -80,6 +80,7 @@ void update_lcd(void * arg)
   platform_gpio_set_direction(PLATFORM_GPIO5, MCUAL_GPIO_OUTPUT);
   platform_gpio_set_direction(PLATFORM_GPIO6, MCUAL_GPIO_OUTPUT);
 
+#ifndef AUSBEE_SIM
   int vbat = platform_adc_get_mV(PLATFORM_ADC_VBAT);
   if(vbat < COCOBOT_LOW_BAT_THRESHOLD)
   {
@@ -99,6 +100,7 @@ void update_lcd(void * arg)
       vTaskDelay(500 / portTICK_PERIOD_MS);
     }
   }
+#endif
 
   //blink for the fun
   int i;
@@ -117,6 +119,7 @@ void update_lcd(void * arg)
   uint32_t last = platform_gpio_get(PLATFORM_GPIO7);
   while(!cocobot_game_state_is_starter_removed())
   {
+    cocobot_console_send_asynchronous("debug", "loutre %d",i++);
     uint32_t current = platform_gpio_get(PLATFORM_GPIO7);
 
     if(current && (current != last))
@@ -131,7 +134,7 @@ void update_lcd(void * arg)
     vTaskDelay(100 / portTICK_PERIOD_MS);
   }
 
-  //
+  
   while(1)
   {
     //toggle led
@@ -143,15 +146,17 @@ void update_lcd(void * arg)
 void run_strategy(void * arg)
 {
   (void)arg;
-  meca_umbrella_init();
   meca_seashell_init();
   meca_fish_init();
 
   strat_shell_register();
   strat_hut_register();
+  strat_sand_register();
 
   cocobot_game_state_wait_for_starter_removed();
   cocobot_action_scheduler_start();
+
+  cocobot_trajectory_wait();
 
   while(0)
   {
@@ -187,7 +192,6 @@ int console_handler(const char * command)
   }
 
   int handled = 0;
-  COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_umbrella_console_handler);
   COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_seashell_console_handler);
   COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_fish_console_handler);
   return handled;
@@ -195,7 +199,6 @@ int console_handler(const char * command)
 
 void funny_action(void)
 {
-  meca_umbrella_open();
 }
 
 int main(void) 
@@ -209,6 +212,7 @@ int main(void)
   cocobot_trajectory_init(4);
   cocobot_opponent_detection_init(3);
   cocobot_game_state_init(funny_action);
+  //cocobot_pathfinder_init(300, 300);
 
 #ifdef AUSBEE_SIM
   //random shell config in simu

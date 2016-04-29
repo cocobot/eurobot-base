@@ -463,31 +463,6 @@ int meca_fish_console_handler(const char * command)
     return 1;
   }
 
-  if(strcmp(command,"meca_fish_ud_servo") == 0)
-  {
-    int set;
-    if(cocobot_console_get_iargument(0, &set))
-    {
-      next_state = MECA_FISH_MANUAL;
-      servo_ud_set_point = set;
-      meca_fish_update();
-    }
-    cocobot_console_send_answer("%u", servo_ud_set_point);
-    return 1;
-  }
-
-  if(strcmp(command,"meca_fish_lr_servo") == 0)
-  {
-    int set;
-    if(cocobot_console_get_iargument(0, &set))
-    {
-      servo_lr_set_point = set;
-      meca_fish_update();
-    }
-    cocobot_console_send_answer("%u", servo_lr_set_point);
-    return 1;
-  }
-
   if(strcmp(command,"meca_fish_rot_servo") == 0)
   {
     int set;
