@@ -24,18 +24,61 @@ typedef struct
 } platform_us_t;
 static platform_us_t us[4];
 
-static void platform_us_0_interrupt(void)
+#ifdef CONFIG_MCUAL_TIMER
+void platform_us_0_interrupt(void)
 {
   uint16_t now = mcual_timer_get_value(MCUAL_TIMER4);
   if(mcual_gpio_get(MCUAL_GPIOB, MCUAL_GPIO_PIN8))
   {
     us[0].rising_edge = now;
+    platform_led_set(PLATFORM_LED1);
   }
   else
   {
     us[0].last_value = now - us[0].rising_edge;
+    platform_led_clear(PLATFORM_LED1);
   }
 }
+
+void platform_us_1_interrupt(void)
+{
+  uint16_t now = mcual_timer_get_value(MCUAL_TIMER4);
+  if(mcual_gpio_get(MCUAL_GPIOB, MCUAL_GPIO_PIN9))
+  {
+    us[1].rising_edge = now;
+  }
+  else
+  {
+    us[1].last_value = now - us[1].rising_edge;
+  }
+}
+
+void platform_us_2_interrupt(void)
+{
+  uint16_t now = mcual_timer_get_value(MCUAL_TIMER4);
+  if(mcual_gpio_get(MCUAL_GPIOC, MCUAL_GPIO_PIN6))
+  {
+    us[2].rising_edge = now;
+  }
+  else
+  {
+    us[2].last_value = now - us[2].rising_edge;
+  }
+}
+
+void platform_us_3_interrupt(void)
+{
+  uint16_t now = mcual_timer_get_value(MCUAL_TIMER4);
+  if(mcual_gpio_get(MCUAL_GPIOD, MCUAL_GPIO_PIN12))
+  {
+    us[3].rising_edge = now;
+  }
+  else
+  {
+    us[3].last_value = now - us[3].rising_edge;
+  }
+}
+#endif
 
 void platform_init(void)
 {
@@ -47,7 +90,7 @@ void platform_init(void)
 #endif
 
   //init clock
-  mcual_clock_init(MCUAL_CLOCK_SOURCE_EXTERNAL, PLATFORM_MAIN_CLOCK_KHZ); 
+  mcual_clock_init(MCUAL_CLOCK_SOURCE_INTERNAL, PLATFORM_MAIN_CLOCK_KHZ); 
   
   //init leds
   mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN4, MCUAL_GPIO_OUTPUT);
@@ -108,9 +151,13 @@ void platform_init(void)
   mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN0, MCUAL_GPIO_INPUT);
   mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN1, MCUAL_GPIO_INPUT);
   mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN2, MCUAL_GPIO_INPUT);
+  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN3, MCUAL_GPIO_INPUT);
+  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN4, MCUAL_GPIO_INPUT);
   mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN0, MCUAL_GPIO_FUNCTION_ANALOG);
   mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN1, MCUAL_GPIO_FUNCTION_ANALOG);
   mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN2, MCUAL_GPIO_FUNCTION_ANALOG);
+  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN3, MCUAL_GPIO_FUNCTION_ANALOG);
+  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN4, MCUAL_GPIO_FUNCTION_ANALOG);
 #ifdef CONFIG_MCUAL_ADC
   mcual_adc_init();
 #endif
@@ -138,6 +185,7 @@ void platform_init(void)
   mcual_spi_master_init(MCUAL_SPI2, MCUAL_SPI_MODE_3, 400000);
 #endif
 
+#ifdef CONFIG_MCUAL_I2C
   //init i2c
   mcual_gpio_init(MCUAL_GPIOB, MCUAL_GPIO_PIN6 | MCUAL_GPIO_PIN7, MCUAL_GPIO_INPUT);
   mcual_gpio_set_function(MCUAL_GPIOB, MCUAL_GPIO_PIN6, 4);
@@ -145,17 +193,26 @@ void platform_init(void)
   mcual_gpio_set_output_type(MCUAL_GPIOB, MCUAL_GPIO_PIN6, MCUAL_GPIO_OPEN_DRAIN);
   mcual_gpio_set_output_type(MCUAL_GPIOB, MCUAL_GPIO_PIN7, MCUAL_GPIO_OPEN_DRAIN);
   mcual_i2c_master_init(MCUAL_I2C1, 100000);
+#endif
 
+#ifdef CONFIG_MCUAL_TIMER
   //init us
   mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN0 | MCUAL_GPIO_PIN1, MCUAL_GPIO_OUTPUT);
   mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN13 | MCUAL_GPIO_PIN14, MCUAL_GPIO_OUTPUT);
   mcual_gpio_init(MCUAL_GPIOB, MCUAL_GPIO_PIN8 | MCUAL_GPIO_PIN9, MCUAL_GPIO_INPUT);
+  mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN6, MCUAL_GPIO_INPUT);
+  mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN12, MCUAL_GPIO_INPUT);
   mcual_gpio_clear(MCUAL_GPIOE, MCUAL_GPIO_PIN0 | MCUAL_GPIO_PIN1);
   mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN13 | MCUAL_GPIO_PIN14);
   mcual_gpio_set_interrupt(MCUAL_GPIOB, MCUAL_GPIO_PIN8, MCUAL_GPIO_BOTH_EDGE, platform_us_0_interrupt);
+  mcual_gpio_set_interrupt(MCUAL_GPIOB, MCUAL_GPIO_PIN9, MCUAL_GPIO_BOTH_EDGE, platform_us_1_interrupt);
+  mcual_gpio_set_interrupt(MCUAL_GPIOC, MCUAL_GPIO_PIN6, MCUAL_GPIO_BOTH_EDGE, platform_us_2_interrupt);
+  mcual_gpio_set_interrupt(MCUAL_GPIOD, MCUAL_GPIO_PIN12, MCUAL_GPIO_BOTH_EDGE, platform_us_3_interrupt);
   mcual_timer_init(MCUAL_TIMER4, -64); //counter only
+#endif
 }
 
+#ifdef CONFIG_MCUAL_TIMER
 void platform_us_send_trig(uint32_t us_id)
 {
   switch(us_id)
@@ -199,6 +256,7 @@ void platform_us_reset_trig(uint32_t us_id)
       break;
   }
 }
+#endif
 
 void platform_led_toggle(uint8_t led)
 {
@@ -741,6 +799,8 @@ int32_t platform_adc_get_mV(uint32_t adc)
 
     case PLATFORM_ADC_IR0:
     case PLATFORM_ADC_IR1:
+    case PLATFORM_ADC_IR2:
+    case PLATFORM_ADC_IR3:
       raw *= 2;
       break;
   }
