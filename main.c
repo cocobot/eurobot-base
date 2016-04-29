@@ -5,6 +5,8 @@
 #include <mcual.h>
 #include <cocobot.h>
 #include "meca_sucker.h"
+#include "meca_umbrella.h"
+#include "meca_crimp.h"
 
 static unsigned int _shell_configuration;
 
@@ -23,6 +25,7 @@ void update_lcd(void * arg)
       //disable everything
       meca_sucker_disable();
       meca_umbrella_disable();
+      meca_crimp_disable();
       cocobot_asserv_set_state(COCOBOT_ASSERV_DISABLE);
 
       vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -53,6 +56,7 @@ void run_strategy(void * arg)
 
   meca_sucker_init();
   meca_umbrella_init();
+  meca_crimp_init();
 
   cocobot_game_state_wait_for_starter_removed();
   cocobot_action_scheduler_start();
@@ -89,14 +93,16 @@ int console_handler(const char * command)
   int handled = 0;
   COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_umbrella_console_handler);
   COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_sucker_console_handler);
+  COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_crimp_console_handler);
   return handled;
 }
 
 void funny_action(void)
 {
-  meca_umbrella_open();
-
   meca_sucker_disable();
+  meca_crimp_disable();
+
+  meca_umbrella_open();
 }
 
 int main(void) 
@@ -109,7 +115,7 @@ int main(void)
   cocobot_trajectory_init(4);
   cocobot_opponent_detection_init(3);
   cocobot_game_state_init(funny_action);
-  cocobot_pathfinder_init(300, 300);
+  //cocobot_pathfinder_init(300, 300);
 
   //Main robot do not need to know the shell config
   _shell_configuration = 0;
