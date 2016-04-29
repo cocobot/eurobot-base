@@ -1,6 +1,8 @@
 #include <string.h>
 #include <cocobot.h>
 #include <platform.h>
+#include <FreeRTOS.h>
+#include <task.h>
 #include "meca_umbrella.h"
 
 typedef enum

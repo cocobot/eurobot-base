@@ -5,6 +5,7 @@
 #include <mcual.h>
 #include <cocobot.h>
 #include "meca_sucker.h"
+#include "meca_umbrella.h"
 
 static unsigned int _shell_configuration;
 
@@ -109,7 +110,7 @@ int main(void)
   cocobot_trajectory_init(4);
   cocobot_opponent_detection_init(3);
   cocobot_game_state_init(funny_action);
-  cocobot_pathfinder_init(300, 300);
+  //cocobot_pathfinder_init(300, 300);
 
   //Main robot do not need to know the shell config
   _shell_configuration = 0;
