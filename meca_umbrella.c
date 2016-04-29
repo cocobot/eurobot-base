@@ -70,7 +70,7 @@ void meca_umbrella_close(void)
 
 void meca_umbrella_open(void)
 {
-  state = MECA_UMBRELLA_CLOSE;
+  state = MECA_UMBRELLA_OPEN;
 
   servo_rot_set_point = MECA_UMBRELLA_ROT_SERVO_OPEN;
   meca_umbrella_update_servo();
