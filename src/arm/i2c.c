@@ -303,11 +303,14 @@ static int mcual_i2c_get_irq_err_id(mcual_i2c_id_t i2c_id)
   return 0;
 }
 
+
+#ifdef CONFIG_MCUAL_I2C_USE_FREERTOS
 static int mcual_i2c_get_tx_buffer_size(mcual_i2c_id_t i2c_id)
 {
   (void)i2c_id;
   return 8;
 }
+#endif
 
 
 void mcual_i2c_master_init(mcual_i2c_id_t i2c_id, uint32_t frequency_Hz)
@@ -367,6 +370,7 @@ void mcual_i2c_master_init(mcual_i2c_id_t i2c_id, uint32_t frequency_Hz)
   NVIC->ISER[irq_id / 32] |= (1 << (irq_id % 32));
 }
 
+#ifdef CONFIG_MCUAL_I2C_USE_FREERTOS
 static void mcual_i2c_stop(mcual_i2c_id_t id, int success)
 {
   I2C_TypeDef * reg = mcual_i2c_get_register(id);
@@ -393,7 +397,6 @@ static void mcual_i2c_stop(mcual_i2c_id_t id, int success)
   }
 }
 
-#ifdef CONFIG_MCUAL_I2C_USE_FREERTOS
 mcual_i2c_status_t mcual_i2c_transmit(mcual_i2c_id_t id, uint8_t addr, uint8_t * txbuf, uint8_t tx_size, uint8_t * rxbuf, uint8_t rx_size)
 {
   (void)rxbuf;
