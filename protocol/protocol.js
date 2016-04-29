@@ -214,6 +214,10 @@ var handleProgramState = function() {
       case 'try_sync':
         bootloader_state.try_number += 1;
         bootloader_state.sendMsg("Trying to synchronize with MCUAL loader - #" + bootloader_state.try_number);
+        if((bootloader_state.try_number % 10) == 0)
+        {
+          programSend("system_reboot");
+        }
         programSend("SYNC " + bootloader_state.try_number);
         break;
 
