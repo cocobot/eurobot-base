@@ -9,6 +9,7 @@ var GlobalUtils = function() {
   this.receiveHandlerFiltered = {};
   this.connected = false;    
   this.responseTime = -1;
+  this.name = '';
   this.socket = io.connect('http://' + document.domain + ':' + location.port);
   this.socket.on('receive', function(data) { self.handleReceive(data); });
 };
@@ -165,6 +166,9 @@ var Cocoui = React.createClass({
       errors: [],
       protocol: this.getProtocolInitialState(),
       bootloader_msg: '',
+      debug: [],
+      debug_idx: 0,
+      name: '',
     };
   },
 
@@ -182,6 +186,25 @@ var Cocoui = React.createClass({
     fireError = this.fireError;
     setTimeout(this.updateProtocolStatus, this.UPDATE_PERIOD_MS);
     utils.socket.on('bootloader', function(data) { self.setState({bootloader_msg: data.msg}); });
+    utils.onReceiveCommand("debug", this.handleReceiveDebug);
+  },
+
+  handleReceiveDebug: function(data) {
+    console.log(data);
+    var obj = {msg: data.answer.data[0].split('=')[1], idx: this.state.debug_idx};
+
+    var dbg = this.state.debug;
+    dbg.push(obj);
+    this.setState({debug: dbg, debug_idx: this.state.debug_idx + 1});
+
+    var self  = this;
+    setTimeout(function() {self.removeDebug(obj)}, 5000);
+  },
+
+  removeDebug: function(obj) {
+    var dbg = this.state.debug;
+   dbg = dbg.filter(function(e) {return (e.idx != obj.idx)});
+    this.setState({debug: dbg});
   },
 
   updateProtocolStatus: function() {
@@ -271,6 +294,15 @@ var Cocoui = React.createClass({
     err.splice(idx, 1);
     this.setState({errors: err});
   },
+
+  renderDebug: function(item) {
+    var txt = item + '';
+    return (
+      <div key={item.idx}>
+      {item.msg}
+      </div>
+    );
+  },
   
   //create components
   render: function() {
@@ -286,9 +318,14 @@ var Cocoui = React.createClass({
       bloaderCls += " hide";
     }
 
+    var debugCls = "row";
+    if(this.state.debug.length == 0) {
+      debugCls += " hide";
+    }
+
     return(
       <div>
-        <TopMenu protocol={this.state.protocol}>
+        <TopMenu protocol={this.state.protocol} ui={this}>
           { this.state.topMenuItem.map(this.renderTopMenuItem) }
         </TopMenu>
         <div className={bloaderCls}>
@@ -298,11 +335,19 @@ var Cocoui = React.createClass({
             </div>
           </div>
         </div>
+        <div className={debugCls}>
+          <div className="col-md-6 col-md-offset-3 main">
+            <div className="alert alert-info" role="alert">
+            { this.state.debug.map(this.renderDebug) }
+            </div>
+          </div>
+        </div>
         {errors}
         <Position page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'position'} actionID={this.state.actionID}/>
         <RConsole page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'console'} actionID={this.state.actionID}/>
         <Asserv page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'asserv'} actionID={this.state.actionID}/>
-        <SMeca page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'smeca'} actionID={this.state.actionID}/>
+        <SMeca page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'smeca' && this.state.name == 'Robot secondaire'} actionID={this.state.actionID}/>
+        <PMeca page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'smeca' && this.state.name == 'Robot principal'} actionID={this.state.actionID}/>
         <Opponent page={this.state.page} pageArgs={this.state.pageArgs} chrono={this} show={this.state.page == 'opponent'} actionID={this.state.actionID}/>
       </div>
     );

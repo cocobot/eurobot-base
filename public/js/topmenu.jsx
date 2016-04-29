@@ -124,6 +124,7 @@ var TopMenuInfo = React.createClass({
         battery: parseFloat(data.answer.data[1]) / 1000.0,
         responseTime: utils.responseTime,
       });
+      this.props.ui.setState({name: data.answer.data[0]});
     }
   },
 
@@ -218,7 +219,7 @@ var TopMenu = React.createClass({
               {this.props.children}
             </ul>
             <TopMenuProtocol protocol={this.props.protocol}/>
-            <TopMenuInfo />
+            <TopMenuInfo ui={this.props.ui}/>
           </div>
         </div>
       </nav>
