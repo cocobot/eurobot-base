@@ -22,7 +22,7 @@
 #define MECA_FISH_ROT_DOWN        540
 #define MECA_FISH_ROT_DISABLE     0
 
-#define MECA_FISH_UD_UP      370
+#define MECA_FISH_UD_UP      340
 #define MECA_FISH_UD_DOWN    300
 #define MECA_FISH_UD_DISABLE 0
 
@@ -179,6 +179,11 @@ void meca_fish_task(void * arg)
 
         case MECA_FISH_SWIM_RIGHT:
           {
+            next_state = MECA_FISH_MANUAL;
+
+            int i;
+            for(i = 0; i < 5; i += 1)
+            {
             servo_rot_set_point = MECA_FISH_ROT_HORIZONTAL;
             servo_lr_set_point = MECA_FISH_LR_LEFT;
             servo_ud_set_point = MECA_FISH_UD_UP;
@@ -208,13 +213,14 @@ void meca_fish_task(void * arg)
             servo_ud_set_point = MECA_FISH_UD_UP;
             meca_fish_update();
             vTaskDelay(200 / portTICK_PERIOD_MS);
+
+            }
 
             servo_rot_set_point = MECA_FISH_ROT_HORIZONTAL;
             servo_lr_set_point = MECA_FISH_LR_DISABLE;
             servo_ud_set_point = MECA_FISH_UD_DISABLE;
             meca_fish_update();
 
-            next_state = MECA_FISH_MANUAL;
           }
           break;
 
