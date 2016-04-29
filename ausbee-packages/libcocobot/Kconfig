@@ -84,3 +84,13 @@ config LIBCOCOBOT_ANGU_PID_MAX_ERROR_FOR_INTEGRATION
   int "+ Angular PID - max error for integration"
   depends on LIBCOCOBOT
   default 0
+
+config LIBCOCOBOT_LEFT_MOTOR_ALPHA
+  int "+ Left motor low pass filter - alpha"
+  depends on LIBCOCOBOT
+  default 1000
+
+config LIBCOCOBOT_RIGHT_MOTOR_ALPHA
+  int "+ Right motor low pass filter - alpha"
+  depends on LIBCOCOBOT
+  default 1000
