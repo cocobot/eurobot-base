@@ -28,6 +28,7 @@ var OpponentUsir = React.createClass({
         ir: parseInt(dec[1]), 
         alert_activated: dec[2] == "0" ? false : true, 
         alert: dec[3] == "0" ? false : true, 
+        forceon: dec[4] == "0" ? false : true, 
       };
       state.push(obj);
     }
@@ -40,6 +41,17 @@ var OpponentUsir = React.createClass({
     }
 
     setTimeout(this.update, this.UPDATE_PERIOD_MS);
+  },
+
+  setForceOn: function(i,v) {
+    if(v) {
+      v = " 1";
+    }
+    else {
+      v = " 0";
+    }
+    utils.sendCommand({command: "opponent_usir_force "+ i + v, argument: null});
+    utils.sendCommand({command: "opponent_usir", argument: null});
   },
 
   renderUsir: function(usir, i) {
@@ -73,9 +85,20 @@ var OpponentUsir = React.createClass({
     else {
       state =  <div className="label label-default"><span className="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>&nbsp;Repos</div>;
     }
+
+    var self = this;
+
     return (
       <div>
-        <b>{name}: </b> {state} (US = {usir.us}mm / IR = {usir.ir}mm)
+        <div>
+          <b>{name}</b>: US = {usir.us}mm / IR = {usir.ir}mm
+        </div>
+        {state}
+        <div className="checkbox small-margin-right">
+          <label>
+            <input type="checkbox" checked={usir.forceon} onChange={function() { self.setForceOn(i, !usir.forceon)}}/>Force on
+          </label>
+        </div>
       </div>
    );
 
@@ -94,7 +117,7 @@ var OpponentUsir = React.createClass({
     return (
       <div className="panel panel-default">
         <div className="panel-heading">
-          Parasol
+          USIR
         </div>
         <div className="panel-body">
           <div className="row">
@@ -142,10 +165,8 @@ var Opponent = React.createClass({
               </div>
               <div className="panel-body">
                 <div className="row">
-                  <div className="col-md-6">
+                  <div className="col-md-12">
                     <OpponentUsir update={this.props.show}/>
-                  </div>
-                  <div className="col-md-6">
                   </div>
                 </div>
               </div>
