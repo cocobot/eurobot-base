@@ -119,7 +119,6 @@ void update_lcd(void * arg)
   uint32_t last = platform_gpio_get(PLATFORM_GPIO7);
   while(!cocobot_game_state_is_starter_removed())
   {
-    cocobot_console_send_asynchronous("debug", "loutre %d",i++);
     uint32_t current = platform_gpio_get(PLATFORM_GPIO7);
 
     if(current && (current != last))
@@ -146,22 +145,28 @@ void update_lcd(void * arg)
 void run_strategy(void * arg)
 {
   (void)arg;
+
   meca_seashell_init();
   meca_fish_init();
 
-  strat_shell_register();
   strat_hut_register();
   strat_sand_register();
 
   cocobot_game_state_wait_for_starter_removed();
+
+  //strat shell must be registered after "starter removed" event because shell configuration can be changed before
+  strat_shell_register();
+
   cocobot_action_scheduler_start();
 
   cocobot_trajectory_wait();
 
+  //only used to test asserv
   while(0)
   {
     vTaskDelay(100 / portTICK_PERIOD_MS);
   }
+
   while(1)
   {
     if(!cocobot_action_scheduler_execute_best_action())
@@ -218,9 +223,9 @@ int main(void)
   //random shell config in simu
   _shell_configuration = rand() % 6; 
 #else
-  //TODO: impl me
   _shell_configuration = 0;
 #endif
+
   cocobot_game_state_set_userdata(COCOBOT_GS_UD_SHELL_CONFIGURATION, &_shell_configuration); 
 
   //set initial position
