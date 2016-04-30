@@ -39,6 +39,7 @@ var getAvailable = function() {
     }
   }
 
+  res.push({type: 'Auto', addr: 'serial'});
   res.push({type: 'TCP', addr: '127.0.0.1:10000'});
   res.push({type: 'TCP', addr: '127.0.0.1:10001'});
 
@@ -54,7 +55,7 @@ var getState = function() {
 }
 
 var connect = function(addr) {
-  if(!addr.indexOf("/dev")) {
+  if(!addr.indexOf("/dev") || (addr == "serial")) {
     lowLevel = serialProtocol.create(addr, receiveData);
   }
   else {

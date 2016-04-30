@@ -1,5 +1,6 @@
 'use strict';
 var serial = require('serialport').SerialPort;
+var fs = require('fs');
 
 function SerialProtocol(addr, handleReceiveData) {
   this.addr = addr;
@@ -17,8 +18,31 @@ SerialProtocol.prototype.connect = function() {
 
     this.try += 1;
 
-    console.log("Try #" + this.try);
-    this.serial = new serial(this.addr, {
+    var addr = this.addr;
+    if(addr == "serial") {
+      var res = [];
+      var files = fs.readdirSync("/dev");
+      for(var i in files) {
+        var name = files[i];
+        if(!name.indexOf("ttyUSB")) {
+          res.push('/dev/' + name);
+        }
+        if(!name.indexOf("ttyACM")) {
+          res.push('/dev/' + name);
+        }
+      }
+
+      if(res.length == 0)
+      {
+        console.log("No serial port available");
+        setTimeout(function() {self.connect()}, 1000);
+        return;
+      }
+      addr = res[this.try % res.length];
+    }
+
+    console.log("Try #" + this.try + " (" + addr + ")");
+    this.serial = new serial(addr, {
       baudrate: 115200
     }, function(error) {
       if ( error ) {
@@ -30,16 +54,26 @@ SerialProtocol.prototype.connect = function() {
         self.serial.on('data', function (buffer) { self.receiveData(buffer); });
       }
     });
+
+    var self = this;
+    this.serial.on('close', function(e) {
+      self.serial = null;
+      setTimeout(function() {self.connect()}, 1000);
+    });
   }
 };
 
 SerialProtocol.prototype.send = function(data) {
-  console.log("SEND: " + data);
-  this.serial.write(data + "\n", function() {});
+  if(this.serial != null) {
+    console.log("SEND: " + data);
+    this.serial.write(data + "\n", function() {});
+  }
 };
 
 SerialProtocol.prototype.sendRaw = function(data) {
-  this.serial.write(data, function() {});
+  if(this.serial != null) {
+    this.serial.write(data, function() {});
+  }
 };
 
 
@@ -51,9 +85,9 @@ SerialProtocol.prototype.receiveData = function(buffer) {
 
 SerialProtocol.prototype.close = function() {
   if(this.serial != null) {
+    this.closed = true;
     this.serial.close(function() {});
     this.serial = null;
-    this.closed = true;
   }
 }
 
