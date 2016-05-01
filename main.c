@@ -158,23 +158,6 @@ void run_strategy(void * arg)
   strat_shell_register();
 
   cocobot_action_scheduler_start();
-
-  cocobot_trajectory_wait();
-
-  //only used to test asserv
-  while(0)
-  {
-    vTaskDelay(100 / portTICK_PERIOD_MS);
-  }
-
-  while(1)
-  {
-    if(!cocobot_action_scheduler_execute_best_action())
-    {
-      //wait small delay if no action is available (which is a bad thing)
-      vTaskDelay(100 / portTICK_PERIOD_MS);
-    }
-  }
 }
 
 int console_handler(const char * command)

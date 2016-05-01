@@ -73,7 +73,7 @@ void strat_hut_register(void)
   if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
   {
     cocobot_action_scheduler_add_action(
-                                        "hut 0",
+                                        "hut_0",
                                         strat_hut_get_score(STRAT_HUT_VIOLET_LEFT),
                                         strat_hut_get_x(STRAT_HUT_VIOLET_LEFT),
                                         strat_hut_get_y(STRAT_HUT_VIOLET_LEFT),
@@ -87,7 +87,7 @@ void strat_hut_register(void)
                                         NULL);
 
     cocobot_action_scheduler_add_action(
-                                        "hut 1",
+                                        "hut_1",
                                         strat_hut_get_score(STRAT_HUT_VIOLET_RIGHT),
                                         strat_hut_get_x(STRAT_HUT_VIOLET_RIGHT),
                                         strat_hut_get_y(STRAT_HUT_VIOLET_RIGHT),
@@ -104,7 +104,7 @@ void strat_hut_register(void)
   if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_POS)
   {
     cocobot_action_scheduler_add_action(
-                                        "hut 2",
+                                        "hut_2",
                                         strat_hut_get_score(STRAT_HUT_GREEN_LEFT),
                                         strat_hut_get_x(STRAT_HUT_GREEN_LEFT),
                                         strat_hut_get_y(STRAT_HUT_GREEN_LEFT),
@@ -118,7 +118,7 @@ void strat_hut_register(void)
                                         NULL);
 
     cocobot_action_scheduler_add_action(
-                                        "hut 3",
+                                        "hut_3",
                                         strat_hut_get_score(STRAT_HUT_GREEN_RIGHT),
                                         strat_hut_get_x(STRAT_HUT_GREEN_RIGHT),
                                         strat_hut_get_y(STRAT_HUT_GREEN_RIGHT),

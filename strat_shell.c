@@ -509,7 +509,7 @@ void strat_shell_register(void)
     if((score > 0) && (success_proba > 0))
     {
       char * action_name = action_names[i];
-      snprintf(action_name,SHELL_ACTION_NAME_LENGTH, "shell %d", i);
+      snprintf(action_name,SHELL_ACTION_NAME_LENGTH, "shell_%d", i);
       cocobot_action_scheduler_add_action(
                                         action_name,
                                         score,
