@@ -65,7 +65,7 @@ static cocobot_action_callback_result_t strat_hut_action(void * arg)
   cocobot_trajectory_goto_d(300, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   cocobot_trajectory_wait();
 
-  return 1;
+  return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
 void strat_hut_register(void)

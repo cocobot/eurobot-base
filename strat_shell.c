@@ -457,7 +457,7 @@ static cocobot_action_callback_result_t strat_shell_preexec(void * arg)
 
   meca_seashell_open();
 
-  return 0;
+  return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
 static cocobot_action_callback_result_t strat_shell_cleanup(void * arg)
@@ -466,7 +466,7 @@ static cocobot_action_callback_result_t strat_shell_cleanup(void * arg)
 
   meca_seashell_close();
 
-  return 0;
+  return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
 static cocobot_action_callback_result_t strat_shell_exec(void * arg)
@@ -493,7 +493,7 @@ static cocobot_action_callback_result_t strat_shell_exec(void * arg)
 
   if(res == COCOBOT_TRAJECTORY_STOPPED_BEFORE_END)
   {
-    return COCOBOT_RETURN_ACTION_UNKNOWN_FAILURE;
+    return COCOBOT_RETURN_ACTION_SUCCESS_BUT_IM_LOST;
   }
 
   return COCOBOT_RETURN_ACTION_SUCCESS;

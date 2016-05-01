@@ -49,7 +49,7 @@ static cocobot_action_callback_result_t strat_sand_preexec(void * arg)
 
   cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_BACKWARD);
 
-  return 0;
+  return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
 static cocobot_action_callback_result_t strat_sand_cleanup(void * arg)
@@ -58,7 +58,7 @@ static cocobot_action_callback_result_t strat_sand_cleanup(void * arg)
 
   cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_FORWARD);
   
-  return 0;
+  return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
 static cocobot_action_callback_result_t strat_sand_exec(void * arg)
@@ -78,7 +78,7 @@ static cocobot_action_callback_result_t strat_sand_exec(void * arg)
 
   cocobot_trajectory_wait();
 
-  return 1;
+  return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
 void strat_sand_register(void)
