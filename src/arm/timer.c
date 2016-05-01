@@ -132,6 +132,10 @@ void mcual_timer_init(mcual_timer_t timer, int32_t freq_Hz)
     int32_t pres = -freq_Hz;
     reg->PSC = (pres - 1);
   }
+  reg->CCMR1 = 0;
+  reg->CCMR2 = 0;
+  reg->CCER = 0;
+
   reg->CNT = 0;
   reg->CR1 = TIM_CR1_CEN;
 }
@@ -155,6 +159,12 @@ uint32_t mcual_timer_get_timer_tick(mcual_timer_t timer)
 void mcual_timer_enable_channel(mcual_timer_t timer, mcual_timer_channel_t channel)
 {
   TIM_TypeDef * reg = mcual_timer_get_register(timer);
+
+  if(timer == MCUAL_TIMER1)
+  {
+    reg->BDTR = TIM_BDTR_MOE;
+  }
+
   if(channel & MCUAL_TIMER_CHANNEL1)
   {
     reg->CCMR1 |= TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2;
@@ -164,6 +174,16 @@ void mcual_timer_enable_channel(mcual_timer_t timer, mcual_timer_channel_t chann
   {
     reg->CCMR1 |= TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_2;
     reg->CCER |= TIM_CCER_CC2E;
+  }
+  if(channel & MCUAL_TIMER_CHANNEL3)
+  {
+    reg->CCMR2 |= TIM_CCMR2_OC3M_1 | TIM_CCMR2_OC3M_2;
+    reg->CCER |= TIM_CCER_CC3E;
+  }
+  if(channel & MCUAL_TIMER_CHANNEL4)
+  {
+    reg->CCMR2 |= TIM_CCMR2_OC4M_1 | TIM_CCMR2_OC4M_2;
+    reg->CCER |= TIM_CCER_CC4E;
   }
 }
 
