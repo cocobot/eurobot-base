@@ -451,7 +451,7 @@ float strat_shell_get_success_proba(int shell)
   return success;
 }
 
-static int strat_shell_preexec(void * arg)
+static cocobot_action_callback_result_t strat_shell_preexec(void * arg)
 {
   (void)arg;
 
@@ -460,7 +460,7 @@ static int strat_shell_preexec(void * arg)
   return 0;
 }
 
-static int strat_shell_cleanup(void * arg)
+static cocobot_action_callback_result_t strat_shell_cleanup(void * arg)
 {
   (void)arg;
 
@@ -469,7 +469,7 @@ static int strat_shell_cleanup(void * arg)
   return 0;
 }
 
-static int strat_shell_exec(void * arg)
+static cocobot_action_callback_result_t strat_shell_exec(void * arg)
 {
   (void)arg;
 
@@ -493,10 +493,10 @@ static int strat_shell_exec(void * arg)
 
   if(res == COCOBOT_TRAJECTORY_STOPPED_BEFORE_END)
   {
-    return -1;
+    return COCOBOT_RETURN_ACTION_UNKNOWN_FAILURE;
   }
 
-  return 1;
+  return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
 void strat_shell_register(void)

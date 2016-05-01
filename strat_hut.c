@@ -57,7 +57,7 @@ static float strat_hut_get_success_proba(int hut)
   return 0.01; //very low. Main robot should have already done the action before us !
 }
 
-static int strat_hut_action(void * arg)
+static cocobot_action_callback_result_t strat_hut_action(void * arg)
 {
   (void)arg; //each hut is equal
 

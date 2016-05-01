@@ -43,7 +43,7 @@ float strat_sand_get_score(void)
   return 16;
 }
 
-static int strat_sand_preexec(void * arg)
+static cocobot_action_callback_result_t strat_sand_preexec(void * arg)
 {
   (void)arg;
 
@@ -52,7 +52,7 @@ static int strat_sand_preexec(void * arg)
   return 0;
 }
 
-static int strat_sand_cleanup(void * arg)
+static cocobot_action_callback_result_t strat_sand_cleanup(void * arg)
 {
   (void)arg;
 
@@ -61,7 +61,7 @@ static int strat_sand_cleanup(void * arg)
   return 0;
 }
 
-static int strat_sand_exec(void * arg)
+static cocobot_action_callback_result_t strat_sand_exec(void * arg)
 {
   (void)arg;
 
