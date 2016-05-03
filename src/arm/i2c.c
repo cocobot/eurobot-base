@@ -375,7 +375,6 @@ static void mcual_i2c_stop(mcual_i2c_id_t id, int success)
 {
   I2C_TypeDef * reg = mcual_i2c_get_register(id);
 
-  mcual_gpio_toggle(MCUAL_GPIOE, MCUAL_GPIO_PIN8);
   reg->CR2 &= ~(I2C_CR2_ITEVTEN | I2C_CR2_ITERREN);
   I2C1->SR1 = 0;
   I2C1->SR2 = 0;
@@ -402,8 +401,6 @@ mcual_i2c_status_t mcual_i2c_transmit(mcual_i2c_id_t id, uint8_t addr, uint8_t *
   (void)rxbuf;
   (void)rx_size;
 
-    mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN7, MCUAL_GPIO_OUTPUT);
-    mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN8, MCUAL_GPIO_OUTPUT);
   I2C_TypeDef * reg = mcual_i2c_get_register(id);
   int i;
 
@@ -441,7 +438,6 @@ void I2C1_EV_IRQHandler(void)
   (void)sr2;
 
   uint8_t byte;
-  mcual_gpio_toggle(MCUAL_GPIOE, MCUAL_GPIO_PIN7);
 
   if(sr1 & (I2C_SR1_SB | I2C_SR1_ADDR | I2C_SR1_BTF))
   {
