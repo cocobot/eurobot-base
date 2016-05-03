@@ -238,8 +238,8 @@ void mcual_gpio_set_interrupt(mcual_gpio_port_t port, mcual_gpio_pin_t pin, mcua
     if(pin & (1 << i))
     {
       _itr_handlers[i] = handler;
-      SYSCFG->EXTICR[i >> 0x02] &= 0x0F << (4 * (i & 0x03));
-      SYSCFG->EXTICR[i >> 0x02] |= port << (4 * (i & 0x03));
+      SYSCFG->EXTICR[i >> 0x02] &= ~(0x0F << (4 * (i & 0x03)));
+      SYSCFG->EXTICR[i >> 0x02] |= (port << (4 * (i & 0x03)));
 
       if((edge == MCUAL_GPIO_RISING_EDGE) || (edge == MCUAL_GPIO_BOTH_EDGE))
       {
@@ -282,6 +282,7 @@ void EXTI ## pin ##_IRQHandler(void) \
 void EXTI ## end ##_ ## start ## _IRQHandler(void) \
 {\
   int i;\
+  uint32_t npr = 0;\
   for(i = start; i <= end; i += 1)\
   {\
     if(EXTI->IMR & (1 << i))\
@@ -292,11 +293,13 @@ void EXTI ## end ##_ ## start ## _IRQHandler(void) \
         {\
           _itr_handlers[i]();\
         }\
+        npr |= (1 << i);\
       }\
     }\
-    EXTI->PR = (1 << i);\
+    EXTI->PR = npr;\
   }\
 }
+ //   EXTI->PR = (1 << i);
 
 generateSimpleIRQHandler(0);
 generateSimpleIRQHandler(1);
