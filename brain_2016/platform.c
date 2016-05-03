@@ -31,12 +31,10 @@ void platform_us_0_interrupt(void)
   if(mcual_gpio_get(MCUAL_GPIOB, MCUAL_GPIO_PIN8))
   {
     us[0].rising_edge = now;
-    platform_led_set(PLATFORM_LED1);
   }
   else
   {
     us[0].last_value = now - us[0].rising_edge;
-    platform_led_clear(PLATFORM_LED1);
   }
 }
 
@@ -158,6 +156,7 @@ void platform_init(void)
   mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN2, MCUAL_GPIO_FUNCTION_ANALOG);
   mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN3, MCUAL_GPIO_FUNCTION_ANALOG);
   mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN4, MCUAL_GPIO_FUNCTION_ANALOG);
+  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN5, MCUAL_GPIO_FUNCTION_ANALOG);
 #ifdef CONFIG_MCUAL_ADC
   mcual_adc_init();
 #endif
