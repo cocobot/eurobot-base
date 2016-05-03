@@ -18,10 +18,10 @@ static float strat_hut_get_x(int hut)
   switch(hut)
   {
     case STRAT_HUT_VIOLET:
-      return -1050;
+      return -1075;
 
     case STRAT_HUT_GREEN:
-      return 1050;
+      return 1075;
   }
 
   return 10000; //unvalid hut has been requested.
@@ -56,11 +56,14 @@ static cocobot_action_callback_result_t strat_hut_action(void * arg)
 {
   (void)arg; //each hut is equal
 
+  cocobot_trajectory_set_opponent_detection(0);
   cocobot_trajectory_goto_d(-10400, 1000);
   cocobot_trajectory_wait();
+  cocobot_trajectory_set_opponent_detection(1);
 
   cocobot_trajectory_goto_d(300, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   cocobot_trajectory_wait();
+
 
   return COCOBOT_RETURN_ACTION_SUCCESS;
 }

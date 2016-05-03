@@ -9,11 +9,13 @@ typedef enum
 } meca_crimp_vertical_t;
 
 void meca_crimp_init(void);
+void meca_crimp_open(void);
+void meca_crimp_close(void);
 void meca_crimp_disable(void);
 
-void meca_crimp_open(unsigned int number);
-void meca_crimp_hold(unsigned int number);
-void meca_crimp_vertical(meca_crimp_vertical_t v);
+//void meca_crimp_open(unsigned int number);
+//void meca_crimp_hold(unsigned int number);
+//void meca_crimp_vertical(meca_crimp_vertical_t v);
 
 int meca_crimp_console_handler(const char * command);
 

@@ -7,12 +7,15 @@
 #include "meca_sucker.h"
 #include "meca_umbrella.h"
 #include "meca_crimp.h"
+#include "strat_hut.h"
 
 static unsigned int _shell_configuration;
 
 void update_lcd(void * arg)
 {
   (void)arg;
+
+  platform_gpio_set_direction(PLATFORM_GPIO0, MCUAL_GPIO_OUTPUT);
 
 #ifndef AUSBEE_SIM
   int vbat = platform_adc_get_mV(PLATFORM_ADC_VBAT);
@@ -32,7 +35,7 @@ void update_lcd(void * arg)
     }
   }
 #endif
-  
+
   //blink for the fun
   int i;
   for(i = 0; i < 20; i += 1)
@@ -58,17 +61,23 @@ void run_strategy(void * arg)
   meca_umbrella_init();
   meca_crimp_init();
 
-  cocobot_game_state_wait_for_starter_removed();
-  cocobot_action_scheduler_start();
+  strat_hut_register();
 
-  while(1)
+  cocobot_game_state_wait_for_starter_removed();
+
+  while(0)
   {
-    if(!cocobot_action_scheduler_execute_best_action())
-    {
-      //wait small delay if no action is available (which is a bad thing)
-      vTaskDelay(100 / portTICK_PERIOD_MS);
-    }
+    cocobot_trajectory_goto_a(90, -1);
+    cocobot_trajectory_goto_a(0, -1);
+    cocobot_trajectory_wait();
+
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
   }
+
+  cocobot_trajectory_goto_d(-100, -1);
+  cocobot_trajectory_wait();
+
+  cocobot_action_scheduler_start();
 }
 
 int console_handler(const char * command)
@@ -125,19 +134,19 @@ int main(void)
   switch(cocobot_game_state_get_color())
   {
     case COCOBOT_GAME_STATE_COLOR_NEG:
-      cocobot_position_set_x(-1250);
-      cocobot_position_set_y(300);
-      cocobot_position_set_angle(0);
+      cocobot_position_set_x(-1300);
+      cocobot_position_set_y(250);
+      cocobot_position_set_angle(180);
       break;
 
     case COCOBOT_GAME_STATE_COLOR_POS:
-      cocobot_position_set_x(1250);
-      cocobot_position_set_y(300);
-      cocobot_position_set_angle(180);
+      cocobot_position_set_x(1300);
+      cocobot_position_set_y(250);
+      cocobot_position_set_angle(0);
       break;
   }
 
-  xTaskCreate(run_strategy, "strat", 200, NULL, 2, NULL );
+  xTaskCreate(run_strategy, "strat", 400, NULL, 2, NULL );
   xTaskCreate(update_lcd, "blink", 200, NULL, 1, NULL );
 
   vTaskStartScheduler();
