@@ -123,6 +123,7 @@ var TopMenuInfo = React.createClass({
         name: data.answer.data[0],
         battery: parseFloat(data.answer.data[1]) / 1000.0,
         responseTime: utils.responseTime,
+        remaningTime: data.answer.data[4],
       });
       this.props.ui.setState({name: data.answer.data[0]});
     }
@@ -157,6 +158,20 @@ var TopMenuInfo = React.createClass({
       responseTimeClass += " label-success";
     }
 
+    var remaningTimeDanger = 85;
+    var remaningTimeWarning = 75;
+    var remaningTimeClass = "label small-margin-right";
+
+    if(this.state.remaningTime > remaningTimeDanger) {
+      remaningTimeClass += " label-danger";
+    }
+    else if(this.state.remaningTime > remaningTimeWarning) {
+      remaningTimeClass += " label-warning";
+    }
+    else {
+      remaningTimeClass += " label-success";
+    }
+
     var generalClasses = "navbar-form navbar-right";
 
     if(!utils.connected) {
@@ -171,8 +186,8 @@ var TopMenuInfo = React.createClass({
         <span className={batteryClass}>
           Batterie: {this.state.battery} V
         </span>      
-        <span className={responseTimeClass}>
-          Temps de r&eacute;ponse: {this.state.responseTime} ms
+        <span className={remaningTimeClass}>
+          Temps: {this.state.remaningTime} s
         </span>      
       </div>
     );
