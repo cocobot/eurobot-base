@@ -157,6 +157,9 @@ void run_strategy(void * arg)
   //strat shell must be registered after "starter removed" event because shell configuration can be changed before
   strat_shell_register();
 
+  cocobot_trajectory_goto_d(100, -1);
+  cocobot_trajectory_wait();
+
   cocobot_action_scheduler_start();
 }
 
@@ -187,6 +190,12 @@ int console_handler(const char * command)
 
 void funny_action(void)
 {
+  platform_gpio_set(PLATFORM_GPIO2);
+  platform_gpio_clear(PLATFORM_GPIO3);
+  platform_gpio_clear(PLATFORM_GPIO4);
+  platform_gpio_clear(PLATFORM_GPIO5);
+  platform_gpio_set(PLATFORM_GPIO6);
+
 }
 
 int main(void) 

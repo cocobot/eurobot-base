@@ -435,14 +435,16 @@ float strat_shell_get_success_proba(int shell)
       case COCOBOT_GAME_STATE_COLOR_NEG:
         if(x > 0)
         {
-          success *= 0.5;
+          //success *= 0.5;
+          success *= 0;
         }
         break;
 
       case COCOBOT_GAME_STATE_COLOR_POS:
         if(x < 0)
         {
-          success *= 0.5;
+          //success *= 0.5;
+          success *= 0;
         }
         break;
     }
