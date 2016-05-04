@@ -5,7 +5,7 @@
 #include "meca_seashell.h"
 
 #define SHELL_NUMBER 22
-#define SHELL_ACTION_NAME_LENGTH 8
+#define SHELL_ACTION_NAME_LENGTH 9
 #define SHELL_TARGET_AREA_X 1300
 #define SHELL_TARGET_AREA_Y -50
 
