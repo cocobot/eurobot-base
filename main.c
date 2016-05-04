@@ -111,6 +111,8 @@ int console_handler(const char * command)
     }
     void * ptr = cocobot_game_state_get_userdata(COCOBOT_GS_UD_SHELL_CONFIGURATION);
     cocobot_console_send_answer("%d", *((unsigned int *)ptr));
+
+    cocobot_console_send_answer("%ld", cocobot_game_state_get_elapsed_time() / 1000);
     return 1;
   }
 
