@@ -10,6 +10,7 @@
 #include "strat_hut.h"
 
 static unsigned int _shell_configuration;
+static int do_funny_action;
 
 void update_lcd(void * arg)
 {
@@ -50,6 +51,20 @@ void update_lcd(void * arg)
     //toggle led
     vTaskDelay(100 / portTICK_PERIOD_MS);
     platform_led_toggle(PLATFORM_LED0);
+
+    if(do_funny_action)
+    {
+
+      meca_sucker_disable();
+      meca_crimp_disable();
+
+      meca_umbrella_open();
+
+      while(1)
+      {
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+      }
+    }
   }
 }
 
@@ -108,10 +123,7 @@ int console_handler(const char * command)
 
 void funny_action(void)
 {
-  meca_sucker_disable();
-  meca_crimp_disable();
-
-  meca_umbrella_open();
+  do_funny_action = 1;
 }
 
 int main(void) 
@@ -129,6 +141,8 @@ int main(void)
   //Main robot do not need to know the shell config
   _shell_configuration = 0;
   cocobot_game_state_set_userdata(COCOBOT_GS_UD_SHELL_CONFIGURATION, &_shell_configuration); 
+
+  do_funny_action = 0;
   
   //set initial position
   switch(cocobot_game_state_get_color())
