@@ -71,10 +71,17 @@ static cocobot_action_callback_result_t strat_sand_exec(void * arg)
     x_k = -1;
   }
 
-  cocobot_trajectory_goto_xy(x_k * 700, 100, -1);
-  cocobot_trajectory_goto_xy(x_k * 400, -100, -1);
-  cocobot_trajectory_goto_xy(x_k * 200, -100, -1);
-  cocobot_trajectory_goto_d(500, -1);
+  cocobot_trajectory_goto_xy(x_k * 700, 100, 10000);
+
+  cocobot_trajectory_wait();
+
+  cocobot_trajectory_set_opponent_detection(0);
+  cocobot_trajectory_goto_xy(x_k * 200, 100, 10000);
+  cocobot_trajectory_set_opponent_detection(1);
+
+
+  cocobot_trajectory_wait();
+  cocobot_trajectory_goto_d(500, 10);
 
   cocobot_trajectory_wait();
 

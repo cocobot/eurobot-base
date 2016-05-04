@@ -481,5 +481,11 @@ int meca_fish_console_handler(const char * command)
     return 1;
   }
 
+  if(strcmp(command,"meca_fish_ir") == 0)
+  {
+    cocobot_console_send_answer("%ld", platform_adc_get_mV(PLATFORM_ADC_CH0));
+    return 1;
+  }
+
   return 0;
 }
