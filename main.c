@@ -11,6 +11,7 @@
 #include "strat_hut.h"
 #include "strat_shell.h"
 #include "strat_sand.h"
+#include "strat_fish.h"
 
 static unsigned int _shell_configuration;
 
@@ -151,6 +152,7 @@ void run_strategy(void * arg)
 
   strat_hut_register();
   strat_sand_register();
+  strat_fish_register();
 
   cocobot_game_state_wait_for_starter_removed();
 
