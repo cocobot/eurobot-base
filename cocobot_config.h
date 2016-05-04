@@ -8,4 +8,6 @@
 
 #define COCOBOT_INVERT_LEFT_MOTOR
 
+#define COCOBOT_ROBOT_DEPTH (220 / 2)
+
 #endif//COCOBOT_CONFIG_H
