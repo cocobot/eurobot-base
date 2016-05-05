@@ -76,8 +76,11 @@ var OpponentUsir = React.createClass({
         break;
     }
 
-    if(usir.alert) {
+    if(usir.alert == 1) {
       state =  <div className="label label-warning"><span className="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>&nbsp;Alerte</div>;
+    }
+    else if(usir.alert == 2) {
+      state =  <div className="label label-danger"><span className="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>&nbsp;Alerte (HT)</div>;
     }
     else if(usir.alert_activated) {
       state =  <div className="label label-success"><span className="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>&nbsp;Activé</div>;
