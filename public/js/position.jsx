@@ -179,6 +179,17 @@ var Robot = React.createClass({
 
       meca.push(<Robot2016Umbrella key={meca.length} update={this.props.update} />);
     }
+    if(this.state.name == "Robot principal")
+    {
+      shape = (
+        <g transform="rotate(90) translate(-150, -110)">
+          <rect height="220" width="300" fill="#000000" />
+        </g>
+      );
+
+      meca.push(<Robot2016Umbrella key={meca.length} update={this.props.update} />);
+    }
+
     else
     {
       shape = (
@@ -978,7 +989,8 @@ var Field = React.createClass({
       {this.props.children}
       </svg>
     );
-  }
+  },
+
 });
 
 var Position = React.createClass({
