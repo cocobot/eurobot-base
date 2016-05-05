@@ -130,6 +130,7 @@ int console_handler(const char * command)
 void funny_action(void)
 {
   do_funny_action = 1;
+  platform_gpio_set(PLATFORM_GPIO0);
 }
 
 int main(void) 

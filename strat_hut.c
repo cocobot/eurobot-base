@@ -1,4 +1,6 @@
 #include <cocobot.h>
+#include <FreeRTOS.h>
+#include <task.h>
 #include "strat_hut.h"
 
 typedef enum
@@ -71,7 +73,12 @@ static cocobot_action_callback_result_t strat_hut_action(void * arg)
   cocobot_trajectory_wait();
   cocobot_trajectory_set_opponent_detection(1);
 
-  cocobot_trajectory_goto_d(400, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  cocobot_trajectory_goto_d(200, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  cocobot_trajectory_wait();
+
+  vTaskDelay(8000 / portTICK_PERIOD_MS);
+
+  cocobot_trajectory_goto_d(200, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   cocobot_trajectory_wait();
 
 
