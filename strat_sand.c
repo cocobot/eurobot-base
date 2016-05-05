@@ -28,6 +28,14 @@ static float strat_sand_get_a(void)
   return 0;
 }
 
+static void strat_sand_pos(void * arg, float *x, float *y, float *a)
+{
+  (void)arg;
+  *x = strat_sand_get_x();
+  *y = strat_sand_get_y();
+  *a = strat_sand_get_a();
+}
+
 static float strat_sand_get_exec_time(void)
 {
   return 5000;
@@ -95,9 +103,7 @@ void strat_sand_register(void)
   cocobot_action_scheduler_add_action(
                                     "sand",
                                     strat_sand_get_score(),
-                                    strat_sand_get_x(),
-                                    strat_sand_get_y(),
-                                    strat_sand_get_a(),
+                                    strat_sand_pos,
                                     strat_sand_get_exec_time(),
                                     strat_sand_get_success_proba(),
                                     strat_sand_preexec,

@@ -32,6 +32,14 @@ static float strat_fish_get_a(void)
   return -90;
 }
 
+static void strat_fish_pos(void *arg, float *x, float *y, float *a)
+{
+  (void)arg;
+  *x = strat_fish_get_x();
+  *y = strat_fish_get_y();
+  *a = strat_fish_get_a();
+}
+
 static float strat_fish_get_exec_time(void)
 {
   return 60000;
@@ -185,9 +193,7 @@ void strat_fish_register(void)
   cocobot_action_scheduler_add_action(
                                     "fish",
                                     strat_fish_get_score(),
-                                    strat_fish_get_x(),
-                                    strat_fish_get_y(),
-                                    strat_fish_get_a(),
+                                    strat_fish_pos,
                                     strat_fish_get_exec_time(),
                                     strat_fish_get_success_proba(),
                                     strat_fish_preexec,

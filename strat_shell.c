@@ -148,6 +148,14 @@ static float strat_shell_get_a(int shell)
   return NAN;
 }
 
+static void strat_shell_pos(void *arg, float *x, float *y, float *a)
+{
+  int shell = (int)arg;
+  *x = strat_shell_get_x(shell);
+  *y = strat_shell_get_y(shell);
+  *a = strat_shell_get_a(shell);
+}
+
 float strat_shell_get_exec_time(int shell)
 {
   float target_x = 0;
@@ -515,15 +523,13 @@ void strat_shell_register(void)
       cocobot_action_scheduler_add_action(
                                         action_name,
                                         score,
-                                        strat_shell_get_x(i),
-                                        strat_shell_get_y(i),
-                                        strat_shell_get_a(i),
+                                        strat_shell_pos,
                                         strat_shell_get_exec_time(i),
                                         success_proba,
                                         strat_shell_preexec,
                                         strat_shell_exec,
                                         strat_shell_cleanup,
-                                        NULL,
+                                        (void *)i,
                                         NULL);
     }
   }

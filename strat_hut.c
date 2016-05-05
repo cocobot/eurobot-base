@@ -45,6 +45,14 @@ static float strat_hut_get_a(int hut)
   return -90; //we want to hit the door with our back
 }
 
+static void strat_hut_pos(void *arg, float *x, float *y, float *a)
+{
+  int hut = (int)arg;
+  *x = strat_hut_get_x(hut);
+  *y = strat_hut_get_y(hut);
+  *a = strat_hut_get_a(hut);
+}
+
 static float strat_hut_get_exec_time(int hut)
 {
   (void)hut; //each hut is equal
@@ -75,9 +83,7 @@ void strat_hut_register(void)
     cocobot_action_scheduler_add_action(
                                         "hut_0",
                                         strat_hut_get_score(STRAT_HUT_VIOLET_LEFT),
-                                        strat_hut_get_x(STRAT_HUT_VIOLET_LEFT),
-                                        strat_hut_get_y(STRAT_HUT_VIOLET_LEFT),
-                                        strat_hut_get_a(STRAT_HUT_VIOLET_LEFT),
+                                        strat_hut_pos,
                                         strat_hut_get_exec_time(STRAT_HUT_VIOLET_LEFT),
                                         strat_hut_get_success_proba(STRAT_HUT_VIOLET_LEFT),
                                         NULL,
@@ -89,9 +95,7 @@ void strat_hut_register(void)
     cocobot_action_scheduler_add_action(
                                         "hut_1",
                                         strat_hut_get_score(STRAT_HUT_VIOLET_RIGHT),
-                                        strat_hut_get_x(STRAT_HUT_VIOLET_RIGHT),
-                                        strat_hut_get_y(STRAT_HUT_VIOLET_RIGHT),
-                                        strat_hut_get_a(STRAT_HUT_VIOLET_RIGHT),
+                                        strat_hut_pos,
                                         strat_hut_get_exec_time(STRAT_HUT_VIOLET_RIGHT),
                                         strat_hut_get_success_proba(STRAT_HUT_VIOLET_RIGHT),
                                         NULL,
@@ -106,9 +110,7 @@ void strat_hut_register(void)
     cocobot_action_scheduler_add_action(
                                         "hut_2",
                                         strat_hut_get_score(STRAT_HUT_GREEN_LEFT),
-                                        strat_hut_get_x(STRAT_HUT_GREEN_LEFT),
-                                        strat_hut_get_y(STRAT_HUT_GREEN_LEFT),
-                                        strat_hut_get_a(STRAT_HUT_GREEN_LEFT),
+                                        strat_hut_pos,
                                         strat_hut_get_exec_time(STRAT_HUT_GREEN_LEFT),
                                         strat_hut_get_success_proba(STRAT_HUT_GREEN_LEFT),
                                         NULL,
@@ -120,9 +122,7 @@ void strat_hut_register(void)
     cocobot_action_scheduler_add_action(
                                         "hut_3",
                                         strat_hut_get_score(STRAT_HUT_GREEN_RIGHT),
-                                        strat_hut_get_x(STRAT_HUT_GREEN_RIGHT),
-                                        strat_hut_get_y(STRAT_HUT_GREEN_RIGHT),
-                                        strat_hut_get_a(STRAT_HUT_GREEN_RIGHT),
+                                        strat_hut_pos,
                                         strat_hut_get_exec_time(STRAT_HUT_GREEN_RIGHT),
                                         strat_hut_get_success_proba(STRAT_HUT_GREEN_RIGHT),
                                         NULL,
