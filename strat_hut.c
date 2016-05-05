@@ -10,7 +10,7 @@ static unsigned int strat_hut_get_score(int hut)
 {
   (void)hut; //each hut is equal
 
-  return 10;
+  return 20;
 }
 
 static float strat_hut_get_x(int hut)
@@ -49,7 +49,7 @@ static float strat_hut_get_success_proba(int hut)
 {
   (void)hut; //each hut is equal
 
-  return 0.99;
+  return 0.98;
 }
 
 static cocobot_action_callback_result_t strat_hut_action(void * arg)

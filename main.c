@@ -9,6 +9,7 @@
 #include "meca_crimp.h"
 #include "strat_hut.h"
 #include "strat_little_dune.h"
+#include "strat_easy_dune.h"
 
 static unsigned int _shell_configuration;
 static int do_funny_action;
@@ -78,14 +79,15 @@ void run_strategy(void * arg)
   meca_crimp_init();
 
   strat_hut_register();
-  strat_little_dune_register();
+ // strat_little_dune_register();
+  strat_easy_dune_register();
 
   cocobot_game_state_wait_for_starter_removed();
 
+
   while(0)
   {
-    cocobot_trajectory_goto_a(90, -1);
-    cocobot_trajectory_goto_a(0, -1);
+    cocobot_trajectory_goto_d(-5000, -1);
     cocobot_trajectory_wait();
 
     vTaskDelay(5000 / portTICK_PERIOD_MS);
@@ -136,11 +138,12 @@ int main(void)
   cocobot_console_init(MCUAL_USART1, 1, 1, console_handler);
   cocobot_lcd_init();
   cocobot_position_init(4);
+  cocobot_action_scheduler_init();
   cocobot_asserv_init();
   cocobot_trajectory_init(4);
   cocobot_opponent_detection_init(3);
   cocobot_game_state_init(funny_action);
-  //cocobot_pathfinder_init(300, 300);
+  cocobot_pathfinder_init(300, 220);
 
   //Main robot do not need to know the shell config
   _shell_configuration = 0;
