@@ -31,6 +31,14 @@ static float strat_easy_dune_get_a(void)
   return 0;
 }
 
+static void strat_easy_dune_pos(void *arg, float *x, float *y, float *a)
+{
+  (void)arg;
+  *x = strat_easy_dune_get_x();
+  *y = strat_easy_dune_get_y();
+  *a = strat_easy_dune_get_a();
+}
+
 static float strat_easy_dune_get_exec_time(void)
 {
   return 5000;
@@ -87,9 +95,7 @@ void strat_easy_dune_register(void)
   cocobot_action_scheduler_add_action(
                                     "easy_dune",
                                     strat_easy_dune_get_score(),
-                                    strat_easy_dune_get_x(),
-                                    strat_easy_dune_get_y(),
-                                    strat_easy_dune_get_a(),
+                                    strat_easy_dune_pos,
                                     strat_easy_dune_get_exec_time(),
                                     strat_easy_dune_get_success_proba(),
                                     strat_easy_dune_preexec,
