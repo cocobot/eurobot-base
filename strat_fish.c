@@ -121,29 +121,29 @@ static cocobot_action_callback_result_t strat_fish_take_exec(void * arg)
   meca_fish_walk(1);
 
   int i;
-  for(i = 0; i < 2; i += 1) 
+  for(i = 0; i < 3; i += 1) 
   {
     switch(cocobot_game_state_get_color())
     {
       case COCOBOT_GAME_STATE_COLOR_POS:
         if((i % 2) == 1)
         {
-          meca_fish_sweep_right(1);
+          meca_fish_sweep_right(1, i == 0);
         }
         else
         {
-          meca_fish_sweep_left(1);
+          meca_fish_sweep_left(1, i == 0);
         }
         break;
 
       case COCOBOT_GAME_STATE_COLOR_NEG:
         if((i % 2) == 0)
         {
-          meca_fish_sweep_right(1);
+          meca_fish_sweep_right(1, i == 0);
         }
         else
         {
-          meca_fish_sweep_left(1);
+          meca_fish_sweep_left(1, i == 0);
         }
         break;
     }

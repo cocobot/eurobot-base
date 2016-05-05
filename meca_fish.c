@@ -35,6 +35,8 @@ typedef enum
   MECA_FISH_CLOSE,
   MECA_FISH_PREPARE,
   MECA_FISH_WALK,
+  MECA_FISH_SWEEP_HIGH_LEFT,
+  MECA_FISH_SWEEP_HIGH_RIGHT,
   MECA_FISH_SWEEP_LEFT,
   MECA_FISH_SWEEP_RIGHT,
   MECA_FISH_SWIM_LEFT,
@@ -143,6 +145,62 @@ void meca_fish_task(void * arg)
         case MECA_FISH_SWEEP_RIGHT:
           {
             servo_rot_set_point = 320;
+            servo_lr_set_point = MECA_FISH_LR_LEFT;
+            servo_ud_set_point = MECA_FISH_UD_DOWN;
+            meca_fish_update();
+            vTaskDelay(200 / portTICK_PERIOD_MS);
+
+            servo_rot_set_point = MECA_FISH_ROT_HORIZONTAL;
+            servo_lr_set_point = MECA_FISH_LR_LEFT;
+            servo_ud_set_point = MECA_FISH_UD_DOWN;
+            meca_fish_update();
+            vTaskDelay(200 / portTICK_PERIOD_MS);
+
+            int i;
+            for(i = 0; i < MECA_FISH_SWEEP_STEP; i += 1)
+            {
+              servo_lr_set_point = MECA_FISH_LR_LEFT + i * ((MECA_FISH_LR_RIGHT - MECA_FISH_LR_LEFT)) / (MECA_FISH_SWEEP_STEP - 1);
+              meca_fish_update();
+              vTaskDelay((MECA_FISH_SWEEP_DURATION_MS / MECA_FISH_SWEEP_STEP) / portTICK_PERIOD_MS);
+            }
+
+            servo_lr_set_point = MECA_FISH_LR_DISABLE;
+            servo_ud_set_point = MECA_FISH_UD_DISABLE;
+            meca_fish_update();
+          }
+          break;
+
+        case MECA_FISH_SWEEP_HIGH_LEFT:
+          {
+            servo_rot_set_point = MECA_FISH_ROT_HORIZONTAL;
+            servo_lr_set_point = MECA_FISH_LR_RIGHT;
+            servo_ud_set_point = MECA_FISH_UD_DOWN;
+            meca_fish_update();
+            vTaskDelay(200 / portTICK_PERIOD_MS);
+
+            servo_rot_set_point = MECA_FISH_ROT_HORIZONTAL;
+            servo_lr_set_point = MECA_FISH_LR_RIGHT;
+            servo_ud_set_point = MECA_FISH_UD_DOWN;
+            meca_fish_update();
+            vTaskDelay(200 / portTICK_PERIOD_MS);
+
+            int i;
+            for(i = 0; i < MECA_FISH_SWEEP_STEP; i += 1)
+            {
+              servo_lr_set_point = MECA_FISH_LR_RIGHT + i * ((MECA_FISH_LR_LEFT - MECA_FISH_LR_RIGHT)) / (MECA_FISH_SWEEP_STEP - 1);
+              meca_fish_update();
+              vTaskDelay((MECA_FISH_SWEEP_DURATION_MS / MECA_FISH_SWEEP_STEP) / portTICK_PERIOD_MS);
+            }
+
+            servo_lr_set_point = MECA_FISH_LR_DISABLE;
+            servo_ud_set_point = MECA_FISH_UD_DISABLE;
+            meca_fish_update();
+          }
+          break;
+          
+        case MECA_FISH_SWEEP_HIGH_RIGHT:
+          {
+            servo_rot_set_point = MECA_FISH_ROT_HORIZONTAL;
             servo_lr_set_point = MECA_FISH_LR_LEFT;
             servo_ud_set_point = MECA_FISH_UD_DOWN;
             meca_fish_update();
@@ -351,19 +409,26 @@ void meca_fish_walk(int wait)
   }
 }
 
-void meca_fish_sweep_left(int wait)
+void meca_fish_sweep_left(int wait, int high)
 {
+  meca_fish_state_t st = MECA_FISH_SWEEP_LEFT;
+
+  if(high) 
+  {
+    st = MECA_FISH_SWEEP_HIGH_LEFT;
+  }
+
   if(wait)
   {
     xEventGroupClearBits(busy, 0xFF);
   }
 
-  if(current_state == MECA_FISH_SWEEP_LEFT)
+  if(current_state == st)
   {
     wait = 0;
   }
 
-  next_state = MECA_FISH_SWEEP_LEFT;
+  next_state = st;
 
   if(wait)
   {
@@ -386,19 +451,26 @@ int meca_fish_is_catch(void)
 #endif
 }
 
-void meca_fish_sweep_right(int wait)
+void meca_fish_sweep_right(int wait, int high)
 {
+  meca_fish_state_t st = MECA_FISH_SWEEP_RIGHT;
+
+  if(high) 
+  {
+    st = MECA_FISH_SWEEP_HIGH_RIGHT;
+  }
+
   if(wait)
   {
     xEventGroupClearBits(busy, 0xFF);
   }
 
-  if(current_state == MECA_FISH_SWEEP_RIGHT)
+  if(current_state == st)
   {
     wait = 0;
   }
 
-  next_state = MECA_FISH_SWEEP_RIGHT;
+  next_state = st;
 
   if(wait)
   {
@@ -484,11 +556,19 @@ int meca_fish_console_handler(const char * command)
       }
       if(strcmp(buf, "sweep_left") == 0)
       {
-        meca_fish_sweep_left(0);
+        meca_fish_sweep_left(0, 0);
       }
       if(strcmp(buf, "sweep_right") == 0)
       {
-        meca_fish_sweep_right(0);
+        meca_fish_sweep_right(0, 0);
+      }
+      if(strcmp(buf, "sweep_high_left") == 0)
+      {
+        meca_fish_sweep_left(0, 1);
+      }
+      if(strcmp(buf, "sweep_high_right") == 0)
+      {
+        meca_fish_sweep_right(0, 1);
       }
       if(strcmp(buf, "swim_left") == 0)
       {
@@ -531,8 +611,16 @@ int meca_fish_console_handler(const char * command)
         cocobot_console_send_answer("sweep_right");
         break;
 
+      case MECA_FISH_SWEEP_HIGH_RIGHT:
+        cocobot_console_send_answer("sweep_high_right");
+        break;
+
       case MECA_FISH_SWIM_LEFT:
         cocobot_console_send_answer("swim_left");
+        break;
+
+      case MECA_FISH_SWEEP_HIGH_LEFT:
+        cocobot_console_send_answer("sweep_high_left");
         break;
 
       case MECA_FISH_SWIM_RIGHT:

@@ -12,8 +12,9 @@ void meca_fish_disable(void);
 
 int meca_fish_console_handler(const char * command);
 
-void meca_fish_sweep_left(int wait);
-void meca_fish_sweep_right(int wait);
+void meca_fish_sweep_left(int wait, int high);
+void meca_fish_sweep_right(int wait, int high);
 int meca_fish_is_catch(void);
+
 
 #endif// MECA_FISH_H
