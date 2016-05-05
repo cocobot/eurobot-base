@@ -60,7 +60,7 @@ var TrajectoryOrders = React.createClass({
       </tr>
     );
   },
-  
+ 
   render: function() {
     return (
       <div className="panel panel-default">
@@ -191,6 +191,29 @@ var Robot = React.createClass({
       );
     }
 
+    var actions = [];
+    for(var i = 0; i < this.props.actions.length; i += 1) {
+      var position = "translate(" + this.props.actions[i].x + "," + this.props.actions[i].y + ")";
+        var act = (
+        <g transform="translate(1500,1000) scale(1, -1)">
+          <g opacity="0.8" transform={position}>
+            <circle cx="0" cy="0" r="100" strokeWidth="10" stroke="#FFFFFF"/>
+              <g transform="scale(1, -1)">
+                <text fontSize="60" y="20" fill="#FFFFFF">
+                  <tspan textAnchor="middle">{this.props.actions[i].score}</tspan>
+                </text>
+                <text fontSize="40" y="-40" fill="#FFFFFF">
+                  <tspan textAnchor="middle">{this.props.actions[i].name}</tspan>
+                </text>
+
+              </g>
+          </g>
+        </g>
+      );
+
+      actions.push(act);
+    }
+
     var paths = [];
     var pathd = null;
     for(var i = 0; i < this.props.orders.length; i += 1) {
@@ -253,8 +276,11 @@ var Robot = React.createClass({
             {shape}
             {meca}
           </g>
+          <g>
           {paths}
+          </g>
         </g>
+        {actions}
       </g>
     );
   },
@@ -948,6 +974,8 @@ var Position = React.createClass({
       y: 0,
       a: 0,
       orders: [],
+      debugStrat: false,
+      actions: [],
     }
   },
 
@@ -958,6 +986,7 @@ var Position = React.createClass({
   componentDidMount: function() {
     utils.onReceiveCommand("position", this.handleReceivePositionDebug);
     utils.onReceiveCommand("trajectory_list", this.handleReceiveTrajectoryList);
+    utils.onReceiveCommand("debug_actions", this.handleReceiveActionList);
     setTimeout(this.update, this.UPDATE_PERIOD_MS);
   },
 
@@ -965,6 +994,12 @@ var Position = React.createClass({
     if(this.props.show) {
       utils.sendCommand({command: "position_debug", argument: "1"});
       utils.sendCommand({command: "trajectory_list", argument: null});
+      if(this.state.debugStrat) {
+        utils.sendCommand({command: "debug_actions", argument: null});
+      }
+      else {
+        this.setState({actions: []});
+      }
     }
 
     setTimeout(this.update, this.UPDATE_PERIOD_MS);
@@ -1010,6 +1045,31 @@ var Position = React.createClass({
     this.setState({orders: orders});
   },
 
+  handleReceiveActionList: function(data) {
+    var actions = [];
+    for(var i = 0; i < data.answer.data.length; i += 1) {
+      var action = data.answer.data[i].split(',');
+      actions.push({
+        name: action[0],
+        x: action[1],
+        y: action[2],
+        score: action[3],
+      });
+    }
+
+    this.setState({actions: actions});
+  },
+
+  onChangeDebugStrat: function(event) {
+    if(event.target.checked) {
+      this.setState({debugStrat: true});
+    }
+    else {
+      this.setState({debugStrat: false});
+    }
+  },
+
+
   render: function() {
     var divClasses = 'container-fluid';
     var panelClasses = 'panel-body';
@@ -1018,12 +1078,23 @@ var Position = React.createClass({
       divClasses += ' hide';
     }
 
+    console.log(this.state.actions);
+
     return (
       <div className={divClasses}>
         <div className="row">
           <div className="col-md-12 main">
             <div className="panel panel-primary">
               <div className="panel-heading">
+                <div className="pull-right">
+                  <form className="form-inline">
+                    <div className="checkbox small-margin-right">
+                      <label>
+                        <input type="checkbox" checked={this.state.debugStrat} onChange={this.onChangeDebugStrat}/>Debug strat
+                      </label>
+                    </div>
+                  </form>
+                </div>
                 Position
               </div>
               <div className="panel-body">
@@ -1031,7 +1102,7 @@ var Position = React.createClass({
                   <div className="col-md-8">
                     <Field x={this.state.x} y={this.state.y}>
                       <Eurobot2016 />
-                      <Robot update={this.props.show} x={this.state.x} y={this.state.y} a={this.state.a} orders={this.state.orders}/>
+                      <Robot update={this.props.show} x={this.state.x} y={this.state.y} a={this.state.a} orders={this.state.orders} actions={this.state.actions}/>
                     </Field>
                   </div>
                   <div className="col-md-4">
