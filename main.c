@@ -14,6 +14,7 @@
 #include "strat_fish.h"
 
 static unsigned int _shell_configuration;
+static int do_funny_action;
 
 void display_shell_configuration(void)
 {
@@ -140,6 +141,17 @@ void update_lcd(void * arg)
     //toggle led
     vTaskDelay(100 / portTICK_PERIOD_MS);
     platform_led_toggle(PLATFORM_LED0);
+
+    if(do_funny_action)
+    {
+
+      meca_fish_disable();
+      meca_seashell_disable();
+      while(1)
+      {
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+      }
+    }
   }
 }
 
@@ -150,14 +162,14 @@ void run_strategy(void * arg)
   meca_seashell_init();
   meca_fish_init();
 
-  strat_hut_register();
+  //strat_hut_register();
   strat_sand_register();
   strat_fish_register();
 
   cocobot_game_state_wait_for_starter_removed();
 
   //strat shell must be registered after "starter removed" event because shell configuration can be changed before
-  strat_shell_register();
+  //strat_shell_register();
 
   cocobot_trajectory_goto_d(100, -1);
   cocobot_trajectory_wait();
@@ -194,6 +206,7 @@ int console_handler(const char * command)
 
 void funny_action(void)
 {
+  do_funny_action = 1;
   platform_gpio_set(PLATFORM_GPIO2);
   platform_gpio_clear(PLATFORM_GPIO3);
   platform_gpio_clear(PLATFORM_GPIO4);
@@ -223,6 +236,8 @@ int main(void)
 #endif
 
   cocobot_game_state_set_userdata(COCOBOT_GS_UD_SHELL_CONFIGURATION, &_shell_configuration); 
+
+  do_funny_action = 0;
 
   //set initial position
   switch(cocobot_game_state_get_color())

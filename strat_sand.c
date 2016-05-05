@@ -83,8 +83,9 @@ static cocobot_action_callback_result_t strat_sand_exec(void * arg)
 
 
   cocobot_trajectory_goto_d(150, 2500);
-  cocobot_trajectory_wait();
+  cocobot_trajectory_goto_xy_forward(x_k * (1500 - 400), strat_sand_get_y(), 10000);
 
+  cocobot_trajectory_wait();
 
   return COCOBOT_RETURN_ACTION_SUCCESS;
 }

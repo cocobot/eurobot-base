@@ -18,10 +18,13 @@
 #define MECA_FISH_LR_DISABLE 0
 
 #define MECA_FISH_ROT_UP          200
-#define MECA_FISH_ROT_HORIZONTAL  470
+//#define MECA_FISH_ROT_HORIZONTAL  470
+#define MECA_FISH_ROT_HORIZONTAL  490
 #define MECA_FISH_ROT_DOWN        540
+#define MECA_FISH_ROT_CHECK       380
 #define MECA_FISH_ROT_DISABLE     0
 
+#define MECA_FISH_UD_CHECK   370
 #define MECA_FISH_UD_UP      340
 #define MECA_FISH_UD_DOWN    300
 #define MECA_FISH_UD_DISABLE 0
@@ -30,11 +33,13 @@ typedef enum
 {
   MECA_FISH_CLOSE,
   MECA_FISH_PREPARE,
+  MECA_FISH_WALK,
   MECA_FISH_SWEEP_LEFT,
   MECA_FISH_SWEEP_RIGHT,
   MECA_FISH_SWIM_LEFT,
   MECA_FISH_SWIM_RIGHT,
   MECA_FISH_MANUAL,
+  MECA_FISH_CHECK,
 } meca_fish_state_t;
 
 static volatile meca_fish_state_t current_state;
@@ -44,6 +49,9 @@ static EventGroupHandle_t busy;
 static unsigned int servo_lr_set_point;
 static unsigned int servo_ud_set_point;
 static unsigned int servo_rot_set_point;
+
+static unsigned int ir_value;
+static unsigned int disabled;
 
 static void meca_fish_update(void)
 {
@@ -58,7 +66,7 @@ void meca_fish_task(void * arg)
 
   while(1)
   {
-    if(next_state != current_state)
+    if((next_state != current_state) && (!disabled))
     {
       current_state = next_state;
 
@@ -94,12 +102,28 @@ void meca_fish_task(void * arg)
           }
           break;
 
+        case MECA_FISH_WALK:
+          {
+            servo_rot_set_point = 320;
+            servo_lr_set_point = MECA_FISH_LR_CENTER;
+            servo_ud_set_point = MECA_FISH_UD_DISABLE;
+            meca_fish_update();
+          }
+          break;
+
         case MECA_FISH_SWEEP_LEFT:
           {
+            servo_rot_set_point = 320;
+            servo_lr_set_point = MECA_FISH_LR_RIGHT;
+            servo_ud_set_point = MECA_FISH_UD_DOWN;
+            meca_fish_update();
+            vTaskDelay(200 / portTICK_PERIOD_MS);
+
             servo_rot_set_point = MECA_FISH_ROT_HORIZONTAL;
             servo_lr_set_point = MECA_FISH_LR_RIGHT;
             servo_ud_set_point = MECA_FISH_UD_DOWN;
             meca_fish_update();
+            vTaskDelay(200 / portTICK_PERIOD_MS);
 
             int i;
             for(i = 0; i < MECA_FISH_SWEEP_STEP; i += 1)
@@ -117,10 +141,17 @@ void meca_fish_task(void * arg)
           
         case MECA_FISH_SWEEP_RIGHT:
           {
+            servo_rot_set_point = 320;
+            servo_lr_set_point = MECA_FISH_LR_LEFT;
+            servo_ud_set_point = MECA_FISH_UD_DOWN;
+            meca_fish_update();
+            vTaskDelay(200 / portTICK_PERIOD_MS);
+
             servo_rot_set_point = MECA_FISH_ROT_HORIZONTAL;
             servo_lr_set_point = MECA_FISH_LR_LEFT;
             servo_ud_set_point = MECA_FISH_UD_DOWN;
             meca_fish_update();
+            vTaskDelay(200 / portTICK_PERIOD_MS);
 
             int i;
             for(i = 0; i < MECA_FISH_SWEEP_STEP; i += 1)
@@ -142,7 +173,7 @@ void meca_fish_task(void * arg)
             servo_lr_set_point = MECA_FISH_LR_RIGHT;
             servo_ud_set_point = MECA_FISH_UD_UP;
             meca_fish_update();
-            vTaskDelay(200 / portTICK_PERIOD_MS);
+            vTaskDelay(500 / portTICK_PERIOD_MS);
 
             servo_rot_set_point = MECA_FISH_ROT_DOWN;
             servo_lr_set_point = MECA_FISH_LR_RIGHT;
@@ -224,6 +255,29 @@ void meca_fish_task(void * arg)
           }
           break;
 
+        case MECA_FISH_CHECK:
+          {
+            next_state = MECA_FISH_MANUAL;
+
+            servo_rot_set_point = MECA_FISH_ROT_CHECK;
+            servo_lr_set_point = MECA_FISH_LR_CENTER;
+            servo_ud_set_point = MECA_FISH_UD_DOWN;
+            meca_fish_update();
+
+            //servo_rot_set_point = MECA_FISH_ROT_CHECK;
+            //servo_lr_set_point = MECA_FISH_LR_CENTER;
+            //servo_ud_set_point = MECA_FISH_UD_CHECK;
+            //meca_fish_update();
+
+            vTaskDelay(750 / portTICK_PERIOD_MS);
+
+            ir_value = platform_adc_get_mV(PLATFORM_ADC_CH0);
+
+            servo_lr_set_point = MECA_FISH_LR_DISABLE;
+            servo_ud_set_point = MECA_FISH_UD_DISABLE;
+            meca_fish_update();
+          }
+          break;
 
 
         default:
@@ -276,6 +330,26 @@ void meca_fish_prepare(int wait)
   }
 }
 
+void meca_fish_walk(int wait)
+{
+  if(wait)
+  {
+    xEventGroupClearBits(busy, 0xFF);
+  }
+
+  if(current_state == MECA_FISH_WALK)
+  {
+    wait = 0;
+  }
+
+  next_state = MECA_FISH_WALK;
+
+  if(wait)
+  {
+    xEventGroupWaitBits(busy, 0xFF, pdFALSE, pdFALSE, portMAX_DELAY); 
+  }
+}
+
 void meca_fish_sweep_left(int wait)
 {
   if(wait)
@@ -294,6 +368,21 @@ void meca_fish_sweep_left(int wait)
   {
     xEventGroupWaitBits(busy, 0xFF, pdFALSE, pdFALSE, portMAX_DELAY); 
   }
+}
+
+int meca_fish_is_catch(void)
+{
+  xEventGroupClearBits(busy, 0xFF);
+
+  next_state = MECA_FISH_CHECK;
+
+  xEventGroupWaitBits(busy, 0xFF, pdFALSE, pdFALSE, portMAX_DELAY); 
+
+#ifdef AUSBEE_SIM
+  return 0;
+#else
+  return ir_value > 300;
+#endif
 }
 
 void meca_fish_sweep_right(int wait)
@@ -358,6 +447,7 @@ void meca_fish_swim_right(int wait)
 
 void meca_fish_init(void)
 {
+  disabled = 0;
   busy = xEventGroupCreate();
   next_state = MECA_FISH_MANUAL;
   current_state = MECA_FISH_MANUAL;
@@ -369,6 +459,7 @@ void meca_fish_init(void)
 
 void meca_fish_disable(void)
 {
+  disabled = 1;
   servo_rot_set_point = MECA_FISH_ROT_DISABLE;
   servo_lr_set_point = MECA_FISH_LR_DISABLE;
   servo_ud_set_point = MECA_FISH_UD_DISABLE;
@@ -406,6 +497,11 @@ int meca_fish_console_handler(const char * command)
       {
         meca_fish_swim_right(0);
       }
+      if(strcmp(buf, "check") == 0)
+      {
+        int a = meca_fish_is_catch();
+        cocobot_console_send_asynchronous("debug", "%d %d", a, ir_value);
+      }
     }
 
     switch(next_state)
@@ -414,12 +510,20 @@ int meca_fish_console_handler(const char * command)
         cocobot_console_send_answer("close");
         break;
 
+      case MECA_FISH_WALK:
+        cocobot_console_send_answer("walk");
+        break;
+
       case MECA_FISH_PREPARE:
         cocobot_console_send_answer("prepare");
         break;
 
       case MECA_FISH_SWEEP_LEFT:
         cocobot_console_send_answer("sweep_left");
+        break;
+
+      case MECA_FISH_CHECK:
+        cocobot_console_send_answer("check");
         break;
 
       case MECA_FISH_SWEEP_RIGHT:
