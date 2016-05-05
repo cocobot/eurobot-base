@@ -1,5 +1,6 @@
 #include <cocobot.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <math.h>
 #include "strat_shell.h"
 #include "meca_seashell.h"
@@ -150,7 +151,7 @@ static float strat_shell_get_a(int shell)
 
 static void strat_shell_pos(void *arg, float *x, float *y, float *a)
 {
-  int shell = (int)arg;
+  intptr_t shell = (intptr_t)arg;
   *x = strat_shell_get_x(shell);
   *y = strat_shell_get_y(shell);
   *a = strat_shell_get_a(shell);
@@ -511,7 +512,7 @@ static cocobot_action_callback_result_t strat_shell_exec(void * arg)
 
 void strat_shell_register(void)
 {
-  int i;
+  intptr_t i;
   for(i = 0; i < SHELL_NUMBER; i += 1)
   {
     unsigned int score = strat_shell_get_score(i);

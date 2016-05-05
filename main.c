@@ -169,7 +169,7 @@ void run_strategy(void * arg)
   cocobot_game_state_wait_for_starter_removed();
 
   //strat shell must be registered after "starter removed" event because shell configuration can be changed before
-  //strat_shell_register();
+  strat_shell_register();
 
   cocobot_trajectory_goto_d(100, -1);
   cocobot_trajectory_wait();

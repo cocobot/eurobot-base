@@ -1,11 +1,13 @@
 #include <cocobot.h>
 #include "strat_hut.h"
 
-#define STRAT_HUT_VIOLET_LEFT     0
-#define STRAT_HUT_VIOLET_RIGHT    1
-#define STRAT_HUT_GREEN_LEFT      2
-#define STRAT_HUT_GREEN_RIGHT     3
-
+typedef enum
+{
+  STRAT_HUT_VIOLET_LEFT,
+  STRAT_HUT_VIOLET_RIGHT,
+  STRAT_HUT_GREEN_LEFT,
+  STRAT_HUT_GREEN_RIGHT,
+} strat_hut_t;
 
 static unsigned int strat_hut_get_score(int hut)
 {
@@ -13,7 +15,7 @@ static unsigned int strat_hut_get_score(int hut)
   return 10;
 }
 
-static float strat_hut_get_x(int hut)
+static float strat_hut_get_x(strat_hut_t hut)
 {
   switch(hut)
   {
@@ -33,13 +35,13 @@ static float strat_hut_get_x(int hut)
   return 10000; //unvalid hut has been requested.
 }
 
-static float strat_hut_get_y(int hut)
+static float strat_hut_get_y(strat_hut_t hut)
 {
   (void)hut; //each hut is equal
   return 700;
 }
 
-static float strat_hut_get_a(int hut)
+static float strat_hut_get_a(strat_hut_t hut)
 {
   (void)hut; //each hut is equal
   return -90; //we want to hit the door with our back
@@ -47,19 +49,19 @@ static float strat_hut_get_a(int hut)
 
 static void strat_hut_pos(void *arg, float *x, float *y, float *a)
 {
-  int hut = (int)arg;
+  strat_hut_t hut = (strat_hut_t)arg;
   *x = strat_hut_get_x(hut);
   *y = strat_hut_get_y(hut);
   *a = strat_hut_get_a(hut);
 }
 
-static float strat_hut_get_exec_time(int hut)
+static float strat_hut_get_exec_time(strat_hut_t hut)
 {
   (void)hut; //each hut is equal
   return 3000; //in ms
 }
 
-static float strat_hut_get_success_proba(int hut)
+static float strat_hut_get_success_proba(strat_hut_t hut)
 {
   (void)hut; //each hut is equal
   return 0.01; //very low. Main robot should have already done the action before us !
