@@ -193,11 +193,27 @@ var Robot = React.createClass({
 
     var actions = [];
     for(var i = 0; i < this.props.actions.length; i += 1) {
+      var color = "#FFFFFF";
+      var score = this.props.actions[i].score;
+
+      if(score == "-1.000")
+      {
+        color = "#FFAA00";
+      }
+      else if(score == "-2.000")
+      {
+        color = "#10EE10";
+      }
+      else if(score == "-3.000")
+      {
+        color = "#EE0515";
+      }
+
       var position = "translate(" + this.props.actions[i].x + "," + this.props.actions[i].y + ")";
         var act = (
         <g transform="translate(1500,1000) scale(1, -1)">
           <g opacity="0.8" transform={position}>
-            <circle cx="0" cy="0" r="100" strokeWidth="10" stroke="#FFFFFF"/>
+            <circle cx="0" cy="0" r="100" strokeWidth="10" stroke={color}/>
               <g transform="scale(1, -1)">
                 <text fontSize="60" y="20" fill="#FFFFFF">
                   <tspan textAnchor="middle">{this.props.actions[i].score}</tspan>
