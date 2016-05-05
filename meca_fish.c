@@ -172,13 +172,13 @@ void meca_fish_task(void * arg)
 
         case MECA_FISH_SWEEP_HIGH_LEFT:
           {
-            servo_rot_set_point = MECA_FISH_ROT_HORIZONTAL;
+            servo_rot_set_point = 320;
             servo_lr_set_point = MECA_FISH_LR_RIGHT;
             servo_ud_set_point = MECA_FISH_UD_DOWN;
             meca_fish_update();
             vTaskDelay(200 / portTICK_PERIOD_MS);
 
-            servo_rot_set_point = MECA_FISH_ROT_HORIZONTAL;
+            servo_rot_set_point = 470;
             servo_lr_set_point = MECA_FISH_LR_RIGHT;
             servo_ud_set_point = MECA_FISH_UD_DOWN;
             meca_fish_update();
@@ -200,13 +200,13 @@ void meca_fish_task(void * arg)
           
         case MECA_FISH_SWEEP_HIGH_RIGHT:
           {
-            servo_rot_set_point = MECA_FISH_ROT_HORIZONTAL;
+            servo_rot_set_point = 320;
             servo_lr_set_point = MECA_FISH_LR_LEFT;
             servo_ud_set_point = MECA_FISH_UD_DOWN;
             meca_fish_update();
             vTaskDelay(200 / portTICK_PERIOD_MS);
 
-            servo_rot_set_point = MECA_FISH_ROT_HORIZONTAL;
+            servo_rot_set_point = 470;
             servo_lr_set_point = MECA_FISH_LR_LEFT;
             servo_ud_set_point = MECA_FISH_UD_DOWN;
             meca_fish_update();

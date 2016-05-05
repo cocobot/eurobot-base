@@ -16,7 +16,7 @@ static int remaning_fish;
 
 static float strat_fish_take_get_x(void)
 {
-  float target = 1500 - 600 - last_take_idx * 105;
+  float target = 1500 - 610 - last_take_idx * 100;
 
   if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
   {
