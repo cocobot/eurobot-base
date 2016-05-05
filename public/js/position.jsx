@@ -992,6 +992,7 @@ var Position = React.createClass({
       orders: [],
       debugStrat: false,
       actions: [],
+      asPause: false,
     }
   },
 
@@ -1003,6 +1004,7 @@ var Position = React.createClass({
     utils.onReceiveCommand("position", this.handleReceivePositionDebug);
     utils.onReceiveCommand("trajectory_list", this.handleReceiveTrajectoryList);
     utils.onReceiveCommand("debug_actions", this.handleReceiveActionList);
+    utils.onReceiveCommand("action_pause", this.handleReceiveActionPause);
     setTimeout(this.update, this.UPDATE_PERIOD_MS);
   },
 
@@ -1010,6 +1012,7 @@ var Position = React.createClass({
     if(this.props.show) {
       utils.sendCommand({command: "position_debug", argument: "1"});
       utils.sendCommand({command: "trajectory_list", argument: null});
+      utils.sendCommand({command: "action_pause", argument: null});
       if(this.state.debugStrat) {
         utils.sendCommand({command: "debug_actions", argument: null});
       }
@@ -1076,12 +1079,30 @@ var Position = React.createClass({
     this.setState({actions: actions});
   },
 
+  handleReceiveActionPause: function(data) {
+    if(data.answer.data[0] == "0") {
+      this.setState({asPause: false});
+    }
+    else {
+      this.setState({asPause: true});
+    }
+  },
+
   onChangeDebugStrat: function(event) {
     if(event.target.checked) {
       this.setState({debugStrat: true});
     }
     else {
       this.setState({debugStrat: false});
+    }
+  },
+
+  onChangeAsPause: function(event) {
+    if(this.state.asPause) {
+      utils.sendCommand({command: "action_pause", argument: "0"});
+    }
+    else {
+      utils.sendCommand({command: "action_pause", argument: "1"});
     }
   },
 
@@ -1094,8 +1115,6 @@ var Position = React.createClass({
       divClasses += ' hide';
     }
 
-    console.log(this.state.actions);
-
     return (
       <div className={divClasses}>
         <div className="row">
@@ -1107,6 +1126,16 @@ var Position = React.createClass({
                     <div className="checkbox small-margin-right">
                       <label>
                         <input type="checkbox" checked={this.state.debugStrat} onChange={this.onChangeDebugStrat}/>Debug strat
+                      </label>
+                    </div>
+                  </form>
+                </div>
+                <div className="pull-right">
+                  <form className="form-inline">
+                    <div className="checkbox small-margin-right">
+                      <label>
+                      <input type="checkbox" checked={this.state.asPause} onChange={this.onChangeAsPause}/>Pause action scheduler
+
                       </label>
                     </div>
                   </form>
