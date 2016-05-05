@@ -42,7 +42,7 @@ static float strat_hut_get_a(int hut)
 static float strat_hut_get_exec_time(int hut)
 {
   (void)hut; //each hut is equal
-  return 1000; //in ms
+  return 5000; //in ms
 }
 
 static float strat_hut_get_success_proba(int hut)
