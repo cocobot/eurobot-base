@@ -163,7 +163,7 @@ void run_strategy(void * arg)
   meca_fish_init();
 
   //strat_hut_register();
-  strat_sand_register();
+  //strat_sand_register();
   strat_fish_register();
 
   cocobot_game_state_wait_for_starter_removed();
