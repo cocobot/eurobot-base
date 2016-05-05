@@ -264,6 +264,7 @@ var Robot = React.createClass({
 
         var nend = end;
         var change = true;
+        change = false; /// <--- TODO: understand this !
         while(change) {
           change = false;
           if(Math.abs(nend + 360 - start) < Math.abs(end -start)) {
