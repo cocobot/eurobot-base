@@ -17,8 +17,8 @@
 #define MECA_CRIMP_RIGHT_SERVO_ID        PLATFORM_SERVO_3_ID
 #define MECA_CRIMP_VERTICAL_SERVO_ID     PLATFORM_SERVO_14_ID
 
-#define MECA_CRIMP_LEFT_SERVO_OPEN 290
-#define MECA_CRIMP_LEFT_SERVO_CLOSE 100
+#define MECA_CRIMP_LEFT_SERVO_OPEN 200
+#define MECA_CRIMP_LEFT_SERVO_CLOSE 550
 #define MECA_CRIMP_LEFT_SERVO_DISABLE 0
 
 #define MECA_CRIMP_RIGHT_SERVO_OPEN 340
@@ -131,7 +131,7 @@ void meca_crimp_init(void)
 
   xTaskCreate(meca_crimp_task, "crimp", 200, NULL, 2, NULL);
 
-  //meca_crimp_close();
+  meca_crimp_close();
 }
 
 void meca_crimp_open(void)
@@ -145,9 +145,6 @@ void meca_crimp_open(void)
 void meca_crimp_close(void)
 {
   servo_right_set_point = MECA_CRIMP_RIGHT_SERVO_CLOSE;
-  meca_crimp_update_servo();
-  vTaskDelay(150 / portTICK_PERIOD_MS);
-
   servo_left_set_point = MECA_CRIMP_LEFT_SERVO_CLOSE;
   meca_crimp_update_servo();
 }
