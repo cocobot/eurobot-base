@@ -27,6 +27,14 @@ static float strat_little_dune_get_a(void)
   return 90;
 }
 
+static void strat_little_dune_pos(void *arg, float *x, float *y, float *a)
+{
+  (void)arg;
+  *x = strat_little_dune_get_x();
+  *y = strat_little_dune_get_y();
+  *a = strat_little_dune_get_a();
+}
+
 static float strat_little_dune_get_exec_time(void)
 {
   return 20000;
@@ -117,9 +125,7 @@ void strat_little_dune_register(void)
   cocobot_action_scheduler_add_action(
                                     "little_dune",
                                     strat_little_dune_get_score(),
-                                    strat_little_dune_get_x(),
-                                    strat_little_dune_get_y(),
-                                    strat_little_dune_get_a(),
+                                    strat_little_dune_pos,
                                     strat_little_dune_get_exec_time(),
                                     strat_little_dune_get_success_proba(),
                                     strat_little_dune_preexec,

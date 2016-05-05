@@ -1,19 +1,21 @@
 #include <cocobot.h>
 #include "strat_hut.h"
 
-#define STRAT_HUT_VIOLET        0
-#define STRAT_HUT_GREEN         1
+typedef enum
+{
+  STRAT_HUT_VIOLET = 0,
+  STRAT_HUT_GREEN  = 1,
+} strat_hut_t;
 
 
-
-static unsigned int strat_hut_get_score(int hut)
+static unsigned int strat_hut_get_score(strat_hut_t hut)
 {
   (void)hut; //each hut is equal
 
   return 10;
 }
 
-static float strat_hut_get_x(int hut)
+static float strat_hut_get_x(strat_hut_t hut)
 {
   switch(hut)
   {
@@ -27,25 +29,33 @@ static float strat_hut_get_x(int hut)
   return 10000; //unvalid hut has been requested.
 }
 
-static float strat_hut_get_y(int hut)
+static float strat_hut_get_y(strat_hut_t hut)
 {
   (void)hut; //each hut is equal
   return 700;
 }
 
-static float strat_hut_get_a(int hut)
+static float strat_hut_get_a(strat_hut_t hut)
 {
   (void)hut; //each hut is equal
   return -90; //we want to hit the door with our back
 }
 
-static float strat_hut_get_exec_time(int hut)
+static void strat_hut_pos(void *arg, float *x, float *y, float *a)
+{
+  strat_hut_t hut = (strat_hut_t)arg;
+  *x = strat_hut_get_x(hut);
+  *y = strat_hut_get_y(hut);
+  *a = strat_hut_get_a(hut);
+}
+
+static float strat_hut_get_exec_time(strat_hut_t hut)
 {
   (void)hut; //each hut is equal
   return 1000; //in ms
 }
 
-static float strat_hut_get_success_proba(int hut)
+static float strat_hut_get_success_proba(strat_hut_t hut)
 {
   (void)hut; //each hut is equal
 
@@ -93,9 +103,7 @@ void strat_hut_register(void)
     cocobot_action_scheduler_add_action(
                                         "hut_violet",
                                         strat_hut_get_score(STRAT_HUT_VIOLET),
-                                        strat_hut_get_x(STRAT_HUT_VIOLET),
-                                        strat_hut_get_y(STRAT_HUT_VIOLET),
-                                        strat_hut_get_a(STRAT_HUT_VIOLET),
+                                        strat_hut_pos,
                                         strat_hut_get_exec_time(STRAT_HUT_VIOLET),
                                         strat_hut_get_success_proba(STRAT_HUT_VIOLET),
                                         strat_hut_preexec,
@@ -110,9 +118,7 @@ void strat_hut_register(void)
     cocobot_action_scheduler_add_action(
                                         "hut_green",
                                         strat_hut_get_score(STRAT_HUT_GREEN),
-                                        strat_hut_get_x(STRAT_HUT_GREEN),
-                                        strat_hut_get_y(STRAT_HUT_GREEN),
-                                        strat_hut_get_a(STRAT_HUT_GREEN),
+                                        strat_hut_pos,
                                         strat_hut_get_exec_time(STRAT_HUT_GREEN),
                                         strat_hut_get_success_proba(STRAT_HUT_GREEN),
                                         strat_hut_preexec,
