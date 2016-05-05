@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <string.h>
 #include <cocobot.h>
 #include <platform.h>
@@ -379,7 +380,7 @@ int meca_fish_is_catch(void)
   xEventGroupWaitBits(busy, 0xFF, pdFALSE, pdFALSE, portMAX_DELAY); 
 
 #ifdef AUSBEE_SIM
-  return 0;
+  return ((rand() % 3) == 0);
 #else
   return ir_value > 300;
 #endif

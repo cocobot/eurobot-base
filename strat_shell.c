@@ -356,8 +356,8 @@ float strat_shell_compute_base_proba(int conf, int shell, cocobot_game_state_col
     case 5:
       switch(shell)
       {
-        case 15:
-        case 17:
+        //case 15:
+        //case 17:
         case 18:
         case 19:
         case 20:

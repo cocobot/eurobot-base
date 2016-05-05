@@ -10,10 +10,13 @@
 
 static int last_depose_idx;
 static int last_take_idx;
+static int fish_taken;
+static int seeshell_removed;
+static int remaning_fish;
 
-static float strat_fish_get_x(void)
+static float strat_fish_take_get_x(void)
 {
-  float target = 1500 - 600;
+  float target = 1500 - 600 - last_take_idx * 105;
 
   if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
   {
@@ -22,56 +25,61 @@ static float strat_fish_get_x(void)
   return target;
 }
 
-static float strat_fish_get_y(void)
+static float strat_fish_take_get_y(void)
 {
   return -(1000 - 140);
 }
 
-static float strat_fish_get_a(void)
+static float strat_fish_take_get_a(void)
 {
   return -90;
 }
 
-static void strat_fish_pos(void *arg, float *x, float *y, float *a)
+static void strat_fish_take_pos(void *arg, float *x, float *y, float *a)
 {
   (void)arg;
-  *x = strat_fish_get_x();
-  *y = strat_fish_get_y();
-  *a = strat_fish_get_a();
+  *x = strat_fish_take_get_x();
+  *y = strat_fish_take_get_y();
+  *a = strat_fish_take_get_a();
 }
 
-static float strat_fish_get_exec_time(void)
+static float strat_fish_take_get_exec_time(void)
 {
-  return 60000;
+  return 2000;
 }
 
-float strat_fish_get_success_proba(void)
+float strat_fish_take_get_success_proba(void)
 {
   return 0.75;
 }
 
-float strat_fish_get_score(void)
+float strat_fish_take_get_score(void)
 {
-  return 40;
+  return 5;
 }
 
-static cocobot_action_callback_result_t strat_fish_preexec(void * arg)
+static cocobot_action_callback_result_t strat_fish_take_preexec(void * arg)
+{
+  (void)arg;
+
+
+  return COCOBOT_RETURN_ACTION_SUCCESS;
+}
+
+static cocobot_action_callback_result_t strat_fish_take_cleanup(void * arg)
 {
   (void)arg;
 
   return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
-static cocobot_action_callback_result_t strat_fish_cleanup(void * arg)
+static int strat_fish_take_unlocked(void)
 {
-  (void)arg;
-
-  meca_fish_close(0);
-
-  return COCOBOT_RETURN_ACTION_SUCCESS;
+  return !fish_taken;
 }
 
-static cocobot_action_callback_result_t strat_fish_exec(void * arg)
+
+static cocobot_action_callback_result_t strat_fish_take_exec(void * arg)
 {
   (void)arg;
 
@@ -87,101 +95,172 @@ static cocobot_action_callback_result_t strat_fish_exec(void * arg)
   
   if((conf == 0) || (conf == 5))
   {
-    //remove shell
-    meca_seashell_open();
-    cocobot_trajectory_goto_xy(x_k * 800, -850, 5000);
-    cocobot_trajectory_goto_a(90, 2000);
-    cocobot_trajectory_goto_d(225, 3000);
-    cocobot_trajectory_goto_d(-150, 3000);
-    cocobot_trajectory_wait();
-    meca_seashell_close();
+    if(!seeshell_removed)
+    {
+      //remove shell
+      meca_seashell_open();
+      cocobot_trajectory_goto_xy(x_k * 800, -850, 5000);
+      cocobot_trajectory_goto_a(90, 2000);
+      cocobot_trajectory_goto_d(225, 3000);
+      cocobot_trajectory_goto_d(-150, 3000);
+      cocobot_trajectory_wait();
+      meca_seashell_close();
 
 
-    cocobot_trajectory_goto_xy_backward(strat_fish_get_x(), strat_fish_get_y(), 5000);
-    cocobot_trajectory_goto_a(strat_fish_get_a(), 5000);
-    cocobot_trajectory_wait();
+      cocobot_trajectory_goto_xy_backward(strat_fish_take_get_x(), strat_fish_take_get_y(), 5000);
+      cocobot_trajectory_goto_a(strat_fish_take_get_a(), 5000);
+      cocobot_trajectory_wait();
+
+      seeshell_removed = 1;
+    }
   }
 
 
-  while(1)
+  cocobot_trajectory_goto_d(140, 1500);
+  cocobot_trajectory_wait();
+  meca_fish_walk(1);
+
+  int i;
+  for(i = 0; i < 2; i += 1) 
   {
-    cocobot_trajectory_goto_d(140, 1500);
-    cocobot_trajectory_wait();
-
-    meca_fish_walk(1);
-    int i;
-    for(i = 0; i < 2; i += 1) 
+    switch(cocobot_game_state_get_color())
     {
-      switch(cocobot_game_state_get_color())
-      {
-        case COCOBOT_GAME_STATE_COLOR_POS:
-          if((i % 2) == 1)
-          {
-            meca_fish_sweep_right(1);
-          }
-          else
-          {
-            meca_fish_sweep_left(1);
-          }
-          break;
-
-        case COCOBOT_GAME_STATE_COLOR_NEG:
-          if((i % 2) == 0)
-          {
-            meca_fish_sweep_right(1);
-          }
-          else
-          {
-            meca_fish_sweep_left(1);
-          }
-          break;
-      }
-
-      vTaskDelay(250 / portTICK_PERIOD_MS);
-
-      if(meca_fish_is_catch())
-      {
-        meca_fish_walk(0);
-        cocobot_trajectory_goto_d(-200, 5000);
-        cocobot_trajectory_goto_xy(x_k * (400 - 50 * last_depose_idx), -800, 15000);
-        last_depose_idx += 1;
-        cocobot_trajectory_goto_a(strat_fish_get_a(), 3000);
-
-        cocobot_trajectory_wait();
-
-        cocobot_trajectory_goto_d(50, 2500);
-        cocobot_trajectory_goto_d(500, 750);
-
-        cocobot_trajectory_wait();
-
-        meca_fish_prepare(0);
-
-        cocobot_trajectory_goto_d(-250, 5000);
-        cocobot_trajectory_wait();
-
-        meca_fish_close(0);
+      case COCOBOT_GAME_STATE_COLOR_POS:
+        if((i % 2) == 1)
+        {
+          meca_fish_sweep_right(1);
+        }
+        else
+        {
+          meca_fish_sweep_left(1);
+        }
         break;
 
-      }
+      case COCOBOT_GAME_STATE_COLOR_NEG:
+        if((i % 2) == 0)
+        {
+          meca_fish_sweep_right(1);
+        }
+        else
+        {
+          meca_fish_sweep_left(1);
+        }
+        break;
     }
 
-    if(i == 2)
+    vTaskDelay(250 / portTICK_PERIOD_MS);
+
+    if(meca_fish_is_catch())
     {
-
-      meca_fish_walk(0);
-      cocobot_trajectory_goto_d(-200, 5000);
+      fish_taken = 1;
+      break;
     }
-
-    last_take_idx += 1;
-    last_take_idx %= 3;
-    cocobot_trajectory_goto_xy(strat_fish_get_x() - x_k * (last_take_idx * 105), strat_fish_get_y(), 15000);
-    cocobot_trajectory_goto_a(strat_fish_get_a(), 3000);
-    cocobot_trajectory_wait();
-
   }
 
+  meca_fish_walk(0);
+  cocobot_trajectory_goto_d(-200, 5000);
+  cocobot_trajectory_wait();
+
+  last_take_idx += 1;
+  last_take_idx %= 3;
+
+  if(fish_taken)
+  {
+    if(remaning_fish == 0)
+    {
+      return COCOBOT_RETURN_ACTION_SUCCESS;
+    }
+    else
+    {
+      remaning_fish -= 1;
+      return COCOBOT_RETURN_ACTION_SUCCESS_BUT_DO_IT_AGAIN;
+    }
+  }
+
+  return COCOBOT_RETURN_ACTION_UNKNOWN_FAILURE;        
+}
+
+static float strat_fish_release_get_x(void)
+{
+  float target = 400 - 50 * last_depose_idx;
+
+  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+  {
+    return -target;
+  }
+  return target;
+}
+
+static float strat_fish_release_get_y(void)
+{
+  return -800;
+}
+
+static float strat_fish_release_get_a(void)
+{
+  return -90;
+}
+
+static void strat_fish_release_pos(void *arg, float *x, float *y, float *a)
+{
+  (void)arg;
+  *x = strat_fish_release_get_x();
+  *y = strat_fish_release_get_y();
+  *a = strat_fish_release_get_a();
+}
+
+static float strat_fish_release_get_exec_time(void)
+{
+  return 2000;
+}
+
+float strat_fish_release_get_success_proba(void)
+{
+  return 0.90;
+}
+
+float strat_fish_release_get_score(void)
+{
+  return 5;
+}
+
+static cocobot_action_callback_result_t strat_fish_release_preexec(void * arg)
+{
+  (void)arg;
 
 
+  return COCOBOT_RETURN_ACTION_SUCCESS;
+}
+
+static cocobot_action_callback_result_t strat_fish_release_cleanup(void * arg)
+{
+  (void)arg;
+
+  return COCOBOT_RETURN_ACTION_SUCCESS;
+}
+
+static int strat_fish_release_unlocked(void)
+{
+  return fish_taken;
+}
+
+static cocobot_action_callback_result_t strat_fish_release_exec(void * arg)
+{
+  (void)arg;
+
+  cocobot_trajectory_goto_d(50, 2500);
+  cocobot_trajectory_goto_d(100, 750);
+
+  cocobot_trajectory_wait();
+
+  meca_fish_prepare(0);
+
+  cocobot_trajectory_goto_d(-250, 5000);
+  cocobot_trajectory_wait();
+
+  meca_fish_close(0);
+
+  fish_taken = 0;
   return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
@@ -189,17 +268,31 @@ void strat_fish_register(void)
 {
   last_depose_idx = 0;
   last_take_idx = 0;
+  fish_taken = 0;
+  seeshell_removed = 0;
+  remaning_fish = 4;
 
   cocobot_action_scheduler_add_action(
-                                    "fish",
-                                    strat_fish_get_score(),
-                                    strat_fish_pos,
-                                    strat_fish_get_exec_time(),
-                                    strat_fish_get_success_proba(),
-                                    strat_fish_preexec,
-                                    strat_fish_exec,
-                                    strat_fish_cleanup,
+                                    "take_fish",
+                                    strat_fish_take_get_score(),
+                                    strat_fish_take_pos,
+                                    strat_fish_take_get_exec_time(),
+                                    strat_fish_take_get_success_proba(),
+                                    strat_fish_take_preexec,
+                                    strat_fish_take_exec,
+                                    strat_fish_take_cleanup,
                                     NULL,
-                                    NULL);
-}
+                                    strat_fish_take_unlocked);
 
+  cocobot_action_scheduler_add_action(
+                                    "release_fish",
+                                    strat_fish_release_get_score(),
+                                    strat_fish_release_pos,
+                                    strat_fish_release_get_exec_time(),
+                                    strat_fish_release_get_success_proba(),
+                                    strat_fish_release_preexec,
+                                    strat_fish_release_exec,
+                                    strat_fish_release_cleanup,
+                                    NULL,
+                                    strat_fish_release_unlocked);
+}
