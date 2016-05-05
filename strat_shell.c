@@ -419,6 +419,16 @@ float strat_shell_get_success_proba(int shell)
     success = strat_shell_compute_base_proba(conf, shell, cocobot_game_state_get_color());
   }
 
+  if((shell == 0) && (cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG))
+  {
+    return 1;
+  }
+
+  if((shell == 3) && (cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_POS))
+  {
+    return 1;
+  }
+
   switch(shell)
   {
     case 13:
