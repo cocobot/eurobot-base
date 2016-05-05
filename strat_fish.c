@@ -261,7 +261,7 @@ static cocobot_action_callback_result_t strat_fish_release_exec(void * arg)
   meca_fish_close(0);
 
   fish_taken = 0;
-  return COCOBOT_RETURN_ACTION_SUCCESS;
+  return COCOBOT_RETURN_ACTION_SUCCESS_BUT_DO_IT_AGAIN;
 }
 
 void strat_fish_register(void)
