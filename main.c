@@ -8,6 +8,7 @@
 #include "meca_umbrella.h"
 #include "meca_crimp.h"
 #include "strat_hut.h"
+#include "strat_little_dune.h"
 
 static unsigned int _shell_configuration;
 static int do_funny_action;
@@ -77,6 +78,7 @@ void run_strategy(void * arg)
   meca_crimp_init();
 
   strat_hut_register();
+  strat_little_dune_register();
 
   cocobot_game_state_wait_for_starter_removed();
 

@@ -57,11 +57,11 @@ static cocobot_action_callback_result_t strat_hut_action(void * arg)
   (void)arg; //each hut is equal
 
   cocobot_trajectory_set_opponent_detection(0);
-  cocobot_trajectory_goto_d(-10400, 1000);
+  cocobot_trajectory_goto_d(-225, 1000);
   cocobot_trajectory_wait();
   cocobot_trajectory_set_opponent_detection(1);
 
-  cocobot_trajectory_goto_d(300, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  cocobot_trajectory_goto_d(400, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   cocobot_trajectory_wait();
 
 

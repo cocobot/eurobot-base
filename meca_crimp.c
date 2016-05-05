@@ -100,9 +100,7 @@ static void meca_crimp_task(void * arg)
 
 void meca_crimp_init(void)
 {
-  crimp_disable = 1;
 
-  crimp_target = 800;//MECA_CRIMP_MAX_OPENNING;
 
   servo_left_set_point = MECA_CRIMP_LEFT_SERVO_DISABLE;
   servo_right_set_point = MECA_CRIMP_RIGHT_SERVO_DISABLE;
@@ -126,6 +124,10 @@ void meca_crimp_init(void)
   cocobot_asserv_pid_init(&pid);
   cocobot_asserv_pid_set_kp(&pid, 750.0);
   cocobot_asserv_pid_set_kd(&pid, 1000.0);
+
+
+  meca_crimp_set_target(750);
+  crimp_disable = 0;
 
   xTaskCreate(meca_crimp_task, "crimp", 200, NULL, 2, NULL);
 
@@ -273,4 +275,15 @@ int meca_crimp_console_handler(const char * command)
   }
 
   return 0;
+}
+
+void meca_crimp_set_target(int target)
+{
+  crimp_target = target;
+}
+
+void meca_crimp_set_vertical(int target)
+{
+  servo_vertical_set_point = target;
+  meca_crimp_update_servo();
 }

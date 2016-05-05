@@ -19,4 +19,7 @@ void meca_crimp_disable(void);
 
 int meca_crimp_console_handler(const char * command);
 
+void meca_crimp_set_target(int target);
+void meca_crimp_set_vertical(int target);
+
 #endif// MECA_CRIMP_H
