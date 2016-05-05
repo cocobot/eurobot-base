@@ -173,13 +173,13 @@ var Robot = React.createClass({
     {
       shape = (
         <g transform="rotate(90) translate(-100, -75)">
-          <rect height="150" width="200" fill="#000000" />
+          <rect height="145" width="185" fill="#000000" />
         </g>
       );
 
       meca.push(<Robot2016Umbrella key={meca.length} update={this.props.update} />);
     }
-    if(this.state.name == "Robot principal")
+    else if(this.state.name == "Robot principal")
     {
       shape = (
         <g transform="rotate(90) translate(-150, -110)">
