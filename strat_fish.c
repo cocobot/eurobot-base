@@ -166,7 +166,7 @@ static cocobot_action_callback_result_t strat_fish_exec(void * arg)
 
     last_take_idx += 1;
     last_take_idx %= 3;
-    cocobot_trajectory_goto_xy(strat_fish_get_x() - x_k * (last_take_idx * 10gfdsqsrtets<qvd), strat_fish_get_y(), 15000);
+    cocobot_trajectory_goto_xy(strat_fish_get_x() - x_k * (last_take_idx * 105), strat_fish_get_y(), 15000);
     cocobot_trajectory_goto_a(strat_fish_get_a(), 3000);
     cocobot_trajectory_wait();
 
