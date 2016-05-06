@@ -245,6 +245,10 @@ var Robot = React.createClass({
     var pathd = null;
     for(var i = 0; i < this.props.orders.length; i += 1) {
       var o = this.props.orders[i];
+      if(o.end.x == Math.Nan)
+      {
+        continue;
+      }
       if(pathd == null) {
         pathd = "M" + o.start.x + " " + o.start.y;
       }
@@ -309,6 +313,36 @@ var Robot = React.createClass({
           </g>
         </g>
         {actions}
+      </g>
+    );
+  },
+});
+
+var FakeBot = React.createClass({
+  getInitialState: function() {
+    return {
+    };
+  },
+
+  render: function() {
+    var shape = null;
+    shape = (
+             <g>
+             <circle cx="0" cy="0" r="100" strokeWidth="10" stroke="#FF00FF"/>
+             </g>
+            );
+    var position = "translate(" + this.props.info.x + "," + this.props.info.y + ")";
+    var op = 0;
+    if(this.props.info.activated) {
+      op = 0.8;
+    }
+    return (
+      <g>
+        <g transform="translate(1500,1000) scale(1, -1)">
+          <g opacity={op} transform={position}>
+            {shape}
+          </g>
+        </g>
       </g>
     );
   },
@@ -837,6 +871,8 @@ var Eurobot2016 = React.createClass({
       seeShellConf = [this.state.conf];
     }
 
+    var self = this;
+
     return (
       <g>
         {this.renderFieldColor()}
@@ -986,10 +1022,21 @@ var Field = React.createClass({
 
     var vBvalue = xmin + " " + ymin + " " + (xmax - xmin) + " " + (ymax - ymin);
     return (
-      <svg viewBox={vBvalue} width="680px">
+      <svg viewBox={vBvalue} width="680px" onClick={this.clicked} ref="field">
       {this.props.children}
       </svg>
     );
+  },
+
+  clicked: function(evt) {
+    var pos = this.refs.field.createSVGPoint();
+    pos.x = evt.clientX;
+    pos.y = evt.clientY;
+    pos = pos.matrixTransform(this.refs.field.getScreenCTM().inverse());
+    pos.x -= 1500;
+    pos.y = -pos.y + 1000;
+
+    utils.sendCommand({command: "opponent_fakebot", argument: "1 " + pos.x + " " + pos.y});
   },
 
 });
@@ -1006,6 +1053,11 @@ var Position = React.createClass({
       debugStrat: false,
       actions: [],
       asPause: false,
+      fakebot: {
+        x: 0,
+        y: 0,
+        activated: false,
+      }
     }
   },
 
@@ -1018,6 +1070,7 @@ var Position = React.createClass({
     utils.onReceiveCommand("trajectory_list", this.handleReceiveTrajectoryList);
     utils.onReceiveCommand("debug_actions", this.handleReceiveActionList);
     utils.onReceiveCommand("action_pause", this.handleReceiveActionPause);
+    utils.onReceiveCommand("opponent_fakebot", this.handleReceiveOpponentFakebot);
     setTimeout(this.update, this.UPDATE_PERIOD_MS);
   },
 
@@ -1026,6 +1079,7 @@ var Position = React.createClass({
       utils.sendCommand({command: "position_debug", argument: "1"});
       utils.sendCommand({command: "trajectory_list", argument: null});
       utils.sendCommand({command: "action_pause", argument: null});
+      utils.sendCommand({command: "opponent_fakebot", argument: null});
       if(this.state.debugStrat) {
         utils.sendCommand({command: "debug_actions", argument: null});
       }
@@ -1092,6 +1146,17 @@ var Position = React.createClass({
     this.setState({actions: actions});
   },
 
+  handleReceiveOpponentFakebot: function(data) {
+    var fb = data.answer.data[0].split(' ');
+    this.setState({fakebot: {
+      activated: fb[0] == "1",
+      x: fb[1],
+      y: fb[2],
+    }});
+  },
+
+
+
   handleReceiveActionPause: function(data) {
     if(data.answer.data[0] == "0") {
       this.setState({asPause: false});
@@ -1100,6 +1165,7 @@ var Position = React.createClass({
       this.setState({asPause: true});
     }
   },
+
 
   onChangeDebugStrat: function(event) {
     if(event.target.checked) {
@@ -1161,6 +1227,7 @@ var Position = React.createClass({
                     <Field x={this.state.x} y={this.state.y}>
                       <Eurobot2016 />
                       <Robot update={this.props.show} x={this.state.x} y={this.state.y} a={this.state.a} orders={this.state.orders} actions={this.state.actions}/>
+                      <FakeBot info={this.state.fakebot}/>
                     </Field>
                   </div>
                   <div className="col-md-4">
