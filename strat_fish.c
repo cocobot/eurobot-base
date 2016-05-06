@@ -27,7 +27,7 @@ static float strat_fish_take_get_x(void)
 
 static float strat_fish_take_get_y(void)
 {
-  return -(1000 - 140);
+  return -(1000 - 140) + 10;
 }
 
 static float strat_fish_take_get_a(void)

@@ -245,13 +245,13 @@ int main(void)
   {
     case COCOBOT_GAME_STATE_COLOR_NEG:
       cocobot_position_set_x(-1300);
-      cocobot_position_set_y(-20);
+      cocobot_position_set_y(-20 + 11);
       cocobot_position_set_angle(-90);
       break;
 
     case COCOBOT_GAME_STATE_COLOR_POS:
       cocobot_position_set_x(1300);
-      cocobot_position_set_y(-20);
+      cocobot_position_set_y(-20 + 11);
       cocobot_position_set_angle(-90);
       break;
   }
