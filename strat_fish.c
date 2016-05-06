@@ -12,7 +12,7 @@ static int last_depose_idx;
 static int last_take_idx;
 static int fish_taken;
 static int seeshell_removed;
-static int remaning_fish;
+static int remaining_fish;
 
 static float strat_fish_take_get_x(void)
 {
@@ -166,13 +166,13 @@ static cocobot_action_callback_result_t strat_fish_take_exec(void * arg)
 
   if(fish_taken)
   {
-    if(remaning_fish == 0)
+    remaining_fish -= 1;
+    if(remaining_fish == 0)
     {
       return COCOBOT_RETURN_ACTION_SUCCESS;
     }
     else
     {
-      remaning_fish -= 1;
       return COCOBOT_RETURN_ACTION_SUCCESS_BUT_DO_IT_AGAIN;
     }
   }
@@ -270,7 +270,7 @@ void strat_fish_register(void)
   last_take_idx = 0;
   fish_taken = 0;
   seeshell_removed = 0;
-  remaning_fish = 4;
+  remaining_fish = 4;
 
   cocobot_action_scheduler_add_action(
                                     "take_fish",
