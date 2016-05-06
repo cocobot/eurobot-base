@@ -231,6 +231,7 @@ int main(void)
 #ifdef AUSBEE_SIM
   //random shell config in simu
   _shell_configuration = rand() % 6; 
+  _shell_configuration = 5;
 #else
   _shell_configuration = 0;
 #endif
