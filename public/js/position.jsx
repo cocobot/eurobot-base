@@ -209,15 +209,15 @@ var Robot = React.createClass({
 
       if(score == "-1.000")
       {
-        color = "#FFAA00";
+        color = "#EE0515";
       }
       else if(score == "-2.000")
       {
-        color = "#10EE10";
+        color = "#FFAA00";
       }
       else if(score == "-3.000")
       {
-        color = "#EE0515";
+        color = "#10EE10";
       }
 
       var position = "translate(" + this.props.actions[i].x + "," + this.props.actions[i].y + ")";
