@@ -10,6 +10,7 @@
 #include "strat_hut.h"
 #include "strat_little_dune.h"
 #include "strat_easy_dune.h"
+#include "strat_dune_attack.h"
 
 static unsigned int _shell_configuration;
 static int do_funny_action;
@@ -81,6 +82,7 @@ void run_strategy(void * arg)
   strat_hut_register();
  // strat_little_dune_register();
   strat_easy_dune_register();
+  strat_dune_attack_register();
 
   cocobot_game_state_wait_for_starter_removed();
 

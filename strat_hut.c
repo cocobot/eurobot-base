@@ -76,11 +76,12 @@ static cocobot_action_callback_result_t strat_hut_action(void * arg)
   cocobot_trajectory_goto_d(200, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   cocobot_trajectory_wait();
 
-  vTaskDelay(8000 / portTICK_PERIOD_MS);
+  //vTaskDelay(8000 / portTICK_PERIOD_MS);
 
-  cocobot_trajectory_goto_d(200, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  cocobot_trajectory_wait();
+  //cocobot_trajectory_goto_d(200, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  //cocobot_trajectory_wait();
 
+  vTaskDelay(5000 / portTICK_PERIOD_MS);
 
   return COCOBOT_RETURN_ACTION_SUCCESS;
 }
@@ -90,6 +91,7 @@ static cocobot_action_callback_result_t strat_hut_preexec(void * arg)
   (void)arg;
 
   cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_BACKWARD);
+  cocobot_action_scheduler_use_pathfinder(0);
 
   return COCOBOT_RETURN_ACTION_SUCCESS;
 }
@@ -98,6 +100,7 @@ static cocobot_action_callback_result_t strat_hut_cleanup(void * arg)
 {
   (void)arg;
 
+  cocobot_action_scheduler_use_pathfinder(0);
   cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_FORWARD);
   
   return COCOBOT_RETURN_ACTION_SUCCESS;
