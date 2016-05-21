@@ -26,6 +26,7 @@ LIBCOCOBOT_SRC_FILES+=$(LIBCOCOBOT_FILE_PATH)/src/opponent_detection/opponent_de
 LIBCOCOBOT_SRC_FILES+=$(LIBCOCOBOT_FILE_PATH)/src/pathfinder/pathfinder.c
 LIBCOCOBOT_SRC_FILES+=$(LIBCOCOBOT_FILE_PATH)/src/pathfinder/pathfinder_internal.c
 LIBCOCOBOT_SRC_FILES+=$(LIBCOCOBOT_FILE_PATH)/src/pathfinder/pathfinder_table.c
+LIBCOCOBOT_SRC_FILES+=$(LIBCOCOBOT_FILE_PATH)/src/pathfinder/pathfinder_douglas_peucker.c
 
 LIBCOCOBOT_TARGET_SRC_FILES+=$(LIBCOCOBOT_FILE_PATH)/src/position/encoders.c
 
