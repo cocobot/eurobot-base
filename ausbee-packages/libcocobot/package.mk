@@ -7,7 +7,7 @@ LIBCOCOBOT_GIT_UPSTREAM_URL = git@github.com:cocobot/libcocobot.git
 ifeq ($(CONFIG_LIBCOCOBOT_USE_GIT),y)
 LIBCOCOBOT_FILE_PATH=git
 else
-LIBCOCOBOT_FILE_PATH=mcual-$(LIBCOCOBOT_VERSION)
+LIBCOCOBOT_FILE_PATH=libcocobot-$(LIBCOCOBOT_VERSION)
 endif
 
 # Include files
