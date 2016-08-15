@@ -19,6 +19,13 @@ config PLATFORM_NUCLEO_401
   select USE_FPU
   select PLATFORM_DEVICE_STM32F429_439xx
 
+config PLATFORM_DISCOVERY_F4
+  bool "Discovery f4"
+  #select device
+  select PLATFORM_ARM_CORE_CORTEX_M4
+  select USE_FPU
+  select PLATFORM_DEVICE_STM32F429_439xx
+
 config PLATFORM_PRISM_V1
   bool "Prism v1"
   #select device
