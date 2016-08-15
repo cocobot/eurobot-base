@@ -8,6 +8,9 @@
 #elif defined(STM32F40_41xxx)
 # define APB1_CLOCK_MAX_FREQUECY_KHZ 20000 //because of i2c *stupid* peripheral.....
 # define APB2_CLOCK_MAX_FREQUECY_KHZ 84000
+#elif defined(STM32F401xx)
+# define APB1_CLOCK_MAX_FREQUECY_KHZ 20000 //because of i2c *stupid* peripheral.....
+# define APB2_CLOCK_MAX_FREQUECY_KHZ 84000
 #else
 # error Architecture not supported
 #endif
