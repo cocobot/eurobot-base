@@ -4,9 +4,10 @@
 #include <mcual.h>
 #include <stdint.h>
 
-#define PLATFORM_LED0 (1 << 0)
-#define PLATFORM_LED1 (1 << 1)
-#define PLATFORM_LED2 (1 << 2)
+#define PLATFORM_LED_GREEN  (1 << 0)
+#define PLATFORM_LED_ORANGE (1 << 1)
+#define PLATFORM_LED_RED    (1 << 2)
+#define PLATFORM_LED_BLUE   (1 << 3)
 
 #define PLATFORM_GPIO0                        (1 << 0)
 #define PLATFORM_GPIO1                        (1 << 1)

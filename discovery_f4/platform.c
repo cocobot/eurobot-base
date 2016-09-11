@@ -7,7 +7,7 @@
 #include "platform.h"
 #include <stm32f4xx.h> //todo remove me
 
-#define PLATFORM_MAIN_CLOCK_KHZ 84000
+#define PLATFORM_MAIN_CLOCK_KHZ 168000
 
 #ifdef CONFIG_OS_USE_FREERTOS
 //mutexes for spi access
@@ -86,17 +86,23 @@ void platform_init(void)
 //  mutex_i2c = xSemaphoreCreateMutex();
 //#endif
 //
-//  //init clock
-//  mcual_clock_init(MCUAL_CLOCK_SOURCE_INTERNAL, PLATFORM_MAIN_CLOCK_KHZ); 
-//  
+  //init clock
+    mcual_clock_init(MCUAL_CLOCK_SOURCE_EXTERNAL, PLATFORM_MAIN_CLOCK_KHZ); 
+  
 //  //init leds
-//  mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN4, MCUAL_GPIO_OUTPUT);
-//  mcual_gpio_init(MCUAL_GPIOB, MCUAL_GPIO_PIN5, MCUAL_GPIO_OUTPUT);
-//  mcual_gpio_init(MCUAL_GPIOB, MCUAL_GPIO_PIN12, MCUAL_GPIO_OUTPUT);
-//  mcual_gpio_clear(MCUAL_GPIOC, MCUAL_GPIO_PIN4);
-//  mcual_gpio_clear(MCUAL_GPIOB, MCUAL_GPIO_PIN5);
-//  mcual_gpio_clear(MCUAL_GPIOB, MCUAL_GPIO_PIN12);
-//  
+    mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN12, MCUAL_GPIO_OUTPUT);
+    mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN13, MCUAL_GPIO_OUTPUT);
+    mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN14, MCUAL_GPIO_OUTPUT);
+    mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN15, MCUAL_GPIO_OUTPUT);
+    //mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN12);
+    //mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN13);
+    //mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN14);
+    //mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN15);
+    mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN12);
+    mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN13);
+    mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN14);
+    mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN15);
+
 //  //init gpio
 //  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN7, MCUAL_GPIO_INPUT);
 //  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN8, MCUAL_GPIO_INPUT);
@@ -258,20 +264,25 @@ void platform_us_reset_trig(uint32_t us_id)
 //
 void platform_led_toggle(uint8_t led)
 {
-//  if(led & PLATFORM_LED0)
-//  {
-//    mcual_gpio_toggle(MCUAL_GPIOC, MCUAL_GPIO_PIN4);
-//  }
-//
-//  if(led & PLATFORM_LED1)
-//  {
-//    mcual_gpio_toggle(MCUAL_GPIOB, MCUAL_GPIO_PIN5);
-//  }
-//
-//  if(led & PLATFORM_LED2)
-//  {
-//    mcual_gpio_toggle(MCUAL_GPIOB, MCUAL_GPIO_PIN12);
-//  }
+  if(led & PLATFORM_LED_GREEN)
+  {
+    mcual_gpio_toggle(MCUAL_GPIOD, MCUAL_GPIO_PIN12);
+  }
+
+  if(led & PLATFORM_LED_ORANGE)
+  {
+    mcual_gpio_toggle(MCUAL_GPIOD, MCUAL_GPIO_PIN13);
+  }
+
+  if(led & PLATFORM_LED_RED)
+  {
+    mcual_gpio_toggle(MCUAL_GPIOD, MCUAL_GPIO_PIN14);
+  }
+
+  if(led & PLATFORM_LED_BLUE)
+  {
+    mcual_gpio_toggle(MCUAL_GPIOD, MCUAL_GPIO_PIN15);
+  }
 }
 //
 float platform_us_get_value(uint32_t us_id)
@@ -304,41 +315,50 @@ float platform_us_get_value(uint32_t us_id)
 //
 void platform_led_set(uint8_t led)
 {
-//  if(led & PLATFORM_LED0)
-//  {
-//    mcual_gpio_set(MCUAL_GPIOC, MCUAL_GPIO_PIN4);
-//  }
-//
-//  if(led & PLATFORM_LED1)
-//  {
-//    mcual_gpio_set(MCUAL_GPIOB, MCUAL_GPIO_PIN5);
-//  }
-//
-//  if(led & PLATFORM_LED2)
-//  {
-//    mcual_gpio_set(MCUAL_GPIOB, MCUAL_GPIO_PIN12);
-//  }
+  if(led & PLATFORM_LED_GREEN)
+  {
+    mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN12);
+  }
+
+  if(led & PLATFORM_LED_ORANGE)
+  {
+    mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN13);
+  }
+
+  if(led & PLATFORM_LED_RED)
+  {
+    mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN14);
+  }
+
+  if(led & PLATFORM_LED_BLUE)
+  {
+    mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN15);
+  }
 }
-//
+
 void platform_led_clear(uint8_t led)
 {
-//  if(led & PLATFORM_LED0)
-//  {
-//    mcual_gpio_clear(MCUAL_GPIOC, MCUAL_GPIO_PIN4);
-//  }
-//
-//  if(led & PLATFORM_LED1)
-//  {
-//    mcual_gpio_clear(MCUAL_GPIOB, MCUAL_GPIO_PIN5);
-//  }
-//
-//  if(led & PLATFORM_LED2)
-//  {
-//    mcual_gpio_clear(MCUAL_GPIOB, MCUAL_GPIO_PIN12);
-//  }
+  if(led & PLATFORM_LED_GREEN)
+  {
+    mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN12);
+  }
+
+  if(led & PLATFORM_LED_ORANGE)
+  {
+    mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN13);
+  }
+
+  if(led & PLATFORM_LED_RED)
+  {
+    mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN14);
+  }
+
+  if(led & PLATFORM_LED_BLUE)
+  {
+    mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN15);
+  }
 }
-//
-//
+
 void platform_gpio_set_direction(uint32_t gpio, mcual_gpio_direction_t direction)
 {
 //  if(gpio & PLATFORM_GPIO0)
