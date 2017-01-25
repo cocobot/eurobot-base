@@ -84,11 +84,11 @@ void mcual_gpio_init(mcual_gpio_port_t port, mcual_gpio_pin_t pin, mcual_gpio_di
       //set function 0 (GPIO)
       if(i < 8)
       {
-        afrl &= ~(0x03 << (4 * i));
+        afrl &= ~(0x0F << (4 * i));
       }
       else
       {
-        afrh &= ~(0x03 << (4 * (i - 8)));
+        afrh &= ~(0x0F << (4 * (i - 8)));
       }
     }
   }
@@ -152,12 +152,12 @@ void mcual_gpio_set_function(mcual_gpio_port_t port, mcual_gpio_pin_t pin, int f
 
         if(i < 8)
         {
-          afrl &= ~(0x03 << (4 * i));
+          afrl &= ~(0x0F << (4 * i));
           afrl |=  (function_id << (4 * i));
         }
         else
         {
-          afrh &= ~(0x03 << (4 * (i - 8)));
+          afrh &= ~(0x0F << (4 * (i - 8)));
           afrh |=  (function_id << (4 * (i - 8)));
         }
       }
