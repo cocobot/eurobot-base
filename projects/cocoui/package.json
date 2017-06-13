@@ -1,0 +1,14 @@
+{
+  "name": "Cocoui",
+  "version": "0.0.1",
+  "dependencies": {
+    "body-parser": "^1.15.0",
+    "ejs": "^2.4.1",
+    "express": "^4.13.4",
+    "express-jsx": "0.0.4",
+    "multer": "^1.1.0",
+    "optimist": "^0.6.1",
+    "serialport": "^3.1.1",
+    "socket.io": "^1.4.5"
+  }
+}

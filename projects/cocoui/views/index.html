@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Cocobot - Cocoui</title>
+    <link href="/libs/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/cocoui.css" rel="stylesheet">
+  </head>
+  <body>
+    <div id="app"> </div>
+    <script src="/libs/jquery-2.1.4.min.js"></script>
+    <script src="/libs/bootstrap.min.js"></script>
+    <script src="/libs/react.min.js"></script>
+    <script src="/libs/react-dom.min.js"></script>
+    <script src="/libs/JSXTransformer.js"></script> 
+    <script src="/libs/jquery.history.js"></script>
+    <script src="/libs/smoothie.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var DEFAULT_PAGE = "position";var DEFAULT_PAGE_ARGS = "";
+      var path = window.location.pathname.split('/');
+      if(path.length >= 3) {
+        DEFAULT_PAGE = path[2];
+      }
+    </script> 
+    <script type="text/jsx" src="/js/topmenu.jsx"></script>
+    <script type="text/jsx" src="/js/error.jsx"></script>
+    <script type="text/jsx" src="/js/console.jsx"></script>
+    <script type="text/jsx" src="/js/asserv.jsx"></script>
+    <script type="text/jsx" src="/js/position.jsx"></script>
+    <script type="text/jsx" src="/js/meca.jsx"></script>
+    <script type="text/jsx" src="/js/opponent.jsx"></script>
+    <script type="text/jsx" src="/js/cocoui.jsx"></script>
+  </body>
+</html>
