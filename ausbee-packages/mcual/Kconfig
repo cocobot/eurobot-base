@@ -1,11 +1,3 @@
-choice
-  prompt "+ mcual version"
-  depends on MCUAL
-  config MCUAL_USE_GIT
-    bool "git"
-endchoice
-
-
 config MCUAL_CLOCK
 	bool "+ Clock"
 	default n
