@@ -1,4 +1,3 @@
-#define _GNU_SOURCE
 #include <mcual.h>
 #include <errno.h>
 #include <sys/time.h>
@@ -279,6 +278,9 @@ void mcual_bootloader(void)
     }
   }
 
+#if 0
   //restart
   execl(program_invocation_name, program_invocation_name, NULL);
+#endif
+#warning TODO: make something less ugly
 }
