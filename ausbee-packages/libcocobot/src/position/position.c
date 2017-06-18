@@ -8,7 +8,9 @@
 
 #ifdef AUSBEE_SIM
 #include <stdlib.h>
+#ifdef VREF_ENABLE
 #include <cocobot/vrep.h>
+#endif
 #else
 #include <cocobot/encoders.h>
 #endif //AUSBEE_SIM
@@ -29,9 +31,6 @@ static int32_t robot_distance=0,     robot_angle=0, robot_angle_offset=0;
 static int32_t robot_linear_speed=0, robot_angular_velocity=0;
 int32_t motor_position[2] = {0, 0}; // {right, left}
 static int position_debug = 0;
-#ifdef AUSBEE_SIM
-int fake_vrep = 0;
-#endif
 static float last_left_sp = 0;
 static float last_right_sp = 0;
 static float left_motor_alpha = (((float)CONFIG_LIBCOCOBOT_LEFT_MOTOR_ALPHA) / 1000.0f);
@@ -41,10 +40,9 @@ static void cocobot_position_compute(void)
 {
   //update encoder values
 #ifdef AUSBEE_SIM
-  if(!fake_vrep)
-  {
+#ifdef VREP_ENABLE
     cocobot_vrep_get_motor_position(motor_position);
-  }
+#endif
 #else
   cocobot_encoders_get_motor_position(motor_position);
 #endif //AUSBEE_SIM
@@ -100,18 +98,9 @@ void cocobot_position_init(unsigned int task_priority)
   mutex = xSemaphoreCreateMutex();
 
 #ifdef AUSBEE_SIM
-  char * fvrep = getenv("FAKE_VREP");
-  if(fvrep != NULL)
-  {
-    if(strcmp(getenv("FAKE_VREP"), "1") == 0) 
-    {
-      fake_vrep = 1;
-    }
-  }
-  if(!fake_vrep)
-  {
+#ifdef VREP_ENABLE
     cocobot_vrep_init();
-  }
+#endif
 #endif //AUSBEE_SIM
 
   //Be sure that position manager have valid values before continuing the initialization process.
@@ -197,15 +186,12 @@ void cocobot_position_set_motor_command(float left_motor_speed, float right_moto
   }
 
 #ifdef AUSBEE_SIM
-  if(!fake_vrep)
-  {
+#ifdef VREP_ENABLE
     cocobot_vrep_set_motor_command(left_motor_speed, right_motor_speed);
-  }
-  else
-  {
+#else
     motor_position[0] += right_motor_speed / 100.0f;
     motor_position[1] += left_motor_speed / 100.0f;
-  }
+#endif
 #else
 
 #ifdef COCOBOT_INVERT_LEFT_MOTOR
@@ -344,10 +330,9 @@ void cocobot_position_set_x(float x)
   robot_x = MM2TICK(x);
   xSemaphoreGive(mutex);
 #ifdef AUSBEE_SIM
-  if(!fake_vrep)
-  {
+#ifdef VREP_ENABLE
     cocobot_vrep_position_set_x(x);
-  }
+#endif
 #endif
 
   cocobot_asserv_set_state(saved_state);
@@ -363,10 +348,9 @@ void cocobot_position_set_y(float y)
   robot_y = MM2TICK(y);
   xSemaphoreGive(mutex);
 #ifdef AUSBEE_SIM
-  if(!fake_vrep)
-  {
+#ifdef VREP_ENABLE
     cocobot_vrep_position_set_y(y);
-  }
+#endif
 #endif
 
   cocobot_asserv_set_state(saved_state);
@@ -384,10 +368,9 @@ void cocobot_position_set_angle(float angle)
   robot_angle_offset += DEG2TICK(diff);
   xSemaphoreGive(mutex);
 #ifdef AUSBEE_SIM
-  if(!fake_vrep)
-  {
+#ifdef VREP_ENABLE
     cocobot_vrep_position_set_angle(angle);
-  }
+#endif
 #endif
 
   cocobot_asserv_set_state(saved_state);
