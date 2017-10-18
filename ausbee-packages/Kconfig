@@ -14,4 +14,10 @@ config VREP
   bool "V-Rep"
   default n
 
-source "$AUSBEE_CUSTOM_PACKAGES_PATH/vrep/Kconfig"
+source "$AUSBEE_CUSTOM_PACKAGES_PATH/simulator/vrep/Kconfig"
+
+config FREERTOS_HOST_PORT
+  bool "FreeRTOS simulation"
+  default y
+
+source "$AUSBEE_CUSTOM_PACKAGES_PATH/simulator/freeRtosPort/Kconfig"

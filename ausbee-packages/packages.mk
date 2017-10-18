@@ -7,5 +7,9 @@ include $(CONFIG_CUSTOM_PACKAGES_PATH)/mcual/package.mk
 endif
 
 ifeq ($(CONFIG_VREP),y)
-include $(CONFIG_CUSTOM_PACKAGES_PATH)/vrep/package.mk
+include $(CONFIG_CUSTOM_PACKAGES_PATH)/simulator/vrep/package.mk
+endif
+
+ifeq ($(CONFIG_FREERTOS_HOST_PORT),y)
+include $(CONFIG_CUSTOM_PACKAGES_PATH)/simulator/freeRtosPort/package.mk
 endif
