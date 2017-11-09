@@ -1,0 +1,12 @@
+Prepare script:
+./prepare.sh
+
+build project:
+cd projects/pbrain
+puis:
+make menuconfig
+si menuconfig ne s'affiche pas, verifier README.md ausbee (required package)
+exit and save
+
+make (pour builder pour target)
+make sim (pour builder le simulateur)
