@@ -247,22 +247,19 @@ void mcual_bootloader(void)
   itimer.it_value.tv_usec = 0;
   setitimer(ITIMER_REAL, &itimer, &oitimer );
 
-  ////stop server
-  //close(server_socket);
-
   //kill clients
   int i;
+  pthread_mutex_lock(&_mutex_network);
   for(i = 0; i < CLIENT_MAX; i += 1)
   {
     if(_peripherals_socket[i].socket != -1)
     {
       close(_peripherals_socket[i].socket);
+      _peripherals_socket[i].socket = -1;
     }
   }
+  pthread_mutex_unlock(&_mutex_network);
 
-#if 0
   //restart
-  execl(program_invocation_name, program_invocation_name, NULL);
-#endif
-#warning TODO: make something less ugly
+  execv(_argv[0], _argv);
 }
