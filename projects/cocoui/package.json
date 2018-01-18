@@ -1,14 +1,26 @@
-{
-  "name": "Cocoui",
-  "version": "0.0.1",
-  "dependencies": {
-    "body-parser": "^1.15.0",
-    "ejs": "^2.4.1",
-    "express": "^4.13.4",
-    "express-jsx": "0.0.4",
-    "multer": "^1.1.0",
-    "optimist": "^0.6.1",
-    "serialport": "^3.1.1",
-    "socket.io": "^1.4.5"
-  }
-}
+ {
+   "name": "Cocoui",
+  "version": "1.2018.0",
+   "dependencies": {
+    "bootstrap": "^4.0.0-beta.1",
+    "css-loader": "^0.28.8",
+    "electron": "^1.7.9",
+    "reactstrap": "^5.0.0-alpha.4",
+    "style-loader": "^0.19.1"
+  },
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "webpack",
+    "watch": "webpack -w"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-react": "^6.24.1",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "webpack": "^3.10.0"
+   }
+ }
