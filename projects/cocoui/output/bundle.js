@@ -28488,7 +28488,7 @@ var _Field = __webpack_require__(50);
 
 var _Field2 = _interopRequireDefault(_Field);
 
-var _Eurobot = __webpack_require__(52);
+var _Eurobot = __webpack_require__(51);
 
 var _Eurobot2 = _interopRequireDefault(_Eurobot);
 
@@ -28662,8 +28662,7 @@ var Field = function (_React$Component) {
 exports.default = Field;
 
 /***/ }),
-/* 51 */,
-/* 52 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
