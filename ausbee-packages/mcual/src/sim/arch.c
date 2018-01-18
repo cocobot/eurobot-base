@@ -10,6 +10,10 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <getopt.h>
+#include <time.h>
+#include <netdb.h>
+#include <arpa/inet.h>
 
 #define PERIPHERAL_TCP_PORT 10000
 #define CLIENT_MAX          10
@@ -21,85 +25,140 @@ typedef struct
   mcual_usart_id_t usart_id;
 } mcual_arch_sim_peripheral_socket_t;
 
-static int server_socket = 0;
+static pthread_t _peripheral_thread;
+static mcual_arch_sim_peripheral_socket_t _peripherals_socket[CLIENT_MAX];
+static pthread_mutex_t _mutex_network = PTHREAD_MUTEX_INITIALIZER;
+static fd_set _valid_fds;
 
-static mcual_arch_sim_peripheral_socket_t peripherals_socket[CLIENT_MAX];
+static char * _ip = "127.0.0.1";
+static int _argc = 0;
+static char ** _argv = NULL;
+static int _port = 10000;
+static int _id = 0;
+
+static void mcual_arch_help(){
+  printf("%s\n\n", _argv[0]);
+  printf("Usage example:\n");
+  printf("%s [(-h|--help)] [(-i|--ip)] [(-p|--port)]\n\n", _argv[0]);
+  printf("Options:\n");
+  printf("-h or --help: Displays this information.\n");
+  printf("-i or --ip: Cocoui server IP.\n");
+  printf("-p or --port: Cocoui server TCP port.\n");
+  exit(1);
+}
+
+void mcual_arch_main(int argc, char *argv[])
+{
+  _argc = argc;
+  _argv = argv;
+
+  srand(time(NULL));
+  _id = rand();
+
+  struct option long_options[] =
+  {
+    {"ip", required_argument, NULL, 'i'},
+    {"port", required_argument, NULL, 'p'},
+    {"help", no_argument, NULL, 'h'},
+    {NULL, 0, NULL, 0}
+  };
+
+  int opt;
+  while ((opt = getopt_long(argc, argv, "hi:p:", long_options, NULL)) != -1)
+  {
+    switch (opt)
+    {
+      case 'h':
+        mcual_arch_help();
+        break;
+
+      case 'i':
+        _ip = optarg;
+        break;
+
+      case 'p':
+        _port = atoi(optarg);
+        break;
+    }
+  }
+}
 
 void mcual_arch_sim_handle_uart_peripheral_write(mcual_usart_id_t usart_id, uint8_t byte)
 {
+  pthread_mutex_lock(&_mutex_network);
+
   //try to find usart slot (if client is connected)
   int i;
   for(i = 0; i < CLIENT_MAX; i += 1)
   {
-    if((peripherals_socket[i].socket != -1) && (peripherals_socket[i].init) && (peripherals_socket[i].usart_id == usart_id))
+    if((_peripherals_socket[i].socket != -1) && (_peripherals_socket[i].init) && (_peripherals_socket[i].usart_id == usart_id))
     {
       //send data to peripheral
-      write(peripherals_socket[i].socket, &byte, 1);
+      pthread_mutex_unlock(&_mutex_network);
+      write(_peripherals_socket[i].socket, &byte, 1);
+      return;
     }
   }
+
+  //no opened connection
+  int sock = socket(AF_INET, SOCK_STREAM, 0);
+  if(sock < 0)
+  {
+    perror("Unable to create client socket for peripheral");
+    exit(1);
+  }  
+
+  struct hostent * hostinfo = gethostbyname(_ip);
+  if (hostinfo == NULL)
+  {
+    fprintf(stderr, "Unknown host %s.\n", _ip);
+    exit(1);
+  }
+
+  struct sockaddr_in saddr;
+  saddr.sin_family = AF_INET;
+  saddr.sin_port = htons(_port);
+  saddr.sin_addr = *(struct in_addr *) hostinfo->h_addr;
+
+  printf("Trying to connect: %s:%d (UART %d)\n", inet_ntoa(saddr.sin_addr), _port, usart_id);
+  if(connect(sock,(struct sockaddr *) &saddr, sizeof(struct sockaddr_in)) < 0)
+  {
+    perror("connect");
+    close(sock);
+  }
+  else
+  {
+    printf(" [*] Success\n");
+    for(i = 0; i < CLIENT_MAX; i += 1)
+    {
+      if(_peripherals_socket[i].socket == -1)
+      {
+        _peripherals_socket[i].socket = sock;
+        _peripherals_socket[i].init = 1;
+        _peripherals_socket[i].usart_id = usart_id;
+
+        //send data to peripheral
+        FD_SET(sock, &_valid_fds);
+
+        char buf[32];
+        snprintf(buf, sizeof(buf), ">>USART%d<<\n", usart_id);
+        write(_peripherals_socket[i].socket, buf, strlen(buf));
+
+        pthread_mutex_unlock(&_mutex_network);
+        write(_peripherals_socket[i].socket, &byte, 1);
+        pthread_kill(_peripheral_thread, SIGUSR2);
+        return;
+      }
+    }
+    fprintf(stderr, "No free peripheral available in list\n");
+  }
+  pthread_mutex_unlock(&_mutex_network);
 }
 
 static void * mcual_arch_sim_handle_peripherals(void * args)
 {
   (void)args;
-
-  //create socket server
-  server_socket = socket(AF_INET, SOCK_STREAM, 0);
-  if(server_socket < 0)
-  {
-    perror("Unable to create server socket for peripheral");
-    exit(EXIT_FAILURE);
-  }
-
-  //get peripheral port
-  char * sport = getenv("PERIPHERAL_TCP_PORT");
-  int port = PERIPHERAL_TCP_PORT;
-  if(sport != NULL)
-  {
-    port = atoi(sport);
-  }
-
-  //create socket info storage
-  struct sockaddr_in saddr;
-  saddr.sin_family = AF_INET;
-  saddr.sin_port = htons(port);
-  saddr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-  //configure socket in order to prevent failed bind in quick(burger king?) restart
-  int on = 1;
-  if(setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int)) < 0)
-  {
-    perror("Unable to set SO_REUSEADDR for peripheral server");
-    exit(EXIT_FAILURE);
-  }
-
-  on = 1;
-  if(setsockopt(server_socket, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(int)) < 0)
-  {
-    perror("Unable to set SO_REUSEPORT for peripheral server");
-    exit(EXIT_FAILURE);
-  }
-
-
-  //bind socket & storage
-  if(bind(server_socket, (struct sockaddr *) &saddr, sizeof (saddr)) < 0)
-  {
-    perror("Unable to bind socket to storage for peripheral");
-    exit(EXIT_FAILURE);
-  }
-
-  //declare we are ready to accept incoming connection
-  if(listen(server_socket, 1) < 0)
-  {
-    perror("Unable to listen from socket for peripheral");
-    exit (EXIT_FAILURE);
-  }
-
-  //init set of valid sockets
-  fd_set valid_fds;
-  FD_ZERO(&valid_fds);
-  FD_SET(server_socket, &valid_fds);
-
+ 
   //set signal mask for pselect
   sigset_t sig_mask;
   sigfillset(&sig_mask);
@@ -108,132 +167,53 @@ static void * mcual_arch_sim_handle_peripherals(void * args)
   while(1)
   {
     //wait for an event
-    fd_set readable_fds = valid_fds;
+    pthread_mutex_lock(&_mutex_network);
+    fd_set readable_fds = _valid_fds;
+    pthread_mutex_unlock(&_mutex_network);
     if(pselect(FD_SETSIZE, &readable_fds, NULL, NULL, NULL, &sig_mask) < 0)
     {
-      perror("Unable to select readable fs for peripheral");
-      exit (EXIT_FAILURE);
-    }
-
-    //check if event is a new incoming connection
-    if(FD_ISSET(server_socket, &readable_fds))
-    {
-      int new_socket;
-      struct sockaddr_in new_saddr;
-      int size = sizeof(new_saddr);
-
-      //accept the incoming connection
-      new_socket = accept(server_socket, (struct sockaddr *)&new_saddr,&size);
-      if(new_socket < 0)
+      if(errno != EINTR)
       {
-        perror("Unable to accept the incoming connection for peripheral");
-        exit(EXIT_FAILURE);
-      }
-
-      //find free slot
-      int i;
-      for(i = 0; i < CLIENT_MAX; i += 1)
-      {
-        if(peripherals_socket[i].socket == -1)
-        {
-          peripherals_socket[i].socket = new_socket;
-          peripherals_socket[i].init = 0;
-          FD_SET(new_socket, &valid_fds);
-          break;
-        }
-      }
-      
-      //if no empty slot has been found, close the socket
-      if(i >= CLIENT_MAX)
-      {
-        close(new_socket);
+        perror("Unable to select readable fs for peripheral");
+        exit (EXIT_FAILURE);
       }
     }
 
     //check if event is from an existing connection
+    pthread_mutex_lock(&_mutex_network);
     int i;
     for(i = 0; i < CLIENT_MAX; i += 1)
     {
-      if(peripherals_socket[i].socket != -1)
+      if(_peripherals_socket[i].socket != -1)
       {
-        if(FD_ISSET(peripherals_socket[i].socket, &readable_fds))
+        if(FD_ISSET(_peripherals_socket[i].socket, &readable_fds))
         {
           //we have a winner !
           char buf[32];
-          int r = read(peripherals_socket[i].socket, buf, sizeof(buf) - 1);
+          int r = read(_peripherals_socket[i].socket, buf, sizeof(buf) - 1);
           if(r <= 0)
           {
             //he is gone :'(
-            close(peripherals_socket[i].socket);
-            FD_CLR(peripherals_socket[i].socket, &valid_fds);
-            peripherals_socket[i].socket = -1;
+            close(_peripherals_socket[i].socket);
+            FD_CLR(_peripherals_socket[i].socket, &_valid_fds);
+            _peripherals_socket[i].socket = -1;
+            _peripherals_socket[i].init = 0;
           }
           else
           {
-            buf[r] = 0;
-            if(!peripherals_socket[i].init)
+            int j;
+            for(j = 0; j < r; j += 1)
             {
-              //if never init find usart id
-              if(strncmp(buf, "USART0", 6) == 0)
-              {
-                peripherals_socket[i].usart_id = MCUAL_USART0;
-                peripherals_socket[i].init = 1;
-              }
-              else if(strncmp(buf, "USART1", 6) == 0)
-              {
-                peripherals_socket[i].usart_id = MCUAL_USART1;
-                peripherals_socket[i].init = 1;
-              }
-              else if(strncmp(buf, "USART2", 6) == 0)
-              {
-                peripherals_socket[i].usart_id = MCUAL_USART2;
-                peripherals_socket[i].init = 2;
-              }
-              else if(strncmp(buf, "USART3", 6) == 0)
-              {
-                peripherals_socket[i].usart_id = MCUAL_USART3;
-                peripherals_socket[i].init = 3;
-              }
-              else if(strncmp(buf, "USART4", 6) == 0)
-              {
-                peripherals_socket[i].usart_id = MCUAL_USART4;
-                peripherals_socket[i].init = 1;
-              }
-              else if(strncmp(buf, "USART5", 6) == 0)
-              {
-                peripherals_socket[i].usart_id = MCUAL_USART5;
-                peripherals_socket[i].init = 1;
-              }
-              else if(strncmp(buf, "USART6", 6) == 0)
-              {
-                peripherals_socket[i].usart_id = MCUAL_USART6;
-                peripherals_socket[i].init = 1;
-              }
-              else if(strncmp(buf, "USART7", 6) == 0)
-              {
-                peripherals_socket[i].usart_id = MCUAL_USART7;
-                peripherals_socket[i].init = 1;
-              }
-              else if(strncmp(buf, "USART8", 6) == 0)
-              {
-                peripherals_socket[i].usart_id = MCUAL_USART8;
-                peripherals_socket[i].init = 1;
-              }
-            }
-            else
-            {
-              int j;
-              for(j = 0; j < r; j += 1)
-              {
-                //send data to freeRTOS
-                mcual_usart_recv_from_network(peripherals_socket[i].usart_id, buf[j]);
-              }
+              //send data to freeRTOS
+              mcual_usart_recv_from_network(_peripherals_socket[i].usart_id, buf[j]);
             }
           }
         }
       }
     }
+    pthread_mutex_unlock(&_mutex_network);
   }
+
 
   return NULL;
 }
@@ -244,11 +224,13 @@ void mcual_arch_sim_init_peripherals(void)
 
   for(i = 0; i < CLIENT_MAX; i += 1)
   {
-    peripherals_socket[i].socket = -1;
+    _peripherals_socket[i].socket = -1;
   }
 
-  pthread_t peripheral_thread;
-  if(pthread_create(&peripheral_thread, NULL, mcual_arch_sim_handle_peripherals, NULL) != 0)
+  //init set of valid sockets
+  FD_ZERO(&_valid_fds);
+
+  if(pthread_create(&_peripheral_thread, NULL, mcual_arch_sim_handle_peripherals, NULL) != 0)
   {
     perror("Unable to create thread for peripheral");
     exit(EXIT_FAILURE);
@@ -265,16 +247,16 @@ void mcual_bootloader(void)
   itimer.it_value.tv_usec = 0;
   setitimer(ITIMER_REAL, &itimer, &oitimer );
 
-  //stop server
-  close(server_socket);
+  ////stop server
+  //close(server_socket);
 
   //kill clients
   int i;
   for(i = 0; i < CLIENT_MAX; i += 1)
   {
-    if(peripherals_socket[i].socket != -1)
+    if(_peripherals_socket[i].socket != -1)
     {
-      close(peripherals_socket[i].socket);
+      close(_peripherals_socket[i].socket);
     }
   }
 
