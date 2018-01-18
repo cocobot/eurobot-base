@@ -30,7 +30,6 @@ static float robot_x=0, robot_y=0;
 static int32_t robot_distance=0,     robot_angle=0, robot_angle_offset=0;
 static int32_t robot_linear_speed=0, robot_angular_velocity=0;
 int32_t motor_position[2] = {0, 0}; // {right, left}
-static int position_debug = 0;
 static float last_left_sp = 0;
 static float last_right_sp = 0;
 static float left_motor_alpha = (((float)CONFIG_LIBCOCOBOT_LEFT_MOTOR_ALPHA) / 1000.0f);
@@ -275,13 +274,6 @@ void cocobot_position_set_speed_distance_angle(float linear_speed, float angular
 
 int cocobot_position_handle_console(char * command)
 {
-  if(strcmp(command,"position_debug") == 0)
-  {
-    cocobot_console_get_iargument(0, &position_debug);
-    cocobot_console_send_answer("%d", position_debug);
-    return 1;
-  }
-
   if(strcmp(command,"left_motor_alpha") == 0)
   {
     float set;
@@ -306,18 +298,17 @@ int cocobot_position_handle_console(char * command)
 
   return 0;
 }
+#include <stdio.h>
 
 void cocobot_position_handle_async_console(void)
 {
-  if(position_debug)
-  {
-    cocobot_console_send_asynchronous("position", "%.3f,%.3f,%.3f,%.3f",
-                                     (double)cocobot_position_get_x(),
-                                     (double)cocobot_position_get_y(),
-                                     (double)cocobot_position_get_angle(),
-                                     (double)cocobot_position_get_distance()
-                                    );
-  }
+  cocobot_console_send(COCOBOT_CONSOLE_POSITION_DEBUG_PID,
+                       "FFFF",
+                       (double)cocobot_position_get_x(),
+                       (double)cocobot_position_get_y(),
+                       (double)cocobot_position_get_angle(),
+                       (double)cocobot_position_get_distance()
+                      );
 }
 
 void cocobot_position_set_x(float x)

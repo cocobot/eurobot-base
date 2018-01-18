@@ -7,6 +7,7 @@
 #include <task.h>
 #include <semphr.h>
 
+#if 0
 
 
 //define protocol special characters
@@ -284,3 +285,154 @@ void cocobot_console_init(mcual_usart_id_t usart_id, unsigned int priority_monit
   xTaskCreate(cocobot_console_sync_thread, "con. sync", 512, NULL, priority_monitor, NULL );
   xTaskCreate(cocobot_console_async_thread, "con. async", 512, NULL, priority_async, NULL );
 }
+#else
+
+#define COCOBOT_CONSOLE_HEADER_START 0xC0
+
+typedef struct __attribute__((packed)) 
+{
+  uint8_t start;
+  uint16_t pid;
+  uint16_t len;
+  uint16_t crc;
+} cocobot_console_header_t;
+
+static SemaphoreHandle_t _mutex;
+static mcual_usart_id_t _usart;
+
+int cocobot_console_get_sargument(int id, char * str, int maxsize)
+{
+  (void)id;
+  (void)str;
+  (void)maxsize;
+  return 0;
+}
+
+int cocobot_console_get_iargument(int id, int * i)
+{
+  (void)id;
+  (void)i;
+  return 0;
+}
+
+int cocobot_console_get_fargument(int id, float * f)
+{
+  (void)id;
+  (void)f;
+  return 0;
+}
+
+void cocobot_console_send_answer(char * fmt, ...)
+{
+  (void)fmt;
+}
+
+void cocobot_console_send_asynchronous(char * title, char * fmt, ...)
+{
+  (void)title;
+  (void)fmt;
+}
+
+void cocobot_console_async_thread(void *arg)
+{
+  (void)arg;
+
+  TickType_t xLastWakeTime;
+  xLastWakeTime = xTaskGetTickCount();
+  while(pdTRUE)
+  {
+    //send debug information if needed
+    cocobot_position_handle_async_console();
+    cocobot_asserv_handle_async_console();
+
+    //wait 100ms (minus time used by previous handler)
+    vTaskDelayUntil( &xLastWakeTime, 100 / portTICK_PERIOD_MS);
+  }
+}
+
+void cocobot_console_init(mcual_usart_id_t usart_id, unsigned int priority_monitor, unsigned int priority_async, cocobot_console_handler_t handler)
+{
+  _usart = usart_id;
+  //create mutex
+  _mutex = xSemaphoreCreateMutex();
+
+
+  //init usart peripheral
+  mcual_usart_init(_usart, 115200);
+
+  //start tasks
+  xTaskCreate(cocobot_console_async_thread, "con. async", 512, NULL, priority_async, NULL );
+}
+
+void cocobot_console_send(uint16_t pid, char * fmt, ...)
+{
+  va_list(ap);
+
+  cocobot_console_header_t header;
+
+  header.start = COCOBOT_CONSOLE_HEADER_START;
+  header.pid = pid;
+  header.len = 0;
+  int i;
+  for(i = 0; i < strlen(fmt); i += 1)
+  {
+    switch(fmt[i])
+    {
+      case 'H':
+        header.len += 2;
+        break;
+
+      case 'F':
+        header.len += 8;
+        break;
+    }
+  }
+  header.crc = 4242;
+
+  xSemaphoreTake(_mutex, portMAX_DELAY);
+  uint8_t * ptr = &header;
+  for(i = 0; i < sizeof(header); i += 1)
+  {
+    mcual_usart_send(_usart, *ptr);
+  }
+
+  uint16_t crc = 0xFFFF;
+  va_start(ap, fmt);
+  for(i = 0; i < strlen(fmt); i += 1)
+  {
+    switch(fmt[i])
+    {
+      case 'H':
+        {
+          uint16_t v = va_arg(ap, uint16_t);
+          uint8_t * p = (uint8_t *)&v;
+          mcual_usart_send(_usart, *(p + 0));
+          mcual_usart_send(_usart, *(p + 1));
+        }
+        break;
+
+      case 'F':
+        {
+          double v = va_arg(ap, double);
+          uint8_t * p = (uint8_t *)&v;
+          mcual_usart_send(_usart, *(p + 0));
+          mcual_usart_send(_usart, *(p + 1));
+          mcual_usart_send(_usart, *(p + 2));
+          mcual_usart_send(_usart, *(p + 3));
+          mcual_usart_send(_usart, *(p + 4));
+          mcual_usart_send(_usart, *(p + 5));
+          mcual_usart_send(_usart, *(p + 6));
+          mcual_usart_send(_usart, *(p + 7));
+        }
+        break;
+    }
+  }
+  va_end(ap);
+
+  mcual_usart_send(_usart, crc & 0xFF);
+  mcual_usart_send(_usart, (crc >> 8) & 0xFF);
+
+  xSemaphoreGive(_mutex);
+}
+
+#endif
