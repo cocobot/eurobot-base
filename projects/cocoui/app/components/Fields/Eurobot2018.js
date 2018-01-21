@@ -72,7 +72,7 @@ class Eurobot2018CubeGroup extends React.Component {
         </g>
         <Eurobot2018Cube color={cSignalYellow} />
         <text fontSize="60" y="5" x="0">
-          <tspan textAnchor="middle" alignment-baseline="middle">{this.props.id}</tspan>
+          <tspan textAnchor="middle" alignmentBaseline="middle">{this.props.id}</tspan>
          </text>
       </g>
     );
@@ -127,10 +127,10 @@ class Eurobot2018BallFeeder extends React.Component {
     return (
       <g transform={"translate(" + x + ", " + y + ") rotate(" + a + ")"}>
         <linearGradient id={"ball" + this.props.id} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stop-color={ball1Color}/>
-          <stop offset="50%" stop-color={ball1Color}/>
-          <stop offset="50%" stop-color={ball2Color}/>
-          <stop offset="100%" stop-color={ball2Color}/>
+          <stop offset="0%" stopColor={ball1Color}/>
+          <stop offset="50%" stopColor={ball1Color}/>
+          <stop offset="50%" stopColor={ball2Color}/>
+          <stop offset="100%" stopColor={ball2Color}/>
         </linearGradient>
         <rect height="22" width="89" x="-22" y="-11" fill={feederColor} strokeWidth="2" stroke="#000000" />
         <circle r="27" cx="45" cy="0" fill={feederColor} strokeWidth="2" stroke="#000000" />
@@ -241,6 +241,8 @@ class Eurobot2018 extends React.Component {
         <Eurobot2018BallFeeder id="1" />
         <Eurobot2018BallFeeder id="2" />
         <Eurobot2018BallFeeder id="3" />
+
+        {this.props.children}
       </g>
     );
   }

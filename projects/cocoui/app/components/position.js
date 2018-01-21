@@ -6,6 +6,7 @@ import {
   Card, CardHeader, CardBody, CardTitle, CardText,
 } from 'reactstrap';
 import Field from './Field';
+import Robots from './Robots';
 import Eurobot2018 from './Fields/Eurobot2018';
 
 class Position extends React.Component {
@@ -34,7 +35,9 @@ class Position extends React.Component {
               <Row>
                 <Col xs="8">
                   <Field>
-                    <Eurobot2018 />
+                    <Eurobot2018>
+                      <Robots />
+                    </ Eurobot2018>
                   </Field>
                 </Col>
                 <Col xs="4">
