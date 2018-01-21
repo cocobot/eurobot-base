@@ -304,10 +304,10 @@ void cocobot_position_handle_async_console(void)
 {
   cocobot_console_send(COCOBOT_CONSOLE_POSITION_DEBUG_PID,
                        "FFFF",
-                       (double)cocobot_position_get_x(),
-                       (double)cocobot_position_get_y(),
-                       (double)cocobot_position_get_angle(),
-                       (double)cocobot_position_get_distance()
+                       (float)cocobot_position_get_x(),
+                       (float)cocobot_position_get_y(),
+                       (float)cocobot_position_get_angle(),
+                       (float)cocobot_position_get_distance()
                       );
 }
 

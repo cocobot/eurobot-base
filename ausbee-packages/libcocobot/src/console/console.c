@@ -190,7 +190,7 @@ void cocobot_console_async_thread(void *arg)
     cocobot_asserv_handle_async_console();
 
     //wait 100ms (minus time used by previous handler)
-    vTaskDelayUntil( &xLastWakeTime, 100 / portTICK_PERIOD_MS);
+    vTaskDelayUntil( &xLastWakeTime, 1000 / portTICK_PERIOD_MS);
   }
 }
 
@@ -364,6 +364,26 @@ void cocobot_console_init(mcual_usart_id_t usart_id, unsigned int priority_monit
   xTaskCreate(cocobot_console_async_thread, "con. async", 512, NULL, priority_async, NULL );
 }
 
+static uint16_t cocobot_console_crc16_update(uint16_t crc, uint8_t a)
+{
+  int i;
+
+  crc ^= a;
+  for(i = 0; i < 8; i += 1)
+  {
+    if (crc & 1)
+    {
+      crc = (crc >> 1) ^ 0xA001;
+    }
+    else
+    {
+      crc = (crc >> 1);
+    }
+  }
+
+  return crc;
+}
+
 void cocobot_console_send(uint16_t pid, char * fmt, ...)
 {
   va_list(ap);
@@ -383,17 +403,24 @@ void cocobot_console_send(uint16_t pid, char * fmt, ...)
         break;
 
       case 'F':
-        header.len += 8;
+        header.len += 4;
         break;
     }
   }
-  header.crc = 4242;
+  header.crc = 0xFFFF;
+  uint8_t * ptr = &header;
+  for(i = 0; i < sizeof(header) - 2; i += 1)
+  {
+    header.crc = cocobot_console_crc16_update(header.crc, *ptr);
+    ptr += 1;
+  }
 
   xSemaphoreTake(_mutex, portMAX_DELAY);
-  uint8_t * ptr = &header;
+  ptr = &header;
   for(i = 0; i < sizeof(header); i += 1)
   {
     mcual_usart_send(_usart, *ptr);
+    ptr += 1;
   }
 
   uint16_t crc = 0xFFFF;
@@ -413,16 +440,12 @@ void cocobot_console_send(uint16_t pid, char * fmt, ...)
 
       case 'F':
         {
-          double v = va_arg(ap, double);
+          float v = va_arg(ap, double);
           uint8_t * p = (uint8_t *)&v;
           mcual_usart_send(_usart, *(p + 0));
           mcual_usart_send(_usart, *(p + 1));
           mcual_usart_send(_usart, *(p + 2));
           mcual_usart_send(_usart, *(p + 3));
-          mcual_usart_send(_usart, *(p + 4));
-          mcual_usart_send(_usart, *(p + 5));
-          mcual_usart_send(_usart, *(p + 6));
-          mcual_usart_send(_usart, *(p + 7));
         }
         break;
     }

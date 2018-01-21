@@ -1,8 +1,13 @@
 const electron = require('electron');
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
+
+const Protocol = require('./protocol');
+
+const protocol = new Protocol();
  
 app.on('ready', () => {
+  return;
   mainWindow = new BrowserWindow({
     height: 650,
     width: 1200,
