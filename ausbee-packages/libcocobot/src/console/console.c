@@ -285,7 +285,6 @@ void cocobot_console_init(mcual_usart_id_t usart_id, unsigned int priority_monit
   xTaskCreate(cocobot_console_sync_thread, "con. sync", 512, NULL, priority_monitor, NULL );
   xTaskCreate(cocobot_console_async_thread, "con. async", 512, NULL, priority_async, NULL );
 }
-#else
 
 #define COCOBOT_CONSOLE_HEADER_START 0xC0
 

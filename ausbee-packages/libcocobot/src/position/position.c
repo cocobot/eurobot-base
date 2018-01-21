@@ -272,6 +272,7 @@ void cocobot_position_set_speed_distance_angle(float linear_speed, float angular
   cocobot_position_set_motor_command(left_sp, right_sp);
 }
 
+/*
 int cocobot_position_handle_console(char * command)
 {
   if(strcmp(command,"left_motor_alpha") == 0)
@@ -298,17 +299,16 @@ int cocobot_position_handle_console(char * command)
 
   return 0;
 }
-#include <stdio.h>
+*/
 
-void cocobot_position_handle_async_console(void)
+void cocobot_position_handle_async_com(void)
 {
-  cocobot_console_send(COCOBOT_CONSOLE_POSITION_DEBUG_PID,
-                       "FFFF",
-                       (float)cocobot_position_get_x(),
-                       (float)cocobot_position_get_y(),
-                       (float)cocobot_position_get_angle(),
-                       (float)cocobot_position_get_distance()
-                      );
+  cocobot_com_send(COCOBOT_COM_POSITION_DEBUG_PID,
+                   "FFF",
+                   (double)cocobot_position_get_x(),
+                   (double)cocobot_position_get_y(),
+                   (double)cocobot_position_get_angle()
+                  );
 }
 
 void cocobot_position_set_x(float x)

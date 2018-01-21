@@ -41,16 +41,13 @@ cocobot_asserv_state_t cocobot_asserv_get_state(void);
 
 /* Handle console user command related to asserv module
  * Argument:
- *  - command: requested command
- * Return:
- *  0 : if command is not reconized
- *  1 : if command has been successfully handled
+ *  - pid: requested command identifier
  */
-int cocobot_asserv_handle_console(char * command);
+void cocobot_asserv_com_handler(uint16_t pid);
 
-/* Send asynchronously debug informations if user has requested them
+/* Send asynchronously debug informations
  */
-void cocobot_asserv_handle_async_console(void);
+void cocobot_asserv_handle_async_com(void);
 
 /* Get the linear speed of the robot (assumpe acceleration is inifite)
  * Return:

@@ -4,7 +4,6 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include "strat_easy_dune.h"
-#include "meca_crimp.h"
 
 static float strat_easy_dune_get_x(void)
 {

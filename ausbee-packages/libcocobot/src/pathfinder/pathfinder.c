@@ -11,7 +11,7 @@ static opponent_table_s opponent_robot;
 
 uint16_t cocobot_pathfinder_get_trajectory_time(int16_t starting_point_x, int16_t starting_point_y, int16_t target_point_x, int16_t target_point_y)
 {
-    cocobot_console_send_asynchronous("PATHFINDER", "Get trajectory time started");
+    cocobot_com_printf("PATHFINDER: Get trajectory time started");
     
     cocobot_pathfinder_reset_table(g_table);
 
@@ -21,7 +21,7 @@ uint16_t cocobot_pathfinder_get_trajectory_time(int16_t starting_point_x, int16_
     cocobot_node_s* target_node = &g_table[(target_point_x + (TABLE_LENGTH / 2))/GRID_SIZE][(target_point_y - (TABLE_WIDTH / 2))/GRID_SIZE];
     if(((target_node->nodeType & OBSTACLE) == OBSTACLE) || ((target_node->nodeType & SOFT_OBSTACLE) == SOFT_OBSTACLE) || ((target_node->nodeType & FORBIDDEN) == FORBIDDEN))
     {
-        cocobot_console_send_asynchronous("PATHFINDER", "Target not reachable");
+        cocobot_com_printf("PATHFINDER: Target not reachable");
         return 0;
     }
     cocobot_pathfinder_set_target_node(target_node);
@@ -59,7 +59,7 @@ uint16_t cocobot_pathfinder_get_trajectory_time(int16_t starting_point_x, int16_
         }
         else
         {
-            cocobot_console_send_asynchronous("PATHFINDER", "No solution");
+            cocobot_com_printf("PATHFINDER: No solution");
             return 0;
         }
     }
@@ -69,7 +69,7 @@ uint16_t cocobot_pathfinder_get_trajectory_time(int16_t starting_point_x, int16_
 
 char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t starting_point_y, int16_t target_point_x, int16_t target_point_y)
 {
-    cocobot_console_send_asynchronous("PATHFINDER", "execute trajectory started");
+    cocobot_com_printf("PATHFINDER: execute trajectory started");
     
     cocobot_pathfinder_reset_table(g_table);
 
@@ -80,7 +80,7 @@ char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t sta
     cocobot_node_s* target_node = &g_table[(target_point_x + (TABLE_LENGTH / 2))/GRID_SIZE][((TABLE_WIDTH / 2) - target_point_y)/GRID_SIZE];
     if(((target_node->nodeType & OBSTACLE) == OBSTACLE) || ((target_node->nodeType & SOFT_OBSTACLE) == SOFT_OBSTACLE) || ((target_node->nodeType & FORBIDDEN) == FORBIDDEN))
     {
-        cocobot_console_send_asynchronous("PATHFINDER", "Target not reachable");
+        cocobot_com_printf("PATHFINDER: Target not reachable");
         return DESTINATION_NOT_AVAILABLE;
     }
     cocobot_pathfinder_set_target_node(target_node);
@@ -121,14 +121,14 @@ char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t sta
         }
         else
         {
-            cocobot_console_send_asynchronous("PATHFINDER", "No solution");
+            cocobot_com_printf("PATHFINDER: No solution");
             return NO_ROUTE_TO_TARGET;
         }
     }
     cocobot_pathfinder_get_path(&current_node, g_table, &final_traj);
     for(int i = 0; i < final_traj.nbr_points; i++)
     {
-        cocobot_console_send_asynchronous("REAL_PATH", "x: %d, y:%d", final_traj.trajectory[i].x, final_traj.trajectory[i].y);
+        cocobot_com_printf("REAL_PATH x: %d, y:%d", final_traj.trajectory[i].x, final_traj.trajectory[i].y);
     }
     
     cocobot_pathfinder_set_trajectory(&final_traj);

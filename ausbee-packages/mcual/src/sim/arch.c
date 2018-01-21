@@ -14,6 +14,7 @@
 #include <time.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <netinet/tcp.h>
 
 #define PERIPHERAL_TCP_PORT 10000
 #define CLIENT_MAX          10
@@ -107,6 +108,13 @@ void mcual_arch_sim_handle_uart_peripheral_write(mcual_usart_id_t usart_id, uint
     perror("Unable to create client socket for peripheral");
     exit(1);
   }  
+
+  int flag = 1;
+  if(setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char *) &flag, sizeof(int)) < 0)
+  {
+    fprintf(stderr, "Unable to set TCP_NODELAY");
+    exit(1);
+  }
 
   struct hostent * hostinfo = gethostbyname(_ip);
   if (hostinfo == NULL)
