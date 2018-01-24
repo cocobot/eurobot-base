@@ -6,6 +6,7 @@
     "css-loader": "^0.28.8",
     "electron": "^1.7.9",
     "immutable": "^3.8.2",
+    "pegjs": "^0.10.0",
     "react-redux": "^5.0.6",
     "reactstrap": "^5.0.0-alpha.4",
     "redux": "^3.7.2",
