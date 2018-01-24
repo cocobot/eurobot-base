@@ -115,6 +115,8 @@ static cocobot_trajectory_xy_default_t xy_pref;
 
 static int enable_opponent_detection;
 
+static int trajectory_updated;
+
 static float cocobot_trajectory_find_best_angle(float current_angle, float angle)
 {
   //get modulo multiplier
@@ -711,12 +713,14 @@ void cocobot_trajectory_task(void * arg)
         xSemaphoreTake(mutex, portMAX_DELAY);
         order_list_read = (order_list_read + 1) % TRAJECTORY_MAX_ORDER;
         xSemaphoreGive(mutex);
+      trajectory_updated = 1;
       }
     }
     else if(result == COCOBOT_TRAJECTORY_RUNNING)
     {
       result = COCOBOT_TRAJECTORY_SUCCESS;
       xEventGroupSetBits(no_more_orders, BIT_0);
+      trajectory_updated = 1;
     }
 
     //wait 100ms
@@ -743,6 +747,8 @@ void cocobot_trajectory_init(unsigned int task_priority)
 
   //init handle generator
   last_handle = 0;
+
+  trajectory_updated = 0;
 
   //start task
   xTaskCreate(cocobot_trajectory_task, "trajectory", 200, NULL, task_priority, NULL);
@@ -780,6 +786,8 @@ void cocobot_add_new_order(cocobot_trajectory_order_t * order)
 
   xSemaphoreGive(mutex);
   xEventGroupClearBits(no_more_orders, BIT_0);
+
+  trajectory_updated = 1;
 }
 
 cocobot_trajectory_handle_t cocobot_trajectory_goto_d(float distance, float time)
@@ -913,6 +921,23 @@ cocobot_trajectory_result_t cocobot_trajectory_wait(void)
 void cocobot_trajetory_set_xy_default(cocobot_trajectory_xy_default_t pref)
 {
   xy_pref = pref;
+}
+
+void cocobot_trajectory_handle_async_com(void)
+{
+  if(trajectory_updated)
+  {
+    trajectory_updated = 0;
+    cocobot_com_send(COCOBOT_COM_TRAJECTORY_DEBUG_PID,
+     "[B]",
+     (uint8_t *)order_list,                     //array ptr
+     sizeof(order_list[0]),                     //array elm size 
+     sizeof(order_list)/sizeof(order_list[0]),  //array size 
+     order_list_read,                           //array start
+     order_list_write,                          //array end
+     offsetof(cocobot_trajectory_order_t, type)
+    );
+  }
 }
 
 /*

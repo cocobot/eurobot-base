@@ -152,4 +152,6 @@ void cocobot_trajetory_set_xy_default(cocobot_trajectory_xy_default_t pref);
 
 void cocobot_trajectory_set_opponent_detection(int enable);
 
+void cocobot_trajectory_handle_async_com(void);
+
 #endif// COCOBOT_TRAJECTORY_H

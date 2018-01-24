@@ -9,6 +9,7 @@ const AST = {};
 DECODERS[0x8000] = "{position}F(x)F(y)F(angle)"
 DECODERS[0x8001] = "{asserv_dist}F(target)F(distance)F(ramp_out)F(speed_target)F(speed)F(pid_out)F(pid_P)F(pid_I)F(pid_d)"
 DECODERS[0x8002] = "{asserv_angle}F(target)F(angle)F(ramp_out)F(speed_target)F(speed)F(pid_out)F(pid_P)F(pid_I)F(pid_d)"
+DECODERS[0x8003] = "{trajecotry}[B(type)]"
 
 class Client {
   constructor(protocol, socket) {
@@ -117,7 +118,8 @@ class Client {
   _parse(pkt) {
     const decoder = AST[pkt.pid];
     if(decoder == null) {
-      console.log("Unable to decode:" + pkt);
+      console.log("Unable to decode:");
+      console.log(pkt);
     }
     else {
       try {
