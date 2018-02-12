@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "cocobot/pathfinder_internal.h"
-#include "cocobot/pathfinder_table.h"
+#include "cocobot/pathfinder_table_utils.h"
 
 static cocobot_node_s g_table[TABLE_LENGTH/GRID_SIZE][TABLE_WIDTH/GRID_SIZE];
 static cocobot_list_s open_list;
