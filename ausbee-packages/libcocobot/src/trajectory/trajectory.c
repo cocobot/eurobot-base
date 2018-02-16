@@ -929,6 +929,7 @@ void cocobot_trajectory_handle_async_com(void)
   if(trajectory_updated)
   {
     trajectory_updated = 0;
+    xSemaphoreTake(mutex, portMAX_DELAY);
     cocobot_com_send(COCOBOT_COM_TRAJECTORY_DEBUG_PID,
      "[BFFFFFFFFFFFF]",
      (uint8_t *)order_list,                     //array ptr
@@ -950,75 +951,9 @@ void cocobot_trajectory_handle_async_com(void)
      offsetof(cocobot_trajectory_order_t, estimated_end.angle),
      offsetof(cocobot_trajectory_order_t, estimated_distance_before_stop)
     );
-  }
-}
-
-/*
-int cocobot_trajectory_handle_console(char * command)
-{
-  if(strcmp(command,"trajectory_list") == 0)
-  {
-    xSemaphoreTake(mutex, portMAX_DELAY);
-    int opost = order_list_read;
     xSemaphoreGive(mutex);
-    while(1)
-    {
-      cocobot_trajectory_order_t * order = NULL;
-
-      xSemaphoreTake(mutex, portMAX_DELAY);
-      if(opost != (int)order_list_write)
-      {
-        order = &order_list[opost];
-      }
-      xSemaphoreGive(mutex);
-
-      if(order == NULL)
-      {
-        break;
-      }
-
-      int flags = 0;
-
-      if(order->estimated_distance_before_stop > 0)
-      {
-        flags |= TRAJECTORY_FLAG_SLOW_DOWN;
-      }
-
-      switch(order->type)
-      {
-        case COCOBOT_TRAJECTORY_GOTO_D:
-          cocobot_console_send_answer("D,%d,%.3f,%.3f", flags, (double)order->time, (double)order->d_order.distance);
-          break;
-
-        case COCOBOT_TRAJECTORY_GOTO_A:
-          cocobot_console_send_answer("A,%d,%.3f,%.3f", flags, (double)order->time, (double)order->a_order.angle);
-          break;
-
-        case COCOBOT_TRAJECTORY_GOTO_XY:
-          cocobot_console_send_answer("XY,%d,%.3f,%.3f,%.3f", flags, (double)order->time, (double)order->xy_order.x, (double)order->xy_order.y);
-          break;
-
-        case COCOBOT_TRAJECTORY_GOTO_XY_BACKWARD:
-          cocobot_console_send_answer("XY BACKWARD,%d,%.3f,%.3f,%.3f", flags, (double)order->time, (double)order->xy_order.x, (double)order->xy_order.y);
-          break;
-
-
-
-        default:
-          cocobot_console_send_answer("?");
-          break;
-      }
-      cocobot_console_send_answer("%.3f,%.3f,%.3f", (double)order->estimated_start.x, (double)order->estimated_start.y, (double)order->estimated_start.angle);
-      cocobot_console_send_answer("%.3f,%.3f,%.3f", (double)order->estimated_end.x, (double)order->estimated_end.y, (double)order->estimated_end.angle);
-
-      opost = (opost + 1) % TRAJECTORY_MAX_ORDER;
-    }
-    return 1;
   }
-
-  return 0;
 }
-*/
 
 void cocobot_trajectory_set_opponent_detection(int enable)
 {
