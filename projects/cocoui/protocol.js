@@ -10,7 +10,7 @@ let AST = null;
 DECODERS[0x8000] = "{position}F(x)F(y)F(angle)"
 DECODERS[0x8001] = "{asserv_dist}F(target)F(distance)F(ramp_out)F(speed_target)F(speed)F(pid_out)F(pid_P)F(pid_I)F(pid_d)"
 DECODERS[0x8002] = "{asserv_angle}F(target)F(angle)F(ramp_out)F(speed_target)F(speed)F(pid_out)F(pid_P)F(pid_I)F(pid_d)"
-DECODERS[0x8003] = "{trajectory_orders}[B(type)](orders)"
+DECODERS[0x8003] = "{trajectory_orders}[B(type)F(time)F(a1)F(a2)F(a3)F(a4)F(start_x)F(start_y)F(start_angle)F(end_x)F(end_y)F(end_angle)F(estimated_distance_before_stop)](orders)"
 
 
 const GRAMMAR = `
@@ -39,7 +39,7 @@ expr
  / value:reader '(' id:identifier ')'{ return () => { const obj = {}; obj[id] = value(); return obj }}
 
 identifier
- = id:[a-zA-Z_]+ { return id.join("") };
+ = id:[a-zA-Z0-9_]+ { return id.join("") };
 
 reader
  = Freader
@@ -168,8 +168,10 @@ class Client {
         AST.__pkt = pkt;
         const run = AST.parse(decoder);
         pkt.decoded = {};
+        pkt.offset = 0;
         run();
         
+        console.log(pkt.decoded);
         this._emit(pkt.decoded);
       }
       catch(e) {

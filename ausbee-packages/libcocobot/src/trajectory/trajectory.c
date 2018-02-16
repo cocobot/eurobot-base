@@ -634,6 +634,7 @@ void cocobot_trajectory_task(void * arg)
     if(estimations_need_recompute)
     {
       cocobot_trajectory_compute_estimations();
+      trajectory_updated = 1;
       estimations_need_recompute = 0;
     }
 
@@ -929,13 +930,25 @@ void cocobot_trajectory_handle_async_com(void)
   {
     trajectory_updated = 0;
     cocobot_com_send(COCOBOT_COM_TRAJECTORY_DEBUG_PID,
-     "[B]",
+     "[BFFFFFFFFFFFF]",
      (uint8_t *)order_list,                     //array ptr
      sizeof(order_list[0]),                     //array elm size 
      sizeof(order_list)/sizeof(order_list[0]),  //array size 
      order_list_read,                           //array start
      order_list_write,                          //array end
-     offsetof(cocobot_trajectory_order_t, type)
+     offsetof(cocobot_trajectory_order_t, type),
+     offsetof(cocobot_trajectory_order_t, time),
+     offsetof(cocobot_trajectory_order_t, circle_order.xc),
+     offsetof(cocobot_trajectory_order_t, circle_order.yc),
+     offsetof(cocobot_trajectory_order_t, circle_order.xe),
+     offsetof(cocobot_trajectory_order_t, circle_order.ye),
+     offsetof(cocobot_trajectory_order_t, estimated_start.x),
+     offsetof(cocobot_trajectory_order_t, estimated_start.y),
+     offsetof(cocobot_trajectory_order_t, estimated_start.angle),
+     offsetof(cocobot_trajectory_order_t, estimated_end.x),
+     offsetof(cocobot_trajectory_order_t, estimated_end.y),
+     offsetof(cocobot_trajectory_order_t, estimated_end.angle),
+     offsetof(cocobot_trajectory_order_t, estimated_distance_before_stop)
     );
   }
 }

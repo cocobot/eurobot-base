@@ -8,6 +8,7 @@ import {
 import Field from './Field';
 import Robots from './Robots';
 import Eurobot2018 from './Fields/Eurobot2018';
+import TrajectoryOrders from './TrajectoryOrders';
 
 class Position extends React.Component {
   render() {
@@ -41,7 +42,7 @@ class Position extends React.Component {
                   </Field>
                 </Col>
                 <Col xs="4">
-                  Trajectory
+                  <TrajectoryOrders />
                 </Col>
               </Row>
             </CardBody>

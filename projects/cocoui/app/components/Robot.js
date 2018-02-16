@@ -49,9 +49,9 @@ class RobotComponent extends React.Component {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    x: state.robots.getIn([ownProps.cid, 'x']),
-    y: state.robots.getIn([ownProps.cid, 'y']),
-    angle: state.robots.getIn([ownProps.cid, 'angle']),
+    x: state.robots.getIn([ownProps.cid, 'position', 'x']),
+    y: state.robots.getIn([ownProps.cid, 'position', 'y']),
+    angle: state.robots.getIn([ownProps.cid, 'position', 'angle']),
   }
 }
 

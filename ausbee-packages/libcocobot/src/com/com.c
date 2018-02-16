@@ -31,8 +31,8 @@ void cocobot_com_async_thread(void *arg)
   while(pdTRUE)
   {
     //send debug information if needed
-    //   cocobot_position_handle_async_com();
-    //   cocobot_asserv_handle_async_com();
+    cocobot_position_handle_async_com();
+    cocobot_asserv_handle_async_com();
     cocobot_trajectory_handle_async_com();
 
     //wait 100ms (minus time used by previous handler)

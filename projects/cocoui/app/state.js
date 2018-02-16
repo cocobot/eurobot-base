@@ -1,6 +1,6 @@
 import electron from 'electron';
 import {saveRobotPacket} from './actions';
-import {robots, conns } from './reducers';
+import {robots, conns, win } from './reducers';
 import {createStore, combineReducers} from 'redux';
 
 class State {
@@ -8,6 +8,7 @@ class State {
     this._store = createStore(
       combineReducers({
         robots: robots,
+        win: win,
         conns: conns,
       })
     );
