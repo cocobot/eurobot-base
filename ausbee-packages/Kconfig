@@ -10,6 +10,10 @@ config LIBCOCOBOT
 
 source "$AUSBEE_CUSTOM_PACKAGES_PATH/libcocobot/Kconfig"
 
+config VL53L0X
+  bool "vl53l0x"
+  default n
+
 config VREP
   bool "V-Rep"
   default n
