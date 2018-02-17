@@ -483,6 +483,8 @@ uint32_t VL53L0X_calc_macro_period_ps(VL53L0X_DEV Dev, uint8_t vcsel_period_pclk
 
 	LOG_FUNCTION_START("");
 
+  (void)Dev; //<< cocobot fix for -Wunused
+
 	/* The above calculation will produce rounding errors,
 	   therefore set fixed value
 	*/

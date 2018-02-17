@@ -231,6 +231,8 @@ VL53L0X_Error VL53L0X_GetPowerMode(VL53L0X_DEV Dev, VL53L0X_PowerModes *pPowerMo
 	uint8_t Byte;
 	LOG_FUNCTION_START("");
 
+  (void)pPowerMode; //<< cocobot fix for -Wunused
+
 	/* Only level1 of Power mode exists */
 	Status = VL53L0X_RdByte(Dev, 0x80, &Byte);
 
@@ -315,6 +317,8 @@ VL53L0X_Error VL53L0X_SetGroupParamHold(VL53L0X_DEV Dev, uint8_t GroupParamHold)
 	LOG_FUNCTION_START("");
 
 	/* not implemented on VL53L0X */
+  (void)Dev; //<< cocobot fix for -Wunused
+  (void)GroupParamHold; //<< cocobot fix for -Wunused
 
 	LOG_FUNCTION_END(Status);
 	return Status;
@@ -327,6 +331,8 @@ VL53L0X_Error VL53L0X_GetUpperLimitMilliMeter(VL53L0X_DEV Dev,
 	LOG_FUNCTION_START("");
 
 	/* not implemented on VL53L0X */
+  (void)Dev; //<< cocobot fix for -Wunused
+  (void)pUpperLimitMilliMeter; //<< cocobot fix for -Wunused
 
 	LOG_FUNCTION_END(Status);
 	return Status;
@@ -732,6 +738,7 @@ VL53L0X_Error VL53L0X_WaitDeviceBooted(VL53L0X_DEV Dev)
 	LOG_FUNCTION_START("");
 
 	/* not implemented on VL53L0X */
+  (void)Dev; //<< cocobot fix for -Wunused
 
 	LOG_FUNCTION_END(Status);
 	return Status;
@@ -969,6 +976,8 @@ VL53L0X_Error VL53L0X_SetHistogramMode(VL53L0X_DEV Dev,
 	LOG_FUNCTION_START("");
 
 	/* not implemented on VL53L0X */
+  (void)Dev; //<< cocobot fix for -Wunused
+  (void)HistogramMode; //<< cocobot fix for -Wunused
 
 	LOG_FUNCTION_END(Status);
 	return Status;
@@ -981,6 +990,8 @@ VL53L0X_Error VL53L0X_GetHistogramMode(VL53L0X_DEV Dev,
 	LOG_FUNCTION_START("");
 
 	/* not implemented on VL53L0X */
+  (void)Dev; //<< cocobot fix for -Wunused
+  (void)pHistogramMode; //<< cocobot fix for -Wunused
 
 	LOG_FUNCTION_END(Status);
 	return Status;
@@ -1135,6 +1146,7 @@ VL53L0X_Error sequence_step_enabled(VL53L0X_DEV Dev,
 	VL53L0X_Error Status = VL53L0X_ERROR_NONE;
 	*pSequenceStepEnabled = 0;
 	LOG_FUNCTION_START("");
+  (void)Dev; //<< cocobot fix for -Wunused
 
 	switch (SequenceStepId) {
 	case VL53L0X_SEQUENCESTEP_TCC:
@@ -1224,6 +1236,8 @@ VL53L0X_Error VL53L0X_GetNumberOfSequenceSteps(VL53L0X_DEV Dev,
 {
 	VL53L0X_Error Status = VL53L0X_ERROR_NONE;
 	LOG_FUNCTION_START("");
+  (void)Dev;
+  (void)pNumberOfSequenceSteps;
 
 	*pNumberOfSequenceSteps = VL53L0X_SEQUENCESTEP_NUMBER_OF_CHECKS;
 
@@ -2099,6 +2113,8 @@ VL53L0X_Error VL53L0X_PerformSingleHistogramMeasurement(VL53L0X_DEV Dev,
 	LOG_FUNCTION_START("");
 
 	/* not implemented on VL53L0X */
+  (void)Dev; //<< cocobot fix for -Wunused
+  (void)pHistogramMeasurementData; //<< cocobot fix for -Wunused
 
 	LOG_FUNCTION_END(Status);
 	return Status;
@@ -2125,6 +2141,10 @@ VL53L0X_Error VL53L0X_PerformXTalkMeasurement(VL53L0X_DEV Dev,
 	LOG_FUNCTION_START("");
 
 	/* not implemented on VL53L0X */
+  (void)Dev;
+  (void)TimeoutMs;
+  (void)pXtalkPerSpad;
+  (void)pAmbientTooHigh;
 
 	LOG_FUNCTION_END(Status);
 	return Status;
@@ -2355,6 +2375,8 @@ VL53L0X_Error VL53L0X_WaitDeviceReadyForNewMeasurement(VL53L0X_DEV Dev,
 	LOG_FUNCTION_START("");
 
 	/* not implemented for VL53L0X */
+  (void)Dev; //<< cocobot fix for -Wunused
+  (void)MaxLoop; //<< cocobot fix for -Wunused
 
 	LOG_FUNCTION_END(Status);
 	return Status;
@@ -2541,6 +2563,8 @@ VL53L0X_Error VL53L0X_GetHistogramMeasurementData(VL53L0X_DEV Dev,
 {
 	VL53L0X_Error Status = VL53L0X_ERROR_NOT_IMPLEMENTED;
 	LOG_FUNCTION_START("");
+  (void)Dev; //<< cocobot fix for -Wunused
+  (void)pHistogramMeasurementData; //<< cocobot fix for -Wunused
 
 	LOG_FUNCTION_END(Status);
 	return Status;
@@ -2578,6 +2602,7 @@ VL53L0X_Error VL53L0X_SetNumberOfROIZones(VL53L0X_DEV Dev,
 	uint8_t NumberOfROIZones)
 {
 	VL53L0X_Error Status = VL53L0X_ERROR_NONE;
+  (void)Dev; //<< cocobot fix for -Wunused
 
 	LOG_FUNCTION_START("");
 
@@ -2593,6 +2618,7 @@ VL53L0X_Error VL53L0X_GetNumberOfROIZones(VL53L0X_DEV Dev,
 	uint8_t *pNumberOfROIZones)
 {
 	VL53L0X_Error Status = VL53L0X_ERROR_NONE;
+  (void)Dev; //<< cocobot fix for -Wunused
 
 	LOG_FUNCTION_START("");
 
@@ -2606,6 +2632,7 @@ VL53L0X_Error VL53L0X_GetMaxNumberOfROIZones(VL53L0X_DEV Dev,
 	uint8_t *pMaxNumberOfROIZones)
 {
 	VL53L0X_Error Status = VL53L0X_ERROR_NONE;
+  (void)Dev; //<< cocobot fix for -Wunused
 
 	LOG_FUNCTION_START("");
 
@@ -2792,6 +2819,8 @@ VL53L0X_Error VL53L0X_SetInterruptThresholds(VL53L0X_DEV Dev,
 	LOG_FUNCTION_START("");
 
 	/* no dependency on DeviceMode for Ewok */
+  (void)DeviceMode; //<< cocobot fix for -Wunused
+
 	/* Need to divide by 2 because the FW will apply a x2 */
 	Threshold16 = (uint16_t)((ThresholdLow >> 17) & 0x00fff);
 	Status = VL53L0X_WrWord(Dev, VL53L0X_REG_SYSTEM_THRESH_LOW, Threshold16);
@@ -2816,6 +2845,7 @@ VL53L0X_Error VL53L0X_GetInterruptThresholds(VL53L0X_DEV Dev,
 	LOG_FUNCTION_START("");
 
 	/* no dependency on DeviceMode for Ewok */
+  (void)DeviceMode; //<< cocobot fix for -Wunused
 
 	Status = VL53L0X_RdWord(Dev, VL53L0X_REG_SYSTEM_THRESH_LOW, &Threshold16);
 	/* Need to multiply by 2 because the FW will apply a x2 */
@@ -2873,6 +2903,8 @@ VL53L0X_Error VL53L0X_ClearInterruptMask(VL53L0X_DEV Dev, uint32_t InterruptMask
 	uint8_t Byte;
 	LOG_FUNCTION_START("");
 
+  (void)InterruptMask; //<< cocobot fix for -Wunused
+
 	/* clear bit 0 range interrupt, bit 1 error interrupt */
 	LoopCount = 0;
 	do {
@@ -2918,6 +2950,8 @@ VL53L0X_Error VL53L0X_EnableInterruptMask(VL53L0X_DEV Dev, uint32_t InterruptMas
 	LOG_FUNCTION_START("");
 
 	/* not implemented for VL53L0X */
+  (void)Dev; //<< cocobot fix for -Wunused
+  (void)InterruptMask; //<< cocobot fix for -Wunused
 
 	LOG_FUNCTION_END(Status);
 	return Status;
