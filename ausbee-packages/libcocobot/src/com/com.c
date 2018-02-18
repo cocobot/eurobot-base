@@ -34,6 +34,7 @@ void cocobot_com_async_thread(void *arg)
     cocobot_position_handle_async_com();
     cocobot_asserv_handle_async_com();
     cocobot_trajectory_handle_async_com();
+    cocobot_pathfinder_handle_async_com();
 
     //wait 100ms (minus time used by previous handler)
     vTaskDelayUntil( &xLastWakeTime, 100 / portTICK_PERIOD_MS);
@@ -102,6 +103,20 @@ static int cocobot_com_compute_len(char ** fmt, va_list ap, uint32_t nested)
       case 'B':
         {
           size += 1;
+          if(nested)
+          {
+            va_arg(ap, size_t); //offsetof
+          }
+          else
+          {
+            va_arg(ap, int);
+          }
+        }
+        break;
+
+      case 'H':
+        {
+          size += 2;
           if(nested)
           {
             va_arg(ap, size_t); //offsetof
@@ -206,6 +221,33 @@ static uint16_t cocobot_com_send_data(char ** fmt, va_list ap, uint16_t crc, uin
         }
         break;
 
+      case 'H':
+        {
+          unsigned int v = 0;
+          if(ptr == NULL)
+          {
+            v = va_arg(ap, int);
+          }
+          else
+          {
+            uint8_t * p = (uint8_t *)&v;
+            int offset = va_arg(ap, size_t); //offsetof
+            if(ptr == INVALID_PTR)
+            {
+              continue;
+            }
+            p[0] = ptr[offset + 0];
+            p[1] = ptr[offset + 1];
+          }
+
+          uint8_t * p = (uint8_t *)&v;
+          mcual_usart_send(_usart, *(p + 0));
+          crc = cocobot_com_crc16_update(crc, *(p + 0));
+          mcual_usart_send(_usart, *(p + 1));
+          crc = cocobot_com_crc16_update(crc, *(p + 1));
+        }
+        break;
+
       case ']':
         return crc;
         break;
@@ -289,32 +331,6 @@ void cocobot_com_send(uint16_t pid, char * fmt, ...)
   pfmt = fmt;
   crc = cocobot_com_send_data(&pfmt, ap, crc, 0);
   va_end(ap);
-
-  //for(i = 0; i < strlen(fmt); i += 1)
-  //{
-  //  switch(fmt[i])
-  //  {
-  //    case 'H':
-  //      {
-  //        uint16_t v = va_arg(ap, unsigned int) & 0xFFFF;
-  //        uint8_t * p = (uint8_t *)&v;
-  //        mcual_usart_send(_usart, *(p + 0));
-  //        mcual_usart_send(_usart, *(p + 1));
-  //      }
-  //      break;
-
-  //    case 'F':
-  //      {
-  //        float v = va_arg(ap, double);
-  //        uint8_t * p = (uint8_t *)&v;
-  //        mcual_usart_send(_usart, *(p + 0));
-  //        mcual_usart_send(_usart, *(p + 1));
-  //        mcual_usart_send(_usart, *(p + 2));
-  //        mcual_usart_send(_usart, *(p + 3));
-  //      }
-  //      break;
-  //  }
-  //}
 
   crc = 0x4242;
   mcual_usart_send(_usart, crc & 0xFF);

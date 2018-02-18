@@ -1,7 +1,6 @@
 #include <cocobot.h>
 #include <FreeRTOS.h>
 #include <task.h>
-#include <stdio.h>
 #include <math.h>
 
 #define SCHEDULER_MAX_ACTIONS 32

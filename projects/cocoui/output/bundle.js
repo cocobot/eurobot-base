@@ -30797,7 +30797,6 @@ var RobotComponent = function (_React$Component) {
       var pathd = null;
       for (var i = 0; i < this.props.orders.length; i += 1) {
         var o = this.props.orders[i];
-        console.log(o);
         if (o.end_x == Math.Nan) {
           continue;
         }
@@ -30805,7 +30804,6 @@ var RobotComponent = function (_React$Component) {
           pathd = "M" + o.start_x + " " + o.start_y;
         }
         pathd += " L" + o.end_x + " " + o.end_y;
-        console.log(pathd);
 
         var generateTurnPath = function generateTurnPath(x, y, start, end, key) {
           x = parseFloat(x);
@@ -30851,7 +30849,6 @@ var RobotComponent = function (_React$Component) {
         }
       }
       paths.push(_react2.default.createElement('path', { key: paths.length, d: pathd, strokeWidth: '8', stroke: '#FF0000', fill: 'rgba(0, 0, 0, 0)' }));
-      console.log(pathd);
 
       var position = "translate(" + this.props.x + "," + this.props.y + ") rotate(" + this.props.angle + ")";
       return _react2.default.createElement(
@@ -30908,6 +30905,10 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
+var _Pathfinder = __webpack_require__(96);
+
+var _Pathfinder2 = _interopRequireDefault(_Pathfinder);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -30933,12 +30934,12 @@ var Eurobot2018Cube = function (_React$Component) {
   }
 
   _createClass(Eurobot2018Cube, [{
-    key: "render",
+    key: 'render',
     value: function render() {
       return _react2.default.createElement(
-        "g",
+        'g',
         null,
-        _react2.default.createElement("rect", { height: "58", width: "58", x: "-29", y: "-29", fill: this.props.color, strokeWidth: "2", stroke: "#000000" })
+        _react2.default.createElement('rect', { height: '58', width: '58', x: '-29', y: '-29', fill: this.props.color, strokeWidth: '2', stroke: '#000000' })
       );
     }
   }]);
@@ -30956,7 +30957,7 @@ var Eurobot2018CubeGroup = function (_React$Component2) {
   }
 
   _createClass(Eurobot2018CubeGroup, [{
-    key: "_getTranslation",
+    key: '_getTranslation',
     value: function _getTranslation() {
       var x = 0;
       var y = 0;
@@ -30994,38 +30995,38 @@ var Eurobot2018CubeGroup = function (_React$Component2) {
       return "translate(" + x + "," + y + ")";
     }
   }, {
-    key: "render",
+    key: 'render',
     value: function render() {
       return _react2.default.createElement(
-        "g",
+        'g',
         { transform: this._getTranslation() },
         _react2.default.createElement(
-          "g",
-          { transform: "translate(58, 0)" },
+          'g',
+          { transform: 'translate(58, 0)' },
           _react2.default.createElement(Eurobot2018Cube, { color: cSignalOrange })
         ),
         _react2.default.createElement(
-          "g",
-          { transform: "translate(-58, 0)" },
+          'g',
+          { transform: 'translate(-58, 0)' },
           _react2.default.createElement(Eurobot2018Cube, { color: cYellowGreen })
         ),
         _react2.default.createElement(
-          "g",
-          { transform: "translate(0, 58)" },
+          'g',
+          { transform: 'translate(0, 58)' },
           _react2.default.createElement(Eurobot2018Cube, { color: cSignalBlue })
         ),
         _react2.default.createElement(
-          "g",
-          { transform: "translate(0, -58)" },
+          'g',
+          { transform: 'translate(0, -58)' },
           _react2.default.createElement(Eurobot2018Cube, { color: cBlack })
         ),
         _react2.default.createElement(Eurobot2018Cube, { color: cSignalYellow }),
         _react2.default.createElement(
-          "text",
-          { fontSize: "60", y: "5", x: "0" },
+          'text',
+          { fontSize: '60', y: '5', x: '0' },
           _react2.default.createElement(
-            "tspan",
-            { textAnchor: "middle", alignmentBaseline: "middle" },
+            'tspan',
+            { textAnchor: 'middle', alignmentBaseline: 'middle' },
             this.props.id
           )
         )
@@ -31046,7 +31047,7 @@ var Eurobot2018BallFeeder = function (_React$Component3) {
   }
 
   _createClass(Eurobot2018BallFeeder, [{
-    key: "render",
+    key: 'render',
     value: function render() {
       var x = 0;
       var y = 0;
@@ -31092,21 +31093,21 @@ var Eurobot2018BallFeeder = function (_React$Component3) {
           break;
       }
       return _react2.default.createElement(
-        "g",
+        'g',
         { transform: "translate(" + x + ", " + y + ") rotate(" + a + ")" },
         _react2.default.createElement(
-          "linearGradient",
-          { id: "ball" + this.props.id, x1: "0", x2: "0", y1: "0", y2: "1" },
-          _react2.default.createElement("stop", { offset: "0%", stopColor: ball1Color }),
-          _react2.default.createElement("stop", { offset: "50%", stopColor: ball1Color }),
-          _react2.default.createElement("stop", { offset: "50%", stopColor: ball2Color }),
-          _react2.default.createElement("stop", { offset: "100%", stopColor: ball2Color })
+          'linearGradient',
+          { id: "ball" + this.props.id, x1: '0', x2: '0', y1: '0', y2: '1' },
+          _react2.default.createElement('stop', { offset: '0%', stopColor: ball1Color }),
+          _react2.default.createElement('stop', { offset: '50%', stopColor: ball1Color }),
+          _react2.default.createElement('stop', { offset: '50%', stopColor: ball2Color }),
+          _react2.default.createElement('stop', { offset: '100%', stopColor: ball2Color })
         ),
-        _react2.default.createElement("rect", { height: "22", width: "89", x: "-22", y: "-11", fill: feederColor, strokeWidth: "2", stroke: "#000000" }),
-        _react2.default.createElement("circle", { r: "27", cx: "45", cy: "0", fill: feederColor, strokeWidth: "2", stroke: "#000000" }),
-        _react2.default.createElement("rect", { height: "54", width: "32.5", x: "12.5", y: "-27", fill: feederColor, strokeWidth: "2", stroke: feederColor }),
-        _react2.default.createElement("circle", { r: "27", cx: "12.5", cy: "0", fill: feederColor, strokeWidth: "2", stroke: "#000000" }),
-        _react2.default.createElement("circle", { r: "20", cx: "12.5", cy: "0", fill: "url(#ball" + this.props.id + ")", strokeWidth: "4", stroke: "#000000" })
+        _react2.default.createElement('rect', { height: '22', width: '89', x: '-22', y: '-11', fill: feederColor, strokeWidth: '2', stroke: '#000000' }),
+        _react2.default.createElement('circle', { r: '27', cx: '45', cy: '0', fill: feederColor, strokeWidth: '2', stroke: '#000000' }),
+        _react2.default.createElement('rect', { height: '54', width: '32.5', x: '12.5', y: '-27', fill: feederColor, strokeWidth: '2', stroke: feederColor }),
+        _react2.default.createElement('circle', { r: '27', cx: '12.5', cy: '0', fill: feederColor, strokeWidth: '2', stroke: '#000000' }),
+        _react2.default.createElement('circle', { r: '20', cx: '12.5', cy: '0', fill: "url(#ball" + this.props.id + ")", strokeWidth: '4', stroke: '#000000' })
       );
     }
   }]);
@@ -31124,105 +31125,106 @@ var Eurobot2018 = function (_React$Component4) {
   }
 
   _createClass(Eurobot2018, [{
-    key: "renderBorders",
+    key: 'renderBorders',
     value: function renderBorders() {
       var borders = [];
 
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "22", width: "3044", x: "-22", y: "-22", fill: cSilexGray, strokeWidth: "2", stroke: "#000000" }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '3044', x: '-22', y: '-22', fill: cSilexGray, strokeWidth: '2', stroke: '#000000' }));
 
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "2022", width: "22", x: "-22", y: "-22", fill: cSilexGray, strokeWidth: "2", stroke: "#000000" }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '2022', width: '22', x: '-22', y: '-22', fill: cSilexGray, strokeWidth: '2', stroke: '#000000' }));
 
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "2022", width: "22", x: "3000", y: "-22", fill: cSilexGray, strokeWidth: "2", stroke: "#000000" }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '2022', width: '22', x: '3000', y: '-22', fill: cSilexGray, strokeWidth: '2', stroke: '#000000' }));
 
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "22", width: "3044", x: "-22", y: "2000", fill: cSilexGray, strokeWidth: "2", stroke: "#000000" }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '3044', x: '-22', y: '2000', fill: cSilexGray, strokeWidth: '2', stroke: '#000000' }));
 
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "150", width: "22", x: "-44", y: "2000", fill: cSilexGray, strokeWidth: "2", stroke: "#000000" }));
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "150", width: "22", x: "3022", y: "2000", fill: cSilexGray, strokeWidth: "2", stroke: "#000000" }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '150', width: '22', x: '-44', y: '2000', fill: cSilexGray, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '150', width: '22', x: '3022', y: '2000', fill: cSilexGray, strokeWidth: '2', stroke: '#000000' }));
 
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "22", width: "30", x: "1240", y: "2128", fill: cSilexGray, strokeWidth: "2", stroke: "#000000" }));
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "22", width: "962", x: "278", y: "2128", fill: cSilexGray, strokeWidth: "2", stroke: "#000000" }));
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "22", width: "300", x: "-22", y: "2128", fill: cSilexGray, strokeWidth: "2", stroke: "#000000" }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '30', x: '1240', y: '2128', fill: cSilexGray, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '962', x: '278', y: '2128', fill: cSilexGray, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '300', x: '-22', y: '2128', fill: cSilexGray, strokeWidth: '2', stroke: '#000000' }));
 
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "22", width: "30", x: "1730", y: "2128", fill: cSilexGray, strokeWidth: "2", stroke: "#000000" }));
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "22", width: "962", x: "1760", y: "2128", fill: cSilexGray, strokeWidth: "2", stroke: "#000000" }));
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "22", width: "300", x: "2722", y: "2128", fill: cSilexGray, strokeWidth: "2", stroke: "#000000" }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '30', x: '1730', y: '2128', fill: cSilexGray, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '962', x: '1760', y: '2128', fill: cSilexGray, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '300', x: '2722', y: '2128', fill: cSilexGray, strokeWidth: '2', stroke: '#000000' }));
 
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "230", width: "22", x: "1270", y: "2022", fill: cYellowGreen, strokeWidth: "2", stroke: "#000000" }));
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "230", width: "22", x: "1478", y: "2022", fill: cYellowGreen, strokeWidth: "2", stroke: "#000000" }));
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "230", width: "22", x: "1500", y: "2022", fill: cSignalOrange, strokeWidth: "2", stroke: "#000000" }));
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "230", width: "22", x: "1708", y: "2022", fill: cSignalOrange, strokeWidth: "2", stroke: "#000000" }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '230', width: '22', x: '1270', y: '2022', fill: cYellowGreen, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '230', width: '22', x: '1478', y: '2022', fill: cYellowGreen, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '230', width: '22', x: '1500', y: '2022', fill: cSignalOrange, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '230', width: '22', x: '1708', y: '2022', fill: cSignalOrange, strokeWidth: '2', stroke: '#000000' }));
 
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "22", width: "186", x: "1292", y: "2230", fill: cYellowGreen, strokeWidth: "2", stroke: "#000000" }));
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "22", width: "186", x: "1522", y: "2230", fill: cSignalOrange, strokeWidth: "2", stroke: "#000000" }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '186', x: '1292', y: '2230', fill: cYellowGreen, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '186', x: '1522', y: '2230', fill: cSignalOrange, strokeWidth: '2', stroke: '#000000' }));
 
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "250", width: "1200", x: "900", y: "1750", fill: cSilexGray, strokeWidth: "2", stroke: "#000000" }));
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "250", width: "22", x: "1489", y: "1750", fill: cSilexGray, strokeWidth: "2", stroke: "#000000" }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '250', width: '1200', x: '900', y: '1750', fill: cSilexGray, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '250', width: '22', x: '1489', y: '1750', fill: cSilexGray, strokeWidth: '2', stroke: '#000000' }));
 
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "250", width: "12", x: "888", y: "1750", fill: cYellowGreen, strokeWidth: "2", stroke: "#000000" }));
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "22", width: "600", x: "900", y: "1750", fill: cYellowGreen, strokeWidth: "2", stroke: "#000000" }));
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "22", width: "600", x: "900", y: "1978", fill: cYellowGreen, strokeWidth: "2", stroke: "#000000" }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '250', width: '12', x: '888', y: '1750', fill: cYellowGreen, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '600', x: '900', y: '1750', fill: cYellowGreen, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '600', x: '900', y: '1978', fill: cYellowGreen, strokeWidth: '2', stroke: '#000000' }));
 
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "250", width: "12", x: "2100", y: "1750", fill: cSignalOrange, strokeWidth: "2", stroke: "#000000" }));
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "22", width: "600", x: "1500", y: "1750", fill: cSignalOrange, strokeWidth: "2", stroke: "#000000" }));
-      borders.push(_react2.default.createElement("rect", { key: borders.length, height: "22", width: "600", x: "1500", y: "1978", fill: cSignalOrange, strokeWidth: "2", stroke: "#000000" }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '250', width: '12', x: '2100', y: '1750', fill: cSignalOrange, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '600', x: '1500', y: '1750', fill: cSignalOrange, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '600', x: '1500', y: '1978', fill: cSignalOrange, strokeWidth: '2', stroke: '#000000' }));
 
       return borders;
     }
   }, {
-    key: "renderBoxes",
+    key: 'renderBoxes',
     value: function renderBoxes() {
       var boxes = [];
 
-      boxes.push(_react2.default.createElement("rect", { key: boxes.length, height: "370", width: "370", x: "-10", y: "-392", fill: cYellowGreen, strokeWidth: "2", stroke: "#000000" }));
-      boxes.push(_react2.default.createElement("rect", { key: boxes.length, height: "370", width: "10", x: "-10", y: "-392", fill: cYellowGreen, strokeWidth: "2", stroke: "#000000" }));
-      boxes.push(_react2.default.createElement("rect", { key: boxes.length, height: "10", width: "360", x: "-10", y: "-392", fill: cYellowGreen, strokeWidth: "2", stroke: "#000000" }));
-      boxes.push(_react2.default.createElement("rect", { key: boxes.length, height: "370", width: "10", x: "350", y: "-392", fill: cYellowGreen, strokeWidth: "2", stroke: "#000000" }));
-      boxes.push(_react2.default.createElement("rect", { key: boxes.length, height: "10", width: "360", x: "0", y: "-32", fill: cYellowGreen, strokeWidth: "2", stroke: "#000000" }));
-      boxes.push(_react2.default.createElement("rect", { key: boxes.length, height: "360", width: "22", x: "0", y: "-382", fill: cYellowGreen, strokeWidth: "2", stroke: "#000000" }));
-      boxes.push(_react2.default.createElement("rect", { key: boxes.length, height: "22", width: "328", x: "22", y: "-382", fill: cYellowGreen, strokeWidth: "2", stroke: "#000000" }));
+      boxes.push(_react2.default.createElement('rect', { key: boxes.length, height: '370', width: '370', x: '-10', y: '-392', fill: cYellowGreen, strokeWidth: '2', stroke: '#000000' }));
+      boxes.push(_react2.default.createElement('rect', { key: boxes.length, height: '370', width: '10', x: '-10', y: '-392', fill: cYellowGreen, strokeWidth: '2', stroke: '#000000' }));
+      boxes.push(_react2.default.createElement('rect', { key: boxes.length, height: '10', width: '360', x: '-10', y: '-392', fill: cYellowGreen, strokeWidth: '2', stroke: '#000000' }));
+      boxes.push(_react2.default.createElement('rect', { key: boxes.length, height: '370', width: '10', x: '350', y: '-392', fill: cYellowGreen, strokeWidth: '2', stroke: '#000000' }));
+      boxes.push(_react2.default.createElement('rect', { key: boxes.length, height: '10', width: '360', x: '0', y: '-32', fill: cYellowGreen, strokeWidth: '2', stroke: '#000000' }));
+      boxes.push(_react2.default.createElement('rect', { key: boxes.length, height: '360', width: '22', x: '0', y: '-382', fill: cYellowGreen, strokeWidth: '2', stroke: '#000000' }));
+      boxes.push(_react2.default.createElement('rect', { key: boxes.length, height: '22', width: '328', x: '22', y: '-382', fill: cYellowGreen, strokeWidth: '2', stroke: '#000000' }));
 
-      boxes.push(_react2.default.createElement("rect", { key: boxes.length, height: "370", width: "370", x: "2640", y: "-392", fill: cSignalOrange, strokeWidth: "2", stroke: "#000000" }));
-      boxes.push(_react2.default.createElement("rect", { key: boxes.length, height: "370", width: "10", x: "3000", y: "-392", fill: cSignalOrange, strokeWidth: "2", stroke: "#000000" }));
-      boxes.push(_react2.default.createElement("rect", { key: boxes.length, height: "10", width: "360", x: "2650", y: "-392", fill: cSignalOrange, strokeWidth: "2", stroke: "#000000" }));
-      boxes.push(_react2.default.createElement("rect", { key: boxes.length, height: "370", width: "10", x: "2640", y: "-392", fill: cSignalOrange, strokeWidth: "2", stroke: "#000000" }));
-      boxes.push(_react2.default.createElement("rect", { key: boxes.length, height: "10", width: "360", x: "2640", y: "-32", fill: cSignalOrange, strokeWidth: "2", stroke: "#000000" }));
-      boxes.push(_react2.default.createElement("rect", { key: boxes.length, height: "360", width: "22", x: "2978", y: "-382", fill: cSignalOrange, strokeWidth: "2", stroke: "#000000" }));
-      boxes.push(_react2.default.createElement("rect", { key: boxes.length, height: "22", width: "328", x: "2650", y: "-382", fill: cSignalOrange, strokeWidth: "2", stroke: "#000000" }));
+      boxes.push(_react2.default.createElement('rect', { key: boxes.length, height: '370', width: '370', x: '2640', y: '-392', fill: cSignalOrange, strokeWidth: '2', stroke: '#000000' }));
+      boxes.push(_react2.default.createElement('rect', { key: boxes.length, height: '370', width: '10', x: '3000', y: '-392', fill: cSignalOrange, strokeWidth: '2', stroke: '#000000' }));
+      boxes.push(_react2.default.createElement('rect', { key: boxes.length, height: '10', width: '360', x: '2650', y: '-392', fill: cSignalOrange, strokeWidth: '2', stroke: '#000000' }));
+      boxes.push(_react2.default.createElement('rect', { key: boxes.length, height: '370', width: '10', x: '2640', y: '-392', fill: cSignalOrange, strokeWidth: '2', stroke: '#000000' }));
+      boxes.push(_react2.default.createElement('rect', { key: boxes.length, height: '10', width: '360', x: '2640', y: '-32', fill: cSignalOrange, strokeWidth: '2', stroke: '#000000' }));
+      boxes.push(_react2.default.createElement('rect', { key: boxes.length, height: '360', width: '22', x: '2978', y: '-382', fill: cSignalOrange, strokeWidth: '2', stroke: '#000000' }));
+      boxes.push(_react2.default.createElement('rect', { key: boxes.length, height: '22', width: '328', x: '2650', y: '-382', fill: cSignalOrange, strokeWidth: '2', stroke: '#000000' }));
 
       return boxes;
     }
   }, {
-    key: "renderCenter",
+    key: 'renderCenter',
     value: function renderCenter() {
       var center = [];
 
-      center.push(_react2.default.createElement("rect", { key: center.length, height: "10", width: "200", x: "1400", y: "0", fill: "white", strokeWidth: "2", stroke: "#000000" }));
-      center.push(_react2.default.createElement("rect", { key: center.length, height: "10", width: "80", x: "1090", y: "0", fill: "white", strokeWidth: "2", stroke: "#000000" }));
-      center.push(_react2.default.createElement("rect", { key: center.length, height: "10", width: "80", x: "1830", y: "0", fill: "white", strokeWidth: "2", stroke: "#000000" }));
+      center.push(_react2.default.createElement('rect', { key: center.length, height: '10', width: '200', x: '1400', y: '0', fill: 'white', strokeWidth: '2', stroke: '#000000' }));
+      center.push(_react2.default.createElement('rect', { key: center.length, height: '10', width: '80', x: '1090', y: '0', fill: 'white', strokeWidth: '2', stroke: '#000000' }));
+      center.push(_react2.default.createElement('rect', { key: center.length, height: '10', width: '80', x: '1830', y: '0', fill: 'white', strokeWidth: '2', stroke: '#000000' }));
 
       return center;
     }
   }, {
-    key: "render",
+    key: 'render',
     value: function render() {
       return _react2.default.createElement(
-        "g",
+        'g',
         null,
-        _react2.default.createElement("image", { href: "f2018.png", x: "0", y: "0", height: "2000", width: "3000" }),
+        _react2.default.createElement('image', { href: 'f2018.png', x: '0', y: '0', height: '2000', width: '3000' }),
         this.renderBorders(),
         this.renderBoxes(),
         this.renderCenter(),
-        _react2.default.createElement(Eurobot2018CubeGroup, { id: "0" }),
-        _react2.default.createElement(Eurobot2018CubeGroup, { id: "1" }),
-        _react2.default.createElement(Eurobot2018CubeGroup, { id: "2" }),
-        _react2.default.createElement(Eurobot2018CubeGroup, { id: "3" }),
-        _react2.default.createElement(Eurobot2018CubeGroup, { id: "4" }),
-        _react2.default.createElement(Eurobot2018CubeGroup, { id: "5" }),
-        _react2.default.createElement(Eurobot2018BallFeeder, { id: "0" }),
-        _react2.default.createElement(Eurobot2018BallFeeder, { id: "1" }),
-        _react2.default.createElement(Eurobot2018BallFeeder, { id: "2" }),
-        _react2.default.createElement(Eurobot2018BallFeeder, { id: "3" }),
-        this.props.children
+        _react2.default.createElement(Eurobot2018CubeGroup, { id: '0' }),
+        _react2.default.createElement(Eurobot2018CubeGroup, { id: '1' }),
+        _react2.default.createElement(Eurobot2018CubeGroup, { id: '2' }),
+        _react2.default.createElement(Eurobot2018CubeGroup, { id: '3' }),
+        _react2.default.createElement(Eurobot2018CubeGroup, { id: '4' }),
+        _react2.default.createElement(Eurobot2018CubeGroup, { id: '5' }),
+        _react2.default.createElement(Eurobot2018BallFeeder, { id: '0' }),
+        _react2.default.createElement(Eurobot2018BallFeeder, { id: '1' }),
+        _react2.default.createElement(Eurobot2018BallFeeder, { id: '2' }),
+        _react2.default.createElement(Eurobot2018BallFeeder, { id: '3' }),
+        this.props.children,
+        _react2.default.createElement(_Pathfinder2.default, null)
       );
     }
   }]);
@@ -36552,6 +36554,152 @@ var win = exports.win = function win() {
   return Immutable;
 
 }));
+
+/***/ }),
+/* 96 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactRedux = __webpack_require__(7);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var PathfinderComponent = function (_React$Component) {
+  _inherits(PathfinderComponent, _React$Component);
+
+  function PathfinderComponent() {
+    _classCallCheck(this, PathfinderComponent);
+
+    return _possibleConstructorReturn(this, (PathfinderComponent.__proto__ || Object.getPrototypeOf(PathfinderComponent)).apply(this, arguments));
+  }
+
+  _createClass(PathfinderComponent, [{
+    key: 'render',
+    value: function render() {
+      var nodes = [];
+      var gridSize = 15;
+
+      if (this.props.width != 0) {
+        gridSize = 2000 / this.props.width;
+      }
+
+      for (var i = 0; i < this.props.length; i += 1) {
+        for (var j = 0; j < this.props.width; j += 1) {
+          var node = this.props.nodes[i * this.props.width + j];
+          if (node != null) {
+            var type = node.type;
+            var r = 0;
+            var g = 0;
+            var b = 0;
+            var af = 0.5;
+            var as = 0.7;
+
+            switch (type) {
+              case 0x8000:
+                //SOFT OBSTACLE
+                r = 255;
+                g = 255;
+                break;
+
+              case 0x4000:
+                //FORBIDDEN
+                r = 255;
+                g = 165;
+                break;
+
+              case 0x2000:
+                //OBSTACLE
+                r = 255;
+                break;
+
+              case 0x1000:
+                //NEW NODE
+                g = 165;
+                break;
+
+              case 0x1004:
+                //NEW NODE + OPEN_LIST
+                g = 100;
+                b = 100;
+                break;
+
+              case 2:
+                //FINAL TRAJ
+                r = 255;
+                b = 255;
+                break;
+
+              case 0x1:
+                //CLOSED LIST
+                g = 255;
+                b = 165;
+                break;
+
+              case 0x0:
+                //?
+                b = 255;
+                break;
+
+              default:
+                console.log("type? ");
+                console.log(type);
+                r = 255;
+                g = 255;
+                b = 255;
+                as = 1;
+                af = 1;
+                break;
+            }
+
+            nodes.push(_react2.default.createElement(
+              'g',
+              { key: i + "." + j, transform: "translate(" + i * gridSize + ", " + j * gridSize + ")" },
+              _react2.default.createElement('rect', { height: gridSize, strokeWidth: 1, width: gridSize, stroke: "rgba(" + r + "," + g + "," + b + "," + as + ")", fill: "rgba(" + r + "," + g + "," + b + "," + af + ")" })
+            ));
+          }
+        }
+      }
+      return _react2.default.createElement(
+        'g',
+        null,
+        nodes
+      );
+    }
+  }]);
+
+  return PathfinderComponent;
+}(_react2.default.Component);
+
+var mapStateToProps = function mapStateToProps(state, ownProps) {
+  var id = state.win.get('id');
+  return {
+    nodes: state.robots.getIn([id, 'pathfinder', 'nodes'], []),
+    length: state.robots.getIn([id, 'pathfinder', 'length'], 0),
+    width: state.robots.getIn([id, 'pathfinder', 'width'], 0)
+  };
+};
+
+var Pathfinder = (0, _reactRedux.connect)(mapStateToProps, null)(PathfinderComponent);
+
+exports.default = Pathfinder;
 
 /***/ })
 /******/ ]);

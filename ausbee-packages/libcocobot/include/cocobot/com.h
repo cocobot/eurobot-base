@@ -13,6 +13,7 @@
 #define COCOBOT_COM_ASSERV_DIST_DEBUG_PID (0x8001)
 #define COCOBOT_COM_ASSERV_ANGU_DEBUG_PID (0x8002)
 #define COCOBOT_COM_TRAJECTORY_DEBUG_PID  (0x8003)
+#define COCOBOT_COM_PATHFINDER_DEBUG_PID  (0x8004)
 
 typedef void (*cocobot_com_handler_t)(uint16_t pid);
 

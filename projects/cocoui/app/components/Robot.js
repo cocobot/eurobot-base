@@ -39,7 +39,6 @@ class RobotComponent extends React.Component {
     let pathd = null;
     for(let i = 0; i < this.props.orders.length; i += 1) {
       let o = this.props.orders[i];
-      console.log(o);
       if(o.end_x == Math.Nan)
       {
         continue;
@@ -48,7 +47,6 @@ class RobotComponent extends React.Component {
         pathd = "M" + o.start_x + " " + o.start_y;
       }
       pathd += " L" + o.end_x + " " + o.end_y;
-      console.log(pathd);
 
       const generateTurnPath = function(x, y, start, end, key) {
         x = parseFloat(x);
@@ -94,7 +92,6 @@ class RobotComponent extends React.Component {
       }
     }
     paths.push(<path key={paths.length} d={pathd} strokeWidth="8" stroke="#FF0000" fill="rgba(0, 0, 0, 0)" />);
-    console.log(pathd);
 
 
     const position = "translate(" + this.props.x + "," + this.props.y + ") rotate(" + this.props.angle + ")";
