@@ -71,7 +71,6 @@ class TrajectoryOrdersComponent extends React.Component {
  
   render() {
 
-    console.log("UAO: " + this.props.orders);
     return (
       <div>
         <table className="table table-bordered table-condensed">

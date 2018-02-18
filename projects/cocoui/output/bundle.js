@@ -30762,6 +30762,7 @@ var RobotComponent = function (_React$Component) {
     key: 'render',
     value: function render() {
       var shape = null;
+      var paths = [];
 
       if (this.props.name == "Robot secondaire") {
         shape = _react2.default.createElement(
@@ -30792,6 +30793,66 @@ var RobotComponent = function (_React$Component) {
         );
       }
 
+      //path
+      var pathd = null;
+      for (var i = 0; i < this.props.orders.length; i += 1) {
+        var o = this.props.orders[i];
+        console.log(o);
+        if (o.end_x == Math.Nan) {
+          continue;
+        }
+        if (pathd == null) {
+          pathd = "M" + o.start_x + " " + o.start_y;
+        }
+        pathd += " L" + o.end_x + " " + o.end_y;
+        console.log(pathd);
+
+        var generateTurnPath = function generateTurnPath(x, y, start, end, key) {
+          x = parseFloat(x);
+          y = parseFloat(y);
+          start = parseFloat(start);
+          end = parseFloat(end);
+
+          var r = 50;
+          var x0 = x + r * Math.cos(start * Math.PI / 180.0);
+          var y0 = y + r * Math.sin(start * Math.PI / 180.0);
+          var x1 = x + r * Math.cos(end * Math.PI / 180.0);
+          var y1 = y + r * Math.sin(end * Math.PI / 180.0);
+
+          var nend = end;
+          var change = true;
+          change = false; /// <--- TODO: understand this !
+          while (change) {
+            change = false;
+            if (Math.abs(nend + 360 - start) < Math.abs(end - start)) {
+              nend = nend + 360;
+              change = true;
+            }
+            if (Math.abs(nend - 360 - start) < Math.abs(end - start)) {
+              nend = nend - 360;
+              change = true;
+            }
+          }
+
+          var sns = 0;
+          if (start < nend) {
+            sns = 1;
+          }
+
+          var pathc = "M" + x0 + " " + y0 + "A" + r + " " + r + " 0 0 " + sns + " " + x1 + " " + y1;
+
+          return _react2.default.createElement('path', { key: key, d: pathc, strokeWidth: '8', stroke: '#FF0000', fill: 'rgba(0, 0, 0, 0)' });
+        };
+
+        if (o.start_x == o.end_x && o.start_y == o.end_y) {
+          if (o.start_angle != o.end_angle) {
+            paths.push(generateTurnPath(o.start_x, o.start_y, o.start_angle, o.end_angle, paths.length));
+          }
+        }
+      }
+      paths.push(_react2.default.createElement('path', { key: paths.length, d: pathd, strokeWidth: '8', stroke: '#FF0000', fill: 'rgba(0, 0, 0, 0)' }));
+      console.log(pathd);
+
       var position = "translate(" + this.props.x + "," + this.props.y + ") rotate(" + this.props.angle + ")";
       return _react2.default.createElement(
         'g',
@@ -30803,6 +30864,11 @@ var RobotComponent = function (_React$Component) {
             'g',
             { opacity: '0.8', transform: position },
             shape
+          ),
+          _react2.default.createElement(
+            'g',
+            null,
+            paths
           )
         )
       );
@@ -30816,7 +30882,8 @@ var mapStateToProps = function mapStateToProps(state, ownProps) {
   return {
     x: state.robots.getIn([ownProps.cid, 'position', 'x']),
     y: state.robots.getIn([ownProps.cid, 'position', 'y']),
-    angle: state.robots.getIn([ownProps.cid, 'position', 'angle'])
+    angle: state.robots.getIn([ownProps.cid, 'position', 'angle']),
+    orders: state.robots.getIn([ownProps.cid, 'trajectory_orders', 'orders'], [])
   };
 };
 
@@ -31301,7 +31368,6 @@ var TrajectoryOrdersComponent = function (_React$Component) {
     key: 'render',
     value: function render() {
 
-      console.log("UAO: " + this.props.orders);
       return _react2.default.createElement(
         'div',
         null,
