@@ -61,6 +61,7 @@
 #define PLATFORM_SPI_ENCG_SELECT      3
 
 #define PLATFORM_I2C_SERVO            MCUAL_I2C1
+#define PLATFORM_I2C_VL53L0X          MCUAL_I2C1
 
 #define PLATFORM_SERVO_0_ID               0
 #define PLATFORM_SERVO_1_ID               1
