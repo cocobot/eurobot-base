@@ -1,7 +1,7 @@
 #ifndef COCOBOT_PATHFINDER_H
 #define COCOBOT_PATHFINDER_H
 
-#include "cocobot/pathfinder_table.h"
+#include "cocobot/pathfinder_table_utils.h"
 
 #define TRAJECTORY_NBR_POINTS_MAX   160
 
