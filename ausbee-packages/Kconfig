@@ -14,6 +14,8 @@ config VL53L0X
   bool "vl53l0x"
   default n
 
+source "$AUSBEE_CUSTOM_PACKAGES_PATH/vl53l0x/Kconfig"
+
 config VREP
   bool "V-Rep"
   default n

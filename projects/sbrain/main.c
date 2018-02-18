@@ -6,6 +6,7 @@
 #include <mcual.h>
 #include <cocobot.h>
 #include <pcm9685.h>
+#include <vl53l0x.h>
 #include "meca_seashell.h"
 #include "meca_fish.h"
 #include "strat_hut.h"
@@ -218,6 +219,9 @@ void funny_action(void)
 int main(void) 
 {
   platform_init();
+  vl53l0x_init(3);
+  vl53l0x_register_device(0x53);
+  vl53l0x_register_device(0x54);
   cocobot_console_init(MCUAL_USART1, 1, 1, console_handler);
   cocobot_lcd_init();
   cocobot_position_init(4);

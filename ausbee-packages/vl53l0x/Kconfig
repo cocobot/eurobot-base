@@ -1,0 +1,4 @@
+config VL53L0X_MAX_PERIPHERALS
+  int "+ Max peripherals"
+  depends on VL53L0X
+  default 3
