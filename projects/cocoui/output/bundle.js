@@ -30465,7 +30465,11 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
+var _reactRedux = __webpack_require__(7);
+
 var _reactstrap = __webpack_require__(28);
+
+var _actions = __webpack_require__(93);
 
 var _Field = __webpack_require__(86);
 
@@ -30491,18 +30495,25 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var Position = function (_React$Component) {
-  _inherits(Position, _React$Component);
+var PositionComponent = function (_React$Component) {
+  _inherits(PositionComponent, _React$Component);
 
-  function Position() {
-    _classCallCheck(this, Position);
+  function PositionComponent() {
+    _classCallCheck(this, PositionComponent);
 
-    return _possibleConstructorReturn(this, (Position.__proto__ || Object.getPrototypeOf(Position)).apply(this, arguments));
+    return _possibleConstructorReturn(this, (PositionComponent.__proto__ || Object.getPrototypeOf(PositionComponent)).apply(this, arguments));
   }
 
-  _createClass(Position, [{
+  _createClass(PositionComponent, [{
+    key: '_onChangeDebugPathfinder',
+    value: function _onChangeDebugPathfinder(e, checked) {
+      this.props.onChangeDebugPathfinder(e.target.checked);
+    }
+  }, {
     key: 'render',
     value: function render() {
+      var _this2 = this;
+
       return _react2.default.createElement(
         _reactstrap.Container,
         { style: { marginTop: '15px' } },
@@ -30524,6 +30535,15 @@ var Position = function (_React$Component) {
                   _react2.default.createElement(
                     _reactstrap.FormGroup,
                     { inline: true, className: 'mb-2 mr-sm-2 mb-sm-0' },
+                    _react2.default.createElement(
+                      _reactstrap.Label,
+                      { check: true, size: 'sm' },
+                      _react2.default.createElement(_reactstrap.Input, { type: 'checkbox', onChange: function onChange(e, checked) {
+                          return _this2._onChangeDebugPathfinder(e, checked);
+                        }, checked: this.props.debugPathfinder }),
+                      'Debug pathfinder'
+                    ),
+                    _react2.default.createElement(_reactstrap.FormGroup, { inline: true, className: 'mb-2 mr-sm-2 mb-sm-0' }),
                     _react2.default.createElement(
                       _reactstrap.Label,
                       { check: true, size: 'sm' },
@@ -30577,8 +30597,25 @@ var Position = function (_React$Component) {
     }
   }]);
 
-  return Position;
+  return PositionComponent;
 }(_react2.default.Component);
+
+var mapStateToProps = function mapStateToProps(state, ownProps) {
+  var id = state.win.get('id');
+  return {
+    debugPathfinder: state.options.getIn(['debugPathfinder'], false)
+  };
+};
+
+var mapDispatchToProps = function mapDispatchToProps(dispatch) {
+  return {
+    onChangeDebugPathfinder: function onChangeDebugPathfinder(value) {
+      dispatch((0, _actions.updateDebugPathfinder)(value));
+    }
+  };
+};
+
+var Position = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(PositionComponent);
 
 exports.default = Position;
 
@@ -31454,7 +31491,8 @@ var State = function () {
     this._store = (0, _redux.createStore)((0, _redux.combineReducers)({
       robots: _reducers.robots,
       win: _reducers.win,
-      conns: _reducers.conns
+      conns: _reducers.conns,
+      options: _reducers.options
     }));
 
     _electron2.default.ipcRenderer.on("pkt", function (event, pkt) {
@@ -31506,6 +31544,13 @@ var saveRobotPacket = exports.saveRobotPacket = function saveRobotPacket(pkt) {
   };
 };
 
+var updateDebugPathfinder = exports.updateDebugPathfinder = function updateDebugPathfinder(value) {
+  return {
+    type: 'UPDATE_DEBUG_PATHFINDER',
+    value: value
+  };
+};
+
 /***/ }),
 /* 94 */
 /***/ (function(module, exports, __webpack_require__) {
@@ -31516,7 +31561,7 @@ var saveRobotPacket = exports.saveRobotPacket = function saveRobotPacket(pkt) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.win = exports.conns = exports.robots = undefined;
+exports.options = exports.win = exports.conns = exports.robots = undefined;
 
 var _immutable = __webpack_require__(95);
 
@@ -31529,6 +31574,24 @@ var defaultWinState = new _immutable.Map({
 });
 
 var defaultRobotsState = new _immutable.Map({});
+
+var defaultOptionsState = new _immutable.Map({
+  debugPathfinder: true
+});
+
+var saved = localStorage.getItem('options');
+if (saved != null) {
+  try {
+    saved = JSON.parse(saved);
+    for (var i in saved) {
+      if (saved.hasOwnProperty(i)) {
+        defaultOptionsState = defaultOptionsState.set(i, saved[i]);
+      }
+    }
+  } catch (e) {
+    console.log(e);
+  }
+}
 
 var robots = exports.robots = function robots() {
   var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : defaultRobotsState;
@@ -31570,6 +31633,24 @@ var win = exports.win = function win() {
       }
       break;
   }
+  return state;
+};
+
+var options = exports.options = function options() {
+  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : defaultOptionsState;
+  var action = arguments[1];
+
+  var bState = state;
+  switch (action.type) {
+    case 'UPDATE_DEBUG_PATHFINDER':
+      state = state.set('debugPathfinder', action.value);
+      break;
+  }
+
+  if (bState != state) {
+    localStorage.setItem('options', JSON.stringify(state.toJS()));
+  }
+
   return state;
 };
 
@@ -36594,6 +36675,9 @@ var PathfinderComponent = function (_React$Component) {
   _createClass(PathfinderComponent, [{
     key: 'render',
     value: function render() {
+      if (!this.props.debugPathfinder) {
+        return _react2.default.createElement('g', null);
+      }
       var nodes = [];
       var gridSize = 15;
 
@@ -36693,7 +36777,8 @@ var mapStateToProps = function mapStateToProps(state, ownProps) {
   return {
     nodes: state.robots.getIn([id, 'pathfinder', 'nodes'], []),
     length: state.robots.getIn([id, 'pathfinder', 'length'], 0),
-    width: state.robots.getIn([id, 'pathfinder', 'width'], 0)
+    width: state.robots.getIn([id, 'pathfinder', 'width'], 0),
+    debugPathfinder: state.options.getIn(['debugPathfinder'])
   };
 };
 

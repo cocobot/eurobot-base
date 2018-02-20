@@ -1,6 +1,6 @@
 import electron from 'electron';
 import {saveRobotPacket} from './actions';
-import {robots, conns, win } from './reducers';
+import {robots, conns, win, options } from './reducers';
 import {createStore, combineReducers} from 'redux';
 
 class State {
@@ -10,6 +10,7 @@ class State {
         robots: robots,
         win: win,
         conns: conns,
+        options: options,
       })
     );
 

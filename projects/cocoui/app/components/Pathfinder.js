@@ -3,6 +3,9 @@ import { connect } from 'react-redux';
 
 class PathfinderComponent extends React.Component {
   render() {
+    if(!this.props.debugPathfinder) {
+      return <g />;
+    }
     const nodes = [];
     let gridSize = 15;
 
@@ -93,6 +96,7 @@ const mapStateToProps = (state, ownProps) => {
     nodes: state.robots.getIn([id, 'pathfinder', 'nodes'], []),
     length: state.robots.getIn([id, 'pathfinder', 'length'], 0),
     width: state.robots.getIn([id, 'pathfinder', 'width'], 0),
+    debugPathfinder: state.options.getIn(['debugPathfinder']), 
   }
 }
 

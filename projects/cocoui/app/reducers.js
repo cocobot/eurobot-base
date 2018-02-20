@@ -1,4 +1,4 @@
-import { Map, Set } from 'immutable';
+import { Map, Set, fromJS } from 'immutable';
 
 const defaultConnsState = new Map({
   active: Set(),
@@ -12,6 +12,25 @@ const defaultWinState = new Map({
 const defaultRobotsState = new Map({
 });
 
+let defaultOptionsState = new Map({
+  debugPathfinder: true,
+});
+
+let saved = localStorage.getItem('options');
+if(saved != null) {
+  try
+  {
+    saved = JSON.parse(saved);
+    for(let i in saved) {
+      if(saved.hasOwnProperty(i)) {
+        defaultOptionsState = defaultOptionsState.set(i, saved[i]);
+      }
+    }
+  }
+  catch(e) {
+    console.log(e);
+  }
+}
 
 export const robots = (state = defaultRobotsState, action) => {
   switch (action.type) {
@@ -44,5 +63,20 @@ export const win = (state = defaultWinState, action) => {
       }
       break;
   }
+  return state;
+}
+
+export const options = (state = defaultOptionsState, action) => {
+  const bState = state;
+  switch (action.type) {
+    case 'UPDATE_DEBUG_PATHFINDER':
+      state = state.set('debugPathfinder', action.value);
+      break;
+  }
+
+  if(bState != state) {
+    localStorage.setItem('options', JSON.stringify(state.toJS()));
+  }
+
   return state;
 }

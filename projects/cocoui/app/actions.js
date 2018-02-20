@@ -4,3 +4,10 @@ export const saveRobotPacket = (pkt) => {
     pkt
   }
 }
+
+export const updateDebugPathfinder = (value) => {
+  return {
+    type: 'UPDATE_DEBUG_PATHFINDER',
+    value
+  }
+}
