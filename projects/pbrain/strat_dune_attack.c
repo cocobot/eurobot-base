@@ -49,7 +49,6 @@ static cocobot_action_callback_result_t strat_dune_attack_preexec(void * arg)
   (void)arg;
 
   cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_BACKWARD);
-  cocobot_action_scheduler_use_pathfinder(0);
 
   return COCOBOT_RETURN_ACTION_SUCCESS;
 }
@@ -57,7 +56,6 @@ static cocobot_action_callback_result_t strat_dune_attack_preexec(void * arg)
 static cocobot_action_callback_result_t strat_dune_attack_cleanup(void * arg)
 {
   (void)arg;
-  cocobot_action_scheduler_use_pathfinder(0);
 
   cocobot_trajectory_goto_d(-500, 2000);
   QUIT_IF_FAILED();

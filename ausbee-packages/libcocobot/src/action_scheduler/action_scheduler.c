@@ -92,6 +92,7 @@ void cocobot_action_scheduler_set_pause(int paused)
 void cocobot_action_scheduler_use_pathfinder(int use_pathfinder)
 {
   current_game_state.use_pathfinder = use_pathfinder;
+  printf("USE pathfinder %d\n", use_pathfinder);
 }
 
 void cocobot_action_scheduler_start(void)
