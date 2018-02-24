@@ -74,18 +74,13 @@ class PathfinderComponent extends React.Component {
           }
 
           nodes.push(
-            <g key={i + "." + j} transform={"translate(" + (i * gridSize) + ", " + (j * gridSize) + ")"}>
-              <rect height={gridSize} strokeWidth={1}  width={gridSize} stroke={"rgba("+r+","+g+","+b+","+as+")"} fill={"rgba("+r+","+g+","+b+","+af+")"}/>
-            </g>
+              <rect key={i + "." + j} height={gridSize} strokeWidth={1}  width={gridSize} x={i * gridSize} y={j * gridSize} stroke={"rgba("+r+","+g+","+b+","+as+")"} fill={"rgba("+r+","+g+","+b+","+af+")"}/>
           );
         }
       }
-    }
-    return (
-      <g>
-        { nodes }
-      </g>
-    );
+    } 
+    const res = <g>{nodes}</g>;
+    return res;
   }
 }
 
