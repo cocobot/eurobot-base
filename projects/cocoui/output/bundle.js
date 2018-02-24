@@ -13666,7 +13666,7 @@ var Eurobot2018 = function (_React$Component4) {
       return _react2.default.createElement(
         'g',
         null,
-        _react2.default.createElement('image', { href: 'f2018.png', x: '0', y: '0', height: '2000', width: '3000' }),
+        _react2.default.createElement('image', { href: 'f2018_cprs.jpg', x: '0', y: '0', height: '2000', width: '3000' }),
         this.renderBorders(),
         this.renderBoxes(),
         this.renderCenter(),

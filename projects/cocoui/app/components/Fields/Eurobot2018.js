@@ -226,7 +226,7 @@ class Eurobot2018 extends React.Component {
   render() {
     return (
       <g>
-        <image href="f2018.png" x="0" y="0" height="2000" width="3000" />
+        <image href="f2018_cprs.jpg" x="0" y="0" height="2000" width="3000" />
         {this.renderBorders()}
         {this.renderBoxes()}
         {this.renderCenter()}
