@@ -5,8 +5,6 @@
 #include <task.h>
 #include <platform.h>
 #include "strat_dune_attack.h"
-#include "meca_crimp.h"
-#include "meca_sucker.h"
 
 #define QUIT_IF_FAILED() { if(cocobot_trajectory_wait() != COCOBOT_TRAJECTORY_SUCCESS) { return COCOBOT_RETURN_ACTION_SUCCESS;}}
 
@@ -49,10 +47,6 @@ float strat_dune_attack_get_success_proba(void)
 static cocobot_action_callback_result_t strat_dune_attack_preexec(void * arg)
 {
   (void)arg;
-
-  meca_crimp_open();
-
-  meca_crimp_set_target(720);
 
   cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_BACKWARD);
   cocobot_action_scheduler_use_pathfinder(0);
@@ -116,7 +110,6 @@ static cocobot_action_callback_result_t strat_dune_attack_exec(void * arg)
   cocobot_trajectory_goto_d(-10, 1000);
   cocobot_trajectory_wait();
 
-  meca_crimp_set_target(900);
   
   vTaskDelay(1500 / portTICK_PERIOD_MS);
 
@@ -127,19 +120,16 @@ static cocobot_action_callback_result_t strat_dune_attack_exec(void * arg)
   cocobot_trajectory_goto_d(30, 1000);
   cocobot_trajectory_wait();
 
-  meca_crimp_set_target(750);
   vTaskDelay(2500 / portTICK_PERIOD_MS);
 
   cocobot_trajectory_goto_d(60, 3000);
   cocobot_trajectory_wait();
 
-  meca_crimp_set_target(900);
   vTaskDelay(2500 / portTICK_PERIOD_MS);
 
   cocobot_trajectory_goto_d(-70, 1000);
   QUIT_IF_FAILED();
 
-  meca_crimp_set_target(750);
 
   cocobot_trajectory_goto_xy(x_k * 1050, strat_dune_attack_get_y(), 10000);
   QUIT_IF_FAILED();

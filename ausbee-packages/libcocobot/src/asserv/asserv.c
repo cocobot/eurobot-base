@@ -158,8 +158,9 @@ cocobot_asserv_state_t cocobot_asserv_get_state(void)
 
 
 
-int cocobot_asserv_handle_console(char * command)
+void cocobot_asserv_com_handler(uint16_t pid)
 {
+#if 0
   if(strcmp(command,"ramp_distance_speed") == 0)
   {
     float set;
@@ -331,46 +332,33 @@ int cocobot_asserv_handle_console(char * command)
   }
 
   return 0;
+#endif
 }
 
-void cocobot_asserv_handle_async_console(void)
+void cocobot_asserv_handle_async_com(void)
 {
-  if(_ramp_dist_debug)
-  {
-    cocobot_console_send_asynchronous("ramp_distance", "%.3f,%.3f,%.3f,%.3f,%.3f",
-                                     (double)cocobot_asserv_ramp_get_position_target(&_ramp_dist),
-                                     (double)cocobot_position_get_distance(),
-                                     (double)cocobot_asserv_ramp_get_output(&_ramp_dist),
-                                     (double)cocobot_asserv_ramp_get_speed_target(&_ramp_dist),
-                                     (double)cocobot_position_get_speed_distance()
-                                    );
-  }
-  if(_ramp_angu_debug)
-  {
-    cocobot_console_send_asynchronous("ramp_angular", "%.3f,%.3f,%.3f,%.3f,%.3f",
-                                     (double)cocobot_asserv_ramp_get_position_target(&_ramp_angu),
-                                     (double)cocobot_position_get_angle(),
-                                     (double)cocobot_asserv_ramp_get_output(&_ramp_angu),
-                                     (double)cocobot_asserv_ramp_get_speed_target(&_ramp_angu),
-                                     (double)cocobot_position_get_speed_angle()
-                                    );
-  }
-  if(_pid_dist_debug)
-  {
-    cocobot_console_send_asynchronous("pid_distance", "%.3f,%.3f,%.3f,%.3f",
-                                     (double)cocobot_asserv_pid_get_output(&_pid_dist),
-                                     (double)cocobot_asserv_pid_get_p_contribution(&_pid_dist),
-                                     (double)cocobot_asserv_pid_get_i_contribution(&_pid_dist),
-                                     (double)cocobot_asserv_pid_get_d_contribution(&_pid_dist)
-                                    );
-  }
-  if(_pid_angu_debug)
-  {
-    cocobot_console_send_asynchronous("pid_angular", "%.3f,%.3f,%.3f,%.3f",
-                                     (double)cocobot_asserv_pid_get_output(&_pid_angu),
-                                     (double)cocobot_asserv_pid_get_p_contribution(&_pid_angu),
-                                     (double)cocobot_asserv_pid_get_i_contribution(&_pid_angu),
-                                     (double)cocobot_asserv_pid_get_d_contribution(&_pid_angu)
-                                    );
-  }
+  cocobot_com_send(COCOBOT_COM_ASSERV_DIST_DEBUG_PID,
+                   "FFFFFFFFF",
+                   (double)cocobot_asserv_ramp_get_position_target(&_ramp_dist),
+                   (double)cocobot_position_get_distance(),
+                   (double)cocobot_asserv_ramp_get_output(&_ramp_dist),
+                   (double)cocobot_asserv_ramp_get_speed_target(&_ramp_dist),
+                   (double)cocobot_position_get_speed_distance(),
+                   (double)cocobot_asserv_pid_get_output(&_pid_dist),
+                   (double)cocobot_asserv_pid_get_p_contribution(&_pid_dist),
+                   (double)cocobot_asserv_pid_get_i_contribution(&_pid_dist),
+                   (double)cocobot_asserv_pid_get_d_contribution(&_pid_dist)
+                  );
+  cocobot_com_send(COCOBOT_COM_ASSERV_ANGU_DEBUG_PID,
+                   "FFFFFFFFF",
+                   (double)cocobot_asserv_ramp_get_position_target(&_ramp_angu),
+                   (double)cocobot_position_get_angle(),
+                   (double)cocobot_asserv_ramp_get_output(&_ramp_angu),
+                   (double)cocobot_asserv_ramp_get_speed_target(&_ramp_angu),
+                   (double)cocobot_position_get_speed_angle(),
+                   (double)cocobot_asserv_pid_get_output(&_pid_angu),
+                   (double)cocobot_asserv_pid_get_p_contribution(&_pid_angu),
+                   (double)cocobot_asserv_pid_get_i_contribution(&_pid_angu),
+                   (double)cocobot_asserv_pid_get_d_contribution(&_pid_angu)
+                  );
 }

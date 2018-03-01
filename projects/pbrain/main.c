@@ -4,16 +4,12 @@
 #include <task.h>
 #include <mcual.h>
 #include <cocobot.h>
-#include "meca_sucker.h"
-#include "meca_umbrella.h"
-#include "meca_crimp.h"
 #include "strat_hut.h"
 #include "strat_little_dune.h"
 #include "strat_easy_dune.h"
 #include "strat_dune_attack.h"
 
 static unsigned int _shell_configuration;
-static int do_funny_action;
 
 void update_lcd(void * arg)
 {
@@ -30,9 +26,6 @@ void update_lcd(void * arg)
       platform_gpio_toggle(PLATFORM_GPIO0);
 
       //disable everything
-      meca_sucker_disable();
-      meca_umbrella_disable();
-      meca_crimp_disable();
       cocobot_asserv_set_state(COCOBOT_ASSERV_DISABLE);
 
       vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -54,30 +47,12 @@ void update_lcd(void * arg)
     //toggle led
     vTaskDelay(100 / portTICK_PERIOD_MS);
     platform_led_toggle(PLATFORM_LED0);
-
-    if(do_funny_action)
-    {
-
-      meca_sucker_disable();
-      meca_crimp_disable();
-
-      meca_umbrella_open();
-
-      while(1)
-      {
-        vTaskDelay(100 / portTICK_PERIOD_MS);
-      }
-    }
   }
 }
 
 void run_strategy(void * arg)
 {
   (void)arg;
-
-  meca_sucker_init();
-  meca_umbrella_init();
-  meca_crimp_init();
 
   strat_hut_register();
  // strat_little_dune_register();
@@ -101,8 +76,9 @@ void run_strategy(void * arg)
   cocobot_action_scheduler_start();
 }
 
-int console_handler(const char * command)
+void com_handler(uint16_t pid)
 {
+#if 0
   if(strcmp(command,"info") == 0)
   {
     cocobot_console_send_answer("Robot principal");
@@ -127,33 +103,30 @@ int console_handler(const char * command)
   COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_sucker_console_handler);
   COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_crimp_console_handler);
   return handled;
+#else
+  (void)pid;
+#endif
 }
 
-void funny_action(void)
+int main(int argc, char *argv[]) 
 {
-  do_funny_action = 1;
-  platform_gpio_set(PLATFORM_GPIO0);
-}
-
-int main(void) 
-{
+#ifdef AUSBEE_SIM
+  mcual_arch_main(argc, argv);
+#else
+  (void)argc;
+  (void)argv;
+#endif
   platform_init();
-  cocobot_console_init(MCUAL_USART1, 1, 1, console_handler);
+  cocobot_com_init(MCUAL_USART1, 1, 1, com_handler);
   cocobot_lcd_init();
   cocobot_position_init(4);
   cocobot_action_scheduler_init();
   cocobot_asserv_init();
   cocobot_trajectory_init(4);
   cocobot_opponent_detection_init(3);
-  cocobot_game_state_init(funny_action);
+  cocobot_game_state_init(NULL);
   cocobot_pathfinder_init(300, 220);
 
-  //Main robot do not need to know the shell config
-  _shell_configuration = 0;
-  cocobot_game_state_set_userdata(COCOBOT_GS_UD_SHELL_CONFIGURATION, &_shell_configuration); 
-
-  do_funny_action = 0;
-  
   //set initial position
   switch(cocobot_game_state_get_color())
   {

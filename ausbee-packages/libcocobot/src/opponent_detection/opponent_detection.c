@@ -178,6 +178,7 @@ void cocobot_opponent_detection_init(unsigned int task_priority)
   xTaskCreate(cocobot_opponent_detection_task, "opponent", 200, NULL, task_priority, NULL);
 }
 
+/*
 int cocobot_opponent_detection_handle_console(char * command)
 {
   if(strcmp(command,"opponent_usir_force") == 0)
@@ -237,3 +238,4 @@ int cocobot_opponent_detection_handle_console(char * command)
 
   return 0;
 }
+*/

@@ -215,8 +215,14 @@ void funny_action(void)
 
 }
 
-int main(void) 
+int main(int argc, char *argv[]) 
 {
+#ifdef AUSBEE_SIM
+  mcual_arch_main(argc, argv);
+#else
+  (void)argc;
+  (void)argv;
+#endif
   platform_init();
   cocobot_console_init(MCUAL_USART1, 1, 1, console_handler);
   cocobot_lcd_init();

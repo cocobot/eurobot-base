@@ -6,6 +6,7 @@
 
 #include <cocobot/position.h>
 #include <cocobot/console.h>
+#include <cocobot/com.h>
 #include <cocobot/lcd.h>
 #include <cocobot/trajectory.h>
 #include <cocobot/asserv.h>

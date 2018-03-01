@@ -688,7 +688,7 @@ void cocobot_trajectory_task(void * arg)
 
         default:
           //something is broken, signal to user and try next order
-          cocobot_console_send_asynchronous("trajectory", "Unknown order type");
+          cocobot_com_printf("TRAJECTORY: Unknown order type");
           status = COCOBOT_TRAJECTORY_ORDER_DONE;
           break;
       }
@@ -915,6 +915,7 @@ void cocobot_trajetory_set_xy_default(cocobot_trajectory_xy_default_t pref)
   xy_pref = pref;
 }
 
+/*
 int cocobot_trajectory_handle_console(char * command)
 {
   if(strcmp(command,"trajectory_list") == 0)
@@ -979,6 +980,7 @@ int cocobot_trajectory_handle_console(char * command)
 
   return 0;
 }
+*/
 
 void cocobot_trajectory_set_opponent_detection(int enable)
 {
