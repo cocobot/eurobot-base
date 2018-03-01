@@ -1,14 +1,62 @@
 const net = require('net');
 const electron = require('electron');
+const peg = require("pegjs");
 const BrowserWindow = electron.BrowserWindow;
 
 let CLIENT_ID = 0;
 const MAGIC_START = 0xc0;
 const DECODERS = {};
-const AST = {};
+let AST = null;
 DECODERS[0x8000] = "{position}F(x)F(y)F(angle)"
 DECODERS[0x8001] = "{asserv_dist}F(target)F(distance)F(ramp_out)F(speed_target)F(speed)F(pid_out)F(pid_P)F(pid_I)F(pid_d)"
 DECODERS[0x8002] = "{asserv_angle}F(target)F(angle)F(ramp_out)F(speed_target)F(speed)F(pid_out)F(pid_P)F(pid_I)F(pid_d)"
+DECODERS[0x8003] = "{trajectory_orders}[B(type)F(time)F(a1)F(a2)F(a3)F(a4)F(start_x)F(start_y)F(start_angle)F(end_x)F(end_y)F(end_angle)F(estimated_distance_before_stop)](orders)"
+DECODERS[0x8004] = "{pathfinder}H(length)H(width)[H(type)](nodes)"
+
+
+const GRAMMAR = `
+{
+    var pkt = this.__pkt;
+}
+start
+  = obj:format { return () => { pkt.decoded = obj()} }
+
+format
+  = expr1:expr expr2:format { return () => { return Object.assign({}, expr1(), expr2());} }
+  / expr1:expr { return () => { return expr1(); } }
+
+expr
+ = '{' id:identifier '}' { return () => {return {_name: id}; }}
+ / '[' fmt:format ']' '(' id:identifier ')' { return () => {
+   const len = pkt.buffer.readUInt16LE(pkt.offset);
+   pkt.offset += 2;
+   const ret = {};
+   ret[id] = [];
+   for(let i = 0; i < len; i += 1) {
+     ret[id].push(fmt());
+   }
+   return ret;
+ }}
+ / value:reader '(' id:identifier ')'{ return () => { const obj = {}; obj[id] = value(); return obj }}
+
+identifier
+ = id:[a-zA-Z0-9_]+ { return id.join("") };
+
+reader
+ = Freader
+ / Breader
+ / Hreader
+
+Breader
+ = 'B' { return () => { const value = pkt.buffer.readUInt8(pkt.offset); pkt.offset += 1; return value; }};
+
+Hreader
+ = 'H' { return () => { const value = pkt.buffer.readUInt16LE(pkt.offset); pkt.offset += 2; return value; }};
+
+Freader
+ = 'F' { return () => { const value = pkt.buffer.readFloatLE(pkt.offset); pkt.offset += 4; return value; }};
+
+`;
 
 class Client {
   constructor(protocol, socket) {
@@ -115,21 +163,24 @@ class Client {
   }
 
   _parse(pkt) {
-    const decoder = AST[pkt.pid];
+    const decoder = DECODERS[pkt.pid];
     if(decoder == null) {
-      console.log("Unable to decode:" + pkt);
+      console.log("Unable to decode:");
+      console.log(pkt);
     }
     else {
       try {
+        AST.__pkt = pkt;
+        const run = AST.parse(decoder);
         pkt.decoded = {};
         pkt.offset = 0;
-        for(let i = 0; i < decoder.length; i += 1) {
-          decoder[i](pkt);
-        }
+        run();
+        
         this._emit(pkt.decoded);
       }
       catch(e) {
         console.log("Unable to decode packet");
+        console.log(decoder);
         console.log(e);
       }
     }
@@ -154,57 +205,8 @@ class Protocol {
     this._createTCPServer();
   }
 
-  _decode(fmt) {
-    let actions = [];
-    const reName = /\{(.*)\}(.*)/;
-
-    let match = fmt.match(reName);
-    if(match != null) {
-      actions.push((pkt) => {
-        pkt.decoded._name = match[1];
-      });
-      actions = actions.concat(this._decode(match[2]));
-    }
-    else {
-      const reGroups = /(F\(\w*\))/g;
-      let match = fmt.match(reGroups);
-      if(match.length == 1) {
-        const reGroup = /(F)\((\w*)\)/;
-        let match = fmt.match(reGroup);
-        actions.push((pkt) => {
-          let value = null;
-          switch(match[1]) {
-            case 'F':
-              value = pkt.buffer.readFloatLE(pkt.offset);
-              pkt.offset += 4;
-              break;
-
-            default:
-              console.log("Unable to read : " + match[1]);
-              break;
-          }
-          pkt.decoded[match[2]] = value;
-        });
-      }
-      else {
-        for(let i = 0; i < match.length; i += 1) {
-          actions = actions.concat(this._decode(match[i]));
-        }
-      }
-    }
-
-    return actions;
-  }
-
   _generateASTs() {
-    console.log(DECODERS);
-    for(let pid in DECODERS) {
-      if(!DECODERS.hasOwnProperty(pid)) {
-        continue;
-      }
-      AST[pid] = this._decode(DECODERS[pid]);
-    }
-    console.log(AST);
+    AST = peg.generate(GRAMMAR);
   }
 
   _createTCPServer() {

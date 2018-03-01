@@ -126,6 +126,7 @@ int main(int argc, char *argv[])
   cocobot_opponent_detection_init(3);
   cocobot_game_state_init(NULL);
   cocobot_pathfinder_init(300, 220);
+  cocobot_action_scheduler_use_pathfinder(1);
 
   //set initial position
   switch(cocobot_game_state_get_color())

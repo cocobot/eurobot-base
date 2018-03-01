@@ -1,11 +1,15 @@
- {
-   "name": "Cocoui",
+{
+  "name": "Cocoui",
   "version": "1.2018.0",
-   "dependencies": {
+  "dependencies": {
     "bootstrap": "^4.0.0-beta.1",
     "css-loader": "^0.28.8",
     "electron": "^1.7.9",
+    "immutable": "^3.8.2",
+    "pegjs": "^0.10.0",
+    "react-redux": "^5.0.6",
     "reactstrap": "^5.0.0-alpha.4",
+    "redux": "^3.7.2",
     "style-loader": "^0.19.1"
   },
   "main": "main.js",
@@ -22,5 +26,5 @@
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "webpack": "^3.10.0"
-   }
- }
+  }
+}

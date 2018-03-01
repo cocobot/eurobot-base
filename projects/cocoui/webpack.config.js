@@ -4,6 +4,7 @@ module.exports = {
   entry: './app/app.js',
   output: {path: __dirname + '/output', filename: 'bundle.js' },
   devtool: 'source-map',
+  target: 'electron-renderer',
   module: {
     loaders: [
       {
