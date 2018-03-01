@@ -15,13 +15,14 @@ typedef enum
 {
     NEW_NODE = 0x1000,
     OBSTACLE = 0x2000,
-    FORBIDDEN = 0x4000, // Zone where the robot can't go
-    SOFT_OBSTACLE = 0x8000, //Zone where the robot can eventually go but must be cautious when turning
+    FORBIDDEN = 0x4000,     // Zone where the robot can't go
+    SOFT_OBSTACLE = 0x8000, // Zone where the robot can eventually go but must be cautious when turning
     CLOSED_LIST = 0x0001,
     FINAL_TRAJ = 0x0002,
     OPEN_LIST = 0x0004,
     TEMPORARY_ALLOWED = 0x0008,
-    ROBOT = 0x0100
+    ROBOT = 0x0100,         // Adversary
+    GAME_ELEMENT = 0x0200   // Game element, that can be removed manually.
 }cocobot_nodeType_e;
 
 typedef struct
@@ -77,6 +78,24 @@ void cocobot_pathfinder_set_robot_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_S
  *  - y : y center of the zone 
  */
 void cocobot_pathfinder_unset_robot_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y);
+
+/**
+ * Set a zone where an opponent robot is located
+ * Arguments:
+ *  - table : static 2nd array representing the playground area for a*
+ *  - x : x center of the zone
+ *  - y : y center of the zone 
+ */
+void cocobot_pathfinder_set_game_element_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y);
+
+/**
+ *Unset a zone where an opponent robot was previously located
+ * Arguments:
+ *  - table : static 2nd array representing the playground area for a*
+ *  - x : x center of the zone
+ *  - y : y center of the zone 
+ */
+void cocobot_pathfinder_unset_game_element_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y);
 
 /**
  * Reset the table to initial state

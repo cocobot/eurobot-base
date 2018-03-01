@@ -124,6 +124,16 @@ void cocobot_pathfinder_set_robot_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_S
     cocobot_pathfinder_set_circle_mask(table, x, y, OPPONENT_HALF_DIAG/GRID_SIZE, ROBOT); 
 }
 
+//void cocobot_pathfinder_set_game_element_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y, int radius)
+//{
+//    cocobot_pathfinder_set_circle_mask(table, x, y, radius/GRID_SIZE, GAME_ELEMENT); 
+//}
+//
+//void cocobot_pathfinder_reset_game_element_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y, int radius)
+//{
+//    cocobot_pathfinder_set_circle_unmask(table, x, y, radius/GRID_SIZE, GAME_ELEMENT); 
+//}
+
 void cocobot_pathfinder_unset_robot_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y)
 {
     //cocobot_console_send_asynchronous("TABLE","Unset robot x=%d, y=%d", x, y);

@@ -204,6 +204,10 @@ void cocobot_pathfinder_remove_robot(int adv_x, int adv_y)
     }
 }
 
+//void cocobot_pathfinder_set_game_element(int adv_x, int adv_y, int radius)
+//{
+//    cocobot_pathfinder_set_robot_zone(g_table, (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE);
+//}
 void cocobot_pathfinder_allow_start_zone()
 {
     cocobot_pathfinder_set_start_zone_allowed();
