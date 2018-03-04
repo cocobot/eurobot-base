@@ -60,7 +60,7 @@ void cocobot_pathfinder_remove_robot(int adv_x, int adv_y);
  *  - robot_length (mm)
  *  - robot_width (mm)
  */
-void cocobot_pathfinder_init(uint16_t robot_length, uint16_t robot_width);
+void cocobot_pathfinder_init(cocobot_pathfinder_table_init_s * initTable);
 
 void cocobot_pathfinder_handle_async_com(void);
 

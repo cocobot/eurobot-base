@@ -2,8 +2,41 @@
 #include "cocobot.h"
 #include <string.h>
 #include <math.h>
+#include "cocobot_pathfinder_config.h"
 
 static uint8_t cocobot_start_zone_allowed = 0;
+
+void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_pathfinder_table_init_s * initStruct)
+{
+    //Reset table 
+    memset(table, 0, (TABLE_LENGTH / GRID_SIZE) * sizeof(cocobot_node_s));
+    for(int i = 0; i < TABLE_LENGTH / GRID_SIZE; i++)
+    {
+        memset(table[i], 0, (TABLE_WIDTH / GRID_SIZE) * sizeof(cocobot_node_s));
+        for(int j = 0; j < TABLE_WIDTH / GRID_SIZE; j++)
+        {
+            table[i][j].x = i;
+            table[i][j].y = j;
+            table[i][j].nodeType = NEW_NODE;
+        }
+    }
+    
+    int i = 0;
+    //Fill the table with the node
+    while(initStruct[i].obsType != 0)
+    {
+        switch(initStruct[i].obsType)
+        {
+            case RECTANGLE:
+                cocobot_pathfinder_set_rectangle(table, initStruct[i].x_dimension, initStruct[i].y_dimension, initStruct[i].x_position, initStruct[i].y_position, initStruct[i].nodeType); 
+                break;
+            case CIRCLE:
+                cocobot_pathfinder_set_circle(table, initStruct[i].x_position, initStruct[i].y_position, initStruct[i].x_dimension, initStruct[i].nodeType);
+                break;
+        }
+        i++;
+    }
+}
 
 void cocobot_pathfinder_set_point_mask(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int x, int y, cocobot_nodeType_e node_type)
 {

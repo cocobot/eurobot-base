@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint16_t robot_length, uint16_t robot_width)
+void cocobot_pathfinder_initialize_table_2018(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint16_t robot_length, uint16_t robot_width)
 {
     memset(table, 0, (TABLE_LENGTH / GRID_SIZE) * sizeof(cocobot_node_s));
     for(int i = 0; i < TABLE_LENGTH / GRID_SIZE; i++)

@@ -218,12 +218,12 @@ void cocobot_pathfinder_allow_start_zone()
     cocobot_pathfinder_set_start_zone_allowed();
 }
 
-void cocobot_pathfinder_init(uint16_t robot_length, uint16_t robot_width)
+void cocobot_pathfinder_init(cocobot_pathfinder_table_init_s * initTable)
 {
     memset(&opponent_robot, 0, sizeof(opponent_table_s));
     g_table_updated = 0;
 
-    cocobot_pathfinder_initialize_table(g_table, robot_length, robot_width);
+    cocobot_pathfinder_initialize_table(g_table, initTable);
     g_table_updated = 1;
 }
 

@@ -2,12 +2,9 @@
 #define COCOBOT_PATHFINDER_TABLE_H
 
 #include <stdint.h>
+#include "cocobot_pathfinder_config.h"
 
-#define TABLE_LENGTH 3000
-#define TABLE_WIDTH 2000
-#define OPPONENT_HALF_DIAG 225
 #define MAXIMUM_NODE_IN_LIST 200
-#define GRID_SIZE 50
 #define MASK_NEW_NODE 0xFF00
 #define MASK_REMOVE_ROBOT 0xF0FF
 
@@ -46,6 +43,26 @@ typedef struct
     uint8_t nb_elements;
 } cocobot_list_s;
 
+typedef enum
+{
+    RECTANGLE = 1,
+    CIRCLE,
+}cocobot_pathfinder_obsType_e;
+
+/*
+ * Structure used to initialize the table
+ * Note : x and y position are pathfinder coordinates.
+ */
+typedef struct 
+{
+    uint16_t x_position;
+    uint16_t y_position;
+    uint16_t x_dimension;
+    uint16_t y_dimension;
+    uint16_t nodeType;
+    uint8_t obsType;
+}cocobot_pathfinder_table_init_s;
+
 
 /**
  * Initialize the table used for a*
@@ -54,7 +71,8 @@ typedef struct
  *  - table : static 2nd array representing the playground area for a*
  *  
  */
-void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint16_t robot_length, uint16_t robot_width);
+//void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint16_t robot_length, uint16_t robot_width);
+void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_pathfinder_table_init_s * initStruct);
 
 /**
  * Set start zone allowed token to true to be allowed on next reset
