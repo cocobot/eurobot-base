@@ -4,9 +4,10 @@
 #include <stdint.h>
 #include "cocobot_pathfinder_config.h"
 
-#define MAXIMUM_NODE_IN_LIST 200
-#define MASK_NEW_NODE 0xFF00
-#define MASK_REMOVE_ROBOT 0xF0FF
+#define MAXIMUM_NODE_IN_LIST        200
+#define MASK_TEMPORARY_OBSTACLE     0x0F00
+#define MASK_NEW_NODE               0xFF00
+#define MASK_REMOVE_ROBOT           0xF0FF
 
 typedef enum
 {
@@ -61,6 +62,7 @@ typedef struct
     uint16_t y_dimension;
     uint16_t nodeType;
     uint8_t obsType;
+    uint8_t isMask;     //Set if the obstacle can be removed during game (case of game element)
 }cocobot_pathfinder_table_init_s;
 
 
@@ -96,24 +98,6 @@ void cocobot_pathfinder_set_robot_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_S
  *  - y : y center of the zone 
  */
 void cocobot_pathfinder_unset_robot_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y);
-
-/**
- * Set a zone where an opponent robot is located
- * Arguments:
- *  - table : static 2nd array representing the playground area for a*
- *  - x : x center of the zone
- *  - y : y center of the zone 
- */
-void cocobot_pathfinder_set_game_element_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y);
-
-/**
- *Unset a zone where an opponent robot was previously located
- * Arguments:
- *  - table : static 2nd array representing the playground area for a*
- *  - x : x center of the zone
- *  - y : y center of the zone 
- */
-void cocobot_pathfinder_unset_game_element_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y);
 
 /**
  * Reset the table to initial state

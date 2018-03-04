@@ -39,4 +39,19 @@
 #define POSITIVE_DEPART_ZONE_X_POSITION     52
 #define POSITIVE_DEPART_ZONE_Y_POSITION     0
 
+
+//Enumeration for removable game element
+typedef enum
+{
+    CUBE_CROSS_0 = 0,
+    CUBE_CROSS_1,
+    CUBE_CROSS_2,
+    CUBE_CROSS_3,
+    CUBE_CROSS_4,
+    CUBE_CROSS_5,
+}gameElement_e;
+
+void cocobot_pathfinder_conf_remove_game_element(gameElement_e element);
+
+
 #endif
