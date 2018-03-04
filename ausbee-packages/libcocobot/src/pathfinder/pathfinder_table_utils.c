@@ -136,11 +136,11 @@ void cocobot_pathfinder_reset_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE
    {
        if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
        {
-           cocobot_pathfinder_set_rectangle_mask(table, 300/GRID_SIZE, 500/GRID_SIZE, 0, 600/GRID_SIZE, TEMPORARY_ALLOWED);
+           cocobot_pathfinder_set_rectangle_mask(table, NEGATIVE_DEPART_ZONE_X_DIMENSION, NEGATIVE_DEPART_ZONE_Y_DIMENSION, NEGATIVE_DEPART_ZONE_X_POSITION, NEGATIVE_DEPART_ZONE_Y_POSITION, TEMPORARY_ALLOWED);
        }
        else
        {
-           cocobot_pathfinder_set_rectangle_mask(table, 300/GRID_SIZE, 500/GRID_SIZE, 2700/GRID_SIZE, 600/GRID_SIZE, TEMPORARY_ALLOWED);
+           cocobot_pathfinder_set_rectangle_mask(table, POSITIVE_DEPART_ZONE_X_DIMENSION, POSITIVE_DEPART_ZONE_Y_DIMENSION, POSITIVE_DEPART_ZONE_X_POSITION, POSITIVE_DEPART_ZONE_Y_POSITION, TEMPORARY_ALLOWED);
        }
        cocobot_start_zone_allowed = 0;
    }  

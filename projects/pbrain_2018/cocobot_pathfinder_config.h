@@ -27,4 +27,16 @@
 // rounded to superior
 #define ROBOT_HALF_DIAG_GRID    5
 
+//Depart zone position and dimension (grid type)
+//WARNING, Calculated with a GRID_SIZE = 50
+#define NEGATIVE_DEPART_ZONE_X_DIMENSION    8
+#define NEGATIVE_DEPART_ZONE_Y_DIMENSION    13
+#define NEGATIVE_DEPART_ZONE_X_POSITION     0
+#define NEGATIVE_DEPART_ZONE_Y_POSITION     0
+
+#define POSITIVE_DEPART_ZONE_X_DIMENSION    8
+#define POSITIVE_DEPART_ZONE_Y_DIMENSION    13
+#define POSITIVE_DEPART_ZONE_X_POSITION     52
+#define POSITIVE_DEPART_ZONE_Y_POSITION     0
+
 #endif
