@@ -63,9 +63,10 @@ void run_strategy(void * arg)
   //  vTaskDelay(5000 / portTICK_PERIOD_MS);
   //}
 
-  //cocobot_pathfinder_set_start_zone_allowed();
+  cocobot_pathfinder_set_start_zone_allowed();
   //cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), 800, 500);
-  //cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), 1000, -200);
+  cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_0);
+  cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), 1300, 500);
   //cocobot_trajectory_goto_d(100, -1);
   //cocobot_trajectory_wait();
   //cocobot_trajectory_goto_d(-100, -1);
@@ -143,8 +144,8 @@ int main(int argc, char *argv[])
    //   break;
   //}
 
-  cocobot_position_set_x(0);
-  cocobot_position_set_y(0);
+  cocobot_position_set_x(-1300);
+  cocobot_position_set_y(500);
   cocobot_position_set_angle(180);
       
   xTaskCreate(run_strategy, "strat", 400, NULL, 2, NULL );

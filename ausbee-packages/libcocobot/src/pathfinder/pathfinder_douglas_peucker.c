@@ -23,6 +23,8 @@ void cocobot_pathfinder_douglas_peucker(cocobot_trajectory_final_s *trajectory, 
             target_index = cocobot_pathfinder_get_next_point(trajectory, start_index, target_index);
         }
     }
+    
+    trajectory->trajectory[trajectory->nbr_points - 1].status = NO_POINT_TO_KEEP;
 }
 
 float cocobot_pathfinder_get_radial_distance(cocobot_point_final_s start, cocobot_point_final_s end, cocobot_point_final_s point)
@@ -39,7 +41,7 @@ void cocobot_pathfinder_init_final_traj(cocobot_trajectory_s *in_traj, cocobot_t
         final_traj->trajectory[i].x = in_traj->trajectory[i].x;
         final_traj->trajectory[i].y = in_traj->trajectory[i].y;
     }
-    final_traj->trajectory[i].status = POINT_TO_KEEP;
+    final_traj->trajectory[i - 1].status = POINT_TO_KEEP;
     final_traj->nbr_points = in_traj->nbr_points;
 }
 
