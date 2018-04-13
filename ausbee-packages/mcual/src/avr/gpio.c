@@ -24,17 +24,25 @@ static PORT_t * mcual_gpio_get_register(mcual_gpio_port_t port)
     case MCUAL_GPIOE:
       return &PORTE;
 
+#ifdef PORTF
     case MCUAL_GPIOF:
       return &PORTF;
+#endif
 
+#ifdef PORTH
     case MCUAL_GPIOH:
       return &PORTH;
+#endif
 
+#ifdef PORTJ
     case MCUAL_GPIOJ:
       return &PORTJ;
+#endif
 
+#ifdef PORTK
     case MCUAL_GPIOK:
       return &PORTK;
+#endif
   }
 
   return NULL;

@@ -1,6 +1,6 @@
 MCUAL_DEPENDENCIES=system operating_systems mcual_autogen
 
-ifeq ($(CONFIG_AVR_CORE),y)
+ifeq ($(CONFIG_XMEGA_CORE),y)
 MCUAL_ARCH=avr
 else
 MCUAL_ARCH=arm

@@ -4,6 +4,8 @@
 #include <mcual.h>
 #include <stdint.h>
 
+#define PLATFORM_MAIN_CLOCK_KHZ 32000
+
 #define PLATFORM_LED0 (1 << 0)
 
 #define PLATFORM_GPIO0                        (1 << 0)

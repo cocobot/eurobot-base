@@ -22,7 +22,7 @@ typedef uint32_t mcual_adc_id_t;
 #define MCUAL_ADC14 ((mcual_adc_id_t) 14)
 #define MCUAL_ADC15 ((mcual_adc_id_t) 15)
 
-void mcual_adc_init();
+void mcual_adc_init(void);
 int32_t mcual_adc_get(mcual_adc_id_t id);
 
 
