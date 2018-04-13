@@ -31,3 +31,9 @@ config PLATFORM_PRISM_V1
   #select device
   select PLATFORM_AVR_CORE
   select PLATFORM_DEVICE_ATXMEGA128A1
+
+config PLATFORM_STEP_2015
+  bool "Step 2015"
+  #select device
+  select PLATFORM_XMEGA_CORE
+  select PLATFORM_DEVICE_ATXMEGA16A4
