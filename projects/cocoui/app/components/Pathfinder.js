@@ -22,55 +22,49 @@ class PathfinderComponent extends React.Component {
           let g = 0;
           let b = 0;
           let af = 0.5;
-          let as = 0.7;
+          let as = 1;
 
-          switch(type) {
-            case 0x8000: //SOFT OBSTACLE
-              r = 255;
-              g = 255;
-              break;
-
-            case 0x4000: //FORBIDDEN
-              r = 255;
-              g = 165;
-              break;
-
-            case 0x2000: //OBSTACLE
-              r = 255;
-              break;
-
-            case 0x1000: //NEW NODE
-              g = 165;
-              break;
-
-            case 0x1004: //NEW NODE + OPEN_LIST
-              g = 100;
-              b = 100;
-              break;
-
-            case 2: //FINAL TRAJ
-              r = 255;
-              b = 255;
-              break;
-
-            case 0x1: //CLOSED LIST
-              g = 255;
-              b = 165;
-              break;
-
-            case 0x0: //?
-              b = 255;
-              break;
-
-            default:
-              console.log("type? ");
-              console.log(type);
-              r = 255;
-              g = 255;
-              b = 255;
-              as = 1;
-              af = 1;
-              break;
+          if(type & 4){//OPEN_LIST
+            g = 100;
+            b = 100;
+          }
+          else if(type & 1){ //CLOSED LIST
+            g = 255;
+            b = 165;
+          }
+          else if(type & 2){ //FINAL_TRAJ
+            r = 255;
+            b = 255;
+          }
+          else if(type & 0x100){ //ROBOT
+            r = 243;
+            g = 84;
+            b = 39;
+          }
+          else if(type & 0x200){ //GAME_ELEMENT
+            r = 243;
+            g = 192;
+            b = 39;
+          }
+          else if(type & 0x2000){ //OBSTACLE
+            r = 255;
+          }
+          else if(type & 0x4000){ //FORBIDDEN
+            r = 0;
+            g = 0;
+            b = 0;
+            af = 0.7;
+          }
+          else if(type & 0x8000){ //SOFT_OBSTACLE
+            r = 0;
+            g = 0;
+            b = 0;
+          }
+          else if(type & 0x1000){ //NEW NODE (Stay with no color)
+            r = 255;
+            g = 255;
+            b = 255;
+            af = 0;
           }
 
           nodes.push(
