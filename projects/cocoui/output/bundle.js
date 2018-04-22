@@ -14015,7 +14015,6 @@ var State = function () {
       switch (pkt.data._name) {
         case "printf":
           {
-            console.warn("log ");
             var not = new Notification('CocoUI', {
               body: pkt.data.msg
             });

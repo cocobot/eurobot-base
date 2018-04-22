@@ -6,7 +6,7 @@ import time
 import sys
 import binascii
 import zlib
-import requests
+import socket
 
 class HexFile():
     def __init__(self, path, pagesize):
@@ -91,7 +91,12 @@ class HexFile():
 
 class Loader():
     def __init__(self, port, hexf):
-        self.serial = serial.Serial(port, '115200', timeout=0.5)
+        if type(port) is socket._socketobject:
+            self.socket = port
+            self.socket.settimeout(0.5)
+        else:
+            self.socket = None
+            self.serial = serial.Serial(port, '115200', timeout=0.5)
         self.hexf = hexf
         self.sync = random.randint(1, 99)
         self.synchronized = False
@@ -100,10 +105,20 @@ class Loader():
     def send(self, data):
         if self.debug:
             print(" >> %s" % data)
-        self.serial.write(data + '\n')
+        if self.socket == None:
+            self.serial.write(data + '\n')
+        else:
+            self.socket.sendall(data + '\n')
 
     def recv(self):
-        data = self.serial.readline()
+        if self.socket == None:
+            data = self.serial.readline()
+        else:
+            try:
+                data = self.socket.recv(2048)
+            except socket.error, e:
+                data = ''
+                pass
         data = data[:-1]
         if self.debug:
             print(" << %s" % data)
@@ -193,22 +208,15 @@ class Loader():
 def bootloader_cocoui():
     print("*** Trying to bootload with CocoUI ***")
     try:
-        files = {'file': open(sys.argv[2], 'rb')}
-        r = requests.post("http://127.0.0.1:3000/api/program", files=files, stream=True)
-        if r.status_code != 200:
-            print(" - Unexpected CocoUI answer: " + str(r.status_code))
-            return False
-
-        lastline = ""
-        for line in r.iter_lines():
-            lastline = line
-            print(" - " + line)
-        
-        if lastline != "Done":
-            return False
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('127.0.0.1', 10001))
+        hexf = HexFile(sys.argv[2], 16 * 1024)
+        loader = Loader(s, hexf)
+        loader.run()
         return True
-    except requests.exceptions.ConnectionError:
+    except socket.error, e:
         print(" - Unable to connect to CocoUI")
+        print(e)
         return False
 
 

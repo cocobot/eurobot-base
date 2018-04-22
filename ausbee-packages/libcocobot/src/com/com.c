@@ -288,7 +288,8 @@ static uint16_t cocobot_com_send_data(char ** fmt, va_list ap, uint16_t crc, uin
 
 
           p = (uint8_t *)v;
-          for(int i = 0; i < strlen(v); i += 1)
+          unsigned int i;
+          for(i = 0; i < strlen(v); i += 1)
           {
             mcual_usart_send(_usart, *(p + i));
             crc = cocobot_com_crc16_update(crc, *(p + i));

@@ -22,7 +22,6 @@ class State {
     switch(pkt.data._name) {
       case "printf":
         {
-          console.warn("log ");
           const not = new Notification('CocoUI', {
             body: pkt.data.msg,
           });

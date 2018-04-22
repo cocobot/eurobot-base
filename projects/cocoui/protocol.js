@@ -69,6 +69,24 @@ Freader
 
 `;
 
+class BootloaderClient {
+  constructor(protocol, socket) {
+    this._protocol = protocol;
+    this._socket = socket;
+    
+    this._socket.on('close', () => this._onClose());
+    this._socket.on('data', (data) => this._onData(data));
+  }
+
+  _onClose() {
+    console.log("Closed");
+  }
+
+  _onData(data) {
+    console.log(data);
+  }
+}
+
 class Client {
   constructor(protocol, socket) {
     this._protocol = protocol;
@@ -232,10 +250,17 @@ class Protocol {
   _createTCPServer() {
     this._server = net.createServer((socket) => this._newTCPClient(socket));
     this._server.listen(10000, '127.0.0.1');
+
+    this._bootloader = net.createServer((socket) => this._newTCPBootloaderClient(socket));
+    this._bootloader.listen(10001, '127.0.0.1');
   }
 
   _newTCPClient(socket) {
     new Client(this, socket);
+  }
+
+  _newTCPBootloaderClient(socket) {
+    new BootloaderClient(this, socket);
   }
 }
 
