@@ -92,7 +92,6 @@ void cocobot_action_scheduler_set_pause(int paused)
 void cocobot_action_scheduler_use_pathfinder(int use_pathfinder)
 {
   current_game_state.use_pathfinder = use_pathfinder;
-  printf("USE pathfinder %d\n", use_pathfinder);
 }
 
 void cocobot_action_scheduler_start(void)
@@ -149,7 +148,7 @@ void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH],
   }
   else
   {
-    printf("[Warning] cocobot_action_scheduler: Action list full.\n");
+    cocobot_com_printf("[Warning] cocobot_action_scheduler: Action list full.\n");
   }
 }
 

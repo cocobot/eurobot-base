@@ -18,6 +18,7 @@ int main(void)
 {
   platform_init();
 
+  /*
   platform_gpio_set_direction(MECA_CRIMP_ENABLE, MCUAL_GPIO_OUTPUT);
   platform_gpio_set_direction(MECA_SUCKER_LEFT_PUMP, MCUAL_GPIO_OUTPUT);
   platform_gpio_set_direction(MECA_SUCKER_LEFT_SUCKER, MCUAL_GPIO_OUTPUT);
@@ -29,6 +30,7 @@ int main(void)
   platform_gpio_clear(MECA_SUCKER_LEFT_SUCKER);
   platform_gpio_clear(MECA_SUCKER_RIGHT_PUMP);
   platform_gpio_clear(MECA_SUCKER_RIGHT_SUCKER);
+  */
 
 
 

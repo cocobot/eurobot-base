@@ -9,38 +9,28 @@
 #include "strat_easy_dune.h"
 #include "strat_dune_attack.h"
 
-static unsigned int _shell_configuration;
-
-void update_lcd(void * arg)
+void update_led(void * arg)
 {
   (void)arg;
 
-  platform_gpio_set_direction(PLATFORM_GPIO0, MCUAL_GPIO_OUTPUT);
-
-#ifndef AUSBEE_SIM
-  int vbat = platform_adc_get_mV(PLATFORM_ADC_VBAT);
-  if(vbat < COCOBOT_LOW_BAT_THRESHOLD)
-  {
-    while(1)
-    {
-      platform_gpio_toggle(PLATFORM_GPIO0);
-
-      //disable everything
-      cocobot_asserv_set_state(COCOBOT_ASSERV_DISABLE);
-
-      vTaskDelay(500 / portTICK_PERIOD_MS);
-    }
-  }
-#endif
-
-  //blink for the fun
-  int i;
-  for(i = 0; i < 20; i += 1)
-  {
-    platform_gpio_toggle(PLATFORM_GPIO0);
-
-    vTaskDelay(50 / portTICK_PERIOD_MS);
-  }
+//#ifndef AUSBEE_SIM
+//  int vbat = platform_adc_get_mV(PLATFORM_ADC_VBAT);
+//  if(vbat < COCOBOT_LOW_BAT_THRESHOLD)
+//  {
+//    while(1)
+//    {
+//      platform_gpio_toggle(PLATFORM_GPIO0);
+//
+//      //disable everything
+//      meca_sucker_disable();
+//      meca_umbrella_disable();
+//      meca_crimp_disable();
+//      cocobot_asserv_set_state(COCOBOT_ASSERV_DISABLE);
+//
+//      vTaskDelay(500 / portTICK_PERIOD_MS);
+//    }
+//  }
+//#endif
 
   while(1)
   {
@@ -145,7 +135,7 @@ int main(int argc, char *argv[])
   }
 
   xTaskCreate(run_strategy, "strat", 400, NULL, 2, NULL );
-  xTaskCreate(update_lcd, "blink", 200, NULL, 1, NULL );
+  xTaskCreate(update_led, "blink", 200, NULL, 1, NULL );
 
   vTaskStartScheduler();
 

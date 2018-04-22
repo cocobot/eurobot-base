@@ -160,6 +160,7 @@ cocobot_asserv_state_t cocobot_asserv_get_state(void)
 
 void cocobot_asserv_com_handler(uint16_t pid)
 {
+  (void)pid;
 #if 0
   if(strcmp(command,"ramp_distance_speed") == 0)
   {

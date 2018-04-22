@@ -1,5 +1,5 @@
 import React from 'react';
-import TopMenu from './topmenu';
+import TopMenu from './TopMenu';
 import Position from './position';
 
 class Cocoui extends React.Component {

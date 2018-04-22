@@ -67,6 +67,7 @@ class Client {
     this._peripheral = null;
     this._header = null;
     this._id = CLIENT_ID;
+    this._sync = true;
     CLIENT_ID += 1;
 
     this._socket.on('close', () => this._onClose());
@@ -107,7 +108,11 @@ class Client {
         if(this._buffer.length > 0) {
           if(this._buffer.readUInt8(0) != MAGIC_START) {
             this._buffer = this._buffer.slice(1);
-            console.log("Resync...");
+            if(this._sync) {
+              console.log("Resync...");
+              console.log(this._buffer);
+            }
+            this._sync = false;
             setTimeout(() => this._parseData(), 0);
           }
           else {
@@ -139,6 +144,10 @@ class Client {
       }
       else {
         if(this._header.buffer.length == (this._header.len + 2)) {
+          if(!this._sync) {
+            console.log("Synchronized !"); 
+          }
+          this._sync = true;
           this._parse(this._header);
           this._header = null;
           setTimeout(() => this._parseData(), 0);

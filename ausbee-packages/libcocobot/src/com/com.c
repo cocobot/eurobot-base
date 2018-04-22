@@ -40,7 +40,6 @@ void cocobot_com_async_thread(void *arg)
     vTaskDelayUntil( &xLastWakeTime, 100 / portTICK_PERIOD_MS);
   }
 }
-
 void cocobot_com_init(mcual_usart_id_t usart_id, unsigned int priority_monitor, unsigned int priority_async, cocobot_com_handler_t handler)
 {
   _usart = usart_id;
@@ -267,14 +266,17 @@ static uint16_t cocobot_com_send_data(char ** fmt, va_list ap, uint16_t crc, uin
           mcual_usart_send(_usart, *(p + 1));
           crc = cocobot_com_crc16_update(crc, *(p + 1));
 
-          int i;
+          unsigned int i;
           (*fmt) += 1;
-          for(i = start; i < end; i += 1)
+          while(end < start) {
+            end += arrsize;
+          }
+          for(i = start; i != end; i += 1)
           {
             va_list ap_cpy;
             va_copy(ap_cpy, ap);
             char * nfmt = *fmt;
-            crc = cocobot_com_send_data(&nfmt, ap_cpy, crc, ptr + elmsize * i);
+            crc = cocobot_com_send_data(&nfmt, ap_cpy, crc, ptr + elmsize * (i % arrsize));
             va_end(ap_cpy);
           }
           

@@ -9432,9 +9432,9 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _topmenu = __webpack_require__(66);
+var _TopMenu = __webpack_require__(88);
 
-var _topmenu2 = _interopRequireDefault(_topmenu);
+var _TopMenu2 = _interopRequireDefault(_TopMenu);
 
 var _position = __webpack_require__(77);
 
@@ -9463,7 +9463,7 @@ var Cocoui = function (_React$Component) {
       return _react2.default.createElement(
         'div',
         null,
-        _react2.default.createElement(_topmenu2.default, null),
+        _react2.default.createElement(_TopMenu2.default, null),
         _react2.default.createElement(_position2.default, null)
       );
     }
@@ -9475,66 +9475,7 @@ var Cocoui = function (_React$Component) {
 exports.default = Cocoui;
 
 /***/ }),
-/* 66 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactstrap = __webpack_require__(18);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var TopMenu = function (_React$Component) {
-  _inherits(TopMenu, _React$Component);
-
-  function TopMenu() {
-    _classCallCheck(this, TopMenu);
-
-    return _possibleConstructorReturn(this, (TopMenu.__proto__ || Object.getPrototypeOf(TopMenu)).apply(this, arguments));
-  }
-
-  _createClass(TopMenu, [{
-    key: 'render',
-    value: function render() {
-      return _react2.default.createElement(
-        'div',
-        null,
-        _react2.default.createElement(
-          _reactstrap.Navbar,
-          { color: 'dark', dark: true },
-          _react2.default.createElement(
-            _reactstrap.NavbarBrand,
-            { href: '#' },
-            'CocoUI'
-          )
-        )
-      );
-    }
-  }]);
-
-  return TopMenu;
-}(_react2.default.Component);
-
-exports.default = TopMenu;
-
-/***/ }),
+/* 66 */,
 /* 67 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -19178,6 +19119,95 @@ var options = exports.options = function options() {
   return Immutable;
 
 }));
+
+/***/ }),
+/* 88 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactstrap = __webpack_require__(18);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var TopMenu = function (_React$Component) {
+  _inherits(TopMenu, _React$Component);
+
+  function TopMenu() {
+    _classCallCheck(this, TopMenu);
+
+    return _possibleConstructorReturn(this, (TopMenu.__proto__ || Object.getPrototypeOf(TopMenu)).apply(this, arguments));
+  }
+
+  _createClass(TopMenu, [{
+    key: 'render',
+    value: function render() {
+      return _react2.default.createElement(
+        'div',
+        null,
+        _react2.default.createElement(
+          _reactstrap.Navbar,
+          { color: 'dark', dark: true },
+          _react2.default.createElement(
+            _reactstrap.NavbarBrand,
+            { href: '#' },
+            'CocoUI'
+          ),
+          _react2.default.createElement(
+            _reactstrap.UncontrolledDropdown,
+            { nav: true, inNavbar: true },
+            _react2.default.createElement(
+              _reactstrap.DropdownToggle,
+              { nav: true, caret: true },
+              'Options'
+            ),
+            _react2.default.createElement(
+              _reactstrap.DropdownMenu,
+              null,
+              _react2.default.createElement(
+                _reactstrap.DropdownItem,
+                null,
+                'Option 1'
+              ),
+              _react2.default.createElement(
+                _reactstrap.DropdownItem,
+                null,
+                'Option 2'
+              ),
+              _react2.default.createElement(_reactstrap.DropdownItem, { divider: true }),
+              _react2.default.createElement(
+                _reactstrap.DropdownItem,
+                null,
+                'Reset'
+              )
+            )
+          )
+        )
+      );
+    }
+  }]);
+
+  return TopMenu;
+}(_react2.default.Component);
+
+exports.default = TopMenu;
 
 /***/ })
 /******/ ]);
