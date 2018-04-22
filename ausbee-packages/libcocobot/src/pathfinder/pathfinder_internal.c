@@ -58,7 +58,6 @@ void cocobot_pathfinder_compute_node(cocobot_list_s *open_list, cocobot_node_s* 
     {
         if((parent_node->cost - cocobot_pathfinder_get_distance(parent_node, &g_target_node)) + cocobot_pathfinder_get_distance(parent_node, node) + cocobot_pathfinder_get_distance(node, &g_target_node) < node->cost)
         {
-            //cocobot_console_send_asynchronous("OPEN MOD","x=%d, y=%d, px=%d, py=%d, status=%x cost :%f", node->x, node->y, node->pX, node->pY, node->nodeType,(double) node->cost);
             cocobot_pathfinder_remove_from_list(open_list, node);
             node->cost = (parent_node->cost - cocobot_pathfinder_get_distance(parent_node, &g_target_node)) + cocobot_pathfinder_get_distance(parent_node, node) + cocobot_pathfinder_get_distance(node, &g_target_node);
             node->pX = parent_node->x;
@@ -67,12 +66,11 @@ void cocobot_pathfinder_compute_node(cocobot_list_s *open_list, cocobot_node_s* 
         }
         else
         {
-            ;//cocobot_console_send_asynchronous("OPEN","x=%d, y=%d, px=%d, py=%d, status=%x cost :%f", node->x, node->y, node->pX, node->pY, node->nodeType,(double) node->cost);
+            ;
         }
     }
     else if((node->nodeType & CLOSED_LIST) == CLOSED_LIST)
     {
-        //cocobot_console_send_asynchronous("CLOSED","x=%d, y=%d", node->x, node->y);
         ;//Do nothing
     }
     else if((node->nodeType & NEW_NODE) == NEW_NODE)
@@ -81,7 +79,6 @@ void cocobot_pathfinder_compute_node(cocobot_list_s *open_list, cocobot_node_s* 
         node->pY = parent_node->y;
         node->nodeType |= OPEN_LIST;
         node->cost = (parent_node->cost - cocobot_pathfinder_get_distance(parent_node, &g_target_node)) + cocobot_pathfinder_get_distance(parent_node, node) + cocobot_pathfinder_get_distance(node, &g_target_node);
-        //cocobot_console_send_asynchronous("NEW_NODE","x=%d, y=%d px:%d py:%d status=%x cost :%f", node->x, node->y, node->pX, node->pY, node->nodeType,(double) node->cost);
         cocobot_pathfinder_add_to_list(open_list, node);
     }
     else if((node->nodeType & TEMPORARY_ALLOWED) == TEMPORARY_ALLOWED)
@@ -90,12 +87,10 @@ void cocobot_pathfinder_compute_node(cocobot_list_s *open_list, cocobot_node_s* 
         node->pY = parent_node->y;
         node->nodeType |= OPEN_LIST;
         node->cost = (parent_node->cost - cocobot_pathfinder_get_distance(parent_node, &g_target_node)) + cocobot_pathfinder_get_distance(parent_node, node) + cocobot_pathfinder_get_distance(node, &g_target_node);
-        //cocobot_console_send_asynchronous("TEMP","x=%d, y=%d, px=%d, py=%d, status=%x cost :%f", node->x, node->y, node->pX, node->pY, node->nodeType,(double) node->cost);
         cocobot_pathfinder_add_to_list(open_list, node);
     }
     else
     {
-        //cocobot_console_send_asynchronous("OTHER","x=%d, y=%d", node->x, node->y);
         ;//Do nothing for all other cases
     }
 }
@@ -154,11 +149,10 @@ void cocobot_pathfinder_add_to_list(cocobot_list_s *list, cocobot_node_s *node)
         }
         else
         {
-            cocobot_com_printf("ADD: Cost is too big : cost :%f", (double)node->cost);
+            cocobot_com_printf("ADD: Cost is too big : cost :%f\r\n", (double)node->cost);
             //TBD
             //Cost is too big, not added in list --> not supposed to happen, take a list size big enough
         }
-        //cocobot_console_send_asynchronous("ADD","x:%d, y:%d, cost :%f index:%d", node->x, node->y, (double)node->cost, index);
     }
     list->nb_elements++;
 }
@@ -181,7 +175,6 @@ int cocobot_pathfinder_remove_from_list(cocobot_list_s *list, cocobot_node_s *no
         }
         if(index != (MAXIMUM_NODE_IN_LIST - 1))
         {
-            //cocobot_console_send_asynchronous("REMOVE","x:%d, y:%d, px:%d, py:%d, cost :%f index:%d", list->table[index].x, list->table[index].y, list->table[index].pX, list->table[index].pY, (double)list->table[index].cost, index);
             memmove(&list->table[index], &list->table[index+1], (list->nb_elements - index - 1) * sizeof(cocobot_node_s*));
             list->nb_elements--;
         }
@@ -196,7 +189,7 @@ int cocobot_pathfinder_remove_from_list(cocobot_list_s *list, cocobot_node_s *no
 void cocobot_pathfinder_set_target_node(cocobot_node_s *target_node)
 {
     memcpy(&g_target_node, target_node, sizeof(cocobot_node_s));
-    cocobot_com_printf("TARGET_NODE: x= %d, y= %d, nodeType = %x", g_target_node.x, g_target_node.y, g_target_node.nodeType);
+    cocobot_com_printf("TARGET_NODE: x=%d, y=%d, nodeType = %x\r\n", g_target_node.x, g_target_node.y, g_target_node.nodeType);
 }
 
 void cocobot_pathfinder_save_real_target_node(int16_t x, int16_t y)
@@ -208,7 +201,7 @@ void cocobot_pathfinder_save_real_target_node(int16_t x, int16_t y)
 void cocobot_pathfinder_set_start_node(cocobot_node_s *start_node)
 {
     memcpy(&g_start_node, start_node, sizeof(cocobot_node_s));
-    cocobot_com_printf("STARTING_NODE x= %d, y= %d", g_start_node.x, g_start_node.y);
+    cocobot_com_printf("STARTING_NODE x=%d, y=%d\r\n", g_start_node.x, g_start_node.y);
 }
 
 void cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_trajectory_s* trajectory)
@@ -217,7 +210,7 @@ void cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s tabl
     final_node->nodeType |= FINAL_TRAJ;
     while((final_node->x !=  g_start_node.x) || (final_node->y != g_start_node.y))
     {
-        cocobot_com_printf("PATH x= %d, y= %d px=%d, py=%d", final_node->x, final_node->y, final_node->pX, final_node->pY);
+        cocobot_com_printf("PATH x=%d, y=%d px=%d, py=%d\r\n", final_node->x, final_node->y, final_node->pX, final_node->pY);
         //fill trajectory beginning by the end
         trajectory->trajectory[TRAJECTORY_NBR_POINTS_MAX - 1 - trajectory->nbr_points] = cocobot_pathfinder_get_point_from_node(final_node);
         trajectory->nbr_points++;
@@ -225,7 +218,7 @@ void cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s tabl
         final_node->nodeType &= 0xFF0;
         final_node->nodeType |= FINAL_TRAJ;
     }
-    cocobot_com_printf("PATH x= %d, y= %d", final_node->x, final_node->y);
+    cocobot_com_printf("PATH x=%d, y=%d\r\n", final_node->x, final_node->y);
     //last point
     trajectory->trajectory[TRAJECTORY_NBR_POINTS_MAX - 1 - trajectory->nbr_points] = cocobot_pathfinder_get_point_from_node(final_node);
     trajectory->nbr_points++;
@@ -250,11 +243,11 @@ void cocobot_pathfinder_set_trajectory(cocobot_trajectory_s *trajectory)
         {
             point = cocobot_pathfinder_get_real_coordinate(resultTraj.trajectory[i]);
             cocobot_trajectory_goto_xy(point.x, point.y, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-            cocobot_com_printf("LINEAR_PATH: x= %d (x=%d), y=%d (y=%d)", point.x, resultTraj.trajectory[i].x, point.y, resultTraj.trajectory[i].y);
+            cocobot_com_printf("LINEAR_PATH: x=%d (x=%d), y=%d (y=%d)\r\n", point.x, resultTraj.trajectory[i].x, point.y, resultTraj.trajectory[i].y);
         }
     }
     cocobot_trajectory_goto_xy(g_real_target_point.x, g_real_target_point.y, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-    cocobot_com_printf("LINEAR_PATH: x= %d, y=%d", g_real_target_point.x, g_real_target_point.y);
+    cocobot_com_printf("LINEAR_PATH: x=%d, y=%d\r\n", g_real_target_point.x, g_real_target_point.y);
 
 }
 
