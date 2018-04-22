@@ -342,7 +342,10 @@ void cocobot_com_send(uint16_t pid, char * fmt, ...)
 void cocobot_com_printf(char * fmt, ...)
 {
 #ifdef AUSBEE_SIM
-  fprintf(stderr, "%s", fmt);
+  va_list ap;
+  va_start(ap, fmt);  
+  vfprintf(stderr, fmt, ap);
+  va_end(ap);
 #endif
   (void)fmt;
 }
