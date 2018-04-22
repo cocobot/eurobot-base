@@ -33,13 +33,14 @@ float cocobot_pathfinder_get_radial_distance(cocobot_point_final_s start, cocobo
 
 void cocobot_pathfinder_init_final_traj(cocobot_trajectory_s *in_traj, cocobot_trajectory_final_s *final_traj)
 {
-    final_traj->trajectory[0].status = POINT_TO_KEEP;
     int i = 0;
     for(i = 0; i < in_traj->nbr_points; i++)
     {
         final_traj->trajectory[i].x = in_traj->trajectory[i].x;
         final_traj->trajectory[i].y = in_traj->trajectory[i].y;
+        final_traj->trajectory[i].status = NO_POINT_TO_KEEP;
     }
+    final_traj->trajectory[0].status = POINT_TO_KEEP;
     final_traj->trajectory[i - 1].status = POINT_TO_KEEP;
     final_traj->nbr_points = in_traj->nbr_points;
 }
