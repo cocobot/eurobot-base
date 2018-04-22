@@ -21,6 +21,7 @@ typedef struct __attribute__((packed))
 
 static SemaphoreHandle_t _mutex;
 static mcual_usart_id_t _usart;
+static char _printf_buffer[64];
 
 void cocobot_com_async_thread(void *arg)
 {
@@ -84,7 +85,7 @@ static int cocobot_com_compute_len(char ** fmt, va_list ap, uint32_t nested)
   for(; (**fmt) != 0; (*fmt) += 1)
   {
     switch(**fmt)
-    {
+    { 
       case 'F':
         {
           size += 4;
@@ -126,6 +127,25 @@ static int cocobot_com_compute_len(char ** fmt, va_list ap, uint32_t nested)
           }
         }
         break;
+
+      case 'S':
+        {
+          size += 2;
+          if(nested)
+          {
+#ifdef AUSBEE_SIM
+        fprintf(stderr, "COM: nested string is now supported\n");
+#endif
+            va_arg(ap, size_t); //offsetof
+          }
+          else
+          {
+            const char * ptr = va_arg(ap, const char *);
+            size += strlen(ptr) + 1;
+          }
+        }
+        break;
+
 
       case ']':
         return size;
@@ -247,6 +267,39 @@ static uint16_t cocobot_com_send_data(char ** fmt, va_list ap, uint16_t crc, uin
         }
         break;
 
+      case 'S':
+        {
+          char * v = "";
+          if(ptr == NULL)
+          {
+            v = va_arg(ap, char *);
+          }
+          else
+          {
+            //no nested string
+          }
+
+          unsigned int len = strlen(v);
+          uint8_t * p = (uint8_t *)&len;
+          mcual_usart_send(_usart, *(p + 0));
+          crc = cocobot_com_crc16_update(crc, *(p + 0));
+          mcual_usart_send(_usart, *(p + 1));
+          crc = cocobot_com_crc16_update(crc, *(p + 1));
+
+
+          p = (uint8_t *)v;
+          for(int i = 0; i < strlen(v); i += 1)
+          {
+            mcual_usart_send(_usart, *(p + i));
+            crc = cocobot_com_crc16_update(crc, *(p + i));
+          }
+
+          mcual_usart_send(_usart, 0);
+          crc = cocobot_com_crc16_update(crc, 0);
+        }
+        break;
+
+
       case ']':
         return crc;
         break;
@@ -286,7 +339,7 @@ static uint16_t cocobot_com_send_data(char ** fmt, va_list ap, uint16_t crc, uin
 
       default:
 #ifdef AUSBEE_SIM
-        fprintf(stderr, "COM: Unknown size of %c(%s)\n", **fmt, *fmt);
+        fprintf(stderr, "COM: Unknown way to send data of %c(%s)\n", **fmt, *fmt);
 #endif
         break;
     }
@@ -343,8 +396,12 @@ void cocobot_com_send(uint16_t pid, char * fmt, ...)
 
 void cocobot_com_printf(char * fmt, ...)
 {
+  va_list ap;
+  va_start(ap, fmt);
+  vsnprintf(_printf_buffer, sizeof(_printf_buffer), fmt, ap);
+  va_end(ap);
 #ifdef AUSBEE_SIM
-  fprintf(stderr, "%s", fmt);
+  fprintf(stderr, "%s", _printf_buffer);
 #endif
-  (void)fmt;
+  cocobot_com_send(COCOBOT_COM_PRINTF_PID, "S", _printf_buffer);
 }
