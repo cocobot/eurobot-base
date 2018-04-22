@@ -88,7 +88,7 @@ const cocobot_pathfinder_table_init_s initTable [] =
     
 
 
-    {0, 0, 0, 0, 0, 0}//Last line
+    {0, 0, 0, 0, 0, 0, 0}//Last line
 };
 
 
