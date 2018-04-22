@@ -210,7 +210,7 @@ void cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s tabl
     final_node->nodeType |= FINAL_TRAJ;
     while((final_node->x !=  g_start_node.x) || (final_node->y != g_start_node.y))
     {
-        cocobot_com_printf("PATH x=%d, y=%d px=%d, py=%d\r\n", final_node->x, final_node->y, final_node->pX, final_node->pY);
+        //cocobot_com_printf("PATH x=%d, y=%d px=%d, py=%d\r\n", final_node->x, final_node->y, final_node->pX, final_node->pY);
         //fill trajectory beginning by the end
         trajectory->trajectory[TRAJECTORY_NBR_POINTS_MAX - 1 - trajectory->nbr_points] = cocobot_pathfinder_get_point_from_node(final_node);
         trajectory->nbr_points++;
@@ -218,7 +218,7 @@ void cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s tabl
         final_node->nodeType &= MASK_NEW_NODE;
         final_node->nodeType |= FINAL_TRAJ;
     }
-    cocobot_com_printf("PATH x=%d, y=%d\r\n", final_node->x, final_node->y);
+    //cocobot_com_printf("PATH x=%d, y=%d\r\n", final_node->x, final_node->y);
     //last point
     trajectory->trajectory[TRAJECTORY_NBR_POINTS_MAX - 1 - trajectory->nbr_points] = cocobot_pathfinder_get_point_from_node(final_node);
     trajectory->nbr_points++;

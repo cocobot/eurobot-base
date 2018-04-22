@@ -91,7 +91,6 @@ void cocobot_pathfinder_set_point_unmask(cocobot_node_s table[][TABLE_WIDTH/GRID
     //Security to avoid buffer overflow
     if((x < TABLE_LENGTH/GRID_SIZE) && (y < TABLE_WIDTH/GRID_SIZE) && (x >= 0) && (y >= 0))
         table[x][y].nodeType &= ~(uint16_t)node_type;
-    //cocobot_console_send_asynchronous("TABLE","x=%d, y=%d status=%x", x, y, table[x][y].nodeType );
 }
 
 void cocobot_pathfinder_set_rectangle_unmask(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int x_dimension, int y_dimension, int x_position, int y_position, cocobot_nodeType_e node_type)
