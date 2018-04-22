@@ -18,53 +18,65 @@ class PathfinderComponent extends React.Component {
         const node = this.props.nodes[i * this.props.width + j];
         if(node != null) {
           const type  = node.type;
-          let r = 0;
-          let g = 0;
-          let b = 0;
+          //Default = jaune
+          let r = 237;
+          let g = 235;
+          let b = 26;
           let af = 0.5;
           let as = 1;
 
-          if(type & 4){//OPEN_LIST
+          if(type & 4){//OPEN_LIST = Turquoise foncé
+            r = 0;
             g = 100;
             b = 100;
           }
-          else if(type & 1){ //CLOSED LIST
+          else if(type & 1){ //CLOSED LIST = Turquoise clair
+            r = 0;
             g = 255;
             b = 165;
           }
-          else if(type & 2){ //FINAL_TRAJ
+          else if(type & 2){ //FINAL_TRAJ = Fushia
             r = 255;
+            g = 0;
             b = 255;
           }
-          else if(type & 0x100){ //ROBOT
+          else if(type & 0x100){ //ROBOT Orange foncé
             r = 243;
             g = 84;
             b = 39;
           }
-          else if(type & 0x200){ //GAME_ELEMENT
+          else if(type & 0x200){ //GAME_ELEMENT Orange clair
             r = 243;
             g = 192;
             b = 39;
           }
-          else if(type & 0x2000){ //OBSTACLE
+          else if(type & 0x2000){ //OBSTACLE Rouge
             r = 255;
+            g = 0;
+            b = 0;
           }
-          else if(type & 0x4000){ //FORBIDDEN
+          else if(type & 0x4000){ //FORBIDDEN Gris foncé
             r = 0;
             g = 0;
             b = 0;
             af = 0.7;
           }
-          else if(type & 0x8000){ //SOFT_OBSTACLE
+          else if(type & 0x8000){ //SOFT_OBSTACLE Gris clair
             r = 0;
             g = 0;
             b = 0;
           }
-          else if(type & 0x1000){ //NEW NODE (Stay with no color)
+          else if(type & 0x1000){ //NEW NODE (No color)
             r = 255;
             g = 255;
             b = 255;
             af = 0;
+          }
+          else{ //Used as debug, When a node reach an inconsistant state
+            r = type & 0xff;
+            g = type & 0xff00;
+            b = 0;
+            af = 1;
           }
 
           nodes.push(
