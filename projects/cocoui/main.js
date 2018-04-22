@@ -7,7 +7,7 @@ const Protocol = require('./protocol');
 const protocol = new Protocol();
  
 app.on('ready', () => {
-  mainWindow = new BrowserWindow({
+  const mainWindow = new BrowserWindow({
     height: 650,
     width: 1200,
   });

@@ -14012,7 +14012,16 @@ var State = function () {
     key: '_handlePkt',
     value: function _handlePkt(pkt) {
       this._store.dispatch((0, _actions.saveRobotPacket)(pkt));
-      //
+      switch (pkt.data._name) {
+        case "printf":
+          {
+            console.warn("log ");
+            var not = new Notification('CocoUI', {
+              body: pkt.data.msg
+            });
+          }
+          break;
+      }
     }
   }, {
     key: 'getStore',

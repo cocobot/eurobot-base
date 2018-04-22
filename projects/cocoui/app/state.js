@@ -19,7 +19,16 @@ class State {
 
   _handlePkt(pkt) {
     this._store.dispatch(saveRobotPacket(pkt));
-    //
+    switch(pkt.data._name) {
+      case "printf":
+        {
+          console.warn("log ");
+          const not = new Notification('CocoUI', {
+            body: pkt.data.msg,
+          });
+        }
+        break;
+    }
   }
 
   getStore() {
