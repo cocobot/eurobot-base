@@ -12,62 +12,34 @@
 #include "strat_easy_dune.h"
 #include "strat_dune_attack.h"
 
-static unsigned int _shell_configuration;
-static int do_funny_action;
-
-void update_lcd(void * arg)
+void update_led(void * arg)
 {
   (void)arg;
 
-  platform_gpio_set_direction(PLATFORM_GPIO0, MCUAL_GPIO_OUTPUT);
-
-#ifndef AUSBEE_SIM
-  int vbat = platform_adc_get_mV(PLATFORM_ADC_VBAT);
-  if(vbat < COCOBOT_LOW_BAT_THRESHOLD)
-  {
-    while(1)
-    {
-      platform_gpio_toggle(PLATFORM_GPIO0);
-
-      //disable everything
-      meca_sucker_disable();
-      meca_umbrella_disable();
-      meca_crimp_disable();
-      cocobot_asserv_set_state(COCOBOT_ASSERV_DISABLE);
-
-      vTaskDelay(500 / portTICK_PERIOD_MS);
-    }
-  }
-#endif
-
-  //blink for the fun
-  int i;
-  for(i = 0; i < 20; i += 1)
-  {
-    platform_gpio_toggle(PLATFORM_GPIO0);
-
-    vTaskDelay(50 / portTICK_PERIOD_MS);
-  }
+//#ifndef AUSBEE_SIM
+//  int vbat = platform_adc_get_mV(PLATFORM_ADC_VBAT);
+//  if(vbat < COCOBOT_LOW_BAT_THRESHOLD)
+//  {
+//    while(1)
+//    {
+//      platform_gpio_toggle(PLATFORM_GPIO0);
+//
+//      //disable everything
+//      meca_sucker_disable();
+//      meca_umbrella_disable();
+//      meca_crimp_disable();
+//      cocobot_asserv_set_state(COCOBOT_ASSERV_DISABLE);
+//
+//      vTaskDelay(500 / portTICK_PERIOD_MS);
+//    }
+//  }
+//#endif
 
   while(1)
   {
     //toggle led
     vTaskDelay(100 / portTICK_PERIOD_MS);
     platform_led_toggle(PLATFORM_LED0);
-
-    if(do_funny_action)
-    {
-
-      meca_sucker_disable();
-      meca_crimp_disable();
-
-      meca_umbrella_open();
-
-      while(1)
-      {
-        vTaskDelay(100 / portTICK_PERIOD_MS);
-      }
-    }
   }
 }
 
@@ -129,15 +101,10 @@ int console_handler(const char * command)
   return handled;
 }
 
-void funny_action(void)
-{
-  do_funny_action = 1;
-  platform_gpio_set(PLATFORM_GPIO0);
-}
-
 int main(void) 
 {
   platform_init();
+  /*
   cocobot_console_init(MCUAL_USART1, 1, 1, console_handler);
   cocobot_lcd_init();
   cocobot_position_init(4);
@@ -171,7 +138,8 @@ int main(void)
   }
 
   xTaskCreate(run_strategy, "strat", 400, NULL, 2, NULL );
-  xTaskCreate(update_lcd, "blink", 200, NULL, 1, NULL );
+  */
+  xTaskCreate(update_led, "blink", 200, NULL, 1, NULL );
 
   vTaskStartScheduler();
 
