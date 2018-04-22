@@ -52,7 +52,7 @@ uint16_t cocobot_pathfinder_get_trajectory_time(int16_t starting_point_x, int16_
         if(open_list.nb_elements != 0)
         {
             //get first of the list
-            open_list.table[0]->nodeType &= 0xFF0;
+            open_list.table[0]->nodeType &= MASK_NEW_NODE;
             open_list.table[0]->nodeType |= CLOSED_LIST;
             current_node = *open_list.table[0];
             cocobot_pathfinder_remove_from_list(&open_list, open_list.table[0]);
@@ -112,7 +112,7 @@ char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t sta
         if(open_list.nb_elements != 0)
         {
             //get first of the list
-            open_list.table[0]->nodeType &= 0xFF0;
+            open_list.table[0]->nodeType &= MASK_NEW_NODE;
             open_list.table[0]->nodeType |= CLOSED_LIST;
             current_node = *open_list.table[0];
             cocobot_pathfinder_remove_from_list(&open_list, open_list.table[0]);
