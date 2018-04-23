@@ -97,6 +97,15 @@ class BootloaderClient {
 class Client {
   constructor(protocol) {
     this._protocol = protocol;
+    this._init = false;
+    this._buffer = Buffer.alloc(0);
+    this._peripheral = null;
+    this._header = null;
+    this._id = CLIENT_ID;
+    this._sync = true;
+    CLIENT_ID += 1;
+
+
     this._protocol._clients.push(this);
   }
 
@@ -237,15 +246,6 @@ class Client {
 class SerialClient extends Client {
   constructor(protocol, serial) {
     super(protocol);
-    this._init = false;
-    this._buffer = Buffer.alloc(0);
-    this._peripheral = null;
-    this._header = null;
-    this._id = CLIENT_ID;
-    this._sync = true;
-    CLIENT_ID += 1;
-
-
     this._serial = serial;
   }
 
