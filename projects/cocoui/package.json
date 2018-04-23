@@ -4,19 +4,21 @@
   "dependencies": {
     "bootstrap": "^4.0.0-beta.1",
     "css-loader": "^0.28.8",
-    "electron": "^1.7.9",
+    "electron": "^1.8.0",
     "immutable": "^3.8.2",
     "pegjs": "^0.10.0",
     "react-redux": "^5.0.6",
     "reactstrap": "^5.0.0-alpha.4",
     "redux": "^3.7.2",
+    "serialport": "^6.2.0",
     "style-loader": "^0.19.1"
   },
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "build": "webpack",
-    "watch": "webpack -w"
+    "watch": "webpack -w",
+    "install": "electron-rebuild"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
@@ -25,6 +27,7 @@
     "babel-preset-react": "^6.24.1",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
-    "webpack": "^3.10.0"
+    "webpack": "^3.10.0",
+    "electron-rebuild": "^1.4.0"
   }
 }

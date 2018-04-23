@@ -2,6 +2,7 @@ const net = require('net');
 const electron = require('electron');
 const peg = require("pegjs");
 const BrowserWindow = electron.BrowserWindow;
+const serial = require('serialport').SerialPort;
 
 let CLIENT_ID = 0;
 const MAGIC_START = 0xc0;
