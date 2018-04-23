@@ -76,14 +76,20 @@ class BootloaderClient {
     
     this._socket.on('close', () => this._onClose());
     this._socket.on('data', (data) => this._onData(data));
+
+    this._protocol.setHijackCom(this);
+  }
+
+  recv(data) {
+    this._socket.write(data);
   }
 
   _onClose() {
-    console.log("Closed");
+    this._protocol.setHijackCom(null);
   }
 
   _onData(data) {
-    console.log(data);
+    this._protocol.sendToAll(data);
   }
 }
 
@@ -191,9 +197,18 @@ class Client {
     }
   }
 
+  send(data) {
+    this._socket.write(data);
+  }
+
   _onData(data) {
-    this._buffer = Buffer.concat([this._buffer, data]);
-    this._parseData();
+    if(this._protocol._hijackCom != null) {
+      this._protocol._hijackCom.recv(data);
+    }
+    else {
+      this._buffer = Buffer.concat([this._buffer, data]);
+      this._parseData();
+    }
   }
 
   _onClose() {
@@ -236,11 +251,15 @@ class Client {
 
 class Protocol {
   constructor() {
-    this._clients = {
-    };
+    this._clients = [];
+    this._hijackCom = null;
 
     this._generateASTs();
     this._createTCPServer();
+  }
+
+  setHijackCom(obj) {
+    this._hijackCom = obj;
   }
 
   _generateASTs() {
@@ -261,6 +280,12 @@ class Protocol {
 
   _newTCPBootloaderClient(socket) {
     new BootloaderClient(this, socket);
+  }
+
+  sendToAll(data) {
+    for(let i = 0; i < this._clients.length; i += 1) {
+      this._clients[i].send(data);
+    }
   }
 }
 
