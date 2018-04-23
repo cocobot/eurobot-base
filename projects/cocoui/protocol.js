@@ -2,7 +2,7 @@ const net = require('net');
 const electron = require('electron');
 const peg = require("pegjs");
 const BrowserWindow = electron.BrowserWindow;
-const serial = require('serialport').SerialPort;
+const SerialPort = require('serialport');
 
 let CLIENT_ID = 0;
 const MAGIC_START = 0xc0;
@@ -95,19 +95,21 @@ class BootloaderClient {
 }
 
 class Client {
-  constructor(protocol, socket) {
+  constructor(protocol) {
     this._protocol = protocol;
-    this._socket = socket;
-    this._init = false;
-    this._buffer = Buffer.alloc(0);
-    this._peripheral = null;
-    this._header = null;
-    this._id = CLIENT_ID;
-    this._sync = true;
-    CLIENT_ID += 1;
+    this._protocol._clients.push(this);
+  }
 
-    this._socket.on('close', () => this._onClose());
-    this._socket.on('data', (data) => this._onData(data));
+  getName() {
+    this._unimplemented();
+  }
+
+  _unimplemented() {
+    console.warn("Unimplemented");
+  }
+
+  send() {
+    this._unimplemented();
   }
 
   _crc_update(crc, a) {
@@ -198,24 +200,6 @@ class Client {
     }
   }
 
-  send(data) {
-    this._socket.write(data);
-  }
-
-  _onData(data) {
-    if(this._protocol._hijackCom != null) {
-      this._protocol._hijackCom.recv(data);
-    }
-    else {
-      this._buffer = Buffer.concat([this._buffer, data]);
-      this._parseData();
-    }
-  }
-
-  _onClose() {
-    console.log("Closed");
-  }
-
   _parse(pkt) {
     const decoder = DECODERS[pkt.pid];
     if(decoder == null) {
@@ -250,6 +234,62 @@ class Client {
   }
 }
 
+class SerialClient extends Client {
+  constructor(protocol, serial) {
+    super(protocol);
+    this._init = false;
+    this._buffer = Buffer.alloc(0);
+    this._peripheral = null;
+    this._header = null;
+    this._id = CLIENT_ID;
+    this._sync = true;
+    CLIENT_ID += 1;
+
+
+    this._serial = serial;
+  }
+
+  getName() {
+    return this._serial.path;
+  }
+
+  send(data) {
+    this._serial.write(data);
+  }
+}
+
+class TCPClient extends Client {
+  constructor(protocol, socket) {
+    super(protocol);
+    this._socket = socket;
+    this._socket.on('close', () => this._onClose());
+    this._socket.on('data', (data) => this._onData(data));
+  }
+
+  getName() {
+    return "TCP";
+  }
+
+  
+  send(data) {
+    this._socket.write(data);
+  }
+
+  _onData(data) {
+    if(this._protocol._hijackCom != null) {
+      this._protocol._hijackCom.recv(data);
+    }
+    else {
+      this._buffer = Buffer.concat([this._buffer, data]);
+      this._parseData();
+    }
+  }
+
+  _onClose() {
+    console.log("Closed");
+  } 
+}
+
 class Protocol {
   constructor() {
     this._clients = [];
@@ -257,6 +297,38 @@ class Protocol {
 
     this._generateASTs();
     this._createTCPServer();
+    this._checkSerial = setInterval(() => this._checkSerialPort(), 1000);
+  }
+
+  _checkSerialPort() {
+    console.log(" --- ");
+    SerialPort.list().then((ports) => {
+      for(let i = 0; i < ports.length; i += 1) {
+        const name = ports[i].comName;
+        let found = false;
+        for(let j = 0; (j < this._clients.length) && !found; j += 1) {
+          if(this._clients[j].getName() == name) {
+            found = true;
+          }
+        }
+        if(!found) {
+          const serial = new SerialPort(name, {
+            baudRate: 115200,
+            autoOpen: false
+          });
+          serial.open((err) => {
+            if(err) {
+              console.log(name +": " + err);
+            }
+            else {
+              this._newSerialClient(serial);
+            }
+          });
+        }
+      }
+    }).catch((e) => {
+      console.log(e);
+    });
   }
 
   setHijackCom(obj) {
@@ -276,7 +348,11 @@ class Protocol {
   }
 
   _newTCPClient(socket) {
-    new Client(this, socket);
+    new TCPClient(this, socket);
+  }
+
+  _newSerialClient(serial) {
+    new SerialClient(this, serial);
   }
 
   _newTCPBootloaderClient(socket) {
