@@ -20,16 +20,17 @@ uint16_t cocobot_pathfinder_get_trajectory_time(int16_t starting_point_x, int16_
     cocobot_pathfinder_initialize_list(&open_list);
    
     //target_node
-    cocobot_node_s* target_node = &g_table[(target_point_x + (TABLE_LENGTH / 2))/GRID_SIZE][(target_point_y - (TABLE_WIDTH / 2))/GRID_SIZE];
-    if(((target_node->nodeType & OBSTACLE) == OBSTACLE) || ((target_node->nodeType & SOFT_OBSTACLE) == SOFT_OBSTACLE) || ((target_node->nodeType & FORBIDDEN) == FORBIDDEN))
+    cocobot_node_s* target_node = &g_table[(target_point_x + (TABLE_LENGTH / 2))/GRID_SIZE][((TABLE_WIDTH / 2) - target_point_y)/GRID_SIZE];
+    if((target_node->nodeType & OBSTACLE) || (target_node->nodeType & SOFT_OBSTACLE) || (target_node->nodeType & FORBIDDEN) || (target_node->nodeType & ROBOT) || (target_node->nodeType & GAME_ELEMENT))
     {
         cocobot_com_printf("PATHFINDER: Target not reachable\r\n");
-        return 0;
+        g_table_updated = 1;
+        return 0xffff;
     }
     cocobot_pathfinder_set_target_node(target_node);
 
     //start_node
-    cocobot_node_s* start_node = &g_table[(starting_point_x + (TABLE_LENGTH / 2)) / GRID_SIZE][(starting_point_y - (TABLE_WIDTH / 2))/GRID_SIZE];
+    cocobot_node_s* start_node = &g_table[(starting_point_x + (TABLE_LENGTH / 2)) / GRID_SIZE][((TABLE_WIDTH / 2) - starting_point_y)/GRID_SIZE];
     cocobot_pathfinder_set_start_node(start_node);
 
     cocobot_node_s current_node = *start_node;
@@ -60,10 +61,12 @@ uint16_t cocobot_pathfinder_get_trajectory_time(int16_t starting_point_x, int16_
         else
         {
             cocobot_com_printf("PATHFINDER: No solution\r\n");
-            return 0;
+            g_table_updated = 1;
+            return 0xffff;
         }
     }
     
+    g_table_updated = 1;
     return cocobot_pathfinder_get_time(&current_node, g_table);
 }
 
@@ -78,7 +81,7 @@ char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t sta
     //target_node
     cocobot_pathfinder_save_real_target_node(target_point_x, target_point_y);
     cocobot_node_s* target_node = &g_table[(target_point_x + (TABLE_LENGTH / 2))/GRID_SIZE][((TABLE_WIDTH / 2) - target_point_y)/GRID_SIZE];
-    if(((target_node->nodeType & OBSTACLE) == OBSTACLE) || ((target_node->nodeType & SOFT_OBSTACLE) == SOFT_OBSTACLE) || ((target_node->nodeType & FORBIDDEN) == FORBIDDEN))
+    if((target_node->nodeType & OBSTACLE) || (target_node->nodeType & SOFT_OBSTACLE) || (target_node->nodeType & FORBIDDEN) || (target_node->nodeType & ROBOT) || (target_node->nodeType & GAME_ELEMENT))
     {
         cocobot_com_printf("PATHFINDER: Target not reachable\r\n");
         g_table_updated = 1;
