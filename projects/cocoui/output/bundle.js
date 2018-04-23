@@ -19147,6 +19147,8 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactstrap = __webpack_require__(18);
 
+var _reactRedux = __webpack_require__(2);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -19155,55 +19157,195 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var TopMenu = function (_React$Component) {
-  _inherits(TopMenu, _React$Component);
+var TopMenuComponent = function (_React$Component) {
+  _inherits(TopMenuComponent, _React$Component);
 
-  function TopMenu() {
-    _classCallCheck(this, TopMenu);
+  function TopMenuComponent() {
+    _classCallCheck(this, TopMenuComponent);
 
-    return _possibleConstructorReturn(this, (TopMenu.__proto__ || Object.getPrototypeOf(TopMenu)).apply(this, arguments));
+    return _possibleConstructorReturn(this, (TopMenuComponent.__proto__ || Object.getPrototypeOf(TopMenuComponent)).apply(this, arguments));
   }
 
-  _createClass(TopMenu, [{
+  _createClass(TopMenuComponent, [{
+    key: '_renderRobot',
+    value: function _renderRobot(x, key) {
+      //robot
+      var robot = _react2.default.createElement(
+        _reactstrap.Badge,
+        { color: 'danger' },
+        'Robot ?'
+      );
+      var robotVal = this.props.robots.getIn([x, 'game_state', 'robot_id']);
+
+      var color = "light";
+      var colorVal = this.props.robots.getIn([x, 'game_state', 'color']);
+      if (colorVal == 0) {
+        color = "success";
+      } else if (colorVal == 1) {
+        color = "warning";
+      }
+
+      if (robotVal == 0) {
+        robot = _react2.default.createElement(
+          _reactstrap.Badge,
+          { color: color },
+          'Robot principal'
+        );
+      } else if (robotVal == 0) {
+        robot = _react2.default.createElement(
+          _reactstrap.Badge,
+          { color: color },
+          'Robot secondaire'
+        );
+      }
+
+      //time
+      var time = _react2.default.createElement(
+        _reactstrap.Badge,
+        { color: 'danger' },
+        '? s'
+      );
+      var timeVal = this.props.robots.getIn([x, 'game_state', 'time']);
+      var timeColor = "danger";
+      if (timeVal < 50) {
+        timeColor = "success";
+      } else if (timeVal < 80) {
+        timeColor = "warning";
+      }
+      time = _react2.default.createElement(
+        _reactstrap.Badge,
+        { color: timeColor },
+        timeVal,
+        ' s'
+      );
+
+      return _react2.default.createElement(
+        _reactstrap.NavItem,
+        { key: key },
+        _react2.default.createElement(
+          _reactstrap.UncontrolledDropdown,
+          { nav: true, inNavbar: true },
+          _react2.default.createElement(
+            _reactstrap.DropdownToggle,
+            { nav: true, caret: true },
+            _react2.default.createElement(
+              'small',
+              null,
+              _react2.default.createElement(
+                'b',
+                null,
+                '??'
+              ),
+              _react2.default.createElement('br', null),
+              robot,
+              _react2.default.createElement(
+                _reactstrap.Badge,
+                { color: 'danger' },
+                '? V'
+              ),
+              time
+            )
+          ),
+          _react2.default.createElement(
+            _reactstrap.DropdownMenu,
+            null,
+            _react2.default.createElement(
+              _reactstrap.DropdownItem,
+              null,
+              'Option 1'
+            ),
+            _react2.default.createElement(
+              _reactstrap.DropdownItem,
+              null,
+              'Option 2'
+            ),
+            _react2.default.createElement(_reactstrap.DropdownItem, { divider: true }),
+            _react2.default.createElement(
+              _reactstrap.DropdownItem,
+              null,
+              'Reset'
+            )
+          )
+        )
+      );
+    }
+  }, {
     key: 'render',
     value: function render() {
+      var _this2 = this;
+
       return _react2.default.createElement(
         'div',
         null,
         _react2.default.createElement(
           _reactstrap.Navbar,
-          { color: 'dark', dark: true },
+          { color: 'dark', dark: true, expand: 'md' },
           _react2.default.createElement(
             _reactstrap.NavbarBrand,
             { href: '#' },
             'CocoUI'
           ),
           _react2.default.createElement(
-            _reactstrap.UncontrolledDropdown,
-            { nav: true, inNavbar: true },
+            _reactstrap.Nav,
+            { className: 'ml-auto', navbar: true },
+            this.props.active.map(function (x, key) {
+              return _this2._renderRobot(x, key);
+            }),
             _react2.default.createElement(
-              _reactstrap.DropdownToggle,
-              { nav: true, caret: true },
-              'Options'
-            ),
-            _react2.default.createElement(
-              _reactstrap.DropdownMenu,
+              _reactstrap.NavItem,
               null,
               _react2.default.createElement(
-                _reactstrap.DropdownItem,
-                null,
-                'Option 1'
-              ),
-              _react2.default.createElement(
-                _reactstrap.DropdownItem,
-                null,
-                'Option 2'
-              ),
-              _react2.default.createElement(_reactstrap.DropdownItem, { divider: true }),
-              _react2.default.createElement(
-                _reactstrap.DropdownItem,
-                null,
-                'Reset'
+                _reactstrap.UncontrolledDropdown,
+                { nav: true, inNavbar: true },
+                _react2.default.createElement(
+                  _reactstrap.DropdownToggle,
+                  { nav: true, caret: true },
+                  _react2.default.createElement(
+                    'small',
+                    null,
+                    _react2.default.createElement(
+                      'b',
+                      null,
+                      '/dev/ttyUSB0'
+                    ),
+                    _react2.default.createElement('br', null),
+                    _react2.default.createElement(
+                      _reactstrap.Badge,
+                      { color: 'light' },
+                      'Robot principal'
+                    ),
+                    _react2.default.createElement(
+                      _reactstrap.Badge,
+                      { color: 'danger' },
+                      '12 V'
+                    ),
+                    _react2.default.createElement(
+                      _reactstrap.Badge,
+                      { color: 'info' },
+                      '100 s'
+                    )
+                  )
+                ),
+                _react2.default.createElement(
+                  _reactstrap.DropdownMenu,
+                  null,
+                  _react2.default.createElement(
+                    _reactstrap.DropdownItem,
+                    null,
+                    'Option 1'
+                  ),
+                  _react2.default.createElement(
+                    _reactstrap.DropdownItem,
+                    null,
+                    'Option 2'
+                  ),
+                  _react2.default.createElement(_reactstrap.DropdownItem, { divider: true }),
+                  _react2.default.createElement(
+                    _reactstrap.DropdownItem,
+                    null,
+                    'Reset'
+                  )
+                )
               )
             )
           )
@@ -19212,8 +19354,17 @@ var TopMenu = function (_React$Component) {
     }
   }]);
 
-  return TopMenu;
+  return TopMenuComponent;
 }(_react2.default.Component);
+
+var mapStateToProps = function mapStateToProps(state, ownProps) {
+  return {
+    active: state.conns.get('active'),
+    robots: state.robots
+  };
+};
+
+var TopMenu = (0, _reactRedux.connect)(mapStateToProps, null)(TopMenuComponent);
 
 exports.default = TopMenu;
 

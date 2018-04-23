@@ -14,6 +14,7 @@ DECODERS[0x8002] = "{asserv_angle}F(target)F(angle)F(ramp_out)F(speed_target)F(s
 DECODERS[0x8003] = "{trajectory_orders}[B(type)F(time)F(a1)F(a2)F(a3)F(a4)F(start_x)F(start_y)F(start_angle)F(end_x)F(end_y)F(end_angle)F(estimated_distance_before_stop)](orders)"
 DECODERS[0x8004] = "{pathfinder}H(length)H(width)[H(type)](nodes)"
 DECODERS[0x8005] = "{printf}S(msg)"
+DECODERS[0x8006] = "{game_state}B(robot_id)B(color)F(battery)D(time)"
 
 
 const GRAMMAR = `
@@ -48,6 +49,7 @@ reader
  = Freader
  / Breader
  / Hreader
+ / Dreader
  / Sreader
 
 Breader
@@ -55,6 +57,9 @@ Breader
 
 Hreader
  = 'H' { return () => { const value = pkt.buffer.readUInt16LE(pkt.offset); pkt.offset += 2; return value; }};
+
+Dreader
+ = 'D' { return () => { const value = pkt.buffer.readUInt32LE(pkt.offset); pkt.offset += 4; return value; }};
 
 Sreader
  = 'S' { return () => { 

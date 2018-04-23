@@ -15,6 +15,7 @@
 #define COCOBOT_COM_TRAJECTORY_DEBUG_PID  (0x8003)
 #define COCOBOT_COM_PATHFINDER_DEBUG_PID  (0x8004)
 #define COCOBOT_COM_PRINTF_PID            (0x8005)
+#define COCOBOT_COM_GAME_STATE_DEBUG_PID  (0x8006)
 
 typedef void (*cocobot_com_handler_t)(uint16_t pid);
 

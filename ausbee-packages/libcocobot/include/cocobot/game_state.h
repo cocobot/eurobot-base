@@ -50,4 +50,6 @@ void cocobot_game_state_set_userdata(unsigned int id, void * data);
  */
 void * cocobot_game_state_get_userdata(unsigned int id);
 
+void cocobot_game_state_handle_async_com(void);
+
 #endif// COCOBOT_GAME_STATE_H
