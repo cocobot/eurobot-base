@@ -248,12 +248,23 @@ class Client {
       });
     });
   }
+
+  _onData(data) {
+    if(this._protocol._hijackCom != null) {
+      this._protocol._hijackCom.recv(data);
+    }
+    else {
+      this._buffer = Buffer.concat([this._buffer, data]);
+      this._parseData();
+    }
+  }
 }
 
 class SerialClient extends Client {
   constructor(protocol, serial) {
     super(protocol);
     this._serial = serial;
+    this._socket.on('data', (data) => this._onData(data));
   }
 
   getName() {
@@ -261,6 +272,7 @@ class SerialClient extends Client {
   }
 
   send(data) {
+    console.log(data);
     this._serial.write(data);
   }
 }
@@ -280,17 +292,7 @@ class TCPClient extends Client {
   
   send(data) {
     this._socket.write(data);
-  }
-
-  _onData(data) {
-    if(this._protocol._hijackCom != null) {
-      this._protocol._hijackCom.recv(data);
-    }
-    else {
-      this._buffer = Buffer.concat([this._buffer, data]);
-      this._parseData();
-    }
-  }
+  } 
 
   _onClose() {
     console.log("Closed");
