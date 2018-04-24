@@ -49,7 +49,12 @@ export const robots = (state = defaultRobotsState, action) => {
 export const conns = (state = defaultConnsState, action) => {
   switch (action.type) {
     case 'SAVE_ROBOT_PACKET':
-      state = state.set('active', state.get('active').add(action.pkt.client));
+      state = state.set('active', state.get('active').add(
+        Map({
+            'client': action.pkt.client,
+            'name': action.pkt.clientName,
+        })
+      ));
       break;
   }
   return state;

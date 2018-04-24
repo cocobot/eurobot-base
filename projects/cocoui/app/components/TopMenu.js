@@ -6,7 +6,9 @@ import { Nav, Navbar, NavbarBrand, NavItem, NavLink,
 import { connect } from 'react-redux';
 
 class TopMenuComponent extends React.Component {
-  _renderRobot(x, key) {
+  _renderRobot(active, key) {
+    const name = active.getIn(['name']);
+    const x = active.getIn(['client']);
     //robot
     let robot = <Badge color="danger">Robot ?</Badge>;
     const robotVal = this.props.robots.getIn([x, 'game_state', 'robot_id']);
@@ -23,9 +25,39 @@ class TopMenuComponent extends React.Component {
     if(robotVal == 0) {
       robot = <Badge color={color}>Robot principal</Badge>;
     }
-    else if(robotVal == 0) {
+    else if(robotVal == 1) {
       robot = <Badge color={color}>Robot secondaire</Badge>;
     }
+
+    //battery
+    const batteryVal = (this.props.robots.getIn([x, 'game_state', 'battery']) / 1000.0).toFixed(2);
+    let batteryColor = "light";
+    switch(robotVal) {
+      case 0:
+        if(batteryVal < 18) {
+           batteryColor = "danger";
+        }
+        else if(batteryVal < 19.5) {
+           batteryColor = "warning";
+        }
+        else {
+           batteryColor = "success";
+        }
+        break;
+
+      case 1:
+        if(batteryVal < 11.3) {
+           batteryColor = "danger";
+        }
+        else if(batteryVal < 11.6) {
+           batteryColor = "warning";
+        }
+        else {
+           batteryColor = "success";
+        }
+        break;
+    }
+    let battery = <Badge color={batteryColor}>{batteryVal} V</Badge>;
 
     //time
     let time = <Badge color="danger">? s</Badge>;
@@ -44,9 +76,9 @@ class TopMenuComponent extends React.Component {
       <NavItem key={key}>
         <UncontrolledDropdown nav inNavbar>
           <DropdownToggle nav caret>
-            <small><b>??</b><br />
+            <small><b>{name}</b><br />
               {robot}
-              <Badge color="danger">? V</Badge>
+              {battery}
               {time}
             </small>
           </DropdownToggle>
@@ -76,29 +108,6 @@ class TopMenuComponent extends React.Component {
             {this.props.active.map((x, key) => {
               return this._renderRobot(x, key);
             })}
-            <NavItem>
-              <UncontrolledDropdown nav inNavbar>
-                <DropdownToggle nav caret>
-                  <small><b>/dev/ttyUSB0</b><br />
-                    <Badge color="light">Robot principal</Badge>
-                    <Badge color="danger">12 V</Badge>
-                    <Badge color="info">100 s</Badge>
-                  </small>
-                </DropdownToggle>
-                <DropdownMenu >
-                  <DropdownItem>
-                    Option 1
-                  </DropdownItem>
-                  <DropdownItem>
-                    Option 2
-                  </DropdownItem>
-                  <DropdownItem divider />
-                  <DropdownItem>
-                    Reset
-                  </DropdownItem>
-                </DropdownMenu>
-              </UncontrolledDropdown>
-            </NavItem>
           </Nav>
         </Navbar>
       </div>

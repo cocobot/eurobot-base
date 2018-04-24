@@ -25,10 +25,10 @@ void cocobot_game_state_handle_async_com(void)
   {
     _last_update_time = now;
     cocobot_com_send(COCOBOT_COM_GAME_STATE_DEBUG_PID,
-     "BBFD",
+     "BBDD",
      0,  //0 for principal, 1 for secondary 
-     0,  //0 for x negative, 1 for x positive 
-     10.0, //battery voltage
+     _color,  //0 for x negative, 1 for x positive 
+     platform_adc_get_mV(PLATFORM_ADC_VBAT), //battery voltage
      cocobot_game_state_get_elapsed_time() / 1000 //elapsed time
     );
   }

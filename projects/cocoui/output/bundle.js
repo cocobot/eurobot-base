@@ -13101,7 +13101,7 @@ var RobotsComponent = function (_React$Component) {
         'g',
         null,
         this.props.active.map(function (x, key) {
-          return _react2.default.createElement(_Robot2.default, { key: key, cid: x });
+          return _react2.default.createElement(_Robot2.default, { key: key, cid: x.get('client') });
         })
       );
     }
@@ -14108,7 +14108,10 @@ var conns = exports.conns = function conns() {
 
   switch (action.type) {
     case 'SAVE_ROBOT_PACKET':
-      state = state.set('active', state.get('active').add(action.pkt.client));
+      state = state.set('active', state.get('active').add((0, _immutable.Map)({
+        'client': action.pkt.client,
+        'name': action.pkt.clientName
+      })));
       break;
   }
   return state;
@@ -19168,7 +19171,9 @@ var TopMenuComponent = function (_React$Component) {
 
   _createClass(TopMenuComponent, [{
     key: '_renderRobot',
-    value: function _renderRobot(x, key) {
+    value: function _renderRobot(active, key) {
+      var name = active.getIn(['name']);
+      var x = active.getIn(['client']);
       //robot
       var robot = _react2.default.createElement(
         _reactstrap.Badge,
@@ -19191,13 +19196,44 @@ var TopMenuComponent = function (_React$Component) {
           { color: color },
           'Robot principal'
         );
-      } else if (robotVal == 0) {
+      } else if (robotVal == 1) {
         robot = _react2.default.createElement(
           _reactstrap.Badge,
           { color: color },
           'Robot secondaire'
         );
       }
+
+      //battery
+      var batteryVal = (this.props.robots.getIn([x, 'game_state', 'battery']) / 1000.0).toFixed(2);
+      var batteryColor = "light";
+      switch (robotVal) {
+        case 0:
+          if (batteryVal < 18) {
+            batteryColor = "danger";
+          } else if (batteryVal < 19.5) {
+            batteryColor = "warning";
+          } else {
+            batteryColor = "success";
+          }
+          break;
+
+        case 1:
+          if (batteryVal < 11.3) {
+            batteryColor = "danger";
+          } else if (batteryVal < 11.6) {
+            batteryColor = "warning";
+          } else {
+            batteryColor = "success";
+          }
+          break;
+      }
+      var battery = _react2.default.createElement(
+        _reactstrap.Badge,
+        { color: batteryColor },
+        batteryVal,
+        ' V'
+      );
 
       //time
       var time = _react2.default.createElement(
@@ -19234,15 +19270,11 @@ var TopMenuComponent = function (_React$Component) {
               _react2.default.createElement(
                 'b',
                 null,
-                '??'
+                name
               ),
               _react2.default.createElement('br', null),
               robot,
-              _react2.default.createElement(
-                _reactstrap.Badge,
-                { color: 'danger' },
-                '? V'
-              ),
+              battery,
               time
             )
           ),
@@ -19290,64 +19322,7 @@ var TopMenuComponent = function (_React$Component) {
             { className: 'ml-auto', navbar: true },
             this.props.active.map(function (x, key) {
               return _this2._renderRobot(x, key);
-            }),
-            _react2.default.createElement(
-              _reactstrap.NavItem,
-              null,
-              _react2.default.createElement(
-                _reactstrap.UncontrolledDropdown,
-                { nav: true, inNavbar: true },
-                _react2.default.createElement(
-                  _reactstrap.DropdownToggle,
-                  { nav: true, caret: true },
-                  _react2.default.createElement(
-                    'small',
-                    null,
-                    _react2.default.createElement(
-                      'b',
-                      null,
-                      '/dev/ttyUSB0'
-                    ),
-                    _react2.default.createElement('br', null),
-                    _react2.default.createElement(
-                      _reactstrap.Badge,
-                      { color: 'light' },
-                      'Robot principal'
-                    ),
-                    _react2.default.createElement(
-                      _reactstrap.Badge,
-                      { color: 'danger' },
-                      '12 V'
-                    ),
-                    _react2.default.createElement(
-                      _reactstrap.Badge,
-                      { color: 'info' },
-                      '100 s'
-                    )
-                  )
-                ),
-                _react2.default.createElement(
-                  _reactstrap.DropdownMenu,
-                  null,
-                  _react2.default.createElement(
-                    _reactstrap.DropdownItem,
-                    null,
-                    'Option 1'
-                  ),
-                  _react2.default.createElement(
-                    _reactstrap.DropdownItem,
-                    null,
-                    'Option 2'
-                  ),
-                  _react2.default.createElement(_reactstrap.DropdownItem, { divider: true }),
-                  _react2.default.createElement(
-                    _reactstrap.DropdownItem,
-                    null,
-                    'Reset'
-                  )
-                )
-              )
-            )
+            })
           )
         )
       );
