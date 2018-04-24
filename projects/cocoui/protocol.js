@@ -97,8 +97,12 @@ class BootloaderClient {
 
   _onData(data) {
     const asc = data.toString('ascii');
-    if(asc == '#RESET\n') {
-      console.log("DO reset !");
+    if(asc.includes('#RESET')) {
+      this._protocol.formatAndSendtoAll({
+        pid: 0x8007,
+        fmt: "",
+        args: [],
+      });
     }
     this._protocol.sendToAll(data);
   }
@@ -274,8 +278,6 @@ class Client {
   }
 
   sendPacket(pkt) {
-    console.log("Send packet !");
-    console.log(pkt);
     const headerBuffer = Buffer.alloc(7);
     headerBuffer.writeUInt8(0xC0, 0);
     headerBuffer.writeUInt16LE(pkt.pid, 1);
@@ -302,7 +304,7 @@ class SerialClient extends Client {
   constructor(protocol, serial) {
     super(protocol);
     this._serial = serial;
-    this._socket.on('data', (data) => this._onData(data));
+    this._serial.on('data', (data) => this._onData(data));
   }
 
   getName() {
@@ -355,7 +357,6 @@ class Protocol {
   }
 
   _checkSerialPort() {
-    console.log(" --- ");
     SerialPort.list().then((ports) => {
       for(let i = 0; i < ports.length; i += 1) {
         const name = ports[i].comName;
@@ -372,7 +373,6 @@ class Protocol {
           });
           serial.open((err) => {
             if(err) {
-              console.log(name +": " + err);
             }
             else {
               this._newSerialClient(serial);
@@ -417,6 +417,12 @@ class Protocol {
     for(let i = 0; i < this._clients.length; i += 1) {
       this._clients[i].send(data);
     }
+  }
+
+  formatAndSendtoAll(pkt) {
+    this._clients.forEach((client) => {
+      client.formatAndSend(pkt);
+    });
   }
 }
 

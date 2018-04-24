@@ -66,9 +66,11 @@ void cocobot_com_async_thread(void *arg)
 
 void cocobot_com_sync_thread(void *arg)
 {
+  (void)arg;
+
   cocobot_com_header_t header;
   uint8_t * ptr = (uint8_t *)&header;
-  int i;
+  unsigned int i;
   for(i = 0; i < sizeof(header); i += 1) 
   {
     ptr[i] = 0;

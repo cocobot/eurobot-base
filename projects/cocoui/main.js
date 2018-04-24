@@ -5,6 +5,11 @@ const BrowserWindow = electron.BrowserWindow;
 const Protocol = require('./protocol');
 
 const protocol = new Protocol();
+
+process.on('uncaughtException', function (err) {
+  console.error(err.stack);
+  app.quit();
+});
  
 app.on('ready', () => {
   const mainWindow = new BrowserWindow({

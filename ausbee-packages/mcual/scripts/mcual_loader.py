@@ -111,14 +111,22 @@ class Loader():
             self.socket.sendall(data + '\n')
 
     def recv(self):
+        data = ''
         if self.socket == None:
             data = self.serial.readline()
         else:
-            try:
-                data = self.socket.recv(2048)
-            except socket.error, e:
-                data = ''
-                pass
+            while True:
+                try:
+                    char = self.socket.recv(1)
+                    data += char
+                    if char == '\n':
+                        break
+                    if len(data) > 128:
+                        data = ''
+                        break
+                except socket.error, e:
+                    data = ''
+                    break
         data = data[:-1]
         if self.debug:
             print(" << %s" % data)
@@ -144,9 +152,6 @@ class Loader():
         sys.stdout.flush()
         while(True):
             self.sync = (self.sync + 1) % 100
-            self.send("#RESET")
-            self.send("")
-            self.send("")
             self.send("SYNC %d" % self.sync)
             line = self.recv()
             if line == "SYNC %d OK" % self.sync:
@@ -154,6 +159,8 @@ class Loader():
                 print("Synchronization OK")
                 self.synchronized = True
                 break
+            elif line == '':
+                self.send("#RESET")
             else:
                 sys.stdout.write(".")
                 sys.stdout.flush()
@@ -181,7 +188,10 @@ class Loader():
         for pid in pids:
             self.send("FLASH %d" % pid)
             for byte in self.hexf.pages[pid]:
-                self.serial.write(chr(byte))
+                if self.socket == None:
+                    self.serial.write(chr(byte))
+                else:
+                    self.socket.sendall(chr(byte))
 
             while(True):
                 line = self.recv()
@@ -213,6 +223,7 @@ def bootloader_cocoui():
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(('127.0.0.1', 10001))
+        s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         hexf = HexFile(sys.argv[2], 16 * 1024)
         loader = Loader(s, hexf)
         loader.run()
