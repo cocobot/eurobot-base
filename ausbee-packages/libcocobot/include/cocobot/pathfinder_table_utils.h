@@ -4,10 +4,11 @@
 #include <stdint.h>
 #include "cocobot_pathfinder_config.h"
 
-#define MAXIMUM_NODE_IN_LIST        200
-#define MASK_TEMPORARY_OBSTACLE     0x0F00
-#define MASK_NEW_NODE               0xFF00
-#define MASK_REMOVE_ROBOT           0xF0FF
+#define MAXIMUM_NODE_IN_LIST            200
+#define MASK_TEMPORARY_OBSTACLE         0x0F00
+#define MASK_NEW_NODE                   0xFF00
+#define MASK_REMOVE_ROBOT               0xF0FF
+#define COCOBOT_GAME_STATE_COLOR_ALL    0xff
 
 typedef enum
 {
@@ -52,7 +53,8 @@ typedef enum
 
 /*
  * Structure used to initialize the table
- * Note : x and y position are pathfinder coordinates.
+ * Note :   x and y position are pathfinder coordinates.
+ *          isSpecificColor is a field that can be COCOBOT_GAME_STATE_COLOR_NEG (only to be used when the color is positive), COCOBOT_GAME_STATE_COLOR_POS (only to be used when the color is positive), or COCOBOT_GAME_STATE_COLOR_ALL (applied no matter the start color).
  */
 typedef struct 
 {
@@ -63,6 +65,7 @@ typedef struct
     uint16_t nodeType;
     uint8_t obsType;
     uint8_t isMask;     //Set if the obstacle can be removed during game (case of game element)
+    uint8_t isSpecificColor; 
 }cocobot_pathfinder_table_init_s;
 
 
@@ -71,9 +74,9 @@ typedef struct
  * Table width used is TABLE_WIDTH as for table length
  * Arguments:
  *  - table : static 2nd array representing the playground area for a*
+ *  - initStruct : Main table init
  *  
  */
-//void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint16_t robot_length, uint16_t robot_width);
 void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_pathfinder_table_init_s * initStruct);
 
 /**

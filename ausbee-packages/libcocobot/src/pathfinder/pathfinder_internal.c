@@ -254,7 +254,7 @@ void cocobot_pathfinder_set_trajectory(cocobot_trajectory_s *trajectory)
 uint16_t cocobot_pathfinder_get_time(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE])
 {
     uint16_t time = 0;
-    while((final_node->x !=  g_start_node.x) || (final_node->y != g_start_node.y))
+    while((final_node->x != g_start_node.x) || (final_node->y != g_start_node.y))
     {
         //get time between node and parent node 
         time += (uint16_t)(cocobot_pathfinder_get_distance(final_node, &table[(int)final_node->pX][(int)final_node->pY]) * (float)GRID_SIZE) / cocobot_asserv_get_linear_speed();
