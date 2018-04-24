@@ -5,6 +5,13 @@ export const saveRobotPacket = (pkt) => {
   }
 }
 
+export const removeRobot = (client) => {
+  return {
+    type: 'REMOVE_ROBOT',
+    client
+  }
+}
+
 export const updateDebugPathfinder = (value) => {
   return {
     type: 'UPDATE_DEBUG_PATHFINDER',

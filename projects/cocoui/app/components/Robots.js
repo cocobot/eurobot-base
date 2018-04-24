@@ -7,7 +7,7 @@ class RobotsComponent extends React.Component {
     return (
       <g>
         {this.props.active.map((x, key) => {
-          return <Robot key={key} cid={x.get('client')} />
+          return <Robot key={key} cid={key} />
         })}
       </g>
     );

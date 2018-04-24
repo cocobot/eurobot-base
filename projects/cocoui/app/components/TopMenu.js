@@ -8,13 +8,13 @@ import { connect } from 'react-redux';
 class TopMenuComponent extends React.Component {
   _renderRobot(active, key) {
     const name = active.getIn(['name']);
-    const x = active.getIn(['client']);
+
     //robot
     let robot = <Badge color="danger">Robot ?</Badge>;
-    const robotVal = this.props.robots.getIn([x, 'game_state', 'robot_id']);
+    const robotVal = this.props.robots.getIn([key, 'game_state', 'robot_id']);
 
     let color = "light";
-    const colorVal = this.props.robots.getIn([x, 'game_state', 'color']);
+    const colorVal = this.props.robots.getIn([key, 'game_state', 'color']);
     if(colorVal == 0) {
       color = "success";
     }
@@ -30,7 +30,7 @@ class TopMenuComponent extends React.Component {
     }
 
     //battery
-    const batteryVal = (this.props.robots.getIn([x, 'game_state', 'battery']) / 1000.0).toFixed(2);
+    const batteryVal = (this.props.robots.getIn([key, 'game_state', 'battery']) / 1000.0).toFixed(2);
     let batteryColor = "light";
     switch(robotVal) {
       case 0:
@@ -61,7 +61,7 @@ class TopMenuComponent extends React.Component {
 
     //time
     let time = <Badge color="danger">? s</Badge>;
-    const timeVal = this.props.robots.getIn([x, 'game_state', 'time']);
+    const timeVal = this.props.robots.getIn([key, 'game_state', 'time']);
     let timeColor = "danger";
     if(timeVal < 50) {
       timeColor = "success";

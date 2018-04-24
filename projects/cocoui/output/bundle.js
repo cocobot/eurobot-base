@@ -79,6 +79,25 @@ if (true) {
 
 /***/ }),
 /* 1 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__components_Provider__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_connectAdvanced__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__connect_connect__ = __webpack_require__(43);
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "Provider", function() { return __WEBPACK_IMPORTED_MODULE_0__components_Provider__["b"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "createProvider", function() { return __WEBPACK_IMPORTED_MODULE_0__components_Provider__["a"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "connectAdvanced", function() { return __WEBPACK_IMPORTED_MODULE_1__components_connectAdvanced__["a"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "connect", function() { return __WEBPACK_IMPORTED_MODULE_2__connect_connect__["a"]; });
+
+
+
+
+
+
+/***/ }),
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -109,25 +128,6 @@ if (false) {
   // http://fb.me/prop-types-in-prod
   module.exports = __webpack_require__(37)();
 }
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__components_Provider__ = __webpack_require__(36);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_connectAdvanced__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__connect_connect__ = __webpack_require__(43);
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "Provider", function() { return __WEBPACK_IMPORTED_MODULE_0__components_Provider__["b"]; });
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "createProvider", function() { return __WEBPACK_IMPORTED_MODULE_0__components_Provider__["a"]; });
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "connectAdvanced", function() { return __WEBPACK_IMPORTED_MODULE_1__components_connectAdvanced__["a"]; });
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "connect", function() { return __WEBPACK_IMPORTED_MODULE_2__connect_connect__["a"]; });
-
-
-
-
 
 
 /***/ }),
@@ -444,7 +444,7 @@ if (true) {
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return subscriptionShape; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return storeShape; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_prop_types__);
 
 
@@ -1326,7 +1326,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "UncontrolledTooltip", function() { return UncontrolledTooltip; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_prop_types__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_prop_types__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_prop_types___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_prop_types__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_classnames__ = __webpack_require__(67);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_classnames___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_classnames__);
@@ -6722,6 +6722,13 @@ var saveRobotPacket = exports.saveRobotPacket = function saveRobotPacket(pkt) {
   };
 };
 
+var removeRobot = exports.removeRobot = function removeRobot(client) {
+  return {
+    type: 'REMOVE_ROBOT',
+    client: client
+  };
+};
+
 var updateDebugPathfinder = exports.updateDebugPathfinder = function updateDebugPathfinder(value) {
   return {
     type: 'UPDATE_DEBUG_PATHFINDER',
@@ -6746,7 +6753,7 @@ var _reactDom = __webpack_require__(8);
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
-var _reactRedux = __webpack_require__(2);
+var _reactRedux = __webpack_require__(1);
 
 var _cocoui = __webpack_require__(65);
 
@@ -7994,7 +8001,7 @@ module.exports = focusNode;
 /* harmony export (immutable) */ __webpack_exports__["a"] = createProvider;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_prop_types__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_prop_types__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_prop_types___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_prop_types__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_PropTypes__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_warning__ = __webpack_require__(4);
@@ -9432,7 +9439,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _TopMenu = __webpack_require__(88);
+var _TopMenu = __webpack_require__(66);
 
 var _TopMenu2 = _interopRequireDefault(_TopMenu);
 
@@ -9475,7 +9482,218 @@ var Cocoui = function (_React$Component) {
 exports.default = Cocoui;
 
 /***/ }),
-/* 66 */,
+/* 66 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactstrap = __webpack_require__(18);
+
+var _reactRedux = __webpack_require__(1);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var TopMenuComponent = function (_React$Component) {
+  _inherits(TopMenuComponent, _React$Component);
+
+  function TopMenuComponent() {
+    _classCallCheck(this, TopMenuComponent);
+
+    return _possibleConstructorReturn(this, (TopMenuComponent.__proto__ || Object.getPrototypeOf(TopMenuComponent)).apply(this, arguments));
+  }
+
+  _createClass(TopMenuComponent, [{
+    key: '_renderRobot',
+    value: function _renderRobot(active, key) {
+      var name = active.getIn(['name']);
+
+      //robot
+      var robot = _react2.default.createElement(
+        _reactstrap.Badge,
+        { color: 'danger' },
+        'Robot ?'
+      );
+      var robotVal = this.props.robots.getIn([key, 'game_state', 'robot_id']);
+
+      var color = "light";
+      var colorVal = this.props.robots.getIn([key, 'game_state', 'color']);
+      if (colorVal == 0) {
+        color = "success";
+      } else if (colorVal == 1) {
+        color = "warning";
+      }
+
+      if (robotVal == 0) {
+        robot = _react2.default.createElement(
+          _reactstrap.Badge,
+          { color: color },
+          'Robot principal'
+        );
+      } else if (robotVal == 1) {
+        robot = _react2.default.createElement(
+          _reactstrap.Badge,
+          { color: color },
+          'Robot secondaire'
+        );
+      }
+
+      //battery
+      var batteryVal = (this.props.robots.getIn([key, 'game_state', 'battery']) / 1000.0).toFixed(2);
+      var batteryColor = "light";
+      switch (robotVal) {
+        case 0:
+          if (batteryVal < 18) {
+            batteryColor = "danger";
+          } else if (batteryVal < 19.5) {
+            batteryColor = "warning";
+          } else {
+            batteryColor = "success";
+          }
+          break;
+
+        case 1:
+          if (batteryVal < 11.3) {
+            batteryColor = "danger";
+          } else if (batteryVal < 11.6) {
+            batteryColor = "warning";
+          } else {
+            batteryColor = "success";
+          }
+          break;
+      }
+      var battery = _react2.default.createElement(
+        _reactstrap.Badge,
+        { color: batteryColor },
+        batteryVal,
+        ' V'
+      );
+
+      //time
+      var time = _react2.default.createElement(
+        _reactstrap.Badge,
+        { color: 'danger' },
+        '? s'
+      );
+      var timeVal = this.props.robots.getIn([key, 'game_state', 'time']);
+      var timeColor = "danger";
+      if (timeVal < 50) {
+        timeColor = "success";
+      } else if (timeVal < 80) {
+        timeColor = "warning";
+      }
+      time = _react2.default.createElement(
+        _reactstrap.Badge,
+        { color: timeColor },
+        timeVal,
+        ' s'
+      );
+
+      return _react2.default.createElement(
+        _reactstrap.NavItem,
+        { key: key },
+        _react2.default.createElement(
+          _reactstrap.UncontrolledDropdown,
+          { nav: true, inNavbar: true },
+          _react2.default.createElement(
+            _reactstrap.DropdownToggle,
+            { nav: true, caret: true },
+            _react2.default.createElement(
+              'small',
+              null,
+              _react2.default.createElement(
+                'b',
+                null,
+                name
+              ),
+              _react2.default.createElement('br', null),
+              robot,
+              battery,
+              time
+            )
+          ),
+          _react2.default.createElement(
+            _reactstrap.DropdownMenu,
+            null,
+            _react2.default.createElement(
+              _reactstrap.DropdownItem,
+              null,
+              'Option 1'
+            ),
+            _react2.default.createElement(
+              _reactstrap.DropdownItem,
+              null,
+              'Option 2'
+            ),
+            _react2.default.createElement(_reactstrap.DropdownItem, { divider: true }),
+            _react2.default.createElement(
+              _reactstrap.DropdownItem,
+              null,
+              'Reset'
+            )
+          )
+        )
+      );
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this2 = this;
+
+      return _react2.default.createElement(
+        'div',
+        null,
+        _react2.default.createElement(
+          _reactstrap.Navbar,
+          { color: 'dark', dark: true, expand: 'md' },
+          _react2.default.createElement(
+            _reactstrap.NavbarBrand,
+            { href: '#' },
+            'CocoUI'
+          ),
+          _react2.default.createElement(
+            _reactstrap.Nav,
+            { className: 'ml-auto', navbar: true },
+            this.props.active.map(function (x, key) {
+              return _this2._renderRobot(x, key);
+            })
+          )
+        )
+      );
+    }
+  }]);
+
+  return TopMenuComponent;
+}(_react2.default.Component);
+
+var mapStateToProps = function mapStateToProps(state, ownProps) {
+  return {
+    active: state.conns.get('active'),
+    robots: state.robots
+  };
+};
+
+var TopMenu = (0, _reactRedux.connect)(mapStateToProps, null)(TopMenuComponent);
+
+exports.default = TopMenu;
+
+/***/ }),
 /* 67 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -9706,7 +9924,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _propTypes = __webpack_require__(1);
+var _propTypes = __webpack_require__(2);
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
 
@@ -9798,7 +10016,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _propTypes = __webpack_require__(1);
+var _propTypes = __webpack_require__(2);
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
 
@@ -9869,7 +10087,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _propTypes = __webpack_require__(1);
+var _propTypes = __webpack_require__(2);
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
 
@@ -12580,7 +12798,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _propTypes = __webpack_require__(1);
+var _propTypes = __webpack_require__(2);
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
 
@@ -12826,7 +13044,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactRedux = __webpack_require__(2);
+var _reactRedux = __webpack_require__(1);
 
 var _reactstrap = __webpack_require__(18);
 
@@ -13071,7 +13289,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactRedux = __webpack_require__(2);
+var _reactRedux = __webpack_require__(1);
 
 var _Robot = __webpack_require__(80);
 
@@ -13101,7 +13319,7 @@ var RobotsComponent = function (_React$Component) {
         'g',
         null,
         this.props.active.map(function (x, key) {
-          return _react2.default.createElement(_Robot2.default, { key: key, cid: x.get('client') });
+          return _react2.default.createElement(_Robot2.default, { key: key, cid: key });
         })
       );
     }
@@ -13137,7 +13355,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactRedux = __webpack_require__(2);
+var _reactRedux = __webpack_require__(1);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -13649,7 +13867,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactRedux = __webpack_require__(2);
+var _reactRedux = __webpack_require__(1);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -13796,7 +14014,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactRedux = __webpack_require__(2);
+var _reactRedux = __webpack_require__(1);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -14006,9 +14224,29 @@ var State = function () {
     _electron2.default.ipcRenderer.on("pkt", function (event, pkt) {
       return _this._handlePkt(pkt);
     });
+    setInterval(function () {
+      return _this._purgeStore();
+    }, 500);
   }
 
   _createClass(State, [{
+    key: '_purgeStore',
+    value: function _purgeStore() {
+      var _this2 = this;
+
+      var toRemove = [];
+      var now = Date.now();
+      this._store.getState().conns.get('active').map(function (x, k) {
+        var stamp = x.get('timestamp');
+        if (stamp + 2500 < now) {
+          toRemove.push(k);
+        }
+      });
+      toRemove.forEach(function (x) {
+        _this2._store.dispatch((0, _actions.removeRobot)(x));
+      });
+    }
+  }, {
     key: '_handlePkt',
     value: function _handlePkt(pkt) {
       this._store.dispatch((0, _actions.saveRobotPacket)(pkt));
@@ -14058,7 +14296,7 @@ exports.options = exports.win = exports.conns = exports.robots = undefined;
 var _immutable = __webpack_require__(87);
 
 var defaultConnsState = new _immutable.Map({
-  active: (0, _immutable.Set)()
+  active: (0, _immutable.Map)()
 });
 
 var defaultWinState = new _immutable.Map({
@@ -14108,10 +14346,14 @@ var conns = exports.conns = function conns() {
 
   switch (action.type) {
     case 'SAVE_ROBOT_PACKET':
-      state = state.set('active', state.get('active').add((0, _immutable.Map)({
-        'client': action.pkt.client,
-        'name': action.pkt.clientName
-      })));
+      state = state.setIn(['active', action.pkt.client], (0, _immutable.Map)({
+        timestamp: Date.now(),
+        name: action.pkt.clientName
+      }));
+      break;
+
+    case 'REMOVE_ROBOT':
+      state = state.deleteIn(['active', action.client]);
       break;
   }
   return state;
@@ -19130,218 +19372,6 @@ var options = exports.options = function options() {
   return Immutable;
 
 }));
-
-/***/ }),
-/* 88 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactstrap = __webpack_require__(18);
-
-var _reactRedux = __webpack_require__(2);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var TopMenuComponent = function (_React$Component) {
-  _inherits(TopMenuComponent, _React$Component);
-
-  function TopMenuComponent() {
-    _classCallCheck(this, TopMenuComponent);
-
-    return _possibleConstructorReturn(this, (TopMenuComponent.__proto__ || Object.getPrototypeOf(TopMenuComponent)).apply(this, arguments));
-  }
-
-  _createClass(TopMenuComponent, [{
-    key: '_renderRobot',
-    value: function _renderRobot(active, key) {
-      var name = active.getIn(['name']);
-      var x = active.getIn(['client']);
-      //robot
-      var robot = _react2.default.createElement(
-        _reactstrap.Badge,
-        { color: 'danger' },
-        'Robot ?'
-      );
-      var robotVal = this.props.robots.getIn([x, 'game_state', 'robot_id']);
-
-      var color = "light";
-      var colorVal = this.props.robots.getIn([x, 'game_state', 'color']);
-      if (colorVal == 0) {
-        color = "success";
-      } else if (colorVal == 1) {
-        color = "warning";
-      }
-
-      if (robotVal == 0) {
-        robot = _react2.default.createElement(
-          _reactstrap.Badge,
-          { color: color },
-          'Robot principal'
-        );
-      } else if (robotVal == 1) {
-        robot = _react2.default.createElement(
-          _reactstrap.Badge,
-          { color: color },
-          'Robot secondaire'
-        );
-      }
-
-      //battery
-      var batteryVal = (this.props.robots.getIn([x, 'game_state', 'battery']) / 1000.0).toFixed(2);
-      var batteryColor = "light";
-      switch (robotVal) {
-        case 0:
-          if (batteryVal < 18) {
-            batteryColor = "danger";
-          } else if (batteryVal < 19.5) {
-            batteryColor = "warning";
-          } else {
-            batteryColor = "success";
-          }
-          break;
-
-        case 1:
-          if (batteryVal < 11.3) {
-            batteryColor = "danger";
-          } else if (batteryVal < 11.6) {
-            batteryColor = "warning";
-          } else {
-            batteryColor = "success";
-          }
-          break;
-      }
-      var battery = _react2.default.createElement(
-        _reactstrap.Badge,
-        { color: batteryColor },
-        batteryVal,
-        ' V'
-      );
-
-      //time
-      var time = _react2.default.createElement(
-        _reactstrap.Badge,
-        { color: 'danger' },
-        '? s'
-      );
-      var timeVal = this.props.robots.getIn([x, 'game_state', 'time']);
-      var timeColor = "danger";
-      if (timeVal < 50) {
-        timeColor = "success";
-      } else if (timeVal < 80) {
-        timeColor = "warning";
-      }
-      time = _react2.default.createElement(
-        _reactstrap.Badge,
-        { color: timeColor },
-        timeVal,
-        ' s'
-      );
-
-      return _react2.default.createElement(
-        _reactstrap.NavItem,
-        { key: key },
-        _react2.default.createElement(
-          _reactstrap.UncontrolledDropdown,
-          { nav: true, inNavbar: true },
-          _react2.default.createElement(
-            _reactstrap.DropdownToggle,
-            { nav: true, caret: true },
-            _react2.default.createElement(
-              'small',
-              null,
-              _react2.default.createElement(
-                'b',
-                null,
-                name
-              ),
-              _react2.default.createElement('br', null),
-              robot,
-              battery,
-              time
-            )
-          ),
-          _react2.default.createElement(
-            _reactstrap.DropdownMenu,
-            null,
-            _react2.default.createElement(
-              _reactstrap.DropdownItem,
-              null,
-              'Option 1'
-            ),
-            _react2.default.createElement(
-              _reactstrap.DropdownItem,
-              null,
-              'Option 2'
-            ),
-            _react2.default.createElement(_reactstrap.DropdownItem, { divider: true }),
-            _react2.default.createElement(
-              _reactstrap.DropdownItem,
-              null,
-              'Reset'
-            )
-          )
-        )
-      );
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      var _this2 = this;
-
-      return _react2.default.createElement(
-        'div',
-        null,
-        _react2.default.createElement(
-          _reactstrap.Navbar,
-          { color: 'dark', dark: true, expand: 'md' },
-          _react2.default.createElement(
-            _reactstrap.NavbarBrand,
-            { href: '#' },
-            'CocoUI'
-          ),
-          _react2.default.createElement(
-            _reactstrap.Nav,
-            { className: 'ml-auto', navbar: true },
-            this.props.active.map(function (x, key) {
-              return _this2._renderRobot(x, key);
-            })
-          )
-        )
-      );
-    }
-  }]);
-
-  return TopMenuComponent;
-}(_react2.default.Component);
-
-var mapStateToProps = function mapStateToProps(state, ownProps) {
-  return {
-    active: state.conns.get('active'),
-    robots: state.robots
-  };
-};
-
-var TopMenu = (0, _reactRedux.connect)(mapStateToProps, null)(TopMenuComponent);
-
-exports.default = TopMenu;
 
 /***/ })
 /******/ ]);

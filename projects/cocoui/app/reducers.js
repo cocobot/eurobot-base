@@ -1,7 +1,7 @@
 import { Map, Set, fromJS } from 'immutable';
 
 const defaultConnsState = new Map({
-  active: Set(),
+  active: Map(),
 });
 
 const defaultWinState = new Map({
@@ -49,12 +49,14 @@ export const robots = (state = defaultRobotsState, action) => {
 export const conns = (state = defaultConnsState, action) => {
   switch (action.type) {
     case 'SAVE_ROBOT_PACKET':
-      state = state.set('active', state.get('active').add(
-        Map({
-            'client': action.pkt.client,
-            'name': action.pkt.clientName,
-        })
-      ));
+      state = state.setIn(['active', action.pkt.client], Map({
+        timestamp: Date.now(),
+        name: action.pkt.clientName,
+      }));
+      break;
+
+    case 'REMOVE_ROBOT':
+      state = state.deleteIn(['active', action.client]);
       break;
   }
   return state;

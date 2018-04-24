@@ -1,5 +1,5 @@
 import electron from 'electron';
-import {saveRobotPacket} from './actions';
+import {saveRobotPacket, removeRobot} from './actions';
 import {robots, conns, win, options } from './reducers';
 import {createStore, combineReducers} from 'redux';
 
@@ -15,6 +15,21 @@ class State {
     );
 
     electron.ipcRenderer.on("pkt", (event, pkt) => this._handlePkt(pkt)); 
+    setInterval(() => this._purgeStore(), 500);
+  }
+
+  _purgeStore() {
+    const toRemove = [];
+    const now = Date.now();
+    this._store.getState().conns.get('active').map((x, k) => {
+      const stamp = x.get('timestamp');
+      if(stamp + 2500 < now) {
+        toRemove.push(k);
+      }
+    });
+    toRemove.forEach((x) => {
+      this._store.dispatch(removeRobot(x));
+    });
   }
 
   _handlePkt(pkt) {
