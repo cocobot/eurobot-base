@@ -32243,6 +32243,12 @@ var PathfinderComponent = function (_React$Component) {
               r = 0;
               g = 100;
               b = 100;
+            } else if (type & 8) {
+              //TEMPORARY_ALLOWED No color
+              r = 255;
+              g = 255;
+              b = 255;
+              af = 0;
             } else if (type & 1) {
               //CLOSED LIST = Turquoise clair
               r = 0;
