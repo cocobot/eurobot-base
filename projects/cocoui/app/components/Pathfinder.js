@@ -46,6 +46,16 @@ class PathfinderComponent extends React.Component {
             g = 0;
             b = 255;
           }
+          else if(type & 0x0010){ //START_POINT = Bleu
+            r = 0;
+            g = 0;
+            b = 199;
+          }
+          else if(type & 0x0020){ //TARGET_POINT = Violet
+            r = 66;
+            g = 0;
+            b = 117;
+          }
           else if(type & 0x100){ //ROBOT Orange foncé
             r = 243;
             g = 84;
