@@ -2,6 +2,7 @@ const net = require('net');
 const electron = require('electron');
 const peg = require("pegjs");
 const BrowserWindow = electron.BrowserWindow;
+const ipcMain = electron.ipcMain;
 const SerialPort = require('serialport');
 
 let CLIENT_ID = 0;
@@ -95,6 +96,10 @@ class BootloaderClient {
   }
 
   _onData(data) {
+    const asc = data.toString('ascii');
+    if(asc == '#RESET\n') {
+      console.log("DO reset !");
+    }
     this._protocol.sendToAll(data);
   }
 }
@@ -112,6 +117,10 @@ class Client {
 
 
     this._protocol._clients.push(this);
+  }
+
+  getID() {
+    return this._id;
   }
 
   getName() {
@@ -258,6 +267,35 @@ class Client {
       this._parseData();
     }
   }
+
+  formatAndSend(pkt) {
+    pkt.data = Buffer.alloc(0);
+    this.sendPacket(pkt);
+  }
+
+  sendPacket(pkt) {
+    console.log("Send packet !");
+    console.log(pkt);
+    const headerBuffer = Buffer.alloc(7);
+    headerBuffer.writeUInt8(0xC0, 0);
+    headerBuffer.writeUInt16LE(pkt.pid, 1);
+    headerBuffer.writeUInt16LE(pkt.data.length, 3);
+    let crc = 0xFFFF;
+    for(let i = 0; i < 5; i += 1) {
+      crc = this._crc_update(crc, headerBuffer.readUInt8(i));
+    }
+    headerBuffer.writeUInt16LE(crc, 5);
+
+    const crcDataBuffer = Buffer.alloc(2);
+    for(let i = 0; i < pkt.data.length; i += 1) {
+      crc = this._crc_update(crc, pkt.data.readUInt8(i));
+    }
+    crcDataBuffer.writeUInt16LE(crc, 0);
+
+    this.send(headerBuffer);
+    this.send(pkt.data);
+    this.send(crcDataBuffer);
+  }
 }
 
 class SerialClient extends Client {
@@ -272,7 +310,6 @@ class SerialClient extends Client {
   }
 
   send(data) {
-    console.log(data);
     this._serial.write(data);
   }
 }
@@ -307,6 +344,14 @@ class Protocol {
     this._generateASTs();
     this._createTCPServer();
     this._checkSerial = setInterval(() => this._checkSerialPort(), 1000);
+
+    ipcMain.on('pkt', (event, arg) => {
+      this._clients.forEach((client) => {
+        if(client.getID() == arg.client) {
+          client.formatAndSend(arg);
+        }
+      });
+    });
   }
 
   _checkSerialPort() {

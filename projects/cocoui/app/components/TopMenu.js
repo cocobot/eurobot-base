@@ -1,9 +1,12 @@
+import electron from 'electron';
 import React from 'react';
 import { Nav, Navbar, NavbarBrand, NavItem, NavLink,
          UncontrolledDropdown, DropdownToggle, DropdownItem, DropdownMenu,
          Badge,
 } from 'reactstrap';
 import { connect } from 'react-redux';
+
+const ipcRenderer = electron.ipcRenderer;
 
 class TopMenuComponent extends React.Component {
   _renderRobot(active, key) {
@@ -84,19 +87,25 @@ class TopMenuComponent extends React.Component {
           </DropdownToggle>
           <DropdownMenu >
             <DropdownItem>
-              Option 1
-            </DropdownItem>
-            <DropdownItem>
-              Option 2
+              Default view
             </DropdownItem>
             <DropdownItem divider />
-            <DropdownItem>
+            <DropdownItem onClick={() => this._reset(key)}>
               Reset
             </DropdownItem>
           </DropdownMenu>
         </UncontrolledDropdown>
       </NavItem>
     );
+  }
+
+  _reset(cid) {
+    ipcRenderer.send('pkt', {
+      pid: 0x8007,
+      fmt: "",
+      args: [],
+      client: cid, 
+    });
   }
 
   render() {

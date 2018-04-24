@@ -144,6 +144,9 @@ class Loader():
         sys.stdout.flush()
         while(True):
             self.sync = (self.sync + 1) % 100
+            self.send("#RESET")
+            self.send("")
+            self.send("")
             self.send("SYNC %d" % self.sync)
             line = self.recv()
             if line == "SYNC %d OK" % self.sync:

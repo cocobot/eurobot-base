@@ -7,6 +7,7 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
+#include <mcual.h>
 
 #define COCOBOT_COM_HEADER_START 0xC0
 #define INVALID_PTR ((void *)0xFFFFFFFF)
@@ -22,6 +23,26 @@ typedef struct __attribute__((packed))
 static SemaphoreHandle_t _mutex;
 static mcual_usart_id_t _usart;
 static char _printf_buffer[64];
+
+static uint16_t cocobot_com_crc16_update(uint16_t crc, uint8_t a)
+{
+  int i;
+
+  crc ^= a;
+  for(i = 0; i < 8; i += 1)
+  {
+    if (crc & 1)
+    {
+      crc = (crc >> 1) ^ 0xA001;
+    }
+    else
+    {
+      crc = (crc >> 1);
+    }
+  }
+
+  return crc;
+}
 
 void cocobot_com_async_thread(void *arg)
 {
@@ -42,6 +63,55 @@ void cocobot_com_async_thread(void *arg)
     vTaskDelayUntil( &xLastWakeTime, 100 / portTICK_PERIOD_MS);
   }
 }
+
+void cocobot_com_sync_thread(void *arg)
+{
+  cocobot_com_header_t header;
+  uint8_t * ptr = (uint8_t *)&header;
+  int i;
+  for(i = 0; i < sizeof(header); i += 1) 
+  {
+    ptr[i] = 0;
+  }
+  while(pdTRUE)
+  {
+    //get header
+    uint8_t recv = mcual_usart_recv(_usart);
+    for(i = 1; i < sizeof(header); i += 1) 
+    {
+      ptr[i - 1] = ptr[i];
+    }
+    ptr[sizeof(header) - 1] = recv;
+
+    if(header.start == COCOBOT_COM_HEADER_START)
+    {
+      uint16_t crc = 0xFFFF;
+      for(i = 0; i < sizeof(header) - 2; i += 1) 
+      {
+        crc = cocobot_com_crc16_update(crc, ptr[i]);
+      }
+      if(crc == header.crc)
+      {
+        uint8_t * data = pvPortMalloc(header.len);
+        //TODO:: read DATA and CRCDATA
+        
+        switch(header.pid)
+        {
+          case COCOBOT_COM_RESET_PID:
+            mcual_bootloader();
+            break;
+        }
+
+        for(i = 0; i < sizeof(header); i += 1) 
+        {
+          ptr[i] = 0;
+        }
+        vPortFree(data);
+      }
+    }
+  }
+}
+
 void cocobot_com_init(mcual_usart_id_t usart_id, unsigned int priority_monitor, unsigned int priority_async, cocobot_com_handler_t handler)
 {
   _usart = usart_id;
@@ -53,30 +123,10 @@ void cocobot_com_init(mcual_usart_id_t usart_id, unsigned int priority_monitor, 
   mcual_usart_init(_usart, 115200);
 
   //start tasks
-  (void)priority_monitor;
+  xTaskCreate(cocobot_com_sync_thread, "con. sync", 512, NULL, priority_monitor, NULL );
   xTaskCreate(cocobot_com_async_thread, "com. async", 512, NULL, priority_async, NULL );
 
   (void)handler;
-}
-
-static uint16_t cocobot_com_crc16_update(uint16_t crc, uint8_t a)
-{
-  int i;
-
-  crc ^= a;
-  for(i = 0; i < 8; i += 1)
-  {
-    if (crc & 1)
-    {
-      crc = (crc >> 1) ^ 0xA001;
-    }
-    else
-    {
-      crc = (crc >> 1);
-    }
-  }
-
-  return crc;
 }
 
 static int cocobot_com_compute_len(char ** fmt, va_list ap, uint32_t nested)
@@ -451,6 +501,7 @@ void cocobot_com_printf(char * fmt, ...)
   va_end(ap);
 #ifdef AUSBEE_SIM
   fprintf(stderr, "%s", _printf_buffer);
+  fprintf(stderr, "\r\n");
 #endif
   cocobot_com_send(COCOBOT_COM_PRINTF_PID, "S", _printf_buffer);
 }

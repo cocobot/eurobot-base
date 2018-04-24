@@ -9494,6 +9494,10 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _electron = __webpack_require__(85);
+
+var _electron2 = _interopRequireDefault(_electron);
+
 var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
@@ -9510,6 +9514,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+var ipcRenderer = _electron2.default.ipcRenderer;
+
 var TopMenuComponent = function (_React$Component) {
   _inherits(TopMenuComponent, _React$Component);
 
@@ -9522,6 +9528,8 @@ var TopMenuComponent = function (_React$Component) {
   _createClass(TopMenuComponent, [{
     key: '_renderRobot',
     value: function _renderRobot(active, key) {
+      var _this2 = this;
+
       var name = active.getIn(['name']);
 
       //robot
@@ -9634,17 +9642,14 @@ var TopMenuComponent = function (_React$Component) {
             _react2.default.createElement(
               _reactstrap.DropdownItem,
               null,
-              'Option 1'
-            ),
-            _react2.default.createElement(
-              _reactstrap.DropdownItem,
-              null,
-              'Option 2'
+              'Default view'
             ),
             _react2.default.createElement(_reactstrap.DropdownItem, { divider: true }),
             _react2.default.createElement(
               _reactstrap.DropdownItem,
-              null,
+              { onClick: function onClick() {
+                  return _this2._reset(key);
+                } },
               'Reset'
             )
           )
@@ -9652,9 +9657,19 @@ var TopMenuComponent = function (_React$Component) {
       );
     }
   }, {
+    key: '_reset',
+    value: function _reset(cid) {
+      ipcRenderer.send('pkt', {
+        pid: 0x8007,
+        fmt: "",
+        args: [],
+        client: cid
+      });
+    }
+  }, {
     key: 'render',
     value: function render() {
-      var _this2 = this;
+      var _this3 = this;
 
       return _react2.default.createElement(
         'div',
@@ -9671,7 +9686,7 @@ var TopMenuComponent = function (_React$Component) {
             _reactstrap.Nav,
             { className: 'ml-auto', navbar: true },
             this.props.active.map(function (x, key) {
-              return _this2._renderRobot(x, key);
+              return _this3._renderRobot(x, key);
             })
           )
         )
