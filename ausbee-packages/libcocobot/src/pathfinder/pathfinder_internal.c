@@ -206,22 +206,31 @@ void cocobot_pathfinder_set_start_node(cocobot_node_s *start_node)
 
 void cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_trajectory_s* trajectory)
 {
-    final_node->nodeType &= MASK_NEW_NODE;
-    final_node->nodeType |= FINAL_TRAJ;
-    while((final_node->x !=  g_start_node.x) || (final_node->y != g_start_node.y))
+    //Set target point
+    trajectory->trajectory[TRAJECTORY_NBR_POINTS_MAX - 1 - trajectory->nbr_points] = cocobot_pathfinder_get_point_from_node(final_node);
+    trajectory->nbr_points++;
+    table[(int)final_node->x][(int)final_node->y].nodeType &= MASK_NEW_NODE;
+    table[(int)final_node->x][(int)final_node->y].nodeType |= TARGET_POINT;
+    //cocobot_com_printf("PATH x=%d, y=%d px=%d, py=%d NodeType=%X\r\n", final_node->x, final_node->y, final_node->pX, final_node->pY, final_node->nodeType);
+
+    ////Next points
+    final_node = &table[(int)final_node->pX][(int)final_node->pY];
+    while((final_node->x != g_start_node.x) || (final_node->y != g_start_node.y))
     {
-        //cocobot_com_printf("PATH x=%d, y=%d px=%d, py=%d\r\n", final_node->x, final_node->y, final_node->pX, final_node->pY);
+        //cocobot_com_printf("PATH x=%d, y=%d px=%d, py=%d NodeType=%X\r\n", final_node->x, final_node->y, final_node->pX, final_node->pY, final_node->nodeType);
         //fill trajectory beginning by the end
         trajectory->trajectory[TRAJECTORY_NBR_POINTS_MAX - 1 - trajectory->nbr_points] = cocobot_pathfinder_get_point_from_node(final_node);
         trajectory->nbr_points++;
-        final_node = &table[(int)final_node->pX][(int)final_node->pY];
         final_node->nodeType &= MASK_NEW_NODE;
         final_node->nodeType |= FINAL_TRAJ;
+        final_node = &table[(int)final_node->pX][(int)final_node->pY];
     }
-    //cocobot_com_printf("PATH x=%d, y=%d\r\n", final_node->x, final_node->y);
-    //last point
+    //start point
     trajectory->trajectory[TRAJECTORY_NBR_POINTS_MAX - 1 - trajectory->nbr_points] = cocobot_pathfinder_get_point_from_node(final_node);
     trajectory->nbr_points++;
+    final_node->nodeType &= MASK_NEW_NODE;
+    final_node->nodeType |= START_POINT;
+    //cocobot_com_printf("PATH x=%d, y=%d NodeType=%X\r\n", final_node->x, final_node->y, final_node->nodeType);
     
     //put the trajectory at the begining of the array using memcpy if possible, memmove otherwise
     if(trajectory->nbr_points <= (TRAJECTORY_NBR_POINTS_MAX / 2))
