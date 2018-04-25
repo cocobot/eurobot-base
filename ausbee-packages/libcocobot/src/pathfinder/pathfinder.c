@@ -91,6 +91,14 @@ char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t sta
 
     //start_node
     cocobot_node_s* start_node = &g_table[(starting_point_x + (TABLE_LENGTH / 2)) / GRID_SIZE][((TABLE_WIDTH / 2) - starting_point_y)/GRID_SIZE];
+    cocobot_pathfinder_set_real_start_node(start_node);
+    
+    //Check that start node is not a forbidden place
+    if(!(start_node->nodeType == NEW_NODE) && !(start_node->nodeType & TEMPORARY_ALLOWED))
+    {
+        start_node = cocobot_pathfinder_find_closest_new_node(g_table, start_node);
+    }
+    
     cocobot_pathfinder_set_start_node(start_node);
 
     cocobot_node_s current_node = *start_node;

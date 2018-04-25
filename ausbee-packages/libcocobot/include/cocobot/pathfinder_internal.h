@@ -131,12 +131,20 @@ void cocobot_pathfinder_set_target_node(cocobot_node_s *target_node);
 void cocobot_pathfinder_save_real_target_node(int16_t x, int16_t y);
 
 /**
- * Set start node
+ * Set start node of the trajectory found by pathfinder
  * Arguments:
  *  - node : pointer on start node. 
  *  
  */
 void cocobot_pathfinder_set_start_node(cocobot_node_s *start_node);
+
+/**
+ * Set real start node of the trajectory (can be different from the start point of the trajectory found by pathfinder
+ * Arguments:
+ *  - node : pointer on start node. 
+ *  
+ */
+void cocobot_pathfinder_set_real_start_node(cocobot_node_s *start_node);
 
 /**
  * Retreive final path
@@ -188,5 +196,16 @@ cocobot_point_s cocobot_pathfinder_get_point_from_node(cocobot_node_s *node);
  *  - trajectory : pointer on the struct to initialise
  */
 void cocobot_pathfinder_init_trajectory(cocobot_trajectory_s *trajectory);
+
+/**
+ * Retreive the closest point to startPoint that is a NewNode
+ * To be used when the robot wants to start a trajectory from a forbidden zone.
+ * Arguments:
+ *  - table : The map used by the pathfinder
+ *  - startPoint : The forbidden point to start from
+ *
+ * Return: The closest NEW_NODE from where to start the trajectory.
+ */
+cocobot_node_s * cocobot_pathfinder_find_closest_new_node(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_node_s *startPoint);
 
 #endif  //COCOBOT_PATHFINDER_INTERNAL_H
