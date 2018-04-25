@@ -20,6 +20,8 @@ typedef enum
     FINAL_TRAJ = 0x0002,
     OPEN_LIST = 0x0004,
     TEMPORARY_ALLOWED = 0x0008,
+    START_POINT = 0x0010,
+    TARGET_POINT = 0x0020,
     ROBOT = 0x0100,         // Adversary
     GAME_ELEMENT = 0x0200   // Game element, that can be removed manually.
 }cocobot_nodeType_e;
