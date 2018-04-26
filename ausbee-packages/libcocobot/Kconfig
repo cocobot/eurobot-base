@@ -1,3 +1,14 @@
+choice
+    prompt "Pathfinder Table"
+
+config TABLE_2016
+    bool "2016"
+
+config TABLE_2018
+    bool "2018"
+
+endchoice
+
 config LIBCOCOBOT_POSITION_TICK_PER_180DEG
   int "+ Tick / 180deg"
   depends on LIBCOCOBOT

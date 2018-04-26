@@ -115,6 +115,8 @@ static cocobot_trajectory_xy_default_t xy_pref;
 
 static int enable_opponent_detection;
 
+static int trajectory_updated;
+
 static float cocobot_trajectory_find_best_angle(float current_angle, float angle)
 {
   //get modulo multiplier
@@ -632,6 +634,7 @@ void cocobot_trajectory_task(void * arg)
     if(estimations_need_recompute)
     {
       cocobot_trajectory_compute_estimations();
+      trajectory_updated = 1;
       estimations_need_recompute = 0;
     }
 
@@ -688,7 +691,7 @@ void cocobot_trajectory_task(void * arg)
 
         default:
           //something is broken, signal to user and try next order
-          cocobot_console_send_asynchronous("trajectory", "Unknown order type");
+          cocobot_com_printf("TRAJECTORY: Unknown order type");
           status = COCOBOT_TRAJECTORY_ORDER_DONE;
           break;
       }
@@ -711,12 +714,14 @@ void cocobot_trajectory_task(void * arg)
         xSemaphoreTake(mutex, portMAX_DELAY);
         order_list_read = (order_list_read + 1) % TRAJECTORY_MAX_ORDER;
         xSemaphoreGive(mutex);
+      trajectory_updated = 1;
       }
     }
     else if(result == COCOBOT_TRAJECTORY_RUNNING)
     {
       result = COCOBOT_TRAJECTORY_SUCCESS;
       xEventGroupSetBits(no_more_orders, BIT_0);
+      trajectory_updated = 1;
     }
 
     //wait 100ms
@@ -743,6 +748,8 @@ void cocobot_trajectory_init(unsigned int task_priority)
 
   //init handle generator
   last_handle = 0;
+
+  trajectory_updated = 0;
 
   //start task
   xTaskCreate(cocobot_trajectory_task, "trajectory", 200, NULL, task_priority, NULL);
@@ -780,6 +787,8 @@ void cocobot_add_new_order(cocobot_trajectory_order_t * order)
 
   xSemaphoreGive(mutex);
   xEventGroupClearBits(no_more_orders, BIT_0);
+
+  trajectory_updated = 1;
 }
 
 cocobot_trajectory_handle_t cocobot_trajectory_goto_d(float distance, float time)
@@ -915,69 +924,35 @@ void cocobot_trajetory_set_xy_default(cocobot_trajectory_xy_default_t pref)
   xy_pref = pref;
 }
 
-int cocobot_trajectory_handle_console(char * command)
+void cocobot_trajectory_handle_async_com(void)
 {
-  if(strcmp(command,"trajectory_list") == 0)
+  if(trajectory_updated)
   {
+    trajectory_updated = 0;
     xSemaphoreTake(mutex, portMAX_DELAY);
-    int opost = order_list_read;
+    cocobot_com_send(COCOBOT_COM_TRAJECTORY_DEBUG_PID,
+     "[BFFFFFFFFFFFF]",
+     (uint8_t *)order_list,                     //array ptr
+     sizeof(order_list[0]),                     //array elm size 
+     sizeof(order_list)/sizeof(order_list[0]),  //array size 
+     order_list_read,                           //array start
+     order_list_write,                          //array end
+     offsetof(cocobot_trajectory_order_t, type),
+     offsetof(cocobot_trajectory_order_t, time),
+     offsetof(cocobot_trajectory_order_t, circle_order.xc),
+     offsetof(cocobot_trajectory_order_t, circle_order.yc),
+     offsetof(cocobot_trajectory_order_t, circle_order.xe),
+     offsetof(cocobot_trajectory_order_t, circle_order.ye),
+     offsetof(cocobot_trajectory_order_t, estimated_start.x),
+     offsetof(cocobot_trajectory_order_t, estimated_start.y),
+     offsetof(cocobot_trajectory_order_t, estimated_start.angle),
+     offsetof(cocobot_trajectory_order_t, estimated_end.x),
+     offsetof(cocobot_trajectory_order_t, estimated_end.y),
+     offsetof(cocobot_trajectory_order_t, estimated_end.angle),
+     offsetof(cocobot_trajectory_order_t, estimated_distance_before_stop)
+    );
     xSemaphoreGive(mutex);
-    while(1)
-    {
-      cocobot_trajectory_order_t * order = NULL;
-
-      xSemaphoreTake(mutex, portMAX_DELAY);
-      if(opost != (int)order_list_write)
-      {
-        order = &order_list[opost];
-      }
-      xSemaphoreGive(mutex);
-
-      if(order == NULL)
-      {
-        break;
-      }
-
-      int flags = 0;
-
-      if(order->estimated_distance_before_stop > 0)
-      {
-        flags |= TRAJECTORY_FLAG_SLOW_DOWN;
-      }
-
-      switch(order->type)
-      {
-        case COCOBOT_TRAJECTORY_GOTO_D:
-          cocobot_console_send_answer("D,%d,%.3f,%.3f", flags, (double)order->time, (double)order->d_order.distance);
-          break;
-
-        case COCOBOT_TRAJECTORY_GOTO_A:
-          cocobot_console_send_answer("A,%d,%.3f,%.3f", flags, (double)order->time, (double)order->a_order.angle);
-          break;
-
-        case COCOBOT_TRAJECTORY_GOTO_XY:
-          cocobot_console_send_answer("XY,%d,%.3f,%.3f,%.3f", flags, (double)order->time, (double)order->xy_order.x, (double)order->xy_order.y);
-          break;
-
-        case COCOBOT_TRAJECTORY_GOTO_XY_BACKWARD:
-          cocobot_console_send_answer("XY BACKWARD,%d,%.3f,%.3f,%.3f", flags, (double)order->time, (double)order->xy_order.x, (double)order->xy_order.y);
-          break;
-
-
-
-        default:
-          cocobot_console_send_answer("?");
-          break;
-      }
-      cocobot_console_send_answer("%.3f,%.3f,%.3f", (double)order->estimated_start.x, (double)order->estimated_start.y, (double)order->estimated_start.angle);
-      cocobot_console_send_answer("%.3f,%.3f,%.3f", (double)order->estimated_end.x, (double)order->estimated_end.y, (double)order->estimated_end.angle);
-
-      opost = (opost + 1) % TRAJECTORY_MAX_ORDER;
-    }
-    return 1;
   }
-
-  return 0;
 }
 
 void cocobot_trajectory_set_opponent_detection(int enable)

@@ -4,7 +4,6 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include "strat_little_dune.h"
-#include "meca_crimp.h"
 
 static float strat_little_dune_get_x(void)
 {
@@ -54,18 +53,12 @@ static cocobot_action_callback_result_t strat_little_dune_preexec(void * arg)
 {
   (void)arg;
 
-  meca_crimp_set_vertical(290);
-  meca_crimp_set_target(750);
-
   return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
 static cocobot_action_callback_result_t strat_little_dune_cleanup(void * arg)
 {
   (void)arg;
-
-  meca_crimp_set_vertical(0);
-  meca_crimp_set_target(800);
 
   return COCOBOT_RETURN_ACTION_SUCCESS;
 }
@@ -78,12 +71,10 @@ static cocobot_action_callback_result_t strat_little_dune_exec(void * arg)
  // cocobot_trajectory_goto_d(300, 2000);
   cocobot_trajectory_wait();
 
-  meca_crimp_set_vertical(0);
   vTaskDelay(250 / portTICK_PERIOD_MS);
 
   vTaskDelay(3000 / portTICK_PERIOD_MS);
 
-  meca_crimp_set_target(950);
 
   vTaskDelay(1500 / portTICK_PERIOD_MS);
 

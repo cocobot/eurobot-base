@@ -3,8 +3,8 @@
 
 typedef enum
 {
-  COCOBOT_GAME_STATE_COLOR_NEG,
-  COCOBOT_GAME_STATE_COLOR_POS,
+  COCOBOT_GAME_STATE_COLOR_NEG = 0,
+  COCOBOT_GAME_STATE_COLOR_POS = 1,
 } cocobot_game_state_color_t;
 
 typedef void (*cocobot_game_state_funny_action_t)(void);
@@ -49,5 +49,7 @@ void cocobot_game_state_set_userdata(unsigned int id, void * data);
  *  - a pointer to the data.
  */
 void * cocobot_game_state_get_userdata(unsigned int id);
+
+void cocobot_game_state_handle_async_com(void);
 
 #endif// COCOBOT_GAME_STATE_H

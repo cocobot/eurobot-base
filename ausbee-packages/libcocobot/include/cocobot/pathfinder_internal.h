@@ -1,7 +1,7 @@
 #ifndef COCOBOT_PATHFINDER_INTERNAL_H
 #define COCOBOT_PATHFINDER_INTERNAL_H
 
-#include "cocobot/pathfinder_table.h"
+#include "cocobot/pathfinder_table_utils.h"
 #include "cocobot/pathfinder.h"
 
 #define NO_TRAJECTORY_AVAILABLE -1

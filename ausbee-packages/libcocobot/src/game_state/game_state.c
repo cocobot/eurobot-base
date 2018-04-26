@@ -16,6 +16,23 @@ static cocobot_game_state_color_t _color;
 static void * _userdata[USER_DATA_SIZE];
 static uint8_t _starter_removed;
 static TickType_t _start_time = 0;
+static TickType_t _last_update_time = 0;
+
+void cocobot_game_state_handle_async_com(void)
+{
+  TickType_t now = xTaskGetTickCount();
+  if(now - _last_update_time > 1000 / portTICK_PERIOD_MS)
+  {
+    _last_update_time = now;
+    cocobot_com_send(COCOBOT_COM_GAME_STATE_DEBUG_PID,
+     "BBDD",
+     0,  //0 for principal, 1 for secondary 
+     _color,  //0 for x negative, 1 for x positive 
+     platform_adc_get_mV(PLATFORM_ADC_VBAT), //battery voltage
+     cocobot_game_state_get_elapsed_time() / 1000 //elapsed time
+    );
+  }
+}
 
 static void cocobot_game_state_match_ended_event(TimerHandle_t xTimer)
 {

@@ -68,7 +68,7 @@ int cocobot_position_handle_console(char * command);
 
 /* Send asynchronously debug informations if user has requested them
  */
-void cocobot_position_handle_async_console(void);
+void cocobot_position_handle_async_com(void);
 
 /* Set the X coord
  * Argument:

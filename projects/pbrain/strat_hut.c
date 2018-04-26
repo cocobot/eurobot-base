@@ -91,7 +91,6 @@ static cocobot_action_callback_result_t strat_hut_preexec(void * arg)
   (void)arg;
 
   cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_BACKWARD);
-  cocobot_action_scheduler_use_pathfinder(0);
 
   return COCOBOT_RETURN_ACTION_SUCCESS;
 }
@@ -100,7 +99,6 @@ static cocobot_action_callback_result_t strat_hut_cleanup(void * arg)
 {
   (void)arg;
 
-  cocobot_action_scheduler_use_pathfinder(0);
   cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_FORWARD);
   
   return COCOBOT_RETURN_ACTION_SUCCESS;

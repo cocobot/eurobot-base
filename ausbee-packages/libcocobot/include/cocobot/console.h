@@ -61,4 +61,15 @@ void cocobot_console_send_answer(char * fmt, ...)  __attribute__ ((format (print
  */
 void cocobot_console_send_asynchronous(char * title, char * fmt, ...)  __attribute__ ((format (printf, 2, 3)));
 
+
+///////////////////////////////////////
+
+//Format
+// - H : u16
+// - F : 64bit float
+
+#define COCOBOT_CONSOLE_POSITION_DEBUG_PID (0x8000)
+
+void cocobot_console_send(uint16_t pid, char * fmt, ...);
+
 #endif// COCOBOT_CONSOLE_H

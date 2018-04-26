@@ -1,7 +1,6 @@
 #include <cocobot.h>
 #include <FreeRTOS.h>
 #include <task.h>
-#include <stdio.h>
 #include <math.h>
 
 #define SCHEDULER_MAX_ACTIONS 32
@@ -149,21 +148,21 @@ void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH],
   }
   else
   {
-    printf("[Warning] cocobot_action_scheduler: Action list full.\n");
+    cocobot_com_printf("[Warning] cocobot_action_scheduler: Action list full.\n");
   }
 }
 
-static void cocobot_action_scheduler_print_action(cocobot_action_t * action)
-{
-  cocobot_console_send_answer("\t score: %d", action->score);
-  float x, y, a;
-  (*action->pos)(action->callback_arg, &x, &y, &a);
-  cocobot_console_send_answer("\t pos: (x = %.1f mm, y = %.1f, a = %.2f deg)",
-      (double)x, (double)y, (double)a);
-  cocobot_console_send_answer("\t execution time: %ld", action->execution_time);
-  cocobot_console_send_answer("\t success proba: %.2f", (double)action->success_proba);
-  cocobot_console_send_answer("\t done: %d", action->done);
-}
+//static void cocobot_action_scheduler_print_action(cocobot_action_t * action)
+//{
+//  cocobot_console_send_answer("\t score: %d", action->score);
+//  float x, y, a;
+//  (*action->pos)(action->callback_arg, &x, &y, &a);
+//  cocobot_console_send_answer("\t pos: (x = %.1f mm, y = %.1f, a = %.2f deg)",
+//      (double)x, (double)y, (double)a);
+//  cocobot_console_send_answer("\t execution time: %ld", action->execution_time);
+//  cocobot_console_send_answer("\t success proba: %.2f", (double)action->success_proba);
+//  cocobot_console_send_answer("\t done: %d", action->done);
+//}
 
 /* Returns the approximate time (in ms) needed by the robot to reach the action's
  * starting point, based on the average robot linear speed set by the user.
@@ -350,6 +349,7 @@ cocobot_action_callback_result_t cocobot_action_scheduler_execute_best_action(vo
 }
 
 
+/*
 static void cocobot_action_scheduler_print_action_by_name(char name[ACTION_NAME_LENGTH])
 {
   unsigned int action_current_index = 0;
@@ -365,7 +365,9 @@ static void cocobot_action_scheduler_print_action_by_name(char name[ACTION_NAME_
 
   cocobot_console_send_answer("No action with name: %s", name);
 }
+*/
 
+/*
 static void cocobot_action_scheduler_list_actions(void)
 {
   unsigned int i = 0;
@@ -399,7 +401,9 @@ static void cocobot_action_scheduler_list_actions(void)
     }
   }
 }
+*/
 
+/*
 static void cocobot_action_scheduler_debug_actions(void)
 {
   unsigned int i = 0;
@@ -417,7 +421,9 @@ static void cocobot_action_scheduler_debug_actions(void)
     cocobot_console_send_answer("%s,%.0f,%.0f,%0.3f", action->name, (double)x, (double)y, (double)action_value);
   }
 }
+*/
 
+/*
 int cocobot_action_scheduler_handle_console(char * command)
 {
   if(strcmp(command,"exec_action") == 0)
@@ -485,3 +491,4 @@ int cocobot_action_scheduler_handle_console(char * command)
 
   return 0;
 }
+*/
