@@ -502,7 +502,6 @@ void cocobot_com_printf(char * fmt, ...)
   vsnprintf(_printf_buffer, sizeof(_printf_buffer), fmt, ap);
   va_end(ap);
 #ifdef AUSBEE_SIM
-  va_list ap;
   va_start(ap, fmt);  
   vfprintf(stderr, fmt, ap);
   fprintf(stderr, "\r\n");
