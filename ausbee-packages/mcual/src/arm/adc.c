@@ -5,9 +5,8 @@
 #include <mcual.h>
 
 
-void mcual_adc_init(mcual_adc_id_t id)
+void mcual_adc_init(void)
 {
-  (void)id;
   RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
   ADC->CCR = ADC_CCR_ADCPRE_1 | ADC_CCR_ADCPRE_0;
   ADC1->CR1 = 0x00;
