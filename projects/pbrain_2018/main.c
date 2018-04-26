@@ -6,7 +6,7 @@
 #include <cocobot.h>
 //#include "cocobot_pathfinder_config.h"
 
-static unsigned int _shell_configuration;
+//static unsigned int _shell_configuration;
 extern cocobot_pathfinder_table_init_s initTable [];
 
 void update_lcd(void * arg)
@@ -64,13 +64,35 @@ void run_strategy(void * arg)
   //}
 
   cocobot_pathfinder_set_start_zone_allowed();
-  //cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), 800, 500);
-  cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_0);
-  cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), 1300, 500);
-  //cocobot_trajectory_goto_d(100, -1);
+  //cocobot_pathfinder_set_robot(-500, 800);
+  //cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_0);
+  //cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), -975, 475);
   //cocobot_trajectory_wait();
-  //cocobot_trajectory_goto_d(-100, -1);
+  cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), 125, 525);
   cocobot_trajectory_wait();
+  cocobot_pathfinder_set_robot(0, 200);
+  cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), -1000, -500);
+  cocobot_trajectory_wait();
+  cocobot_pathfinder_remove_robot(-500, 800);
+  cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), 1100, -550);
+  cocobot_trajectory_wait();
+  cocobot_pathfinder_set_robot(400, -650);
+  cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_5);
+  cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), -500, 500);
+  cocobot_trajectory_wait();
+
+  //uint16_t toto = cocobot_pathfinder_get_trajectory_time(cocobot_position_get_x(), cocobot_position_get_y(), 1200, 500);
+  //cocobot_com_printf("Duration = %d\r\n", toto);
+  //cocobot_trajectory_wait();
+  //toto = cocobot_pathfinder_get_trajectory_time(cocobot_position_get_x(), cocobot_position_get_y(), -1000, -500);
+  //cocobot_com_printf("Duration = %d\r\n", toto);
+  //cocobot_trajectory_wait();
+  //toto = cocobot_pathfinder_get_trajectory_time(cocobot_position_get_x(), cocobot_position_get_y(), 1100, -550);
+  //cocobot_com_printf("Duration = %d\r\n", toto);
+  //cocobot_trajectory_wait();
+  //toto = cocobot_pathfinder_get_trajectory_time(cocobot_position_get_x(), cocobot_position_get_y(), -500, 500);
+  //cocobot_com_printf("Duration = %d\r\n", toto);
+  //cocobot_trajectory_wait();
 
   while(1)
       ;
@@ -118,7 +140,7 @@ int main(int argc, char *argv[])
   (void)argv;
 #endif
   platform_init();
-  cocobot_com_init(MCUAL_USART1, 1, 1, com_handler);
+  cocobot_com_init(MCUAL_USART1, 1, 4, com_handler);
   cocobot_lcd_init();
   cocobot_position_init(4);
   cocobot_action_scheduler_init();
@@ -146,9 +168,11 @@ int main(int argc, char *argv[])
 
   cocobot_position_set_x(-1300);
   cocobot_position_set_y(500);
+  //cocobot_position_set_x(-1000);
+  //cocobot_position_set_y(-500);
   cocobot_position_set_angle(180);
       
-  xTaskCreate(run_strategy, "strat", 400, NULL, 2, NULL );
+  xTaskCreate(run_strategy, "strat", 600, NULL, 2, NULL );
   xTaskCreate(update_lcd, "blink", 200, NULL, 1, NULL );
 
   vTaskStartScheduler();
