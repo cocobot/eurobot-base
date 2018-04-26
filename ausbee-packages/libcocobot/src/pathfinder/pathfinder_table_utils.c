@@ -2,15 +2,73 @@
 #include "cocobot.h"
 #include <string.h>
 #include <math.h>
+#include "cocobot_pathfinder_config.h"
 
 static uint8_t cocobot_start_zone_allowed = 0;
+
+static void cocobot_pathfinder_set_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_pathfinder_table_init_s * initStruct)
+{
+    switch(initStruct->obsType)
+    {
+        case RECTANGLE:
+            if(initStruct->isMask)
+                cocobot_pathfinder_set_rectangle_mask(table, initStruct->x_dimension, initStruct->y_dimension, initStruct->x_position, initStruct->y_position, initStruct->nodeType); 
+            else
+                cocobot_pathfinder_set_rectangle(table, initStruct->x_dimension, initStruct->y_dimension, initStruct->x_position, initStruct->y_position, initStruct->nodeType); 
+            break;
+        case CIRCLE:
+            if(initStruct->isMask)
+                cocobot_pathfinder_set_circle_mask(table, initStruct->x_position, initStruct->y_position, initStruct->x_dimension, initStruct->nodeType);
+            else
+                cocobot_pathfinder_set_circle(table, initStruct->x_position, initStruct->y_position, initStruct->x_dimension, initStruct->nodeType);
+            break;
+    }
+
+}
+
+void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_pathfinder_table_init_s * initStruct)
+{
+    //Reset table 
+    memset(table, 0, (TABLE_LENGTH / GRID_SIZE) * sizeof(cocobot_node_s));
+    for(int i = 0; i < TABLE_LENGTH / GRID_SIZE; i++)
+    {
+        memset(table[i], 0, (TABLE_WIDTH / GRID_SIZE) * sizeof(cocobot_node_s));
+        for(int j = 0; j < TABLE_WIDTH / GRID_SIZE; j++)
+        {
+            table[i][j].x = i;
+            table[i][j].y = j;
+            table[i][j].nodeType = NEW_NODE;
+        }
+    }
+    
+    int i = 0;
+    //Fill the table with the node
+    while(initStruct[i].obsType != 0)
+    {
+        if(initStruct[i].isSpecificColor == COCOBOT_GAME_STATE_COLOR_ALL)
+            cocobot_pathfinder_set_table(table, &initStruct[i]);
+        else if(initStruct[i].isSpecificColor == cocobot_game_state_get_color())
+        {
+            cocobot_pathfinder_set_table(table, &initStruct[i]);
+        }
+        i++;
+    }
+
+    //Forbid specific zone depending of the color
+//    if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+//    {
+//        cocobot_pathfinder_set_rectangle(table, POSITIVE_DEPART_ZONE_X_DIMENSION, POSITIVE_DEPART_ZONE_Y_DIMENSION, POSITIVE_DEPART_ZONE_X_POSITION, POSITIVE_DEPART_ZONE_Y_POSITION, FORBIDDEN);
+//    }
+//    else
+//        cocobot_pathfinder_set_rectangle(table, NEGATIVE_DEPART_ZONE_X_DIMENSION, NEGATIVE_DEPART_ZONE_Y_DIMENSION, NEGATIVE_DEPART_ZONE_X_POSITION, NEGATIVE_DEPART_ZONE_Y_POSITION, FORBIDDEN);
+//
+}
 
 void cocobot_pathfinder_set_point_mask(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int x, int y, cocobot_nodeType_e node_type)
 {
     //Security to avoid buffer overflow
     if((x < TABLE_LENGTH/GRID_SIZE) && (y < TABLE_WIDTH/GRID_SIZE) && (x >= 0) && (y >= 0))
         table[x][y].nodeType |= node_type;
-    //cocobot_console_send_asynchronous("TABLE","x=%d, y=%d status=%x", x, y, table[x][y].nodeType );
 }
 
 void cocobot_pathfinder_set_rectangle_mask(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int x_dimension, int y_dimension, int x_position, int y_position, cocobot_nodeType_e node_type)
@@ -51,8 +109,7 @@ void cocobot_pathfinder_set_point_unmask(cocobot_node_s table[][TABLE_WIDTH/GRID
 {
     //Security to avoid buffer overflow
     if((x < TABLE_LENGTH/GRID_SIZE) && (y < TABLE_WIDTH/GRID_SIZE) && (x >= 0) && (y >= 0))
-        table[x][y].nodeType &= ~node_type;
-    //cocobot_console_send_asynchronous("TABLE","x=%d, y=%d status=%x", x, y, table[x][y].nodeType );
+        table[x][y].nodeType &= ~(uint16_t)node_type;
 }
 
 void cocobot_pathfinder_set_rectangle_unmask(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int x_dimension, int y_dimension, int x_position, int y_position, cocobot_nodeType_e node_type)
@@ -103,11 +160,11 @@ void cocobot_pathfinder_reset_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE
    {
        if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
        {
-           cocobot_pathfinder_set_rectangle_mask(table, 300/GRID_SIZE, 500/GRID_SIZE, 0, 600/GRID_SIZE, TEMPORARY_ALLOWED);
+           cocobot_pathfinder_set_rectangle_mask(table, NEGATIVE_DEPART_ZONE_X_DIMENSION, NEGATIVE_DEPART_ZONE_Y_DIMENSION, NEGATIVE_DEPART_ZONE_X_POSITION, NEGATIVE_DEPART_ZONE_Y_POSITION, TEMPORARY_ALLOWED);
        }
        else
        {
-           cocobot_pathfinder_set_rectangle_mask(table, 300/GRID_SIZE, 500/GRID_SIZE, 2700/GRID_SIZE, 600/GRID_SIZE, TEMPORARY_ALLOWED);
+           cocobot_pathfinder_set_rectangle_mask(table, POSITIVE_DEPART_ZONE_X_DIMENSION, POSITIVE_DEPART_ZONE_Y_DIMENSION, POSITIVE_DEPART_ZONE_X_POSITION, POSITIVE_DEPART_ZONE_Y_POSITION, TEMPORARY_ALLOWED);
        }
        cocobot_start_zone_allowed = 0;
    }  
@@ -121,13 +178,13 @@ void cocobot_pathfinder_set_start_zone_allowed()
 void cocobot_pathfinder_set_robot_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y)
 {
     //cocobot_console_send_asynchronous("TABLE","Set robot x=%d, y=%d", x, y);
-    cocobot_pathfinder_set_circle_mask(table, x, y, OPPONENT_HALF_DIAG/GRID_SIZE, ROBOT); 
+    cocobot_pathfinder_set_circle_mask(table, x, y, OPPONENT_HALF_DIAG/GRID_SIZE + ROBOT_HALF_DIAG_GRID, ROBOT); 
 }
 
 void cocobot_pathfinder_unset_robot_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y)
 {
     //cocobot_console_send_asynchronous("TABLE","Unset robot x=%d, y=%d", x, y);
-    cocobot_pathfinder_set_circle_unmask(table, x, y, OPPONENT_HALF_DIAG/GRID_SIZE, ROBOT); 
+    cocobot_pathfinder_set_circle_unmask(table, x, y, OPPONENT_HALF_DIAG/GRID_SIZE + ROBOT_HALF_DIAG_GRID, ROBOT); 
 }
 
 void cocobot_pathfinder_set_point(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int x, int y, cocobot_nodeType_e node_type)

@@ -13,78 +13,19 @@ static opponent_table_s opponent_robot;
 
 uint16_t cocobot_pathfinder_get_trajectory_time(int16_t starting_point_x, int16_t starting_point_y, int16_t target_point_x, int16_t target_point_y)
 {
-    cocobot_com_printf("PATHFINDER: Get trajectory time started");
+    cocobot_com_printf("PATHFINDER: Get trajectory time started\r\n");
     
     cocobot_pathfinder_reset_table(g_table);
 
     cocobot_pathfinder_initialize_list(&open_list);
    
     //target_node
-    cocobot_node_s* target_node = &g_table[(target_point_x + (TABLE_LENGTH / 2))/GRID_SIZE][(target_point_y - (TABLE_WIDTH / 2))/GRID_SIZE];
-    if(((target_node->nodeType & OBSTACLE) == OBSTACLE) || ((target_node->nodeType & SOFT_OBSTACLE) == SOFT_OBSTACLE) || ((target_node->nodeType & FORBIDDEN) == FORBIDDEN))
-    {
-        cocobot_com_printf("PATHFINDER: Target not reachable");
-        return 0;
-    }
-    cocobot_pathfinder_set_target_node(target_node);
-
-    //start_node
-    cocobot_node_s* start_node = &g_table[(starting_point_x + (TABLE_LENGTH / 2)) / GRID_SIZE][(starting_point_y - (TABLE_WIDTH / 2))/GRID_SIZE];
-    cocobot_pathfinder_set_start_node(start_node);
-
-    cocobot_node_s current_node = *start_node;
-    current_node.cost = cocobot_pathfinder_get_distance(&current_node, target_node);
-
-    while((current_node.x != target_node->x) || (current_node.y != target_node->y))
-    {
-       // cocobot_console_send_asynchronous("PATHFINDER","current node x=%d, y=%d", current_node.x, current_node.y);
-        //Treat adjacent node
-        for(int i=current_node.x-1; i<=current_node.x+1; i++)
-        {
-            for(int j=current_node.y-1; j<=current_node.y+1; j++)
-            {
-                //cocobot_console_send_asynchronous("DEBUG","i=%d, j=%d", i, j);
-                if((i>=0) && (j>=0) && (i<(TABLE_LENGTH/GRID_SIZE)) && (j<(TABLE_WIDTH/GRID_SIZE)) && ((i != current_node.x) || (j!=current_node.y)))
-                {
-                    cocobot_pathfinder_compute_node(&open_list, &g_table[i][j], &current_node);
-                }
-            }
-        }
-        //open_list is not null
-        if(open_list.nb_elements != 0)
-        {
-            //get first of the list
-            open_list.table[0]->nodeType &= 0xFF0;
-            open_list.table[0]->nodeType |= CLOSED_LIST;
-            current_node = *open_list.table[0];
-            cocobot_pathfinder_remove_from_list(&open_list, open_list.table[0]);
-        }
-        else
-        {
-            cocobot_com_printf("PATHFINDER: No solution");
-            return 0;
-        }
-    }
-    
-    return cocobot_pathfinder_get_time(&current_node, g_table);
-}
-
-char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t starting_point_y, int16_t target_point_x, int16_t target_point_y)
-{
-    cocobot_com_printf("PATHFINDER: execute trajectory started");
-    
-    cocobot_pathfinder_reset_table(g_table);
-
-    cocobot_pathfinder_initialize_list(&open_list);
-   
-    //target_node
-    cocobot_pathfinder_save_real_target_node(target_point_x, target_point_y);
     cocobot_node_s* target_node = &g_table[(target_point_x + (TABLE_LENGTH / 2))/GRID_SIZE][((TABLE_WIDTH / 2) - target_point_y)/GRID_SIZE];
-    if(((target_node->nodeType & OBSTACLE) == OBSTACLE) || ((target_node->nodeType & SOFT_OBSTACLE) == SOFT_OBSTACLE) || ((target_node->nodeType & FORBIDDEN) == FORBIDDEN))
+    if((target_node->nodeType & OBSTACLE) || (target_node->nodeType & SOFT_OBSTACLE) || (target_node->nodeType & FORBIDDEN) || (target_node->nodeType & ROBOT) || (target_node->nodeType & GAME_ELEMENT))
     {
-        cocobot_com_printf("PATHFINDER: Target not reachable");
+        cocobot_com_printf("PATHFINDER: Target not reachable\r\n");
         g_table_updated = 1;
-        return DESTINATION_NOT_AVAILABLE;
+        return 0xffff;
     }
     cocobot_pathfinder_set_target_node(target_node);
 
@@ -95,17 +36,13 @@ char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t sta
     cocobot_node_s current_node = *start_node;
     current_node.cost = cocobot_pathfinder_get_distance(&current_node, target_node);
 
-    cocobot_pathfinder_init_trajectory(&final_traj);
-
     while((current_node.x != target_node->x) || (current_node.y != target_node->y))
     {
-        //cocobot_console_send_asynchronous("PATHFINDER","current node x=%d, y=%d", current_node.x, current_node.y);
         //Treat adjacent node
         for(int i=current_node.x-1; i<=current_node.x+1; i++)
         {
             for(int j=current_node.y-1; j<=current_node.y+1; j++)
             {
-                //cocobot_console_send_asynchronous("DEBUG","i=%d, j=%d", i, j);
                 if((i>=0) && (j>=0) && (i<(TABLE_LENGTH/GRID_SIZE)) && (j<(TABLE_WIDTH/GRID_SIZE)) && ((i != current_node.x) || (j!=current_node.y)))
                 {
                     cocobot_pathfinder_compute_node(&open_list, &g_table[i][j], &current_node);
@@ -116,15 +53,84 @@ char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t sta
         if(open_list.nb_elements != 0)
         {
             //get first of the list
-            open_list.table[0]->nodeType &= 0xFF0;
+            open_list.table[0]->nodeType &= MASK_NEW_NODE;
             open_list.table[0]->nodeType |= CLOSED_LIST;
-            //cocobot_console_send_asynchronous("OPEN_LIST","x=%d, y=%d px=%d, py=%d, status=%x cost :%f", open_list.table[0].x, open_list.table[0].y, open_list.table[0].pX, open_list.table[0].pY, open_list.table[0].nodeType,(double)open_list.table[0].cost);
             current_node = *open_list.table[0];
             cocobot_pathfinder_remove_from_list(&open_list, open_list.table[0]);
         }
         else
         {
-            cocobot_com_printf("PATHFINDER: No solution");
+            cocobot_com_printf("PATHFINDER: No solution\r\n");
+            g_table_updated = 1;
+            return 0xffff;
+        }
+    }
+    
+    g_table_updated = 1;
+    return cocobot_pathfinder_get_time(&current_node, g_table);
+}
+
+char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t starting_point_y, int16_t target_point_x, int16_t target_point_y)
+{
+    cocobot_com_printf("PATHFINDER: Start point:(%d, %d) Target Point:(%d, %d)\r\n", starting_point_x, starting_point_y, target_point_x, target_point_y);
+    
+    cocobot_pathfinder_reset_table(g_table);
+
+    cocobot_pathfinder_initialize_list(&open_list);
+   
+    //target_node
+    cocobot_pathfinder_save_real_target_node(target_point_x, target_point_y);
+    cocobot_node_s* target_node = &g_table[(target_point_x + (TABLE_LENGTH / 2))/GRID_SIZE][((TABLE_WIDTH / 2) - target_point_y)/GRID_SIZE];
+    if((target_node->nodeType & OBSTACLE) || (target_node->nodeType & SOFT_OBSTACLE) || (target_node->nodeType & FORBIDDEN) || (target_node->nodeType & ROBOT) || (target_node->nodeType & GAME_ELEMENT))
+    {
+        cocobot_com_printf("PATHFINDER: Target not reachable\r\n");
+        g_table_updated = 1;
+        return DESTINATION_NOT_AVAILABLE;
+    }
+    cocobot_pathfinder_set_target_node(target_node);
+
+    //start_node
+    cocobot_node_s* start_node = &g_table[(starting_point_x + (TABLE_LENGTH / 2)) / GRID_SIZE][((TABLE_WIDTH / 2) - starting_point_y)/GRID_SIZE];
+    cocobot_pathfinder_set_real_start_node(start_node);
+    
+    //Check that start node is not a forbidden place
+    if(!(start_node->nodeType == NEW_NODE) && !(start_node->nodeType & TEMPORARY_ALLOWED))
+    {
+        start_node = cocobot_pathfinder_find_closest_new_node(g_table, start_node);
+    }
+    
+    cocobot_pathfinder_set_start_node(start_node);
+
+    cocobot_node_s current_node = *start_node;
+    current_node.cost = cocobot_pathfinder_get_distance(&current_node, target_node);
+
+    cocobot_pathfinder_init_trajectory(&final_traj);
+
+    while((current_node.x != target_node->x) || (current_node.y != target_node->y))
+    {
+        //Treat adjacent node
+        for(int i=current_node.x-1; i<=current_node.x+1; i++)
+        {
+            for(int j=current_node.y-1; j<=current_node.y+1; j++)
+            {
+                if((i>=0) && (j>=0) && (i<(TABLE_LENGTH/GRID_SIZE)) && (j<(TABLE_WIDTH/GRID_SIZE)) && ((i != current_node.x) || (j!=current_node.y)))
+                {
+                    cocobot_pathfinder_compute_node(&open_list, &g_table[i][j], &current_node);
+                }
+            }
+        }
+        //open_list is not null
+        if(open_list.nb_elements != 0)
+        {
+            //get first of the list
+            open_list.table[0]->nodeType &= MASK_NEW_NODE;
+            open_list.table[0]->nodeType |= CLOSED_LIST;
+            current_node = *open_list.table[0];
+            cocobot_pathfinder_remove_from_list(&open_list, open_list.table[0]);
+        }
+        else
+        {
+            cocobot_com_printf("PATHFINDER: No solution\r\n");
             g_table_updated = 1;
             return NO_ROUTE_TO_TARGET;
         }
@@ -132,7 +138,7 @@ char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t sta
     cocobot_pathfinder_get_path(&current_node, g_table, &final_traj);
     for(int i = 0; i < final_traj.nbr_points; i++)
     {
-        cocobot_com_printf("REAL_PATH x: %d, y:%d", final_traj.trajectory[i].x, final_traj.trajectory[i].y);
+        //cocobot_com_printf("REAL_PATH x:%d, y:%d\r\n", final_traj.trajectory[i].x, final_traj.trajectory[i].y);
     }
     
     cocobot_pathfinder_set_trajectory(&final_traj);
@@ -161,7 +167,6 @@ void cocobot_pathfinder_set_robot(int adv_x, int adv_y)
 {
     if(opponent_robot.nbr_slot_used < NBR_OTHER_ROBOT_MAX)
     {
-        //cocobot_console_send_asynchronous("SET ROBOT", "x:%d, y:%d, slot:%d", (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE, opponent_robot.nbr_slot_used + 1);
         opponent_robot.other_robot[opponent_robot.nbr_slot_used].x = adv_x;
         opponent_robot.other_robot[opponent_robot.nbr_slot_used].y = adv_y;
         cocobot_pathfinder_set_robot_zone(g_table, (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE);
@@ -169,7 +174,6 @@ void cocobot_pathfinder_set_robot(int adv_x, int adv_y)
     }
     else
     {
-        //cocobot_console_send_asynchronous("SET ROBOT", "x:%d, y:%d, slot:%d", (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE, opponent_robot.nbr_slot_used);
         cocobot_pathfinder_remove_robot(opponent_robot.other_robot[0].x, opponent_robot.other_robot[0].y);
         opponent_robot.other_robot[2].x = adv_x;
         opponent_robot.other_robot[2].y = adv_y;
@@ -184,7 +188,6 @@ void cocobot_pathfinder_remove_robot(int adv_x, int adv_y)
     {
         if((opponent_robot.other_robot[i].x == adv_x) && (opponent_robot.other_robot[i].y == adv_y))
         {
-            //cocobot_console_send_asynchronous("UNSET ROBOT", "x:%d, y:%d, slot:%d", (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE, i + 1);
             cocobot_pathfinder_unset_robot_zone(g_table, (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE);
             if(i < (opponent_robot.nbr_slot_used - 1))
             {
@@ -209,17 +212,22 @@ void cocobot_pathfinder_remove_robot(int adv_x, int adv_y)
     }
 }
 
+void cocobot_pathfinder_remove_game_element(uint8_t x, uint8_t y, uint8_t radius)
+{
+    cocobot_pathfinder_set_circle_unmask(g_table, x, y, radius + ROBOT_HALF_WIDTH_GRID, GAME_ELEMENT);
+}
+
 void cocobot_pathfinder_allow_start_zone()
 {
     cocobot_pathfinder_set_start_zone_allowed();
 }
 
-void cocobot_pathfinder_init(uint16_t robot_length, uint16_t robot_width)
+void cocobot_pathfinder_init(cocobot_pathfinder_table_init_s * initTable)
 {
     memset(&opponent_robot, 0, sizeof(opponent_table_s));
     g_table_updated = 0;
 
-    cocobot_pathfinder_initialize_table(g_table, robot_length, robot_width);
+    cocobot_pathfinder_initialize_table(g_table, initTable);
     g_table_updated = 1;
 }
 

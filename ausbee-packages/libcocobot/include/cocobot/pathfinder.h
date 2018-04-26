@@ -55,12 +55,24 @@ void cocobot_pathfinder_set_robot(int adv_x, int adv_y);
 void cocobot_pathfinder_remove_robot(int adv_x, int adv_y);
 
 /**
+ * Remove a game element from the pathfinder table
+ * When it is removed, it not considered as an obstacle by the pathfinder.
+ * WARNING : Units used here are grid units
+ * This function cannot be internal, because it is called by pathfinder conf. Nevertheless it's easier to use grid coordinates.
+ * Not to be called directly, only by conf
+ * Arguments:
+ *  - x : xposition of the game element to remove.
+ *  - y : yposition of the game element to remove.
+ *  - radius: Size of the game element to remove (it is considered as a circle)
+ */
+void cocobot_pathfinder_remove_game_element(uint8_t x, uint8_t y, uint8_t radius);
+
+/**
  * Initialize the pathFinder
  * Arguments : 
- *  - robot_length (mm)
- *  - robot_width (mm)
+ *  - initTable : Table containing all the elements to be used for initialisation
  */
-void cocobot_pathfinder_init(uint16_t robot_length, uint16_t robot_width);
+void cocobot_pathfinder_init(cocobot_pathfinder_table_init_s * initTable);
 
 void cocobot_pathfinder_handle_async_com(void);
 

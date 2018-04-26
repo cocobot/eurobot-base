@@ -4,8 +4,8 @@ choice
 config TABLE_2016
     bool "2016"
 
-config TABLE_2018
-    bool "2018"
+config TABLE_OTHER
+    bool "other"
 
 endchoice
 

@@ -159,22 +159,27 @@ void run_strategy(void * arg)
 {
   (void)arg;
 
-  meca_seashell_init();
-  meca_fish_init();
+  //meca_seashell_init();
+  //meca_fish_init();
 
   //strat_hut_register();
   //strat_sand_register();
-  strat_fish_register();
+  //strat_fish_register();
 
   cocobot_game_state_wait_for_starter_removed();
 
   //strat shell must be registered after "starter removed" event because shell configuration can be changed before
   strat_shell_register();
 
-  cocobot_trajectory_goto_d(100, -1);
+  cocobot_pathfinder_set_start_zone_allowed();
+  //cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), 800, 500);
+  cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), 1000, 150);
+  //cocobot_trajectory_goto_d(100, -1);
   cocobot_trajectory_wait();
 
-  cocobot_action_scheduler_start();
+  while(1)
+      ;
+  //cocobot_action_scheduler_start();
 }
 
 int console_handler(const char * command)
@@ -215,14 +220,8 @@ void funny_action(void)
 
 }
 
-int main(int argc, char *argv[]) 
+int main(void) 
 {
-#ifdef AUSBEE_SIM
-  mcual_arch_main(argc, argv);
-#else
-  (void)argc;
-  (void)argv;
-#endif
   platform_init();
   cocobot_console_init(MCUAL_USART1, 1, 1, console_handler);
   cocobot_lcd_init();
@@ -232,7 +231,8 @@ int main(int argc, char *argv[])
   cocobot_trajectory_init(4);
   cocobot_opponent_detection_init(3);
   cocobot_game_state_init(funny_action);
-  //cocobot_pathfinder_init(300, 300);
+  //cocobot_pathfinder_init(150, 150);
+  cocobot_pathfinder_init(300, 300);
 
 #ifdef AUSBEE_SIM
   //random shell config in simu
@@ -247,20 +247,20 @@ int main(int argc, char *argv[])
   do_funny_action = 0;
 
   //set initial position
-  switch(cocobot_game_state_get_color())
-  {
-    case COCOBOT_GAME_STATE_COLOR_NEG:
+  //switch(cocobot_game_state_get_color())
+  //{
+    //case COCOBOT_GAME_STATE_COLOR_NEG:
       cocobot_position_set_x(-1300);
       cocobot_position_set_y(-20 + 11);
       cocobot_position_set_angle(-90);
-      break;
+      //break;
 
-    case COCOBOT_GAME_STATE_COLOR_POS:
-      cocobot_position_set_x(1300);
-      cocobot_position_set_y(-20 + 11);
-      cocobot_position_set_angle(-90);
-      break;
-  }
+    //case COCOBOT_GAME_STATE_COLOR_POS:
+    //  cocobot_position_set_x(1300);
+    //  cocobot_position_set_y(-20 + 11);
+    //  cocobot_position_set_angle(-90);
+    //  break;
+  //}
 
   xTaskCreate(run_strategy, "strat", 200, NULL, 2, NULL );
   xTaskCreate(update_lcd, "blink", 200, NULL, 1, NULL );

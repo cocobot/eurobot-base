@@ -21,8 +21,6 @@ endif
 
 ifeq ($(CONFIG_TABLE_2016), y)
 LIBCOCOBOT_LOCAL_SRC_FILES+=src/pathfinder/pathfinder_table_2016.c
-else ifeq ($(CONFIG_TABLE_2018), y)
-LIBCOCOBOT_LOCAL_SRC_FILES+=src/pathfinder/pathfinder_table_2018.c
 endif
 GLOBAL_LDFLAGS+=-lm
 

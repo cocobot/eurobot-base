@@ -2,26 +2,28 @@
 #define COCOBOT_PATHFINDER_TABLE_H
 
 #include <stdint.h>
+#include "cocobot_pathfinder_config.h"
 
-#define TABLE_LENGTH 3000
-#define TABLE_WIDTH 2000
-#define OPPONENT_HALF_DIAG 225
-#define MAXIMUM_NODE_IN_LIST 200
-#define GRID_SIZE 50
-#define MASK_NEW_NODE 0xFF00
-#define MASK_REMOVE_ROBOT 0xF0FF
+#define MAXIMUM_NODE_IN_LIST            200
+#define MASK_TEMPORARY_OBSTACLE         0x0F00
+#define MASK_NEW_NODE                   0xFF00
+#define MASK_REMOVE_ROBOT               0xF0FF
+#define COCOBOT_GAME_STATE_COLOR_ALL    0xff
 
 typedef enum
 {
     NEW_NODE = 0x1000,
     OBSTACLE = 0x2000,
-    FORBIDDEN = 0x4000, // Zone where the robot can't go
-    SOFT_OBSTACLE = 0x8000, //Zone where the robot can eventually go but must be cautious when turning
+    FORBIDDEN = 0x4000,     // Zone where the robot can't go
+    SOFT_OBSTACLE = 0x8000, // Zone where the robot can eventually go but must be cautious when turning
     CLOSED_LIST = 0x0001,
     FINAL_TRAJ = 0x0002,
     OPEN_LIST = 0x0004,
     TEMPORARY_ALLOWED = 0x0008,
-    ROBOT = 0x0100
+    START_POINT = 0x0010,
+    TARGET_POINT = 0x0020,
+    ROBOT = 0x0100,         // Adversary
+    GAME_ELEMENT = 0x0200   // Game element, that can be removed manually.
 }cocobot_nodeType_e;
 
 typedef struct
@@ -45,15 +47,39 @@ typedef struct
     uint8_t nb_elements;
 } cocobot_list_s;
 
+typedef enum
+{
+    RECTANGLE = 1,
+    CIRCLE,
+}cocobot_pathfinder_obsType_e;
+
+/*
+ * Structure used to initialize the table
+ * Note :   x and y position are pathfinder coordinates.
+ *          isSpecificColor is a field that can be COCOBOT_GAME_STATE_COLOR_NEG (only to be used when the color is positive), COCOBOT_GAME_STATE_COLOR_POS (only to be used when the color is positive), or COCOBOT_GAME_STATE_COLOR_ALL (applied no matter the start color).
+ */
+typedef struct 
+{
+    uint16_t x_position;
+    uint16_t y_position;
+    uint16_t x_dimension;
+    uint16_t y_dimension;
+    uint16_t nodeType;
+    uint8_t obsType;
+    uint8_t isMask;     //Set if the obstacle can be removed during game (case of game element)
+    uint8_t isSpecificColor; 
+}cocobot_pathfinder_table_init_s;
+
 
 /**
  * Initialize the table used for a*
  * Table width used is TABLE_WIDTH as for table length
  * Arguments:
  *  - table : static 2nd array representing the playground area for a*
+ *  - initStruct : Main table init
  *  
  */
-void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint16_t robot_length, uint16_t robot_width);
+void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_pathfinder_table_init_s * initStruct);
 
 /**
  * Set start zone allowed token to true to be allowed on next reset
@@ -77,6 +103,82 @@ void cocobot_pathfinder_set_robot_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_S
  *  - y : y center of the zone 
  */
 void cocobot_pathfinder_unset_robot_zone(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], uint8_t x, uint8_t y);
+
+/**
+ * Set a mask on a point on the table
+ * Arguments:
+ *  - table : static 2nd array representing the playground area for a*
+ *  - x : x coordinate of the point
+ *  - y : y coordinate of the point
+ *  - node_type : node_type mask wanted to be applied on the point.
+ *  
+ */
+void cocobot_pathfinder_set_point_mask(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int x, int y, cocobot_nodeType_e node_type);
+
+/**
+ * Set a mask on a rectangle on the table of the same nodetype
+ * Arguments:
+ *  - table : static 2nd array representing the playground area for a*
+ *  - x_dimension : x dimension of the rectangle
+ *  - y_dimension : y dimension of the rectangle
+ *  - x_position : x position of the rectangle (x correspond to the smaller x coordinate of the rectangle)
+ *  - y_position : y position of the rectangle (y correspond to the smaller y coordinate of the rectangle)
+ *  - node_type : node_type mask wanted to be applied on the rectangle.
+ *  
+ */
+void cocobot_pathfinder_set_rectangle_mask(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int x_dimension, int y_dimension, int x_position, int y_position, cocobot_nodeType_e node_type);
+
+
+/**
+ * Set a mask on a circle on the table of the same nodetype
+ * Arguments:
+ *  - table : static 2nd array representing the playground area for a*
+ *  - x_center : x coordinate of the center of the circle
+ *  - y_center : y coordinate of the center of the circle
+ *  - radius : radius of the circle
+ *  - node_type : node_type mask wanted to be applied on the circle.
+ *  
+ */
+void cocobot_pathfinder_set_circle_mask(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int x_center, int y_center, int radius, cocobot_nodeType_e node_type);
+
+
+/**
+ * Remove a mask from a point on the table
+ * Arguments:
+ *  - table : static 2nd array representing the playground area for a*
+ *  - x : x coordinate of the point
+ *  - y : y coordinate of the point
+ *  - node_type : node_type mask wanted to be removed from the point.
+ *  
+ */
+void cocobot_pathfinder_set_point_unmask(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int x, int y, cocobot_nodeType_e node_type);
+
+
+/**
+ * Remove a mask from a rectangle on the table of the same nodetype
+ * Arguments:
+ *  - table : static 2nd array representing the playground area for a*
+ *  - x_dimension : x dimension of the rectangle
+ *  - y_dimension : y dimension of the rectangle
+ *  - x_position : x position of the rectangle (x correspond to the smaller x coordinate of the rectangle)
+ *  - y_position : y position of the rectangle (y correspond to the smaller y coordinate of the rectangle)
+ *  - node_type : node_type mask wanted to be removed from the rectangle.
+ *  
+ */
+void cocobot_pathfinder_set_rectangle_unmask(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int x_dimension, int y_dimension, int x_position, int y_position, cocobot_nodeType_e node_type);
+
+
+/**
+ * Remove a mask from a circle on the table of the same nodetype
+ * Arguments:
+ *  - table : static 2nd array representing the playground area for a*
+ *  - x_center : x coordinate of the center of the circle
+ *  - y_center : y coordinate of the center of the circle
+ *  - radius : radius of the circle
+ *  - node_type : node_type mask wanted to be removed from the circle.
+ *  
+ */
+void cocobot_pathfinder_set_circle_unmask(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], int x_center, int y_center, int radius, cocobot_nodeType_e node_type);
 
 /**
  * Reset the table to initial state

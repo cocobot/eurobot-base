@@ -4,13 +4,12 @@
 
 void cocobot_pathfinder_douglas_peucker(cocobot_trajectory_final_s *trajectory, float threshold)
 {
-    cocobot_com_printf("DOUGLAS: Starting douglas peucker algo");
+    cocobot_com_printf("DOUGLAS: Starting douglas peucker algo\r\n");
     uint8_t start_index = 0;
     uint8_t start_index_sav = 0;
     uint8_t target_index = trajectory->nbr_points - 1;
     while(start_index != target_index)
     {
-        //cocobot_console_send_asynchronous("DOUGLAS:","start_index = %d target_index = %d", start_index, target_index);
         if(cocobot_pathfinder_find_farthest_point(trajectory, start_index, target_index, threshold) == NO_POINT_TO_KEEP)
         {
             start_index = target_index;
@@ -23,6 +22,8 @@ void cocobot_pathfinder_douglas_peucker(cocobot_trajectory_final_s *trajectory, 
             target_index = cocobot_pathfinder_get_next_point(trajectory, start_index, target_index);
         }
     }
+    
+    trajectory->trajectory[trajectory->nbr_points - 1].status = NO_POINT_TO_KEEP;
 }
 
 float cocobot_pathfinder_get_radial_distance(cocobot_point_final_s start, cocobot_point_final_s end, cocobot_point_final_s point)
@@ -32,14 +33,15 @@ float cocobot_pathfinder_get_radial_distance(cocobot_point_final_s start, cocobo
 
 void cocobot_pathfinder_init_final_traj(cocobot_trajectory_s *in_traj, cocobot_trajectory_final_s *final_traj)
 {
-    final_traj->trajectory[0].status = POINT_TO_KEEP;
     int i = 0;
     for(i = 0; i < in_traj->nbr_points; i++)
     {
         final_traj->trajectory[i].x = in_traj->trajectory[i].x;
         final_traj->trajectory[i].y = in_traj->trajectory[i].y;
+        final_traj->trajectory[i].status = NO_POINT_TO_KEEP;
     }
-    final_traj->trajectory[i].status = POINT_TO_KEEP;
+    final_traj->trajectory[0].status = POINT_TO_KEEP;
+    final_traj->trajectory[i - 1].status = POINT_TO_KEEP;
     final_traj->nbr_points = in_traj->nbr_points;
 }
 
@@ -70,7 +72,6 @@ uint8_t cocobot_pathfinder_find_farthest_point(cocobot_trajectory_final_s *traj,
     for(int i = start_index; i <= target_index; i++)
     {
         d = cocobot_pathfinder_get_radial_distance(traj->trajectory[start_index], traj->trajectory[target_index], traj->trajectory[i]);
-        //cocobot_console_send_asynchronous("DOUGLAS:","index: %d dmax: %f, d: %f", i, (double)dMax, (double)d);
         if (d > dMax)
         {
             dMax = d;
@@ -81,7 +82,6 @@ uint8_t cocobot_pathfinder_find_farthest_point(cocobot_trajectory_final_s *traj,
     if(dMax >= threshold)
     {
         traj->trajectory[index].status = POINT_TO_KEEP;
-        //cocobot_console_send_asynchronous("DOUGLAS","to keep: index: %d", index);
         returnValue = POINT_TO_KEEP;
     }
     else
