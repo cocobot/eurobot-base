@@ -237,7 +237,7 @@ static cocobot_action_goto_return_value_t cocobot_action_scheduler_goto(cocobot_
 
   if (current_game_state.use_pathfinder)
   {
-    cocobot_pathfinder_execute_trajectory(cocobot_position_get_x(), cocobot_position_get_y(), x, y);
+    cocobot_pathfinder_execute(cocobot_position_get_x(), cocobot_position_get_y(), x, y, COCOBOT_PATHFINDER_MODE_EXECUTE_TRAJ_FORWARD);
   }
   else
   {

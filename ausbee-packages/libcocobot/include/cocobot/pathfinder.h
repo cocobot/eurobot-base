@@ -5,21 +5,17 @@
 
 #define TRAJECTORY_NBR_POINTS_MAX   160
 
-#define DESTINATION_NOT_AVAILABLE   0
-#define NO_ROUTE_TO_TARGET          1
+#define DESTINATION_NOT_AVAILABLE   0xfffe
+#define NO_ROUTE_TO_TARGET          0xffff
 #define TRAJECTORY_READY            2
 
-/**
- * Get execution time to go from starting point to target point
- * Arguments:
- *  - starting_point_x: trajectory starting point x
- *  - starting_point_y: trajectory starting point y
- *  - target_point_x: trajectory target point x
- *  - target_point_y: trajectory target point y
- *  
- * Return Value: Time (ms) to execute the trajectory, 0 if the trajectory is not available
- **/
-uint16_t cocobot_pathfinder_get_trajectory_time(int16_t starting_point_x, int16_t starting_point_y, int16_t target_point_x, int16_t target_point_y);
+
+typedef enum
+{
+    COCOBOT_PATHFINDER_MODE_GET_DURATION,
+    COCOBOT_PATHFINDER_MODE_EXECUTE_TRAJ_FORWARD,
+    COCOBOT_PATHFINDER_MODE_EXECUTE_TRAJ_BACKWARD,
+}cocobot_pathfinder_mode_e;
 
 /**
  * Execute trajectory from starting point to target point
@@ -28,10 +24,11 @@ uint16_t cocobot_pathfinder_get_trajectory_time(int16_t starting_point_x, int16_
  *  - starting_point_y: trajectory starting point y
  *  - target_point_x: trajectory target point x
  *  - target_point_y: trajectory target point y
+ *  - mode: mode to be used for this execution
  *  
  * Return Value: NO_TRAJECTORY_AVAILABLE if the target_point is not reachable 0 eitherway 
  */
-char cocobot_pathfinder_execute_trajectory(int16_t starting_point_x, int16_t starting_point_y, int16_t target_point_x, int16_t target_point_y);
+uint16_t cocobot_pathfinder_execute(int16_t starting_point_x, int16_t starting_point_y, int16_t target_point_x, int16_t target_point_y, cocobot_pathfinder_mode_e mode);
 
 /**
  * Allow the entire start zone for pathfinder

@@ -64,7 +64,7 @@ typedef struct
  *
  * Return Value: NO_TRAJECTORY_AVAILABLE or TRAJECTORY_AVAILABLE
  */
-//char cocobot_pathfinder_internal_execute_algo(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_node_s *node, cocobot_list_s *open_list);
+char cocobot_pathfinder_internal_execute_algo(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_node_s **node, cocobot_list_s *open_list);
 
 /**
  * Compute a node of the table
@@ -159,18 +159,17 @@ void cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s tabl
 /**
  * set gotoxy for trajectory using Ramer-Douglas-Peucker algorythm
  * Arguments:
- *  - trajectory : pointer on the grid points composing the trajectory
+ *  - resultTraj : Result of the douglas peucker algorithm
  */
-void cocobot_pathfinder_set_trajectory(cocobot_trajectory_s *trajectory);
+void cocobot_pathfinder_set_trajectory(cocobot_trajectory_final_s * resultTraj);
 
 /**
  * Get time for trajectory
  * Arguments:
- *  - final_node : pointer on final node of the path
- *  - table : table used for computing
+ *  - resultTraj : Result of the douglas peucker algorithm
  *  
  */
-uint16_t cocobot_pathfinder_get_time(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE]);
+uint16_t cocobot_pathfinder_get_time(cocobot_trajectory_final_s * resultTraj);
 
 /**
  * Get real coordinate from table point

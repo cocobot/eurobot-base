@@ -12,44 +12,6 @@ static cocobot_node_s g_target_node;
 static cocobot_node_s g_start_node;
 static cocobot_node_s g_real_start_node;
 static cocobot_point_s g_real_target_point;
-static cocobot_trajectory_final_s g_resultTraj;
-
-//char cocobot_pathfinder_internal_execute_algo(cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_node_s *current_node, cocobot_list_s *open_list)
-//{
-//    while((current_node->x != g_target_node.x) || (current_node->y != g_target_node.y))
-//    {
-//        cocobot_console_send_asynchronous("PATHFINDER","current node x=%d, y=%d", current_node->x, current_node->y);
-//        printf("CURRENT current_node x=%d, y=%d\n", current_node->x, current_node->y);
-//        //Treat adjacent node
-//        for(int i=((current_node->x)-1); i<=((current_node->x)+1); i++)
-//        {
-//            for(int j=((current_node->y)-1); j<=((current_node->y)+1); j++)
-//            {
-//                cocobot_console_send_asynchronous("DEBUG","i=%d, j=%d", i, j);
-//                printf("i=%d, j=%d\n", i, j);
-//                if((i >= 0) && (j >= 0) && (i < (TABLE_LENGTH/GRID_SIZE)) && (j < (TABLE_WIDTH/GRID_SIZE)) && ((i != current_node->x) || (j != current_node->y)))
-//                {
-//                    cocobot_pathfinder_compute_node(open_list, &table[i][j], current_node);
-//                }
-//                printf("current_node x=%d, y=%d\n", current_node->x, current_node->y);
-//            }
-//        }
-//        //open_list is not null
-//        if(open_list->nb_elements != 0)
-//        {
-//            //get first of the list
-//            open_list->table[0].nodeType = CLOSED_LIST;
-//            current_node = &(open_list->table[0]);
-//            cocobot_pathfinder_remove_from_list(open_list, &(open_list->table[0]));
-//        }
-//        else
-//        {
-//            cocobot_console_send_asynchronous("PATHFINDER", "No solution");
-//            return NO_TRAJECTORY_AVAILABLE;
-//        }
-//    }
-//    return TRAJECTORY_AVAILABLE;
-//}
 
 void cocobot_pathfinder_compute_node(cocobot_list_s *open_list, cocobot_node_s* node, cocobot_node_s* parent_node)
 {
@@ -248,11 +210,8 @@ void cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s tabl
         memmove(trajectory->trajectory, &trajectory->trajectory[TRAJECTORY_NBR_POINTS_MAX - trajectory->nbr_points], trajectory->nbr_points * sizeof(cocobot_point_s));
 }
 
-void cocobot_pathfinder_set_trajectory(cocobot_trajectory_s *trajectory)
+void cocobot_pathfinder_set_trajectory(cocobot_trajectory_final_s * resultTraj)
 {
-    cocobot_pathfinder_init_final_traj(trajectory, &g_resultTraj);
-
-    cocobot_pathfinder_douglas_peucker(&g_resultTraj, 1.0);
     cocobot_point_s point;
     cocobot_point_final_s final_point;
 
@@ -269,13 +228,13 @@ void cocobot_pathfinder_set_trajectory(cocobot_trajectory_s *trajectory)
             
 
     //Next points
-    for(int i = 1; i < (g_resultTraj.nbr_points - 1); i++)
+    for(int i = 1; i < (resultTraj->nbr_points - 1); i++)
     {
-        if(g_resultTraj.trajectory[i].status == POINT_TO_KEEP)
+        if(resultTraj->trajectory[i].status == POINT_TO_KEEP)
         {
-            point = cocobot_pathfinder_get_real_coordinate(g_resultTraj.trajectory[i]);
+            point = cocobot_pathfinder_get_real_coordinate(resultTraj->trajectory[i]);
             cocobot_trajectory_goto_xy(point.x, point.y, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-            cocobot_com_printf("LINEAR_PATH: x=%d (x=%d), y=%d (y=%d)", point.x, g_resultTraj.trajectory[i].x, point.y, g_resultTraj.trajectory[i].y);
+            cocobot_com_printf("LINEAR_PATH: x=%d (x=%d), y=%d (y=%d)", point.x, resultTraj->trajectory[i].x, point.y, resultTraj->trajectory[i].y);
         }
     }
     //Last point
@@ -284,19 +243,36 @@ void cocobot_pathfinder_set_trajectory(cocobot_trajectory_s *trajectory)
 
 }
 
-uint16_t cocobot_pathfinder_get_time(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE])
+uint16_t cocobot_pathfinder_get_time(cocobot_trajectory_final_s * resultTraj)
 {
     uint16_t time = 0;
-    while((final_node->x != g_start_node.x) || (final_node->y != g_start_node.y))
+    cocobot_node_s node;
+    cocobot_node_s lastNode;
+
+    //First point
+    if((g_real_start_node.x != g_start_node.x) || (g_real_start_node.y != g_start_node.y))
     {
-        //get time between node and parent node 
-        time += (uint16_t)(cocobot_pathfinder_get_distance(final_node, &table[(int)final_node->pX][(int)final_node->pY]) * (float)GRID_SIZE) / cocobot_asserv_get_linear_speed();
-        final_node = &table[(int)final_node->pX][(int)final_node->pY];
+        time += (uint16_t)(cocobot_pathfinder_get_distance(&g_real_start_node, &g_start_node) * (float)GRID_SIZE) / cocobot_asserv_get_linear_speed();
     }
+    
+    lastNode = g_start_node;
 
+    //Next points
+    for(int i = 1; i < (resultTraj->nbr_points - 1); i++)
+    {
+        if(resultTraj->trajectory[i].status == POINT_TO_KEEP)
+        {
+            node.x = resultTraj->trajectory[i].x;
+            node.y = resultTraj->trajectory[i].y;
+            time += (uint16_t)(cocobot_pathfinder_get_distance(&node, &lastNode) * (float)GRID_SIZE) / cocobot_asserv_get_linear_speed();
+            lastNode.x = node.x;
+            lastNode.y = node.y;
+        }
+    }
+    //Last point
+    time += (uint16_t)(cocobot_pathfinder_get_distance(&lastNode, &g_target_node) * (float)GRID_SIZE) / cocobot_asserv_get_linear_speed();
     return time;
-} 
-
+}
 
 cocobot_point_s cocobot_pathfinder_get_point_from_node(cocobot_node_s *node)
 {
