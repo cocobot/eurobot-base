@@ -88,7 +88,7 @@ uint16_t cocobot_pathfinder_execute(int16_t starting_point_x, int16_t starting_p
     
     //Linearization of the trajectory
     cocobot_pathfinder_init_final_traj(&final_traj, &g_resultTraj);
-    cocobot_pathfinder_douglas_peucker(&g_resultTraj, 1.0);
+    cocobot_pathfinder_douglas_peucker(&g_resultTraj, DP_MINIMUM_THRESHOLD);
 
     if(mode != COCOBOT_PATHFINDER_MODE_GET_DURATION)
     {
