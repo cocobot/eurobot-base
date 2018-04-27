@@ -39,6 +39,8 @@
 #define POSITIVE_DEPART_ZONE_X_POSITION     52
 #define POSITIVE_DEPART_ZONE_Y_POSITION     0
 
+//Douglas-Peucker threshold
+#define DP_MINIMUM_THRESHOLD                1.0
 
 //Enumeration for removable game element
 typedef enum
