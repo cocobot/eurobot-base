@@ -14845,7 +14845,7 @@ var PathfinderComponent = function (_React$Component) {
               r = 66;
               g = 0;
               b = 117;
-            } else if (type & 0x100) {
+            } else if (type & 0x0040) {
               //ROBOT Orange foncé
               r = 243;
               g = 84;

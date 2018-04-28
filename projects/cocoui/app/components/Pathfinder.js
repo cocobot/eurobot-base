@@ -56,7 +56,7 @@ class PathfinderComponent extends React.Component {
             g = 0;
             b = 117;
           }
-          else if(type & 0x100){ //ROBOT Orange foncé
+          else if(type & 0x0040){ //ROBOT Orange foncé
             r = 243;
             g = 84;
             b = 39;
