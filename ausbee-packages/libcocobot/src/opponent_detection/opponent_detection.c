@@ -13,17 +13,14 @@ typedef struct
   int alert_activated;
   int alert;
   int force_on;
+  int16_t pos_x;
+  int16_t pos_y;
 } cocobot_opponent_detection_usir_t;
 
-typedef struct
-{
-  float x;
-  float y;
-  int activated;
-} cocobot_opponent_detection_fake_robot_t;
 
 static cocobot_opponent_detection_usir_t _usirs[4];
-static cocobot_opponent_detection_fake_robot_t _fakebot;
+//TODO: make it static --> not static only for tests
+cocobot_opponent_detection_fake_robot_t _fakebot;
 
 const int ir_lookup_table[] = {2894, 2480, 1680, 1310, 1060, 890, 790, 700, 650, 590, 500, 450, 400};
 
@@ -100,6 +97,8 @@ void cocobot_opponent_detection_task(void * arg)
              (ny > -COCOBOT_OPPONENT_DETECTION_MAX_Y))
           {
             _usirs[i].alert = 1;
+            _usirs[i].pos_x = (int16_t)nx;
+            _usirs[i].pos_y = (int16_t)ny;
           }
           else
           {
@@ -121,6 +120,8 @@ void cocobot_opponent_detection_task(void * arg)
         _usirs[i].ir = 0;
         _usirs[i].us = 0;
         _usirs[i].alert = 0;
+        _usirs[i].pos_x = 0;
+        _usirs[i].pos_y = 0;
       }
     }
 
@@ -167,6 +168,8 @@ void cocobot_opponent_detection_init(unsigned int task_priority)
     _usirs[i].alert_activated = COCOBOT_OPPONENT_DETECTION_DEACTIVATED;
     _usirs[i].alert = 0;
     _usirs[i].force_on = 0;
+    _usirs[i].pos_x = 0;
+    _usirs[i].pos_y = 0;
   }
 
   alert_threshold = 250;
@@ -180,8 +183,18 @@ void cocobot_opponent_detection_init(unsigned int task_priority)
 
 void cocobot_opponent_detection_set_on_map()
 {
-    //TODO
-    cocobot_pathfinder_set_robot(-200, 200);
+#ifndef AUSBEE_SIM
+  for(int i = 0; i < 4; i += 1)
+  {
+    if(_usirs[i].alert == 1)
+    {
+      cocobot_pathfinder_set_robot(_usirs[i].pos_x, _usirs[i].pos_y);
+    }
+  }
+#else
+  if(_fakebot.activated == COCOBOT_OPPONENT_DETECTION_ACTIVATED)
+    cocobot_pathfinder_set_robot(_fakebot.x, _fakebot.y);
+#endif
 }
 
 /*

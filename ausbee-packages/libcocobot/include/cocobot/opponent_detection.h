@@ -12,6 +12,12 @@
 #define COCOBOT_OPPONENT_DETECTION_MAX_X (1500 - 100)
 #define COCOBOT_OPPONENT_DETECTION_MAX_Y (1000 - 100)
 
+typedef struct
+{
+  float x;
+  float y;
+  int activated;
+} cocobot_opponent_detection_fake_robot_t;
 
 /* Initialization of the opponent detection module. Need to be called before any other action 
  * Argument:
