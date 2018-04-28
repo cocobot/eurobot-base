@@ -178,6 +178,12 @@ void cocobot_opponent_detection_init(unsigned int task_priority)
   xTaskCreate(cocobot_opponent_detection_task, "opponent", 200, NULL, task_priority, NULL);
 }
 
+void cocobot_opponent_detection_set_on_map()
+{
+    //TODO
+    cocobot_pathfinder_set_robot(-200, 200);
+}
+
 /*
 int cocobot_opponent_detection_handle_console(char * command)
 {

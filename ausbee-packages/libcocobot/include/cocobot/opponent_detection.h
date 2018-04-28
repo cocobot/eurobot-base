@@ -32,6 +32,11 @@ void cocobot_opponent_detection_set_enable(int id, int status);
 
 int cocobot_opponent_detection_is_in_alert(void);
 
+/**
+ * Set an obstacle on map if detected
+ */
+void cocobot_opponent_detection_set_on_map(void);
+
 #define COCOBOT_OPPONENT_DETECTION_ENABLE_FRONT() do \
                 {\
                   cocobot_opponent_detection_set_enable(COCOBOT_OPPONENT_DETECTION_USIR_FRONT_LEFT, COCOBOT_OPPONENT_DETECTION_ACTIVATED);\

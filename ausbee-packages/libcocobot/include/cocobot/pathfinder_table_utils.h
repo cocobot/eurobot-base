@@ -5,9 +5,8 @@
 #include "cocobot_pathfinder_config.h"
 
 #define MAXIMUM_NODE_IN_LIST            200
-#define MASK_TEMPORARY_OBSTACLE         0x0F00
+#define MASK_TEMPORARY_OBSTACLE         0x0F40
 #define MASK_NEW_NODE                   0xFF00
-#define MASK_REMOVE_ROBOT               0xF0FF
 #define COCOBOT_GAME_STATE_COLOR_ALL    0xff
 
 typedef enum
@@ -22,7 +21,7 @@ typedef enum
     TEMPORARY_ALLOWED = 0x0008,
     START_POINT = 0x0010,
     TARGET_POINT = 0x0020,
-    ROBOT = 0x0100,         // Adversary
+    ROBOT = 0x0040,         // Adversary
     GAME_ELEMENT = 0x0200   // Game element, that can be removed manually.
 }cocobot_nodeType_e;
 

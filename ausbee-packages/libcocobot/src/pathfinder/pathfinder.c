@@ -10,18 +10,33 @@ static int g_table_updated;
 static cocobot_node_s g_table[TABLE_LENGTH/GRID_SIZE][TABLE_WIDTH/GRID_SIZE];
 static cocobot_list_s open_list;
 static cocobot_trajectory_s final_traj;
-static opponent_table_s opponent_robot;
+static opponent_table_s g_opponent_robot;
 static cocobot_trajectory_final_s g_resultTraj;
+
+static void cocobot_pathfinder_set_other_robot()
+{
+    for(int i = 0; i < g_opponent_robot.nbr_slot_used; i++)
+    {
+        cocobot_pathfinder_set_robot_zone(g_table, (g_opponent_robot.other_robot[i].x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - g_opponent_robot.other_robot[i].y)/GRID_SIZE);
+    }
+}
 
 uint16_t cocobot_pathfinder_execute(int16_t starting_point_x, int16_t starting_point_y, int16_t target_point_x, int16_t target_point_y, cocobot_pathfinder_mode_e mode)
 {
     uint16_t time = 0xffff;
     cocobot_com_printf("PATHFINDER: Start point:(%d, %d) Target Point:(%d, %d)", starting_point_x, starting_point_y, target_point_x, target_point_y);
-    
-    cocobot_pathfinder_reset_table(g_table);
 
+    //Reset table and init the open list
+    cocobot_pathfinder_reset_table(g_table);
     cocobot_pathfinder_initialize_list(&open_list);
-   
+
+    //Reset the opponent table list
+    memset(&g_opponent_robot, 0, sizeof(opponent_table_s));
+    //Ask to the opponent_detection module if it sees something
+    cocobot_opponent_detection_set_on_map();
+    //Set on the map other robots
+    cocobot_pathfinder_set_other_robot();
+
     //target_node
     cocobot_pathfinder_save_real_target_node(target_point_x, target_point_y);
     cocobot_node_s* target_node = &g_table[(target_point_x + (TABLE_LENGTH / 2))/GRID_SIZE][((TABLE_WIDTH / 2) - target_point_y)/GRID_SIZE];
@@ -39,13 +54,13 @@ uint16_t cocobot_pathfinder_execute(int16_t starting_point_x, int16_t starting_p
     //start_node
     cocobot_node_s* start_node = &g_table[(starting_point_x + (TABLE_LENGTH / 2)) / GRID_SIZE][((TABLE_WIDTH / 2) - starting_point_y)/GRID_SIZE];
     cocobot_pathfinder_set_real_start_node(start_node);
-    
+
     //Check that start node is not a forbidden place
     if(!(start_node->nodeType == NEW_NODE) && !(start_node->nodeType & TEMPORARY_ALLOWED))
     {
         start_node = cocobot_pathfinder_find_closest_new_node(g_table, start_node);
     }
-    
+
     cocobot_pathfinder_set_start_node(start_node);
 
     cocobot_node_s current_node = *start_node;
@@ -88,7 +103,7 @@ uint16_t cocobot_pathfinder_execute(int16_t starting_point_x, int16_t starting_p
     {
         //cocobot_com_printf("REAL_PATH x:%d, y:%d", final_traj.trajectory[i].x, final_traj.trajectory[i].y);
     }
-    
+
     //Linearization of the trajectory
     cocobot_pathfinder_init_final_traj(&final_traj, &g_resultTraj);
     cocobot_pathfinder_douglas_peucker(&g_resultTraj, DP_MINIMUM_THRESHOLD);
@@ -106,50 +121,17 @@ uint16_t cocobot_pathfinder_execute(int16_t starting_point_x, int16_t starting_p
 
 void cocobot_pathfinder_set_robot(int adv_x, int adv_y)
 {
-    if(opponent_robot.nbr_slot_used < NBR_OTHER_ROBOT_MAX)
+    if(g_opponent_robot.nbr_slot_used < NBR_OTHER_ROBOT_MAX)
     {
-        opponent_robot.other_robot[opponent_robot.nbr_slot_used].x = adv_x;
-        opponent_robot.other_robot[opponent_robot.nbr_slot_used].y = adv_y;
-        cocobot_pathfinder_set_robot_zone(g_table, (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE);
-        opponent_robot.nbr_slot_used++;
+        g_opponent_robot.other_robot[g_opponent_robot.nbr_slot_used].x = adv_x;
+        g_opponent_robot.other_robot[g_opponent_robot.nbr_slot_used].y = adv_y;
+        g_opponent_robot.nbr_slot_used++;
     }
     else
     {
-        cocobot_pathfinder_remove_robot(opponent_robot.other_robot[0].x, opponent_robot.other_robot[0].y);
-        opponent_robot.other_robot[2].x = adv_x;
-        opponent_robot.other_robot[2].y = adv_y;
-        cocobot_pathfinder_set_robot_zone(g_table, (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE);
-        opponent_robot.nbr_slot_used++;
-    }
-}
-
-void cocobot_pathfinder_remove_robot(int adv_x, int adv_y)
-{
-    for(int i = 0; i < opponent_robot.nbr_slot_used; i++)
-    {
-        if((opponent_robot.other_robot[i].x == adv_x) && (opponent_robot.other_robot[i].y == adv_y))
-        {
-            cocobot_pathfinder_unset_robot_zone(g_table, (adv_x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - adv_y)/GRID_SIZE);
-            if(i < (opponent_robot.nbr_slot_used - 1))
-            {
-                memmove(&opponent_robot.other_robot[i], &opponent_robot.other_robot[i+1], (opponent_robot.nbr_slot_used - 1 - i) * sizeof(cocobot_point_s));
-            }
-            else
-            {
-                memset(&opponent_robot.other_robot[i], 0, sizeof(cocobot_point_s));
-            }
-            opponent_robot.nbr_slot_used--;
-
-            //set all remaining robot to avoid wrong unset caused by two opponent robots closed to each other
-            for(int j = 0; j < opponent_robot.nbr_slot_used; j++)
-            {
-                cocobot_pathfinder_set_robot_zone(g_table, (opponent_robot.other_robot[j].x + (TABLE_LENGTH / 2))/GRID_SIZE, ((TABLE_WIDTH / 2) - opponent_robot.other_robot[j].y)/GRID_SIZE);
-            }
-        }
-        else
-        {
-            //No opponent robot in the zone
-        }
+        memmove(&g_opponent_robot.other_robot[0], &g_opponent_robot.other_robot[1], (NBR_OTHER_ROBOT_MAX - 1) * sizeof(cocobot_point_s));
+        g_opponent_robot.other_robot[NBR_OTHER_ROBOT_MAX].x = adv_x;
+        g_opponent_robot.other_robot[NBR_OTHER_ROBOT_MAX].y = adv_y;
     }
 }
 
@@ -165,7 +147,7 @@ void cocobot_pathfinder_allow_start_zone()
 
 void cocobot_pathfinder_init(cocobot_pathfinder_table_init_s * initTable)
 {
-    memset(&opponent_robot, 0, sizeof(opponent_table_s));
+    memset(&g_opponent_robot, 0, sizeof(opponent_table_s));
     g_table_updated = 0;
 
     cocobot_pathfinder_initialize_table(g_table, initTable);
@@ -174,19 +156,19 @@ void cocobot_pathfinder_init(cocobot_pathfinder_table_init_s * initTable)
 
 void cocobot_pathfinder_handle_async_com(void)
 {
-  if(g_table_updated)
-  {
-    g_table_updated = 0;
-    cocobot_com_send(COCOBOT_COM_PATHFINDER_DEBUG_PID,
-     "HH[H]",
-     TABLE_LENGTH / GRID_SIZE,
-     TABLE_WIDTH / GRID_SIZE,
-     (uint8_t *)g_table,                        //array ptr
-     sizeof(g_table[0][0]),                        //array elm size 
-     sizeof(g_table)/sizeof(g_table[0][0]),        //array size 
-     0,                                         //array start
-     sizeof(g_table)/sizeof(g_table[0][0]),        //array end 
-     offsetof(cocobot_node_s, nodeType)
-    );
-  }
+    if(g_table_updated)
+    {
+        g_table_updated = 0;
+        cocobot_com_send(COCOBOT_COM_PATHFINDER_DEBUG_PID,
+                "HH[H]",
+                TABLE_LENGTH / GRID_SIZE,
+                TABLE_WIDTH / GRID_SIZE,
+                (uint8_t *)g_table,                        //array ptr
+                sizeof(g_table[0][0]),                        //array elm size 
+                sizeof(g_table)/sizeof(g_table[0][0]),        //array size 
+                0,                                         //array start
+                sizeof(g_table)/sizeof(g_table[0][0]),        //array end 
+                offsetof(cocobot_node_s, nodeType)
+                );
+    }
 }

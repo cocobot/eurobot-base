@@ -44,14 +44,6 @@ void cocobot_pathfinder_allow_start_zone();
 void cocobot_pathfinder_set_robot(int adv_x, int adv_y);
 
 /**
- * Remove opponent robot (as it is no longer in this position)
- * Arguments:
- *  - adv_x: x position of the opponent (considered as the x center)
- *  - adv_y: y position of the opponent (considered as the y center)
- */
-void cocobot_pathfinder_remove_robot(int adv_x, int adv_y);
-
-/**
  * Remove a game element from the pathfinder table
  * When it is removed, it not considered as an obstacle by the pathfinder.
  * WARNING : Units used here are grid units
