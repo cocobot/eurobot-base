@@ -130,8 +130,8 @@ void cocobot_pathfinder_set_robot(int adv_x, int adv_y)
     else
     {
         memmove(&g_opponent_robot.other_robot[0], &g_opponent_robot.other_robot[1], (NBR_OTHER_ROBOT_MAX - 1) * sizeof(cocobot_point_s));
-        g_opponent_robot.other_robot[NBR_OTHER_ROBOT_MAX].x = adv_x;
-        g_opponent_robot.other_robot[NBR_OTHER_ROBOT_MAX].y = adv_y;
+        g_opponent_robot.other_robot[NBR_OTHER_ROBOT_MAX - 1].x = adv_x;
+        g_opponent_robot.other_robot[NBR_OTHER_ROBOT_MAX - 1].y = adv_y;
     }
 }
 
