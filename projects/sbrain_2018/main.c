@@ -4,10 +4,13 @@
 #include <task.h>
 #include <mcual.h>
 #include <cocobot.h>
+#include "strat_water_easy.h"
+#include "strat_water_shared.h"
 //#include "cocobot_pathfinder_config.h"
 
 //static unsigned int _shell_configuration;
 extern cocobot_pathfinder_table_init_s initTable [];
+extern cocobot_opponent_detection_fake_robot_t _fakebot;
 
 void update_lcd(void * arg)
 {
@@ -52,8 +55,16 @@ void run_strategy(void * arg)
 {
   (void)arg;
 
+  strat_water_easy_register();
+  strat_water_shared_register();
+
   cocobot_game_state_wait_for_starter_removed();
 
+  cocobot_trajectory_goto_d(100, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  cocobot_trajectory_wait();
+  cocobot_action_scheduler_start();
+
+  //cocobot_trajectory_goto_d(00, 1000);
 
   //while(0)
   //{
@@ -63,23 +74,21 @@ void run_strategy(void * arg)
   //  vTaskDelay(5000 / portTICK_PERIOD_MS);
   //}
 
-  cocobot_pathfinder_set_start_zone_allowed();
-  //cocobot_pathfinder_set_robot(-500, 800);
-  //cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_0);
-  //cocobot_pathfinder_execute(cocobot_position_get_x(), cocobot_position_get_y(), -975, 475, COCOBOT_PATHFINDER_MODE_EXECUTE_TRAJ_FORWARD);
+  //cocobot_pathfinder_set_start_zone_allowed();
+  //cocobot_pathfinder_execute(cocobot_position_get_x(), cocobot_position_get_y(), -200, -599, COCOBOT_PATHFINDER_MODE_EXECUTE_TRAJ_FORWARD);
+  //cocobot_trajectory_goto_d(500, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   //cocobot_trajectory_wait();
-  cocobot_pathfinder_execute(cocobot_position_get_x(), cocobot_position_get_y(), 125, 525, COCOBOT_PATHFINDER_MODE_EXECUTE_TRAJ_FORWARD);
-  cocobot_trajectory_wait();
-  //cocobot_pathfinder_set_robot(-200, 200);
-  cocobot_pathfinder_execute(cocobot_position_get_x(), cocobot_position_get_y(), -1000, -500, COCOBOT_PATHFINDER_MODE_EXECUTE_TRAJ_FORWARD);
-  cocobot_trajectory_wait();
-  //cocobot_pathfinder_remove_robot(-500, 800);
-  cocobot_pathfinder_execute(cocobot_position_get_x(), cocobot_position_get_y(), 1100, -550, COCOBOT_PATHFINDER_MODE_EXECUTE_TRAJ_FORWARD);
-  cocobot_trajectory_wait();
-  //cocobot_pathfinder_set_robot(150, -300);
-  cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_5);
-  cocobot_pathfinder_execute(cocobot_position_get_x(), cocobot_position_get_y(), -1000, -500, COCOBOT_PATHFINDER_MODE_EXECUTE_TRAJ_FORWARD);
-  cocobot_trajectory_wait();
+  //cocobot_pathfinder_execute(cocobot_position_get_x(), cocobot_position_get_y(), -1000, -500, COCOBOT_PATHFINDER_MODE_EXECUTE_TRAJ_FORWARD);
+  //cocobot_trajectory_wait();
+  //cocobot_pathfinder_execute(cocobot_position_get_x(), cocobot_position_get_y(), 1100, -550, COCOBOT_PATHFINDER_MODE_EXECUTE_TRAJ_FORWARD);
+  //cocobot_trajectory_wait();
+  //_fakebot.x = -200;
+  //_fakebot.y = 200;
+  //_fakebot.activated = COCOBOT_OPPONENT_DETECTION_ACTIVATED;
+  //cocobot_pathfinder_execute(cocobot_position_get_x(), cocobot_position_get_y(), -200, -300, COCOBOT_PATHFINDER_MODE_EXECUTE_TRAJ_FORWARD);
+  //cocobot_trajectory_wait();
+  //cocobot_pathfinder_execute(cocobot_position_get_x(), cocobot_position_get_y(), -500, -200, COCOBOT_PATHFINDER_MODE_EXECUTE_TRAJ_FORWARD);
+  //cocobot_trajectory_wait();
 
   while(1)
       ;
@@ -157,7 +166,7 @@ int main(int argc, char *argv[])
   cocobot_position_set_y(500);
   //cocobot_position_set_x(-1000);
   //cocobot_position_set_y(-500);
-  cocobot_position_set_angle(180);
+  cocobot_position_set_angle(0);
       
   xTaskCreate(run_strategy, "strat", 600, NULL, 2, NULL );
   xTaskCreate(update_lcd, "blink", 200, NULL, 1, NULL );
