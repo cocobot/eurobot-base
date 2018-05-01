@@ -6,16 +6,17 @@ class RobotComponent extends React.Component {
     let shape = null;
     let paths = [];
 
-    if(this.props.name == "Robot secondaire")
+    if(this.props.robot_id == 0)
     {
       shape = (
-        <g transform="rotate(90) translate(-100, -75)">
-          <rect height="145" width="185" fill="#000000" />
+        <g>
+          <path d="M125 180 L25 180 L-125 137 L-125 -137 L25 -180 L125 -180" fill="#000000" />
         </g>
       );
     }
-    else if(this.props.name == "Robot principal")
+    else if(this.props.robot_id == 1)
     {
+      //TODO: dim PMI
       shape = (
         <g transform="rotate(90) translate(-150, -110)">
           <rect height="220" width="300" fill="#000000" />
@@ -117,6 +118,7 @@ const mapStateToProps = (state, ownProps) => {
     y: state.robots.getIn([ownProps.cid, 'position', 'y']),
     angle: state.robots.getIn([ownProps.cid, 'position', 'angle']),
     orders: state.robots.getIn([ownProps.cid, 'trajectory_orders', 'orders'], []),
+    robot_id: state.robots.getIn([ownProps.cid, 'game_state', 'robot_id']),
   }
 }
 
