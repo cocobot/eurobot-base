@@ -13820,13 +13820,13 @@ var Eurobot2018 = function (_React$Component4) {
       borders.push(_react2.default.createElement('rect', { key: borders.length, height: '250', width: '1200', x: '900', y: '1750', fill: cSilexGray, strokeWidth: '2', stroke: '#000000' }));
       borders.push(_react2.default.createElement('rect', { key: borders.length, height: '250', width: '22', x: '1489', y: '1750', fill: cSilexGray, strokeWidth: '2', stroke: '#000000' }));
 
-      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '250', width: '12', x: '888', y: '1750', fill: cYellowGreen, strokeWidth: '2', stroke: '#000000' }));
-      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '600', x: '900', y: '1750', fill: cYellowGreen, strokeWidth: '2', stroke: '#000000' }));
-      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '600', x: '900', y: '1978', fill: cYellowGreen, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '250', width: '12', x: '888', y: '1750', fill: cSignalOrange, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '600', x: '900', y: '1750', fill: cSignalOrange, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '600', x: '900', y: '1978', fill: cSignalOrange, strokeWidth: '2', stroke: '#000000' }));
 
-      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '250', width: '12', x: '2100', y: '1750', fill: cSignalOrange, strokeWidth: '2', stroke: '#000000' }));
-      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '600', x: '1500', y: '1750', fill: cSignalOrange, strokeWidth: '2', stroke: '#000000' }));
-      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '600', x: '1500', y: '1978', fill: cSignalOrange, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '250', width: '12', x: '2100', y: '1750', fill: cYellowGreen, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '600', x: '1500', y: '1750', fill: cYellowGreen, strokeWidth: '2', stroke: '#000000' }));
+      borders.push(_react2.default.createElement('rect', { key: borders.length, height: '22', width: '600', x: '1500', y: '1978', fill: cYellowGreen, strokeWidth: '2', stroke: '#000000' }));
 
       return borders;
     }
