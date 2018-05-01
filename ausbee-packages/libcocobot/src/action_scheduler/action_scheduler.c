@@ -179,13 +179,18 @@ static float cocobot_action_scheduler_time_to_reach(cocobot_action_t * action)
 
   float action_x, action_y, action_a;
   (*action->pos)(action->callback_arg, &action_x, &action_y, &action_a);
-  float x = current_game_state.robot_pos.x - action_x;
-  float y = current_game_state.robot_pos.y - action_y;
-  // 2 is a factor to approximate the length of the real path from the
-  // straight-line distance between the two points
-  float approximate_linear_distance = 2 * EUCLIDEAN_DISTANCE(x, y);
+  if(!current_game_state.use_pathfinder)
+  {
+    float x = current_game_state.robot_pos.x - action_x;
+    float y = current_game_state.robot_pos.y - action_y;
+    // 2 is a factor to approximate the length of the real path from the
+    // straight-line distance between the two points
+    float approximate_linear_distance = 2 * EUCLIDEAN_DISTANCE(x, y);
 
-  return (approximate_linear_distance)/(current_game_state.robot_average_linear_speed);
+    return (approximate_linear_distance)/(current_game_state.robot_average_linear_speed);
+  }
+  else
+      return cocobot_pathfinder_execute(current_game_state.robot_pos.x, current_game_state.robot_pos.y, action_x, action_y, COCOBOT_PATHFINDER_MODE_GET_DURATION);
 }
 
 /* Compute action's value based on current game's state
