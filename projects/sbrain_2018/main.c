@@ -148,25 +148,20 @@ int main(int argc, char *argv[])
   cocobot_action_scheduler_use_pathfinder(1);
 
   //set initial position
-  //switch(cocobot_game_state_get_color())
-  //{
-   // case COCOBOT_GAME_STATE_COLOR_NEG:
-   //   cocobot_position_set_x(-1300);
-   //   cocobot_position_set_y(250);
-   //   cocobot_position_set_angle(180);
-   //   break;
+  switch(cocobot_game_state_get_color())
+  {
+      case COCOBOT_GAME_STATE_COLOR_NEG:
+          cocobot_position_set_x(-1300);
+          cocobot_position_set_y(500);
+          cocobot_position_set_angle(0);
+          break;
 
-   // case COCOBOT_GAME_STATE_COLOR_POS:
-   //   cocobot_position_set_x(1300);
-   //   cocobot_position_set_y(250);
-   //   break;
-  //}
-
-  cocobot_position_set_x(-1300);
-  cocobot_position_set_y(500);
-  //cocobot_position_set_x(-1000);
-  //cocobot_position_set_y(-500);
-  cocobot_position_set_angle(0);
+      case COCOBOT_GAME_STATE_COLOR_POS:
+          cocobot_position_set_x(1300);
+          cocobot_position_set_y(500);
+          cocobot_position_set_angle(180);
+          break;
+  }
       
   xTaskCreate(run_strategy, "strat", 600, NULL, 2, NULL );
   xTaskCreate(update_lcd, "blink", 200, NULL, 1, NULL );
