@@ -90,6 +90,10 @@ class TopMenuComponent extends React.Component {
               Default view
             </DropdownItem>
             <DropdownItem divider />
+            <DropdownItem onClick={() => this._openUSIRWindow(key)}>
+              USIR
+            </DropdownItem>
+            <DropdownItem divider />
             <DropdownItem onClick={() => this._reset(key)}>
               Reset
             </DropdownItem>
@@ -104,6 +108,13 @@ class TopMenuComponent extends React.Component {
       pid: 0x8007,
       fmt: "",
       args: [],
+      client: cid, 
+    });
+  }
+
+  _openUSIRWindow(cid) {
+    ipcRenderer.send('window', {
+      id: 'USIR',
       client: cid, 
     });
   }

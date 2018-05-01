@@ -6772,20 +6772,40 @@ var _cocoui = __webpack_require__(66);
 
 var _cocoui2 = _interopRequireDefault(_cocoui);
 
+var _usir = __webpack_require__(89);
+
+var _usir2 = _interopRequireDefault(_usir);
+
 var _state = __webpack_require__(85);
 
 var _state2 = _interopRequireDefault(_state);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-//render the layout
-//CSS
-_reactDom2.default.render(_react2.default.createElement(
-  _reactRedux.Provider,
-  { store: _state2.default.getStore() },
-  _react2.default.createElement(_cocoui2.default, null)
-), document.getElementById('app'));
 //
+var url_string = window.location.href; //CSS
+
+var url = new URL(url_string);
+var page = url.searchParams.get("page");
+
+//render the layout
+switch (page) {
+  case 'USIR':
+    _reactDom2.default.render(_react2.default.createElement(
+      _reactRedux.Provider,
+      { store: _state2.default.getStore() },
+      _react2.default.createElement(_usir2.default, null)
+    ), document.getElementById('app'));
+    break;
+
+  default:
+    _reactDom2.default.render(_react2.default.createElement(
+      _reactRedux.Provider,
+      { store: _state2.default.getStore() },
+      _react2.default.createElement(_cocoui2.default, null)
+    ), document.getElementById('app'));
+    break;
+}
 
 /***/ }),
 /* 22 */
@@ -9661,6 +9681,14 @@ var TopMenuComponent = function (_React$Component) {
             _react2.default.createElement(
               _reactstrap.DropdownItem,
               { onClick: function onClick() {
+                  return _this2._openUSIRWindow(key);
+                } },
+              'USIR'
+            ),
+            _react2.default.createElement(_reactstrap.DropdownItem, { divider: true }),
+            _react2.default.createElement(
+              _reactstrap.DropdownItem,
+              { onClick: function onClick() {
                   return _this2._reset(key);
                 } },
               'Reset'
@@ -9676,6 +9704,14 @@ var TopMenuComponent = function (_React$Component) {
         pid: 0x8007,
         fmt: "",
         args: [],
+        client: cid
+      });
+    }
+  }, {
+    key: '_openUSIRWindow',
+    value: function _openUSIRWindow(cid) {
+      ipcRenderer.send('window', {
+        id: 'USIR',
         client: cid
       });
     }
@@ -19565,6 +19601,191 @@ var mapStateToProps = function mapStateToProps(state, ownProps) {
 var Actions = (0, _reactRedux.connect)(mapStateToProps, null)(ActionsComponent);
 
 exports.default = Actions;
+
+/***/ }),
+/* 89 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactstrap = __webpack_require__(19);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var USIR = function (_React$Component) {
+  _inherits(USIR, _React$Component);
+
+  function USIR() {
+    _classCallCheck(this, USIR);
+
+    return _possibleConstructorReturn(this, (USIR.__proto__ || Object.getPrototypeOf(USIR)).apply(this, arguments));
+  }
+
+  _createClass(USIR, [{
+    key: 'renderUsir',
+    value: function renderUsir(i) {
+      var name = '';
+      var state = null;
+      var usir = { alert: 0 };
+
+      switch (i) {
+        case 0:
+          name = "Devant gauche";
+          break;
+
+        case 1:
+          name = "Devant droit";
+          break;
+
+        case 2:
+          name = "Arri�re gauche";
+          break;
+
+        case 3:
+          name = "Arri�re droit";
+          break;
+      }
+
+      if (usir.alert == 1) {
+        state = _react2.default.createElement(
+          _reactstrap.Badge,
+          { color: 'warning' },
+          'Alerte'
+        );
+      } else if (usir.alert == 2) {
+        state = _react2.default.createElement(
+          'div',
+          { className: 'label label-danger' },
+          _react2.default.createElement('span', { className: 'glyphicon glyphicon-arrow-up', 'aria-hidden': 'true' }),
+          '\xA0Alerte (HT)'
+        );
+        state = _react2.default.createElement(
+          _reactstrap.Badge,
+          { color: 'danger' },
+          'Alerte (HT)'
+        );
+      } else if (usir.alert_activated) {
+        state = _react2.default.createElement(
+          _reactstrap.Badge,
+          { color: 'success' },
+          'Activ\uFFFD'
+        );
+      } else {
+        state = _react2.default.createElement(
+          _reactstrap.Badge,
+          { color: 'dark' },
+          'Repos'
+        );
+      }
+
+      return _react2.default.createElement(
+        'div',
+        null,
+        _react2.default.createElement(
+          'div',
+          null,
+          _react2.default.createElement(
+            'b',
+            null,
+            name
+          ),
+          ':',
+          _react2.default.createElement('br', null),
+          ' ',
+          _react2.default.createElement(
+            'small',
+            null,
+            'US = ',
+            usir.us,
+            'mm / IR = ',
+            usir.ir,
+            'mm'
+          )
+        ),
+        state,
+        _react2.default.createElement('br', null)
+      );
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      return _react2.default.createElement(
+        _reactstrap.Container,
+        { style: { marginTop: '15px' } },
+        _react2.default.createElement(
+          _reactstrap.Row,
+          null,
+          _react2.default.createElement(
+            _reactstrap.Col,
+            { xs: '12' },
+            _react2.default.createElement(
+              _reactstrap.Card,
+              null,
+              _react2.default.createElement(
+                _reactstrap.CardHeader,
+                null,
+                'Adversaire'
+              ),
+              _react2.default.createElement(
+                _reactstrap.CardBody,
+                null,
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(
+                    _reactstrap.Col,
+                    { xs: '6' },
+                    this.renderUsir(0)
+                  ),
+                  _react2.default.createElement(
+                    _reactstrap.Col,
+                    { xs: '6' },
+                    this.renderUsir(1)
+                  )
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(
+                    _reactstrap.Col,
+                    { xs: '6' },
+                    this.renderUsir(2)
+                  ),
+                  _react2.default.createElement(
+                    _reactstrap.Col,
+                    { xs: '6' },
+                    this.renderUsir(3)
+                  )
+                )
+              )
+            )
+          )
+        )
+      );
+    }
+  }]);
+
+  return USIR;
+}(_react2.default.Component);
+
+exports.default = USIR;
 
 /***/ })
 /******/ ]);
