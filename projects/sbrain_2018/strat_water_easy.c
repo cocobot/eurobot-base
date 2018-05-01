@@ -14,7 +14,7 @@ static unsigned int strat_water_easy_take_get_score()
 
 static float strat_water_easy_take_get_x()
 {
-    float target = 1250;
+    float target = 1225;
 
     if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
     {
@@ -66,7 +66,7 @@ static cocobot_action_callback_result_t strat_water_easy_take_cleanup(void * arg
 {
     (void)arg;
     //Get away from the water castle
-    cocobot_trajectory_goto_d(250, 2000);
+    cocobot_trajectory_goto_d(250, 2500);
     cocobot_trajectory_wait();
     return COCOBOT_RETURN_ACTION_SUCCESS;
 }
@@ -75,7 +75,7 @@ static cocobot_action_callback_result_t strat_water_easy_take_exec(void * arg)
 {
     (void)arg;
     //Move just under the water castle
-    cocobot_trajectory_goto_d(-200, 2000);
+    cocobot_trajectory_goto_d(-200, 2500);
     cocobot_trajectory_wait();
 
     //TBD:Get the water
@@ -99,6 +99,7 @@ static float strat_water_easy_shoot_get_x()
     {
         return -target;
     }
+    return target;
 }
 
 static float strat_water_easy_shoot_get_y()

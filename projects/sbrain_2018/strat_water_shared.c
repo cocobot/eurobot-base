@@ -25,7 +25,7 @@ static float strat_water_shared_take_get_x()
 
 static float strat_water_shared_take_get_y()
 {
-    return -749;
+    return -725;
 }
 
 static float strat_water_shared_take_get_a()
@@ -63,7 +63,7 @@ static cocobot_action_callback_result_t strat_water_shared_take_cleanup(void * a
 {
     (void)arg;
     //Get away from the water castle
-    cocobot_trajectory_goto_d(250, 1000);
+    cocobot_trajectory_goto_d(250, 2500);
     cocobot_trajectory_wait();
     return COCOBOT_RETURN_ACTION_SUCCESS;
 }
@@ -72,7 +72,7 @@ static cocobot_action_callback_result_t strat_water_shared_take_exec(void * arg)
 {
     (void)arg;
     //Move just under the water castle
-    cocobot_trajectory_goto_d(-200, 1000);
+    cocobot_trajectory_goto_d(-200, 2500);
     cocobot_trajectory_wait();
 
     //TBD:Get the water
@@ -96,6 +96,7 @@ static float strat_water_shared_shoot_get_x()
     {
         return -target;
     }
+    return target;
 }
 
 static float strat_water_shared_shoot_get_y()
@@ -169,6 +170,7 @@ static float strat_water_shared_recycle_get_x()
     {
         return -target;
     }
+    return target;
 }
 
 static float strat_water_shared_recycle_get_y()
@@ -209,7 +211,7 @@ static cocobot_action_callback_result_t strat_water_shared_recycle_preexec(void 
 static cocobot_action_callback_result_t strat_water_shared_recycle_cleanup(void * arg)
 {
     (void)arg;
-    cocobot_trajectory_goto_d(250, 1000);
+    cocobot_trajectory_goto_d(250, 2500);
     cocobot_trajectory_wait();
     return COCOBOT_RETURN_ACTION_SUCCESS;
 }
@@ -217,7 +219,7 @@ static cocobot_action_callback_result_t strat_water_shared_recycle_cleanup(void 
 static cocobot_action_callback_result_t strat_water_shared_recycle_exec(void * arg)
 {
     (void)arg;
-    cocobot_trajectory_goto_d(-200, 1000);
+    cocobot_trajectory_goto_d(-200, 2500);
     cocobot_trajectory_wait();
     //TODO: Dump wasted water
     return COCOBOT_RETURN_ACTION_SUCCESS;
