@@ -13164,16 +13164,6 @@ var PositionComponent = function (_React$Component) {
                         }, checked: this.props.debugActionScheduler }),
                       'Debug strat'
                     )
-                  ),
-                  _react2.default.createElement(
-                    _reactstrap.FormGroup,
-                    { inline: true, className: 'mb-2 mr-sm-2 mb-sm-0' },
-                    _react2.default.createElement(
-                      _reactstrap.Label,
-                      { check: true, size: 'sm' },
-                      _react2.default.createElement(_reactstrap.Input, { type: 'checkbox' }),
-                      'Pause action scheduler'
-                    )
                   )
                 ),
                 'Position'

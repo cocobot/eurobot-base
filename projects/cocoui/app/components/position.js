@@ -39,11 +39,6 @@ class PositionComponent extends React.Component {
                     <Input type="checkbox" onChange={(e, checked) => this._onChangeDebugActionScheduler(e, checked)} checked={this.props.debugActionScheduler} />Debug strat
                   </Label>
                 </FormGroup>
-                <FormGroup inline className="mb-2 mr-sm-2 mb-sm-0">
-                  <Label check size="sm">
-                    <Input type="checkbox"  />Pause action scheduler
-                  </Label>
-                </FormGroup>
               </Form>
               Position
             </CardHeader>
