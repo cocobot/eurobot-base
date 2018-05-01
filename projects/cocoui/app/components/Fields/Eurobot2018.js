@@ -1,5 +1,6 @@
 import React from 'react';
 import Pathfinder from '../Pathfinder';
+import Actions from '../Actions';
 
 const cSilexGray = "rgb(181, 176, 161)";
 const cYellowGreen = "rgb(97, 153, 59)";
@@ -245,6 +246,7 @@ class Eurobot2018 extends React.Component {
 
         {this.props.children}
 
+        <Actions />
         <Pathfinder />
       </g>
     );

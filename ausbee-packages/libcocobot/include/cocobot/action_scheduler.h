@@ -137,4 +137,6 @@ cocobot_action_callback_result_t cocobot_action_scheduler_execute_best_action(vo
  */
 int cocobot_action_scheduler_handle_console(char * command);
 
+void cocobot_action_scheduler_handle_async_com(void);
+
 #endif // COCOBOT_ACTION_SCHEDULER_H

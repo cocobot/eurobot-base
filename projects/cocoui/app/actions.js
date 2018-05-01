@@ -18,3 +18,10 @@ export const updateDebugPathfinder = (value) => {
     value
   }
 }
+
+export const updateDebugActionScheduler = (value) => {
+  return {
+    type: 'UPDATE_DEBUG_ACTION_SCHEDULER',
+    value
+  }
+}

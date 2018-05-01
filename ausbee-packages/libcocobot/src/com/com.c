@@ -58,6 +58,7 @@ void cocobot_com_async_thread(void *arg)
     cocobot_trajectory_handle_async_com();
     cocobot_pathfinder_handle_async_com();
     cocobot_game_state_handle_async_com();
+    cocobot_action_scheduler_handle_async_com();
 
     //wait 100ms (minus time used by previous handler)
     vTaskDelayUntil( &xLastWakeTime, 100 / portTICK_PERIOD_MS);
@@ -131,112 +132,145 @@ void cocobot_com_init(mcual_usart_id_t usart_id, unsigned int priority_monitor, 
   (void)handler;
 }
 
-static int cocobot_com_compute_len(char ** fmt, va_list ap, uint32_t nested)
+static int cocobot_com_compute_len(char ** fmt, va_list ap, uint8_t * ptr)
 {
   int size = 0; 
+  int nested = 0;
 
   for(; (**fmt) != 0; (*fmt) += 1)
   {
-    switch(**fmt)
-    { 
-      case 'F':
-        {
-          size += 4;
-          if(nested)
-          {
-            va_arg(ap, size_t); //offsetof
-          }
-          else
-          {
-            va_arg(ap, double);
-          }
-        }
-        break;
+    if(nested) 
+    {
+      if(**fmt == '[') 
+      {
+         nested += 1;
+      }
+      if(**fmt == ']') 
+      {
+        nested -= 1;
+      }
+    }
 
-      case 'B':
-        {
-          size += 1;
-          if(nested)
+    if(nested == 0)
+    {
+      switch(**fmt)
+      { 
+        case 'F':
           {
-            va_arg(ap, size_t); //offsetof
+            size += 4;
+            if(ptr == NULL)
+            {
+              va_arg(ap, double);
+            }
+            else
+            {
+              va_arg(ap, size_t); //offsetof
+            }
           }
-          else
-          {
-            va_arg(ap, int);
-          }
-        }
-        break;
+          break;
 
-      case 'H':
-        {
-          size += 2;
-          if(nested)
+        case 'B':
           {
-            va_arg(ap, size_t); //offsetof
+            size += 1;
+            if(ptr == NULL)
+            {
+              va_arg(ap, int);
+            }
+            else
+            {
+              va_arg(ap, size_t); //offsetof
+            }
           }
-          else
-          {
-            va_arg(ap, int);
-          }
-        }
-        break;
+          break;
 
-      case 'D':
-        {
-          size += 4;
-          if(nested)
+        case 'H':
           {
-            va_arg(ap, size_t); //offsetof
+            size += 2;
+            if(ptr == NULL)
+            {
+              va_arg(ap, int);
+            }
+            else
+            {
+              va_arg(ap, size_t); //offsetof
+            }
           }
-          else
-          {
-            va_arg(ap, int);
-          }
-        }
-        break;
+          break;
 
-      case 'S':
-        {
-          size += 2;
-          if(nested)
+        case 'D':
           {
+            size += 4;
+            if(ptr == NULL)
+            {
+              va_arg(ap, int);
+            }
+            else
+            {
+              va_arg(ap, size_t); //offsetof
+            }
+          }
+          break;
+
+        case 'S':
+          {
+            size += 2;
+            if(ptr == NULL)
+            {
+              const char * v = va_arg(ap, const char *);
+              size += strlen(v) + 1;
+            }
+            else
+            {
+              int offset = va_arg(ap, size_t); //offsetof
+              if(ptr == INVALID_PTR)
+              {
+                continue;
+              }
+              const char * v = (char *)(ptr + offset);
+              size += strlen(v) + 1;
+            }
+          }
+          break;
+
+
+        case ']':
+          return size;
+          break;
+
+        case '[':
+          {
+            nested += 1;
+
+            uint8_t * ptr = va_arg(ap, uint8_t *); //ptr
+            int elmsize = va_arg(ap, size_t); //size
+            int arrsize = va_arg(ap, size_t); //size
+            unsigned int start = va_arg(ap, unsigned int); //start
+            unsigned int end = va_arg(ap, unsigned int); //end
+
+            size += 2;
+            (*fmt) += 1;
+
+            unsigned int i;
+            while(end < start) {
+              end += arrsize;
+            }
+            for(i = start; i != end; i += 1)
+            {
+              va_list ap_cpy;
+              va_copy(ap_cpy, ap);
+              char * nfmt = *fmt;
+              size += cocobot_com_compute_len(&nfmt, ap_cpy, ptr + elmsize * (i % arrsize));  
+              va_end(ap_cpy);
+            }
+          }
+          break;
+
+        default:
 #ifdef AUSBEE_SIM
-        fprintf(stderr, "COM: nested string is now supported\n");
+          fprintf(stderr, "COM: Unknown size of %c(%s)\n", **fmt, *fmt);
 #endif
-            va_arg(ap, size_t); //offsetof
-          }
-          else
-          {
-            const char * ptr = va_arg(ap, const char *);
-            size += strlen(ptr) + 1;
-          }
-        }
-        break;
-
-
-      case ']':
-        return size;
-        break;
-
-      case '[':
-        {
-          va_arg(ap, uint8_t *); //ptr
-          va_arg(ap, size_t); //size
-          va_arg(ap, size_t); //size
-          unsigned int start = va_arg(ap, unsigned int); //start
-          unsigned int end = va_arg(ap, unsigned int); //end
-          int mult = end - start;
-          (*fmt) += 1;
-          size += 2;
-          size += mult * cocobot_com_compute_len(fmt, ap, 1);  
-        }
-        break;
-
-      default:
-#ifdef AUSBEE_SIM
-        fprintf(stderr, "COM: Unknown size of %c(%s)\n", **fmt, *fmt);
-#endif
-        break;
+          break;
+      }
     }
   }
 
@@ -376,7 +410,12 @@ static uint16_t cocobot_com_send_data(char ** fmt, va_list ap, uint16_t crc, uin
           }
           else
           {
-            //no nested string
+            int offset = va_arg(ap, size_t); //offsetof
+            if(ptr == INVALID_PTR)
+            {
+              continue;
+            }
+            v = (char *)(ptr + offset);
           }
 
           unsigned int len = strlen(v);
@@ -413,6 +452,12 @@ static uint16_t cocobot_com_send_data(char ** fmt, va_list ap, uint16_t crc, uin
           unsigned int start = va_arg(ap, unsigned int); //start
           unsigned int end = va_arg(ap, unsigned int); //end
 
+          unsigned int i;
+          (*fmt) += 1;
+          while(end < start) {
+            end += arrsize;
+          }
+
           uint16_t v = end - start;
           uint8_t * p = (uint8_t *)&v;
           mcual_usart_send(_usart, *(p + 0));
@@ -420,11 +465,7 @@ static uint16_t cocobot_com_send_data(char ** fmt, va_list ap, uint16_t crc, uin
           mcual_usart_send(_usart, *(p + 1));
           crc = cocobot_com_crc16_update(crc, *(p + 1));
 
-          unsigned int i;
-          (*fmt) += 1;
-          while(end < start) {
-            end += arrsize;
-          }
+ 
           for(i = start; i != end; i += 1)
           {
             va_list ap_cpy;
@@ -462,7 +503,7 @@ void cocobot_com_send(uint16_t pid, char * fmt, ...)
   va_list ap_cpy_len;
   va_copy(ap_cpy_len, ap);
   char * pfmt = fmt;
-  header.len = cocobot_com_compute_len(&pfmt, ap_cpy_len, 0);
+  header.len = cocobot_com_compute_len(&pfmt, ap_cpy_len, NULL);
   va_end(ap_cpy_len);
 
   header.crc = 0xFFFF;

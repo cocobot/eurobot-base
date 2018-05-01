@@ -6,13 +6,17 @@ import {
   Form, FormGroup, Label, Input,
   Card, CardHeader, CardBody, CardTitle, CardText,
 } from 'reactstrap';
-import { updateDebugPathfinder } from '../actions';
+import { updateDebugPathfinder, updateDebugActionScheduler } from '../actions';
 import Field from './Field';
 import Robots from './Robots';
 import Eurobot2018 from './Fields/Eurobot2018';
 import TrajectoryOrders from './TrajectoryOrders';
 
 class PositionComponent extends React.Component {
+  _onChangeDebugActionScheduler(e, checked) {
+    this.props.onChangeDebugActionScheduler(e.target.checked);
+  }
+
   _onChangeDebugPathfinder(e, checked) {
     this.props.onChangeDebugPathfinder(e.target.checked);
   }
@@ -32,7 +36,7 @@ class PositionComponent extends React.Component {
                 <FormGroup inline className="mb-2 mr-sm-2 mb-sm-0">
                 </FormGroup>
                   <Label check size="sm">
-                    <Input type="checkbox" />Debug strat
+                    <Input type="checkbox" onChange={(e, checked) => this._onChangeDebugActionScheduler(e, checked)} checked={this.props.debugActionScheduler} />Debug strat
                   </Label>
                 </FormGroup>
                 <FormGroup inline className="mb-2 mr-sm-2 mb-sm-0">
@@ -69,11 +73,15 @@ const mapStateToProps = (state, ownProps) => {
   const id = state.win.get('id');
   return {
     debugPathfinder: state.options.getIn(['debugPathfinder'], false),
+    debugActionScheduler: state.options.getIn(['debugActionScheduler'], false),
   }
 };
 
 const mapDispatchToProps = (dispatch) => {
   return {
+    onChangeDebugActionScheduler: (value) => {
+      dispatch(updateDebugActionScheduler(value));
+    },
     onChangeDebugPathfinder: (value) => {
       dispatch(updateDebugPathfinder(value));
     }

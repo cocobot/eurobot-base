@@ -6742,6 +6742,13 @@ var updateDebugPathfinder = exports.updateDebugPathfinder = function updateDebug
   };
 };
 
+var updateDebugActionScheduler = exports.updateDebugActionScheduler = function updateDebugActionScheduler(value) {
+  return {
+    type: 'UPDATE_DEBUG_ACTION_SCHEDULER',
+    value: value
+  };
+};
+
 /***/ }),
 /* 21 */
 /***/ (function(module, exports, __webpack_require__) {
@@ -13105,6 +13112,11 @@ var PositionComponent = function (_React$Component) {
   }
 
   _createClass(PositionComponent, [{
+    key: '_onChangeDebugActionScheduler',
+    value: function _onChangeDebugActionScheduler(e, checked) {
+      this.props.onChangeDebugActionScheduler(e.target.checked);
+    }
+  }, {
     key: '_onChangeDebugPathfinder',
     value: function _onChangeDebugPathfinder(e, checked) {
       this.props.onChangeDebugPathfinder(e.target.checked);
@@ -13147,7 +13159,9 @@ var PositionComponent = function (_React$Component) {
                     _react2.default.createElement(
                       _reactstrap.Label,
                       { check: true, size: 'sm' },
-                      _react2.default.createElement(_reactstrap.Input, { type: 'checkbox' }),
+                      _react2.default.createElement(_reactstrap.Input, { type: 'checkbox', onChange: function onChange(e, checked) {
+                          return _this2._onChangeDebugActionScheduler(e, checked);
+                        }, checked: this.props.debugActionScheduler }),
                       'Debug strat'
                     )
                   ),
@@ -13203,12 +13217,16 @@ var PositionComponent = function (_React$Component) {
 var mapStateToProps = function mapStateToProps(state, ownProps) {
   var id = state.win.get('id');
   return {
-    debugPathfinder: state.options.getIn(['debugPathfinder'], false)
+    debugPathfinder: state.options.getIn(['debugPathfinder'], false),
+    debugActionScheduler: state.options.getIn(['debugActionScheduler'], false)
   };
 };
 
 var mapDispatchToProps = function mapDispatchToProps(dispatch) {
   return {
+    onChangeDebugActionScheduler: function onChangeDebugActionScheduler(value) {
+      dispatch((0, _actions.updateDebugActionScheduler)(value));
+    },
     onChangeDebugPathfinder: function onChangeDebugPathfinder(value) {
       dispatch((0, _actions.updateDebugPathfinder)(value));
     }
@@ -13548,6 +13566,10 @@ var _Pathfinder = __webpack_require__(83);
 
 var _Pathfinder2 = _interopRequireDefault(_Pathfinder);
 
+var _Actions = __webpack_require__(88);
+
+var _Actions2 = _interopRequireDefault(_Actions);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -13863,6 +13885,7 @@ var Eurobot2018 = function (_React$Component4) {
         _react2.default.createElement(Eurobot2018BallFeeder, { id: '2' }),
         _react2.default.createElement(Eurobot2018BallFeeder, { id: '3' }),
         this.props.children,
+        _react2.default.createElement(_Actions2.default, null),
         _react2.default.createElement(_Pathfinder2.default, null)
       );
     }
@@ -14338,7 +14361,8 @@ var defaultWinState = new _immutable.Map({
 var defaultRobotsState = new _immutable.Map({});
 
 var defaultOptionsState = new _immutable.Map({
-  debugPathfinder: true
+  debugPathfinder: true,
+  debugActionScheduler: true
 });
 
 var saved = localStorage.getItem('options');
@@ -14413,6 +14437,10 @@ var options = exports.options = function options() {
   switch (action.type) {
     case 'UPDATE_DEBUG_PATHFINDER':
       state = state.set('debugPathfinder', action.value);
+      break;
+
+    case 'UPDATE_DEBUG_ACTION_SCHEDULER':
+      state = state.set('debugActionScheduler', action.value);
       break;
   }
 
@@ -19404,6 +19432,149 @@ var options = exports.options = function options() {
   return Immutable;
 
 }));
+
+/***/ }),
+/* 88 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactRedux = __webpack_require__(1);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Action = function (_React$Component) {
+  _inherits(Action, _React$Component);
+
+  function Action() {
+    _classCallCheck(this, Action);
+
+    return _possibleConstructorReturn(this, (Action.__proto__ || Object.getPrototypeOf(Action)).apply(this, arguments));
+  }
+
+  _createClass(Action, [{
+    key: 'render',
+    value: function render() {
+      var color = "#FFFFFF";
+      var score = this.props.data.score;
+
+      if (score == -1) {
+        color = "#EE0515";
+        score = "No time";
+      } else if (score == -2) {
+        color = "#FFAA00";
+        score = "Locked";
+      } else if (score == -3) {
+        color = "#10EE10";
+        score = "Done";
+      } else {
+        score = score.toFixed(3);
+      }
+
+      var position = "translate(" + this.props.data.x + "," + this.props.data.y + ")";
+      return _react2.default.createElement(
+        'g',
+        { transform: 'translate(1500,1000) scale(1, -1)' },
+        _react2.default.createElement(
+          'defs',
+          null,
+          _react2.default.createElement(
+            'filter',
+            { x: '0', y: '0', width: '1', height: '1', id: 'solid' },
+            _react2.default.createElement('feFlood', { 'flood-color': '#000000' }),
+            _react2.default.createElement('feComposite', { 'in': 'SourceGraphic' })
+          )
+        ),
+        _react2.default.createElement(
+          'g',
+          { opacity: '0.8', transform: position },
+          _react2.default.createElement('circle', { cx: '0', cy: '0', r: '100', strokeWidth: '10', stroke: color }),
+          _react2.default.createElement(
+            'g',
+            { transform: 'scale(1, -1)' },
+            _react2.default.createElement(
+              'text',
+              { fontSize: '60', y: '20', fill: '#FFFFFF' },
+              _react2.default.createElement(
+                'tspan',
+                { textAnchor: 'middle' },
+                score
+              )
+            ),
+            _react2.default.createElement(
+              'text',
+              { filter: 'url(#solid)', fontSize: '40', y: '-80', fill: '#FFFFFF' },
+              _react2.default.createElement(
+                'tspan',
+                { textAnchor: 'middle' },
+                this.props.data.name
+              )
+            )
+          )
+        )
+      );
+    }
+  }]);
+
+  return Action;
+}(_react2.default.Component);
+
+var ActionsComponent = function (_React$Component2) {
+  _inherits(ActionsComponent, _React$Component2);
+
+  function ActionsComponent() {
+    _classCallCheck(this, ActionsComponent);
+
+    return _possibleConstructorReturn(this, (ActionsComponent.__proto__ || Object.getPrototypeOf(ActionsComponent)).apply(this, arguments));
+  }
+
+  _createClass(ActionsComponent, [{
+    key: 'render',
+    value: function render() {
+      if (!this.props.debugActionScheduler) {
+        return _react2.default.createElement('g', null);
+      }
+      return _react2.default.createElement(
+        'g',
+        null,
+        this.props.strategies.map(function (x, key) {
+          return _react2.default.createElement(Action, { key: key, data: x });
+        })
+      );
+    }
+  }]);
+
+  return ActionsComponent;
+}(_react2.default.Component);
+
+var mapStateToProps = function mapStateToProps(state, ownProps) {
+  var id = state.win.get('id');
+  return {
+    strategies: state.robots.getIn([id, 'action_scheduler', 'strategies'], []),
+    debugActionScheduler: state.options.getIn(['debugActionScheduler'])
+  };
+};
+
+var Actions = (0, _reactRedux.connect)(mapStateToProps, null)(ActionsComponent);
+
+exports.default = Actions;
 
 /***/ })
 /******/ ]);

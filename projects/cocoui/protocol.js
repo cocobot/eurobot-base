@@ -16,6 +16,7 @@ DECODERS[0x8003] = "{trajectory_orders}[B(type)F(time)F(a1)F(a2)F(a3)F(a4)F(star
 DECODERS[0x8004] = "{pathfinder}H(length)H(width)[H(type)](nodes)"
 DECODERS[0x8005] = "{printf}S(msg)"
 DECODERS[0x8006] = "{game_state}B(robot_id)B(color)D(battery)D(time)"
+DECODERS[0x8008] = "{action_scheduler}[S(name)F(x)F(y)F(score)](strategies)"
 
 
 const GRAMMAR = `
@@ -67,7 +68,7 @@ Sreader
    const len = pkt.buffer.readUInt16LE(pkt.offset); 
    pkt.offset += 2; 
    const svalue = pkt.buffer.toString('ascii', pkt.offset, pkt.offset + len); 
-   pkt.offset += len;
+   pkt.offset += len + 1;
    return svalue;
 }};
 

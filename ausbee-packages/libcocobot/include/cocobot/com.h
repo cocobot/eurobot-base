@@ -17,6 +17,7 @@
 #define COCOBOT_COM_PRINTF_PID            (0x8005)
 #define COCOBOT_COM_GAME_STATE_DEBUG_PID  (0x8006)
 #define COCOBOT_COM_RESET_PID             (0x8007)
+#define COCOBOT_COM_ACTION_SCHEDULER_DEBUG_PID (0x8008)
 
 typedef void (*cocobot_com_handler_t)(uint16_t pid);
 

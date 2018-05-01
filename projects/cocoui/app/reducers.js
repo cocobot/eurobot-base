@@ -14,6 +14,7 @@ const defaultRobotsState = new Map({
 
 let defaultOptionsState = new Map({
   debugPathfinder: true,
+  debugActionScheduler: true,
 });
 
 let saved = localStorage.getItem('options');
@@ -78,6 +79,10 @@ export const options = (state = defaultOptionsState, action) => {
   switch (action.type) {
     case 'UPDATE_DEBUG_PATHFINDER':
       state = state.set('debugPathfinder', action.value);
+      break;
+
+    case 'UPDATE_DEBUG_ACTION_SCHEDULER':
+      state = state.set('debugActionScheduler', action.value);
       break;
   }
 

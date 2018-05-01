@@ -42,8 +42,18 @@ typedef struct
   uint8_t         done;
 } cocobot_action_t;
 
+typedef struct
+{
+  char            name[ACTION_NAME_LENGTH];
+  float           x;
+  float           y;
+  float           value;
+} cocobot_action_debug_t;
+
 static cocobot_action_t action_list[SCHEDULER_MAX_ACTIONS];
+static cocobot_action_debug_t action_list_debug[SCHEDULER_MAX_ACTIONS];
 static unsigned int action_list_end;
+static int action_scheduler_updated;
 
 #define INITIAL_REMAINING_TIME 90000
 
@@ -72,6 +82,8 @@ void cocobot_action_scheduler_init(void)
   current_game_state.time_gets_short = 0;
 
   action_list_end = 0;
+
+  action_scheduler_updated = 0;
 }
 
 void cocobot_action_scheduler_set_strategy(cocobot_strategy_t strat)
@@ -330,12 +342,15 @@ cocobot_action_callback_result_t cocobot_action_scheduler_execute_best_action(vo
   for (; action_current_index < action_list_end; action_current_index++)
   {
     action_current_eval = cocobot_action_scheduler_eval(&action_list[action_current_index]);
+    action_list_debug[action_current_index].value = action_current_eval;
     if (action_current_eval > action_best_eval)
     {
       action_best_eval = action_current_eval;
       action_best_index = action_current_index;
     }
   }
+
+  action_scheduler_updated = 1;
 
   if (action_best_eval == COCOBOT_ACTION_NOT_ENOUGH_TIME)
   {
@@ -351,6 +366,34 @@ cocobot_action_callback_result_t cocobot_action_scheduler_execute_best_action(vo
   cocobot_action_t * best_action = &action_list[action_best_index];
 
   return cocobot_action_scheduler_execute_action(best_action);
+}
+
+void cocobot_action_scheduler_handle_async_com(void)
+{
+  if(action_scheduler_updated)
+  {
+    action_scheduler_updated = 0;
+    unsigned int i = 0;
+    for (; i < action_list_end; i++)
+    {
+      cocobot_action_t * action = &action_list[i];
+      float a;
+      (*action->pos)(action->callback_arg, &(action_list_debug[i].x), &(action_list_debug[i].y), &a);
+      memcpy(action_list_debug[i].name, action_list[i].name, ACTION_NAME_LENGTH);
+    }
+    cocobot_com_send(COCOBOT_COM_ACTION_SCHEDULER_DEBUG_PID,
+     "[SFFF]",
+     (uint8_t *)action_list_debug,               //array ptr
+     sizeof(action_list_debug[0]),                     //array elm size 
+     sizeof(action_list_debug)/sizeof(action_list_debug[0]),  //array size 
+     0,                           //array start
+     action_list_end,                          //array end
+     offsetof(cocobot_action_debug_t, name),
+     offsetof(cocobot_action_debug_t, x),
+     offsetof(cocobot_action_debug_t, y),
+     offsetof(cocobot_action_debug_t, value)
+    );
+  }
 }
 
 
