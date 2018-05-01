@@ -55,8 +55,8 @@ void cocobot_game_state_init(cocobot_game_state_funny_action_t funny_action)
 #ifdef AUSBEE_SIM
   //random color in simu
   srand(time(NULL));
-  _color = COCOBOT_GAME_STATE_COLOR_NEG;
-  //_color = rand() % 2; 
+  //_color = COCOBOT_GAME_STATE_COLOR_NEG;
+  _color = rand() % 2; 
 #else
   if(platform_gpio_get(PLATFORM_GPIO_COLOR))
   {
