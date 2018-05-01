@@ -14880,8 +14880,8 @@ var PathfinderComponent = function (_React$Component) {
             } else {
               //Used as debug, When a node reach an inconsistant state
               r = type & 0xff;
-              g = type & 0xff00;
-              b = 0;
+              g = 127;
+              b = type & 0xff00;
               af = 1;
             }
 
