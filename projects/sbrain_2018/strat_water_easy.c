@@ -59,6 +59,7 @@ static cocobot_action_callback_result_t strat_water_easy_take_preexec(void * arg
 {
     (void)arg;
     //TODO: Set loader in ready position?
+    cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_BACKWARD);
     return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
@@ -68,6 +69,7 @@ static cocobot_action_callback_result_t strat_water_easy_take_cleanup(void * arg
     //Get away from the water castle
     cocobot_trajectory_goto_d(250, 2500);
     cocobot_trajectory_wait();
+    cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_FORWARD);
     return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
