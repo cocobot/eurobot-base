@@ -56,6 +56,9 @@ static cocobot_action_callback_result_t strat_water_shared_take_preexec(void * a
 {
     (void)arg;
     //TODO: Set loader in ready position?
+    //
+    //use backward move
+    cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_BACKWARD);
     return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
@@ -65,6 +68,14 @@ static cocobot_action_callback_result_t strat_water_shared_take_cleanup(void * a
     //Get away from the water castle
     cocobot_trajectory_goto_d(250, 2500);
     cocobot_trajectory_wait();
+    cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_FORWARD);
+
+    //Remove game element from pathfinder map.
+    if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+        cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_5);
+    else
+        cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_4);
+
     return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
@@ -164,7 +175,7 @@ static unsigned int strat_water_shared_recycle_get_score()
 
 static float strat_water_shared_recycle_get_x()
 {
-    float target = 175;
+    float target = -475;
 
     if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
     {
