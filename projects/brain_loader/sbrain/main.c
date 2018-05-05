@@ -10,6 +10,10 @@ static void event(void)
 int main(void) 
 {
   platform_init();
+
+  platform_gpio_set_direction(PLATFORM_GPIO_MOTOR_ENABLE, MCUAL_GPIO_OUTPUT);
+  platform_gpio_set(PLATFORM_GPIO_MOTOR_ENABLE);
+
   mcual_loader_init(MCUAL_USART1, event);
   mcual_loader_run();
 

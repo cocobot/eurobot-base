@@ -114,7 +114,11 @@ void cocobot_asserv_compute(void)
                                               cocobot_asserv_pid_get_output(&_pid_angu));
     
     //enable motors
+#ifdef COCOBOT_L298
     platform_gpio_set(PLATFORM_GPIO_MOTOR_ENABLE);
+#else
+# error "not implemented"
+#endif
   }
   else
   {
@@ -126,7 +130,11 @@ void cocobot_asserv_compute(void)
 
     //disable motors
     cocobot_position_set_speed_distance_angle(0, 0);
+#ifdef COCOBOT_L298
     platform_gpio_clear(PLATFORM_GPIO_MOTOR_ENABLE);
+#else
+# error "not implemented"
+#endif
   }
 }
 
