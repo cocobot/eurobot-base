@@ -220,7 +220,7 @@ static float cocobot_action_scheduler_eval(cocobot_action_t * action)
   {
     return COCOBOT_ACTION_ALREADY_DONE;
   }
-  if (action->unlocked != NULL && !action->unlocked())
+  if (action->unlocked != NULL && !action->unlocked(action->callback_arg))
   {
     return COCOBOT_ACTION_LOCKED;
   }

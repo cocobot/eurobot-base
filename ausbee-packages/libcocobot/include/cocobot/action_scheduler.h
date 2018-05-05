@@ -40,7 +40,7 @@ typedef enum
 // Argument is callback_arg
 typedef cocobot_action_callback_result_t (*action_callback)(void *);
 
-typedef int (*action_unlocked)(void);
+typedef int (*action_unlocked)(void*);
 
 // Function for the user to give dynamics coordinates to actions
 // First argument is callback_arg

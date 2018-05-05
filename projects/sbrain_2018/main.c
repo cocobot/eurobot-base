@@ -4,8 +4,9 @@
 #include <task.h>
 #include <mcual.h>
 #include <cocobot.h>
-#include "strat_water_easy.h"
-#include "strat_water_shared.h"
+//#include "strat_water_easy.h"
+//#include "strat_water_shared.h"
+#include "strat_water.h"
 //#include "cocobot_pathfinder_config.h"
 
 //static unsigned int _shell_configuration;
@@ -55,8 +56,8 @@ void run_strategy(void * arg)
 {
   (void)arg;
 
-  strat_water_easy_register();
-  strat_water_shared_register();
+  //strat_water_easy_register();
+  strat_water_register();
 
   cocobot_game_state_wait_for_starter_removed();
 
