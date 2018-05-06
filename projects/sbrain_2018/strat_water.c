@@ -17,8 +17,10 @@ static uint8_t isFlooded[NBR_OF_WATER] = {0};
 
 static unsigned int strat_water_take_get_score(waterDistributor_e water)
 {
-    (void)water;
-    return 10;
+    if(water == WATER_EASY)
+        return 50;
+    else
+        return 70;
 }
 
 static float strat_water_take_get_x(waterDistributor_e water)
@@ -114,7 +116,7 @@ static cocobot_action_callback_result_t strat_water_take_exec(void * arg)
 {
     waterDistributor_e water = (waterDistributor_e )arg;
     //Move just under the water castle
-    cocobot_trajectory_goto_d(-200, 2500);
+    cocobot_trajectory_goto_d(-150, 2500);
     cocobot_trajectory_wait();
 
     //TBD:Get the water
@@ -209,7 +211,7 @@ static int strat_water_shoot_unlocked(void * arg)
 
 static unsigned int strat_water_recycle_get_score()
 {
-    return 20;
+    return 40;
 }
 
 static float strat_water_recycle_get_x()
@@ -249,7 +251,7 @@ float strat_water_recycle_get_exec_time()
 
 float strat_water_recycle_get_success_proba()
 {
-    return 0.50;
+    return 0.80;
 }
 
 static cocobot_action_callback_result_t strat_water_recycle_preexec(void * arg)
@@ -269,7 +271,7 @@ static cocobot_action_callback_result_t strat_water_recycle_cleanup(void * arg)
 static cocobot_action_callback_result_t strat_water_recycle_exec(void * arg)
 {
     (void)arg;
-    cocobot_trajectory_goto_d(-200, 2500);
+    cocobot_trajectory_goto_d(-100, 2500);
     cocobot_trajectory_wait();
     //TODO: Dump wasted water
     return COCOBOT_RETURN_ACTION_SUCCESS;
