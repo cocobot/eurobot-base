@@ -83,7 +83,7 @@ void cocobot_game_state_wait_for_starter_removed(void)
   //no starter on simu. Just wait 3s
   vTaskDelay(3000 / portTICK_PERIOD_MS);
 #else
-  while(!platform_gpio_get(PLATFORM_GPIO_STARTER))
+  while(platform_gpio_get(PLATFORM_GPIO_STARTER))
   {
     vTaskDelay(50 / portTICK_PERIOD_MS);
   }
