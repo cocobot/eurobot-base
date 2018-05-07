@@ -121,6 +121,9 @@ void platform_init(void)
   mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN2, MCUAL_GPIO_INPUT);
   mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN3, MCUAL_GPIO_INPUT);
   mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN4, MCUAL_GPIO_INPUT);
+
+  //shifters
+  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN12, MCUAL_GPIO_INPUT);
   
   //init motor pwm pins
   mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN5, MCUAL_GPIO_OUTPUT);
@@ -426,6 +429,10 @@ void platform_gpio_set_direction(uint32_t gpio, mcual_gpio_direction_t direction
   {
     mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN2, direction);
   }
+  if(gpio & PLATFORM_GPIO_SHIFT_SET)
+  {
+    mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN12, direction);
+  }
 }
 
 void platform_gpio_set(uint32_t gpio)
@@ -513,6 +520,10 @@ void platform_gpio_set(uint32_t gpio)
   if(gpio & PLATFORM_GPIO_MOTOR_ENABLE)
   {
     mcual_gpio_set(MCUAL_GPIOE, MCUAL_GPIO_PIN2);
+  }
+  if(gpio & PLATFORM_GPIO_SHIFT_SET)
+  {
+    mcual_gpio_set(MCUAL_GPIOA, MCUAL_GPIO_PIN12);
   }
 }
 
@@ -602,6 +613,10 @@ void platform_gpio_clear(uint32_t gpio)
   {
     mcual_gpio_clear(MCUAL_GPIOE, MCUAL_GPIO_PIN2);
   }
+  if(gpio & PLATFORM_GPIO_SHIFT_SET)
+  {
+    mcual_gpio_clear(MCUAL_GPIOA, MCUAL_GPIO_PIN12);
+  }
 }
 
 void platform_gpio_toggle(uint32_t gpio)
@@ -689,6 +704,10 @@ void platform_gpio_toggle(uint32_t gpio)
   if(gpio & PLATFORM_GPIO_MOTOR_ENABLE)
   {
     mcual_gpio_toggle(MCUAL_GPIOE, MCUAL_GPIO_PIN2);
+  }
+  if(gpio & PLATFORM_GPIO_SHIFT_SET)
+  {
+    mcual_gpio_toggle(MCUAL_GPIOA, MCUAL_GPIO_PIN12);
   }
 }
 

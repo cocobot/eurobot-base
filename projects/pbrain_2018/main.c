@@ -46,6 +46,9 @@ void update_lcd(void * arg)
     //toggle led
     vTaskDelay(100 / portTICK_PERIOD_MS);
     platform_led_toggle(PLATFORM_LED0);
+
+    cocobot_shifters_set( i % (8 * 3), i / (8*3));
+    cocobot_shifters_update();
   }
 }
 
