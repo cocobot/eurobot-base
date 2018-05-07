@@ -29,6 +29,7 @@
 #define PLATFORM_GPIO_MOTOR_DIR_RIGHT         (1 << 18)
 #define PLATFORM_GPIO_MOTOR_DIR_LEFT          (1 << 19)
 #define PLATFORM_GPIO_MOTOR_ENABLE            (1 << 20)
+#define PLATFORM_GPIO_SHIFT_SET               (1 << 21)
 
 #define PLATFORM_USART_DEBUG MCUAL_USART1
 
