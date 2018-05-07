@@ -30,7 +30,7 @@ void cocobot_game_state_handle_async_com(void)
      _color,  //0 for x negative, 1 for x positive 
      platform_adc_get_mV(PLATFORM_ADC_VBAT), //battery voltage
      cocobot_game_state_get_elapsed_time() / 1000 //elapsed time
-    );
+   );
   }
 }
 
