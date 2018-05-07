@@ -96,20 +96,40 @@ void cocobot_com_sync_thread(void *arg)
       if(crc == header.crc)
       {
         uint8_t * data = pvPortMalloc(header.len);
-        //TODO:: read DATA and CRCDATA
-        
-        switch(header.pid)
+        if((data != NULL) || (header.len == 0))
         {
-          case COCOBOT_COM_RESET_PID:
-            mcual_bootloader();
-            break;
-        }
+          //TODO:: read DATA timeout and check CRCDATA
+          for(i = 0; i < header.len; i += 1) 
+          {
+            data[i] = mcual_usart_recv(_usart);
+          }
 
-        for(i = 0; i < sizeof(header); i += 1) 
-        {
-          ptr[i] = 0;
+          //CRC
+          mcual_usart_recv(_usart);
+          mcual_usart_recv(_usart);
+
+          switch(header.pid)
+          {
+            case COCOBOT_COM_RESET_PID:
+              mcual_bootloader();
+              break;
+          }
+
+          cocobot_opponent_detection_handle_sync_com(header.pid, data, header.len);
+
+          for(i = 0; i < sizeof(header); i += 1) 
+          {
+            ptr[i] = 0;
+          }
+          vPortFree(data);
         }
-        vPortFree(data);
+        else
+        {
+          for(i = 0; i < sizeof(header); i += 1) 
+          {
+            ptr[i] = 0;
+          }
+        }
       }
     }
   }
@@ -549,4 +569,12 @@ void cocobot_com_printf(char * fmt, ...)
   va_end(ap);
 #endif
   cocobot_com_send(COCOBOT_COM_PRINTF_PID, "S", _printf_buffer);
+}
+
+uint32_t cocobot_com_read_B(uint8_t *data , uint32_t len, uint32_t offset, uint8_t * value)
+{
+  (void)len; //TODO: check len
+  *value = data[offset];
+  offset += 1;
+  return offset;
 }

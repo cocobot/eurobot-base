@@ -93,6 +93,9 @@ class TopMenuComponent extends React.Component {
             <DropdownItem onClick={() => this._openUSIRWindow(key)}>
               USIR
             </DropdownItem>
+            <DropdownItem onClick={() => this._openAsservWindow(key)}>
+              Asserv
+            </DropdownItem>
             <DropdownItem divider />
             <DropdownItem onClick={() => this._reset(key)}>
               Reset
@@ -115,6 +118,13 @@ class TopMenuComponent extends React.Component {
   _openUSIRWindow(cid) {
     ipcRenderer.send('window', {
       id: 'USIR',
+      client: cid, 
+    });
+  }
+
+  _openAsservWindow(cid) {
+    ipcRenderer.send('window', {
+      id: 'Asserv',
       client: cid, 
     });
   }

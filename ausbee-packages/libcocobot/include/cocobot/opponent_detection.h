@@ -33,6 +33,7 @@ void cocobot_opponent_detection_init(unsigned int task_priority);
  *  1 : if command has been successfully handled
  */
 int cocobot_opponent_detection_handle_console(char * command);
+void cocobot_opponent_detection_handle_sync_com(uint16_t pid, uint8_t * data, uint32_t len);
 
 void cocobot_opponent_detection_set_enable(int id, int status);
 

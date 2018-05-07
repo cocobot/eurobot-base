@@ -17,6 +17,7 @@ DECODERS[0x8004] = "{pathfinder}H(length)H(width)[H(type)](nodes)"
 DECODERS[0x8005] = "{printf}S(msg)"
 DECODERS[0x8006] = "{game_state}B(robot_id)B(color)D(battery)D(time)"
 DECODERS[0x8008] = "{action_scheduler}[S(name)F(x)F(y)F(score)](strategies)"
+DECODERS[0x800a] = "{usirs}[H(us)H(ir)B(force_on)B(alert)B(alert_activated)](usir)"
 
 
 const GRAMMAR = `
@@ -274,7 +275,40 @@ class Client {
   }
 
   formatAndSend(pkt) {
-    pkt.data = Buffer.alloc(0);
+    console.log(pkt);
+    const getLen = (fmt) => {
+      let size = 0;
+      for(let i = 0; i < fmt.length; i += 1) {
+        switch(fmt[i]) {
+           case 'B':
+            size += 1;
+            break;
+
+          default:
+            console.log("TODO !!! " + fmt[i]);
+        }
+      }
+
+      return size;
+    };
+
+    pkt.data = Buffer.alloc(getLen(pkt.fmt));
+    let offset = 0;
+
+    for(let i = 0; i < pkt.fmt.length; i += 1) {
+      switch(pkt.fmt[i]) {
+         case 'B':
+          pkt.data.writeUInt8(pkt.args.shift(), offset);
+          offset += 1;
+          break;
+
+        default:
+          console.log("TODO !!! " + pkt.fmt[i]);
+      }
+    }
+
+    console.log(offset + "/" + pkt.data.length);
+    console.log(pkt.data);
     this.sendPacket(pkt);
   }
 
@@ -331,7 +365,12 @@ class TCPClient extends Client {
   }
   
   send(data) {
-    this._socket.write(data);
+    try
+    {
+      this._socket.write(data);
+    }
+    catch(e) {
+    }
   } 
 
   _onClose() {

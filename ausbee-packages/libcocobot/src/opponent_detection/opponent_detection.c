@@ -197,64 +197,38 @@ void cocobot_opponent_detection_set_on_map()
 #endif
 }
 
-/*
-int cocobot_opponent_detection_handle_console(char * command)
+void cocobot_opponent_detection_handle_sync_com(uint16_t pid, uint8_t * data, uint32_t len)
 {
-  if(strcmp(command,"opponent_usir_force") == 0)
+  (void)data;
+  (void)len;
+  switch(pid)
   {
-    int id;
-    if(cocobot_console_get_iargument(0, &id))
-    {
-      if((id >= 0) && (id < 4))
+    case COCOBOT_COM_FORCE_USIR_PID:
       {
-        int set;
-        if(cocobot_console_get_iargument(1, &set))
-        {
-          _usirs[id].force_on = set;
-        }
-
-        cocobot_console_send_answer("%d", _usirs[id].force_on);
-        return 1;
-      }              
-    }
-    cocobot_console_send_answer("?");
-    return 1;
-  }
-
-  if(strcmp(command,"opponent_usir") == 0)
-  {
-    int i;
-    for(i = 0; i < 4; i += 1)
-    {
-      cocobot_console_send_answer("%d %d %d %d %d", _usirs[i].us, _usirs[i].ir, _usirs[i].alert_activated, _usirs[i].alert, _usirs[i].force_on);
-    }
-
-    return 1;
-  }
-
-  if(strcmp(command, "opponent_fakebot") == 0)
-  {
-    int activate;
-    float x;
-    float y;
-
-    if(cocobot_console_get_iargument(0, &activate))
-    {
-      if(cocobot_console_get_fargument(1, &x))
-      {
-        if(cocobot_console_get_fargument(2, &y))
-        {
-          _fakebot.x = x;
-          _fakebot.y = y;
-          _fakebot.activated = (activate > 0) ? COCOBOT_OPPONENT_DETECTION_ACTIVATED : COCOBOT_OPPONENT_DETECTION_DEACTIVATED;
-        }
+        uint8_t id;
+        uint8_t force;
+        uint32_t offset = 0;
+        offset += cocobot_com_read_B(data, len, offset, &id);
+        offset += cocobot_com_read_B(data, len, offset, &force);
+        _usirs[id].force_on = force;
       }
-    }
 
-    cocobot_console_send_answer("%d %f %f", _fakebot.activated, (double)_fakebot.x, (double)_fakebot.y);
-    return 1;
+      //no break here. we want to send the updated USIR values. Its ugly but... 
+
+    case COCOBOT_COM_GET_USIR_PID:
+      cocobot_com_send(COCOBOT_COM_SEND_USIR_PID,
+        "[HHBBB]",
+        (uint8_t *)_usirs,                     //array ptr
+        sizeof(_usirs[0]),                     //array elm size 
+        sizeof(_usirs)/sizeof(_usirs[0]),      //array size 
+        0,                                     //array start
+        4,                                     //array end
+        offsetof(cocobot_opponent_detection_usir_t, us),
+        offsetof(cocobot_opponent_detection_usir_t, ir),
+        offsetof(cocobot_opponent_detection_usir_t, force_on),
+        offsetof(cocobot_opponent_detection_usir_t, alert),
+        offsetof(cocobot_opponent_detection_usir_t, alert_activated)
+      );
+      break;
   }
-
-  return 0;
 }
-*/

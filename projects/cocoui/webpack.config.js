@@ -1,4 +1,5 @@
 const webpack = require('webpack');
+const EncodingPlugin = require('webpack-encoding-plugin');
 
 module.exports = {
   entry: './app/app.js',
@@ -25,5 +26,8 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('production')
     }),
+    new EncodingPlugin({
+      encoding: 'iso-8859-1'
+    })
    ],
 };

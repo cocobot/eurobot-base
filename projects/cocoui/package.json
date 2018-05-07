@@ -11,7 +11,9 @@
     "reactstrap": "^5.0.0-beta.2",
     "redux": "^3.7.2",
     "serialport": "^6.2.0",
-    "style-loader": "^0.19.1"
+    "smoothie": "^1.35.0",
+    "style-loader": "^0.19.1",
+    "webpack-encoding-plugin": "^0.2.1"
   },
   "main": "main.js",
   "scripts": {

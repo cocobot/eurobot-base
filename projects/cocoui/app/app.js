@@ -6,6 +6,7 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import Cocoui from './components/cocoui';
 import USIR from './components/usir';
+import Asserv from './components/asserv';
 import State from './state';
 
 
@@ -17,6 +18,10 @@ const page = url.searchParams.get("page");
 switch(page) {
   case 'USIR':
     ReactDOM.render(<Provider store={State.getStore()}><USIR /></Provider>, document.getElementById('app'));
+    break;
+
+  case 'Asserv':
+    ReactDOM.render(<Provider store={State.getStore()}><Asserv /></Provider>, document.getElementById('app'));
     break;
 
   default:

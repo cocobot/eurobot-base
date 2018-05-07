@@ -14,8 +14,8 @@ process.on('uncaughtException', function (err) {
 
 ipcMain.on('window', (event, arg) => {
   const win = new BrowserWindow({
-    height: 500,
-    width: 700,
+    height: 650,
+    width: 1200,
   });
 
   const url = require('url').format({
@@ -24,7 +24,7 @@ ipcMain.on('window', (event, arg) => {
     pathname: require('path').join(__dirname, 'static', 'app.html')
   });
 
-  win.loadURL(url + '?page=USIR');
+  win.loadURL(url + '?page=' + arg.id);
 });
  
 app.on('ready', () => {
