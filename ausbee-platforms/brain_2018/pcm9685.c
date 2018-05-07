@@ -2,7 +2,7 @@
 #include "platform.h"
 #include "pcm9685.h"
 
-#define PCM9685_ADDR 0x58
+#define PCM9685_ADDR 0x78
 
 #define PCA9685_MODE1_REGISTER 0x00
 #define PCA9685_MODE1_REGISTER_SLEEP_bp 4

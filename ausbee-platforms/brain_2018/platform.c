@@ -212,6 +212,7 @@ void platform_init(void)
   mcual_gpio_set_interrupt(MCUAL_GPIOD, MCUAL_GPIO_PIN12, MCUAL_GPIO_BOTH_EDGE, platform_us_3_interrupt);
   mcual_timer_init(MCUAL_TIMER4, -64); //counter only
 #endif
+
 }
 
 #ifdef CONFIG_MCUAL_TIMER
