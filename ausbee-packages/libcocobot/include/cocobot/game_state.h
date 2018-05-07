@@ -52,4 +52,6 @@ void * cocobot_game_state_get_userdata(unsigned int id);
 
 void cocobot_game_state_handle_async_com(void);
 
+void cocobot_game_state_display_score(void);
+
 #endif// COCOBOT_GAME_STATE_H

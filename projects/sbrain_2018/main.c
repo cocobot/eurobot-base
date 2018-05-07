@@ -49,11 +49,10 @@ void update_lcd(void * arg)
     i += 1;
 
     //toggle led
-    vTaskDelay(100 / portTICK_PERIOD_MS);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
     platform_led_toggle(PLATFORM_LED0);
 
-    cocobot_shifters_set( i % (8 * 3), (i / (8*3)) % 2);
-    cocobot_shifters_update();
+    cocobot_game_state_display_score();
   }
 }
 

@@ -9,6 +9,7 @@
 #include <platform.h>
 
 #define USER_DATA_SIZE 16
+#define SCORE_DIGIT 3
 
 static cocobot_game_state_funny_action_t _funny_action;
 static TimerHandle_t _end_match_timer;
@@ -17,6 +18,36 @@ static void * _userdata[USER_DATA_SIZE];
 static uint8_t _starter_removed;
 static TickType_t _start_time = 0;
 static TickType_t _last_update_time = 0;
+static int _score = 0;
+
+static unsigned char _seven_seg[10] = {
+  0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7C,0x07,0x7F,0x67};
+
+void cocobot_game_state_display_score(void)
+{
+  int i;
+  int j;
+  unsigned char digit[SCORE_DIGIT];
+  int score = _score; 
+
+  for (j = 0; j < SCORE_DIGIT; j++){
+    digit[j] = score % 10;
+    score /= 10;
+  }
+
+  //TODO: remove ME
+  _score += 1;
+
+  for (j = 0; j < SCORE_DIGIT; j++){ 
+    for (i = 0; i < 8; i++){
+      cocobot_shifters_set(i + 8*j, (_seven_seg[digit[j]] & (1 << i)) == 0);
+    }
+    cocobot_shifters_update();
+  }
+  
+  //TODO : remove ME
+  vTaskDelay(500 / portTICK_PERIOD_MS);
+}
 
 void cocobot_game_state_handle_async_com(void)
 {
@@ -25,12 +56,12 @@ void cocobot_game_state_handle_async_com(void)
   {
     _last_update_time = now;
     cocobot_com_send(COCOBOT_COM_GAME_STATE_DEBUG_PID,
-     "BBDD",
-     COCOBOT_ROBOT_ID,  //0 for principal, 1 for secondary 
-     _color,  //0 for x negative, 1 for x positive 
-     platform_adc_get_mV(PLATFORM_ADC_VBAT), //battery voltage
-     cocobot_game_state_get_elapsed_time() / 1000 //elapsed time
-   );
+                     "BBDD",
+                     COCOBOT_ROBOT_ID,  //0 for principal, 1 for secondary 
+                     _color,  //0 for x negative, 1 for x positive 
+                     platform_adc_get_mV(PLATFORM_ADC_VBAT), //battery voltage
+                     cocobot_game_state_get_elapsed_time() / 1000 //elapsed time
+                    );
   }
 }
 
