@@ -197,6 +197,23 @@ void cocobot_opponent_detection_set_on_map()
 #endif
 }
 
+void cocobot_opponent_detection_send_debug(void)
+{
+  cocobot_com_send(COCOBOT_COM_SEND_USIR_PID,
+    "[HHBBB]",
+    (uint8_t *)_usirs,                     //array ptr
+    sizeof(_usirs[0]),                     //array elm size 
+    sizeof(_usirs)/sizeof(_usirs[0]),      //array size 
+    0,                                     //array start
+    4,                                     //array end
+    offsetof(cocobot_opponent_detection_usir_t, us),
+    offsetof(cocobot_opponent_detection_usir_t, ir),
+    offsetof(cocobot_opponent_detection_usir_t, force_on),
+    offsetof(cocobot_opponent_detection_usir_t, alert),
+    offsetof(cocobot_opponent_detection_usir_t, alert_activated)
+  );
+}
+
 void cocobot_opponent_detection_handle_sync_com(uint16_t pid, uint8_t * data, uint32_t len)
 {
   (void)data;
@@ -211,24 +228,12 @@ void cocobot_opponent_detection_handle_sync_com(uint16_t pid, uint8_t * data, ui
         offset += cocobot_com_read_B(data, len, offset, &id);
         offset += cocobot_com_read_B(data, len, offset, &force);
         _usirs[id].force_on = force;
+        cocobot_opponent_detection_send_debug();
       }
-
-      //no break here. we want to send the updated USIR values. Its ugly but... 
+      break;
 
     case COCOBOT_COM_GET_USIR_PID:
-      cocobot_com_send(COCOBOT_COM_SEND_USIR_PID,
-        "[HHBBB]",
-        (uint8_t *)_usirs,                     //array ptr
-        sizeof(_usirs[0]),                     //array elm size 
-        sizeof(_usirs)/sizeof(_usirs[0]),      //array size 
-        0,                                     //array start
-        4,                                     //array end
-        offsetof(cocobot_opponent_detection_usir_t, us),
-        offsetof(cocobot_opponent_detection_usir_t, ir),
-        offsetof(cocobot_opponent_detection_usir_t, force_on),
-        offsetof(cocobot_opponent_detection_usir_t, alert),
-        offsetof(cocobot_opponent_detection_usir_t, alert_activated)
-      );
+      cocobot_opponent_detection_send_debug();
       break;
   }
 }
