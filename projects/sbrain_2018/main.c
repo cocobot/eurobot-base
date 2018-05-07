@@ -46,15 +46,25 @@ void update_lcd(void * arg)
 
   while(1)
   {
+    i += 1;
+
     //toggle led
     vTaskDelay(100 / portTICK_PERIOD_MS);
     platform_led_toggle(PLATFORM_LED0);
+
+    cocobot_shifters_set( i % (8 * 3), (i / (8*3)) % 2);
+    cocobot_shifters_update();
   }
 }
 
 void run_strategy(void * arg)
 {
   (void)arg;
+
+  while(1)
+  {
+    vTaskDelay(50 / portTICK_PERIOD_MS);
+  }
 
   //strat_water_easy_register();
   strat_water_register();
@@ -139,6 +149,7 @@ int main(int argc, char *argv[])
   platform_init();
   cocobot_com_init(MCUAL_USART1, 1, 4, com_handler);
   cocobot_lcd_init();
+  cocobot_shifters_init();
   cocobot_position_init(4);
   cocobot_action_scheduler_init();
   cocobot_asserv_init();

@@ -32,6 +32,7 @@ static float strat_domotique_get_a()
 
 static void strat_domotique_pos(void *arg, float *x, float *y, float *a)
 {
+  (void)arg;
     *x = strat_domotique_get_x();
     *y = strat_domotique_get_y();
     *a = strat_domotique_get_a();
@@ -67,6 +68,7 @@ static cocobot_action_callback_result_t strat_domotique_cleanup(void * arg)
 
 static cocobot_action_callback_result_t strat_domotique_exec(void * arg)
 {
+  (void)arg;
     cocobot_trajectory_goto_d(125, 2500);
     cocobot_trajectory_wait();
     return COCOBOT_RETURN_ACTION_SUCCESS;
