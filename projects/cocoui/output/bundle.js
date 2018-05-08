@@ -15737,13 +15737,15 @@ var Chart = function (_React$Component2) {
 
       var self = this;
       _react2.default.Children.forEach(this.props.children, function (child) {
-        var ser = new _smoothie.TimeSeries();
-        self.state.smoothie.addTimeSeries(ser, {
-          lineWidth: child.props.lineWidth,
-          strokeStyle: child.props.strokeStyle
-        });
+        try {
+          var ser = new _smoothie.TimeSeries();
+          self.state.smoothie.addTimeSeries(ser, {
+            lineWidth: child.props.lineWidth,
+            strokeStyle: child.props.strokeStyle
+          });
 
-        self.charts[child.ref] = { timeseries: ser, last: 0 };
+          self.charts[child.ref] = { timeseries: ser, last: 0 };
+        } catch (e) {}
       });
     }
   }, {
@@ -15751,12 +15753,8 @@ var Chart = function (_React$Component2) {
     value: function append(data) {
       if (data.key in this.charts) {
         var c = this.charts[data.key];
-        if (data.date > c.last - 500) {
-          c.timeseries.append(data.date, undefined);
-        }
 
         var dt = data.date + timeOffset / 2;
-
         c.timeseries.append(dt, parseFloat(data.value));
         c.last = data.date;
       }
@@ -15850,51 +15848,53 @@ var Asserv = function (_React$Component4) {
       var now = Date.now();
       switch (pkt.data._name) {
         case "asserv_dist":
-          this.refs.chartdp.append({
-            key: "dpt",
-            date: now,
-            value: pkt.data.target
-          });
-          this.refs.chartdp.append({
-            key: "dpf",
-            date: now,
-            value: pkt.data.ramp_out
-          });
-          this.refs.chartdp.append({
-            key: "dpc",
-            date: now,
-            value: pkt.data.distance
-          });
-          this.refs.chartds.append({
-            key: "dst",
-            date: now,
-            value: pkt.data.speed_target
-          });
-          this.refs.chartds.append({
-            key: "dst",
-            date: now,
-            value: pkt.data.speed
-          });
-          this.refs.chartdpid.append({
-            key: "dpido",
-            date: now,
-            value: pkt.data.pid_out
-          });
-          this.refs.chartdpid.append({
-            key: "dpidp",
-            date: now,
-            value: pkt.data.pid_P
-          });
-          this.refs.chartdpid.append({
-            key: "dpidpi",
-            date: now,
-            value: pkt.data.pid_I
-          });
-          this.refs.chartdpid.append({
-            key: "dpidpd",
-            date: now,
-            value: pkt.data.pid_D
-          });
+          try {
+            this.refs.chartdp.append({
+              key: "dpt",
+              date: now,
+              value: pkt.data.target
+            });
+            this.refs.chartdp.append({
+              key: "dpf",
+              date: now,
+              value: pkt.data.ramp_out
+            });
+            this.refs.chartdp.append({
+              key: "dpc",
+              date: now,
+              value: pkt.data.distance
+            });
+            this.refs.chartds.append({
+              key: "dst",
+              date: now,
+              value: pkt.data.speed_target
+            });
+            this.refs.chartds.append({
+              key: "dst",
+              date: now,
+              value: pkt.data.speed
+            });
+            this.refs.chartdpid.append({
+              key: "dpido",
+              date: now,
+              value: pkt.data.pid_out
+            });
+            this.refs.chartdpid.append({
+              key: "dpidp",
+              date: now,
+              value: pkt.data.pid_P
+            });
+            this.refs.chartdpid.append({
+              key: "dpidpi",
+              date: now,
+              value: pkt.data.pid_I
+            });
+            this.refs.chartdpid.append({
+              key: "dpidpd",
+              date: now,
+              value: pkt.data.pid_D
+            });
+          } catch (e) {}
           break;
       }
     }

@@ -11,6 +11,7 @@ import { SmoothieChart, TimeSeries } from 'smoothie';
 
 const timeOffset = 0;
 
+
 class Parameter extends React.Component {
 
   constructor(props) {
@@ -111,6 +112,7 @@ class Chart extends React.Component {
 
     var self = this;
     React.Children.forEach(this.props.children, function(child) {
+      try {
         var ser = new TimeSeries();
         self.state.smoothie.addTimeSeries(ser,{
           lineWidth: child.props.lineWidth,
@@ -118,18 +120,17 @@ class Chart extends React.Component {
         });
 
         self.charts[child.ref] = {timeseries: ser, last: 0};
+      }
+      catch(e) {
+      }
     });
   }
 
   append(data) {
     if(data.key in this.charts) {
       var c = this.charts[data.key];
-      if(data.date > c.last - 500) {
-        c.timeseries.append(data.date, undefined);
-      }
-      
-      var dt = data.date + timeOffset / 2;
 
+      var dt = data.date + timeOffset / 2;
       c.timeseries.append(dt, parseFloat(data.value));
       c.last = data.date;
     }
@@ -187,51 +188,55 @@ class Asserv extends React.Component {
     const now = Date.now();
     switch(pkt.data._name) {
       case "asserv_dist":
-        this.refs.chartdp.append({
-          key: "dpt",
-          date: now,
-          value: pkt.data.target,
-        });
-        this.refs.chartdp.append({
-          key: "dpf",
-          date: now,
-          value: pkt.data.ramp_out,
-        });
-        this.refs.chartdp.append({
-          key: "dpc",
-          date: now,
-          value: pkt.data.distance,
-        });
-        this.refs.chartds.append({
-          key: "dst",
-          date: now,
-          value: pkt.data.speed_target,
-        });
-        this.refs.chartds.append({
-          key: "dst",
-          date: now,
-          value: pkt.data.speed,
-        });
-        this.refs.chartdpid.append({
-          key: "dpido",
-          date: now,
-          value: pkt.data.pid_out,
-        });
-        this.refs.chartdpid.append({
-          key: "dpidp",
-          date: now,
-          value: pkt.data.pid_P,
-        });
-        this.refs.chartdpid.append({
-          key: "dpidpi",
-          date: now,
-          value: pkt.data.pid_I,
-        });
-        this.refs.chartdpid.append({
-          key: "dpidpd",
-          date: now,
-          value: pkt.data.pid_D,
-        });
+        try {
+          this.refs.chartdp.append({
+                                   key: "dpt",
+                                   date: now,
+                                   value: pkt.data.target,
+          });
+          this.refs.chartdp.append({
+                                   key: "dpf",
+                                   date: now,
+                                   value: pkt.data.ramp_out,
+          });
+          this.refs.chartdp.append({
+                                   key: "dpc",
+                                   date: now,
+                                   value: pkt.data.distance,
+          });
+          this.refs.chartds.append({
+                                   key: "dst",
+                                   date: now,
+                                   value: pkt.data.speed_target,
+          });
+          this.refs.chartds.append({
+                                   key: "dst",
+                                   date: now,
+                                   value: pkt.data.speed,
+          });
+          this.refs.chartdpid.append({
+                                     key: "dpido",
+                                     date: now,
+                                     value: pkt.data.pid_out,
+          });
+          this.refs.chartdpid.append({
+                                     key: "dpidp",
+                                     date: now,
+                                     value: pkt.data.pid_P,
+          });
+          this.refs.chartdpid.append({
+                                     key: "dpidpi",
+                                     date: now,
+                                     value: pkt.data.pid_I,
+          });
+          this.refs.chartdpid.append({
+                                     key: "dpidpd",
+                                     date: now,
+                                     value: pkt.data.pid_D,
+          });
+        }
+    catch(e) {
+    }
         break;
     }
   }
