@@ -929,7 +929,7 @@ void cocobot_trajectory_handle_async_com(void)
   if(trajectory_updated)
   {
     trajectory_updated = 0;
-    xSemaphoreTake(mutex, portMAX_DELAY);
+    //xSemaphoreTake(mutex, portMAX_DELAY);
     cocobot_com_send(COCOBOT_COM_TRAJECTORY_DEBUG_PID,
      "[BFFFFFFFFFFFF]",
      (uint8_t *)order_list,                     //array ptr
@@ -951,7 +951,7 @@ void cocobot_trajectory_handle_async_com(void)
      offsetof(cocobot_trajectory_order_t, estimated_end.angle),
      offsetof(cocobot_trajectory_order_t, estimated_distance_before_stop)
     );
-    xSemaphoreGive(mutex);
+    //xSemaphoreGive(mutex);
   }
 }
 
