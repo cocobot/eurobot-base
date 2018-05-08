@@ -85,11 +85,6 @@ void run_strategy(void * arg)
 {
   (void)arg;
 
-  while(1)
-  {
-    vTaskDelay(50 / portTICK_PERIOD_MS);
-  }
-
   //strat_water_easy_register();
   strat_water_register();
 
@@ -171,7 +166,7 @@ int main(int argc, char *argv[])
   (void)argv;
 #endif
   platform_init();
-  cocobot_com_init(MCUAL_USART1, 1, 4, com_handler);
+  cocobot_com_init(MCUAL_USART1, 1, 1, com_handler);
   cocobot_lcd_init();
   cocobot_shifters_init();
   cocobot_position_init(4);
