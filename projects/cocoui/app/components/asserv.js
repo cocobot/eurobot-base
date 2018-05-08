@@ -235,8 +235,60 @@ class Asserv extends React.Component {
                                      value: pkt.data.pid_D,
           });
         }
-    catch(e) {
-    }
+        catch(e) {
+        }
+        break;
+
+      case "asserv_angle":
+        try {
+          this.refs.chartap.append({
+                                   key: "apt",
+                                   date: now,
+                                   value: pkt.data.target,
+          });
+          this.refs.chartap.append({
+                                   key: "apf",
+                                   date: now,
+                                   value: pkt.data.ramp_out,
+          });
+          this.refs.chartap.append({
+                                   key: "apc",
+                                   date: now,
+                                   value: pkt.data.distance,
+          });
+          this.refs.chartas.append({
+                                   key: "ast",
+                                   date: now,
+                                   value: pkt.data.speed_target,
+          });
+          this.refs.chartas.append({
+                                   key: "ast",
+                                   date: now,
+                                   value: pkt.data.speed,
+          });
+          this.refs.chartapid.append({
+                                     key: "apido",
+                                     date: now,
+                                     value: pkt.data.pid_out,
+          });
+          this.refs.chartapid.append({
+                                     key: "apidp",
+                                     date: now,
+                                     value: pkt.data.pid_P,
+          });
+          this.refs.chartapid.append({
+                                     key: "apidpi",
+                                     date: now,
+                                     value: pkt.data.pid_I,
+          });
+          this.refs.chartapid.append({
+                                     key: "apidpd",
+                                     date: now,
+                                     value: pkt.data.pid_D,
+          });
+        }
+        catch(e) {
+        }
         break;
     }
   }
@@ -248,18 +300,6 @@ class Asserv extends React.Component {
           <Col>
             <Card>
               <CardHeader>
-                <Form inline className="float-right" style={{marginBottom: 0}}>
-                  <FormGroup inline className="mb-2 mr-sm-2 mb-sm-0">
-                    <Label check size="sm">
-                      <Input type="checkbox" onChange={(e, checked) => this._onChangeDebugPathfinder(e, checked)} checked={this.props.debugPathfinder} />Debug pathfinder
-                    </Label>
-                  <FormGroup inline className="mb-2 mr-sm-2 mb-sm-0">
-                  </FormGroup>
-                    <Label check size="sm">
-                      <Input type="checkbox" onChange={(e, checked) => this._onChangeDebugActionScheduler(e, checked)} checked={this.props.debugActionScheduler} />Debug strat
-                    </Label>
-                  </FormGroup>
-                </Form>
                 Asserv
               </CardHeader>
               <CardBody>

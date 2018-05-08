@@ -15896,13 +15896,61 @@ var Asserv = function (_React$Component4) {
             });
           } catch (e) {}
           break;
+
+        case "asserv_angle":
+          try {
+            this.refs.chartap.append({
+              key: "apt",
+              date: now,
+              value: pkt.data.target
+            });
+            this.refs.chartap.append({
+              key: "apf",
+              date: now,
+              value: pkt.data.ramp_out
+            });
+            this.refs.chartap.append({
+              key: "apc",
+              date: now,
+              value: pkt.data.distance
+            });
+            this.refs.chartas.append({
+              key: "ast",
+              date: now,
+              value: pkt.data.speed_target
+            });
+            this.refs.chartas.append({
+              key: "ast",
+              date: now,
+              value: pkt.data.speed
+            });
+            this.refs.chartapid.append({
+              key: "apido",
+              date: now,
+              value: pkt.data.pid_out
+            });
+            this.refs.chartapid.append({
+              key: "apidp",
+              date: now,
+              value: pkt.data.pid_P
+            });
+            this.refs.chartapid.append({
+              key: "apidpi",
+              date: now,
+              value: pkt.data.pid_I
+            });
+            this.refs.chartapid.append({
+              key: "apidpd",
+              date: now,
+              value: pkt.data.pid_D
+            });
+          } catch (e) {}
+          break;
       }
     }
   }, {
     key: 'render',
     value: function render() {
-      var _this5 = this;
-
       return _react2.default.createElement(
         _reactstrap.Container,
         { style: { marginTop: '15px' } },
@@ -15918,31 +15966,6 @@ var Asserv = function (_React$Component4) {
               _react2.default.createElement(
                 _reactstrap.CardHeader,
                 null,
-                _react2.default.createElement(
-                  _reactstrap.Form,
-                  { inline: true, className: 'float-right', style: { marginBottom: 0 } },
-                  _react2.default.createElement(
-                    _reactstrap.FormGroup,
-                    { inline: true, className: 'mb-2 mr-sm-2 mb-sm-0' },
-                    _react2.default.createElement(
-                      _reactstrap.Label,
-                      { check: true, size: 'sm' },
-                      _react2.default.createElement(_reactstrap.Input, { type: 'checkbox', onChange: function onChange(e, checked) {
-                          return _this5._onChangeDebugPathfinder(e, checked);
-                        }, checked: this.props.debugPathfinder }),
-                      'Debug pathfinder'
-                    ),
-                    _react2.default.createElement(_reactstrap.FormGroup, { inline: true, className: 'mb-2 mr-sm-2 mb-sm-0' }),
-                    _react2.default.createElement(
-                      _reactstrap.Label,
-                      { check: true, size: 'sm' },
-                      _react2.default.createElement(_reactstrap.Input, { type: 'checkbox', onChange: function onChange(e, checked) {
-                          return _this5._onChangeDebugActionScheduler(e, checked);
-                        }, checked: this.props.debugActionScheduler }),
-                      'Debug strat'
-                    )
-                  )
-                ),
                 'Asserv'
               ),
               _react2.default.createElement(
