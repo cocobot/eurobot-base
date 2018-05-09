@@ -54,4 +54,8 @@ void cocobot_game_state_handle_async_com(void);
 
 void cocobot_game_state_display_score(void);
 
+void cocobot_game_state_add_points_to_score(int _toAdd);
+
+int cocobot_game_state_getScore();
+
 #endif// COCOBOT_GAME_STATE_H

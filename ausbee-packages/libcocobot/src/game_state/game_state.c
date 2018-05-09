@@ -30,23 +30,30 @@ void cocobot_game_state_display_score(void)
   unsigned char digit[SCORE_DIGIT];
   int score = _score; 
 
-  for (j = 0; j < SCORE_DIGIT; j++){
+  for (j = 0; j < SCORE_DIGIT; j++)
+  {
     digit[j] = score % 10;
     score /= 10;
   }
 
-  //TODO: remove ME
-  _score += 1;
-
-  for (j = 0; j < SCORE_DIGIT; j++){ 
-    for (i = 0; i < 8; i++){
+  for (j = 0; j < SCORE_DIGIT; j++)
+  { 
+    for (i = 0; i < 8; i++)
+    {
       cocobot_shifters_set(i + 8*j, (_seven_seg[digit[j]] & (1 << i)) == 0);
     }
-    cocobot_shifters_update();
   }
-  
-  //TODO : remove ME
-  vTaskDelay(500 / portTICK_PERIOD_MS);
+  cocobot_shifters_update();
+}
+
+void cocobot_game_state_add_points_to_score(int _toAdd)
+{
+    _score += _toAdd;
+}
+
+int cocobot_game_state_getScore()
+{
+    return _score;
 }
 
 void cocobot_game_state_handle_async_com(void)
@@ -86,7 +93,7 @@ void cocobot_game_state_init(cocobot_game_state_funny_action_t funny_action)
 #ifdef AUSBEE_SIM
   //random color in simu
   srand(time(NULL));
-  //_color = COCOBOT_GAME_STATE_COLOR_NEG;
+  _color = COCOBOT_GAME_STATE_COLOR_NEG;
   _color = rand() % 2; 
 #else
   if(platform_gpio_get(PLATFORM_GPIO_COLOR))
