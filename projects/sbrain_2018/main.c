@@ -55,6 +55,25 @@ void update_lcd(void * arg)
   }
 }
 
+void run_homologation(void * arg)
+{
+    (void)arg;
+    cocobot_game_state_wait_for_starter_removed();
+
+    cocobot_trajectory_goto_d(200, 5000);
+    cocobot_trajectory_wait();
+    //cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_0);
+    //cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_1);
+
+   // strat_domotique_register();
+    //cocobot_action_scheduler_start();
+
+    while(1)
+    {
+        vTaskDelay(100/portTICK_PERIOD_MS);
+    }
+}
+
 void run_strategy(void * arg)
 {
   (void)arg;
@@ -168,7 +187,8 @@ int main(int argc, char *argv[])
           break;
   }
       
-  xTaskCreate(run_strategy, "strat", 600, NULL, 2, NULL );
+  xTaskCreate(run_homologation, "strat", 600, NULL, 2, NULL );
+  //xTaskCreate(run_strategy, "strat", 600, NULL, 2, NULL );
   xTaskCreate(update_lcd, "blink", 200, NULL, 1, NULL );
 
   vTaskStartScheduler();
