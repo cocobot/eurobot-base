@@ -284,6 +284,10 @@ class Client {
             size += 1;
             break;
 
+          case 'D':
+            size += 4;
+            break;
+
           case 'F':
             size += 4;
             break;
@@ -310,6 +314,13 @@ class Client {
           pkt.data.writeFloatLE(pkt.args.shift(), offset);
           offset += 4;
           break;
+
+        case 'D':
+          pkt.data.writeInt32LE(pkt.args.shift(), offset);
+          offset += 4;
+          break;
+
+
 
         default:
           console.log("TODO !!! " + pkt.fmt[i]);

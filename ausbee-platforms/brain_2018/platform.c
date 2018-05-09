@@ -142,6 +142,7 @@ void platform_init(void)
   platform_motor_set_right_duty_cycle(0x0000);
   platform_motor_set_dc0_duty_cycle(0x0000);
   mcual_timer_enable_channel(MCUAL_TIMER9, MCUAL_TIMER_CHANNEL1 | MCUAL_TIMER_CHANNEL2);
+  mcual_timer_enable_channel(MCUAL_TIMER2, MCUAL_TIMER_CHANNEL3);
 #endif
 
 

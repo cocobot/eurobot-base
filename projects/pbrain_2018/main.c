@@ -176,36 +176,22 @@ void run_strategy(void * arg)
   //cocobot_action_scheduler_start();
  }
 
-void com_handler(uint16_t pid)
+void com_handler(uint16_t pid, uint8_t * data, uint32_t len)
 {
-#if 0
-  if(strcmp(command,"info") == 0)
+  switch(pid)
   {
-    cocobot_console_send_answer("Robot principal");
-    cocobot_console_send_answer("%ld", platform_adc_get_mV(PLATFORM_ADC_VBAT));
-    if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
-    {
-      cocobot_console_send_answer("Violet");
-    }
-    else
-    {
-      cocobot_console_send_answer("Green");
-    }
-    void * ptr = cocobot_game_state_get_userdata(COCOBOT_GS_UD_SHELL_CONFIGURATION);
-    cocobot_console_send_answer("%d", *((unsigned int *)ptr));
+    case COCOBOT_COM_SET_SERVO_PID:
+      {
+        uint8_t id;
+        int32_t value;
+        uint32_t offset = 0;
 
-    cocobot_console_send_answer("%ld", cocobot_game_state_get_elapsed_time() / 1000);
-    return 1;
+        offset += cocobot_com_read_B(data, len, offset, &id);
+        offset += cocobot_com_read_D(data, len, offset, &value);
+        platform_servo_set_value(id, value);
+      }
+      break;
   }
-
-  int handled = 0;
-  COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_umbrella_console_handler);
-  COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_sucker_console_handler);
-  COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_crimp_console_handler);
-  return handled;
-#else
-  (void)pid;
-#endif
 }
 
 int main(int argc, char *argv[]) 

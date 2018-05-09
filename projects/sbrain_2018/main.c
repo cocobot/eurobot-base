@@ -1,9 +1,11 @@
+#include <cocobot/encoders.h>
 #include <stdio.h>
 #include <platform.h>
 #include <FreeRTOS.h>
 #include <task.h>
 #include <mcual.h>
 #include <cocobot.h>
+#include "meca_bee.h"
 //#include "strat_water_easy.h"
 //#include "strat_water_shared.h"
 #include "strat_water.h"
@@ -61,12 +63,17 @@ void update_lcd(void * arg)
     vTaskDelay(50 / portTICK_PERIOD_MS);
   }
 
+  int32_t zero = cocobot_position_get_distance();
   while(1)
   {
     //toggle led
     vTaskDelay(100 / portTICK_PERIOD_MS);
     platform_led_toggle(PLATFORM_LED0);
+    cocobot_game_state_set_score((int)cocobot_position_get_distance() - zero);
     cocobot_game_state_display_score();
+
+    platform_gpio_set(PLATFORM_GPIO_MOTOR_DIR_DC0);
+    platform_motor_set_dc0_duty_cycle(0x8000);
   }
 }
 
@@ -75,8 +82,8 @@ void run_homologation(void * arg)
     (void)arg;
     cocobot_game_state_wait_for_starter_removed();
 
-    cocobot_trajectory_goto_d(200, 5000);
-    cocobot_trajectory_wait();
+    //cocobot_trajectory_goto_d(200, 5000);
+    //cocobot_trajectory_wait();
     //cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_0);
     //cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_1);
 
@@ -92,6 +99,8 @@ void run_homologation(void * arg)
 void run_strategy(void * arg)
 {
   (void)arg;
+
+  meca_bee_init();
 
   //strat_water_easy_register();
   strat_water_register();
@@ -133,36 +142,24 @@ void run_strategy(void * arg)
   //cocobot_action_scheduler_start();
 }
 
-void com_handler(uint16_t pid)
+void com_handler(uint16_t pid, uint8_t * data, uint32_t len)
 {
-#if 0
-  if(strcmp(command,"info") == 0)
+  switch(pid)
   {
-    cocobot_console_send_answer("Robot principal");
-    cocobot_console_send_answer("%ld", platform_adc_get_mV(PLATFORM_ADC_VBAT));
-    if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
-    {
-      cocobot_console_send_answer("Violet");
-    }
-    else
-    {
-      cocobot_console_send_answer("Green");
-    }
-    void * ptr = cocobot_game_state_get_userdata(COCOBOT_GS_UD_SHELL_CONFIGURATION);
-    cocobot_console_send_answer("%d", *((unsigned int *)ptr));
+    case COCOBOT_COM_SET_SERVO_PID:
+      {
+        uint8_t id;
+        int32_t value;
+        uint32_t offset = 0;
 
-    cocobot_console_send_answer("%ld", cocobot_game_state_get_elapsed_time() / 1000);
-    return 1;
+        offset += cocobot_com_read_B(data, len, offset, &id);
+        offset += cocobot_com_read_D(data, len, offset, &value);
+        platform_servo_set_value(id, value);
+      }
+      break;
   }
 
-  int handled = 0;
-  COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_umbrella_console_handler);
-  COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_sucker_console_handler);
-  COCOBOT_CONSOLE_TRY_HANDLER_IF_NEEDED(handled, command, meca_crimp_console_handler);
-  return handled;
-#else
-  (void)pid;
-#endif
+  com_bee_handler(pid, data, len);
 }
 
 int main(int argc, char *argv[]) 

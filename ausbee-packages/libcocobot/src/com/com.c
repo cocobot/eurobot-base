@@ -23,6 +23,7 @@ typedef struct __attribute__((packed))
 static SemaphoreHandle_t _mutex;
 static mcual_usart_id_t _usart;
 static char _printf_buffer[64];
+static cocobot_com_handler_t _user_handler;
 
 static uint16_t cocobot_com_crc16_update(uint16_t crc, uint8_t a)
 {
@@ -118,6 +119,11 @@ void cocobot_com_sync_thread(void *arg)
           cocobot_opponent_detection_handle_sync_com(header.pid, data, header.len);
           cocobot_asserv_handle_sync_com(header.pid, data, header.len);
 
+          if(_user_handler != NULL)
+          {
+            _user_handler(header.pid, data, header.len);
+          }
+
           for(i = 0; i < sizeof(header); i += 1) 
           {
             ptr[i] = 0;
@@ -141,6 +147,7 @@ void cocobot_com_init(mcual_usart_id_t usart_id, unsigned int priority_monitor, 
   _usart = usart_id;
   //create mutex
   _mutex = xSemaphoreCreateMutex();
+  _user_handler = handler;
 
 
   //init usart peripheral
@@ -150,7 +157,6 @@ void cocobot_com_init(mcual_usart_id_t usart_id, unsigned int priority_monitor, 
   xTaskCreate(cocobot_com_sync_thread, "con. sync", 512, NULL, priority_monitor, NULL );
   xTaskCreate(cocobot_com_async_thread, "com. async", 512, NULL, priority_async, NULL );
 
-  (void)handler;
 }
 
 static int cocobot_com_compute_len(char ** fmt, va_list ap, uint8_t * ptr)
@@ -581,6 +587,21 @@ uint32_t cocobot_com_read_B(uint8_t *data , uint32_t len, uint32_t offset, uint8
 }
 
 uint32_t cocobot_com_read_F(uint8_t *data , uint32_t len, uint32_t offset, float * value)
+{
+  (void)len; //TODO: check len
+  uint8_t * ptr = (uint8_t *) value;
+  
+  int i;
+  for(i = 0; i < 4; i += 1)
+  {
+    *ptr = data[offset];
+    ptr += 1;
+    offset += 1;
+  }
+  return offset;
+}
+
+uint32_t cocobot_com_read_D(uint8_t *data , uint32_t len, uint32_t offset, int32_t * value)
 {
   (void)len; //TODO: check len
   uint8_t * ptr = (uint8_t *) value;

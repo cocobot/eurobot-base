@@ -7013,6 +7013,10 @@ var _usir = __webpack_require__(102);
 
 var _usir2 = _interopRequireDefault(_usir);
 
+var _meca = __webpack_require__(108);
+
+var _meca2 = _interopRequireDefault(_meca);
+
 var _asserv = __webpack_require__(103);
 
 var _asserv2 = _interopRequireDefault(_asserv);
@@ -7023,9 +7027,8 @@ var _state2 = _interopRequireDefault(_state);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-//CSS
-var url_string = window.location.href;
 //
+var url_string = window.location.href; //CSS
 
 var url = new URL(url_string);
 var page = url.searchParams.get("page");
@@ -7045,6 +7048,14 @@ switch (page) {
       _reactRedux.Provider,
       { store: _state2.default.getStore() },
       _react2.default.createElement(_asserv2.default, null)
+    ), document.getElementById('app'));
+    break;
+
+  case 'Meca':
+    _reactDom2.default.render(_react2.default.createElement(
+      _reactRedux.Provider,
+      { store: _state2.default.getStore() },
+      _react2.default.createElement(_meca2.default, null)
     ), document.getElementById('app'));
     break;
 
@@ -10246,6 +10257,13 @@ var TopMenuComponent = function (_React$Component) {
                 } },
               'Asserv'
             ),
+            _react2.default.createElement(
+              _reactstrap.DropdownItem,
+              { onClick: function onClick() {
+                  return _this2._openMecaWindow(key);
+                } },
+              'Meca'
+            ),
             _react2.default.createElement(_reactstrap.DropdownItem, { divider: true }),
             _react2.default.createElement(
               _reactstrap.DropdownItem,
@@ -10281,6 +10299,14 @@ var TopMenuComponent = function (_React$Component) {
     value: function _openAsservWindow(cid) {
       ipcRenderer.send('window', {
         id: 'Asserv',
+        client: cid
+      });
+    }
+  }, {
+    key: '_openMecaWindow',
+    value: function _openMecaWindow(cid) {
+      ipcRenderer.send('window', {
+        id: 'Meca',
         client: cid
       });
     }
@@ -22349,6 +22375,257 @@ var options = exports.options = function options() {
   return Immutable;
 
 }));
+
+/***/ }),
+/* 108 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _electron = __webpack_require__(5);
+
+var _electron2 = _interopRequireDefault(_electron);
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactstrap = __webpack_require__(6);
+
+var _reactRedux = __webpack_require__(1);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var ipcRenderer = _electron2.default.ipcRenderer;
+
+var MecaAction = function (_React$Component) {
+  _inherits(MecaAction, _React$Component);
+
+  function MecaAction() {
+    _classCallCheck(this, MecaAction);
+
+    return _possibleConstructorReturn(this, (MecaAction.__proto__ || Object.getPrototypeOf(MecaAction)).apply(this, arguments));
+  }
+
+  _createClass(MecaAction, [{
+    key: '_action',
+    value: function _action() {
+      var _this2 = this;
+
+      this.props.active.map(function (x, key) {
+        ipcRenderer.send('pkt', {
+          pid: 0x1001,
+          fmt: "B",
+          args: [parseInt(_this2.props.id)],
+          client: key
+        });
+      });
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this3 = this;
+
+      return _react2.default.createElement(
+        _reactstrap.Col,
+        { md: '3' },
+        _react2.default.createElement(
+          _reactstrap.Button,
+          { onClick: function onClick() {
+              return _this3._action();
+            }, color: 'primary' },
+          this.props.name
+        )
+      );
+    }
+  }]);
+
+  return MecaAction;
+}(_react2.default.Component);
+
+var ServoParameter = function (_React$Component2) {
+  _inherits(ServoParameter, _React$Component2);
+
+  function ServoParameter(props) {
+    _classCallCheck(this, ServoParameter);
+
+    var _this4 = _possibleConstructorReturn(this, (ServoParameter.__proto__ || Object.getPrototypeOf(ServoParameter)).call(this, props));
+
+    _this4.UPDATE_PERIOD_MS = 1000;
+    _this4.state = {
+      value: ""
+    };
+    return _this4;
+  }
+
+  _createClass(ServoParameter, [{
+    key: 'handleChange',
+    value: function handleChange(event) {
+      event.preventDefault();
+      this.setState({ value: event.target.value });
+    }
+  }, {
+    key: 'handleKeyPress',
+    value: function handleKeyPress(event) {
+      var _this5 = this;
+
+      if (event.key === 'Enter') {
+        this.props.active.map(function (x, key) {
+          ipcRenderer.send('pkt', {
+            pid: 0x1000,
+            fmt: "BD",
+            args: [_this5.props.id, parseInt(_this5.state.value)],
+            client: key
+          });
+        });
+        this.setState({ value: '' });
+      }
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this6 = this;
+
+      return _react2.default.createElement(
+        _reactstrap.Row,
+        null,
+        _react2.default.createElement(
+          _reactstrap.InputGroup,
+          { size: 'sm' },
+          _react2.default.createElement(
+            _reactstrap.InputGroupAddon,
+            { addonType: 'prepend' },
+            'Servo ',
+            this.props.id,
+            ': '
+          ),
+          _react2.default.createElement(_reactstrap.Input, { value: this.state.value, onChange: function onChange(e) {
+              return _this6.handleChange(e);
+            }, onKeyPress: function onKeyPress(e) {
+              return _this6.handleKeyPress(e);
+            } })
+        )
+      );
+    }
+  }]);
+
+  return ServoParameter;
+}(_react2.default.Component);
+
+var MecaComponent = function (_React$Component3) {
+  _inherits(MecaComponent, _React$Component3);
+
+  function MecaComponent(props) {
+    _classCallCheck(this, MecaComponent);
+
+    var _this7 = _possibleConstructorReturn(this, (MecaComponent.__proto__ || Object.getPrototypeOf(MecaComponent)).call(this, props));
+
+    _this7.state = {};
+    return _this7;
+  }
+
+  _createClass(MecaComponent, [{
+    key: 'render',
+    value: function render() {
+
+      var servos = [];
+
+      for (var i = 0; i < 12; i += 1) {
+        servos.push(_react2.default.createElement(ServoParameter, { key: i, id: i, active: this.props.active }));
+      }
+
+      return _react2.default.createElement(
+        _reactstrap.Container,
+        { style: { marginTop: '15px' } },
+        _react2.default.createElement(
+          _reactstrap.Row,
+          null,
+          _react2.default.createElement(
+            _reactstrap.Col,
+            { md: '6' },
+            _react2.default.createElement(
+              _reactstrap.Card,
+              null,
+              _react2.default.createElement(
+                _reactstrap.CardHeader,
+                null,
+                'Servo'
+              ),
+              _react2.default.createElement(
+                _reactstrap.CardBody,
+                null,
+                servos
+              )
+            )
+          ),
+          _react2.default.createElement(
+            _reactstrap.Col,
+            { md: '6' },
+            _react2.default.createElement(
+              _reactstrap.Card,
+              null,
+              _react2.default.createElement(
+                _reactstrap.CardHeader,
+                null,
+                'Meca 2'
+              ),
+              _react2.default.createElement(
+                _reactstrap.CardBody,
+                null,
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '0', name: 'Bee init' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '1', name: 'Bee prepare' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '2', name: 'Bee action' }),
+                  ' ',
+                  ' '
+                )
+              )
+            )
+          )
+        )
+      );
+    }
+  }]);
+
+  return MecaComponent;
+}(_react2.default.Component);
+
+var mapStateToProps = function mapStateToProps(state, ownProps) {
+  var asservs = [];
+  state.conns.get('active').map(function (x, key) {
+    var asserv = state.robots.getIn([key, 'asserv_params'], new Map());
+    if (asserv != null) {
+      asservs.push(asserv);
+    }
+  });
+  return {
+    active: state.conns.get('active'),
+    asservs: asservs
+  };
+};
+
+var Meca = (0, _reactRedux.connect)(mapStateToProps, null)(MecaComponent);
+
+exports.default = Meca;
 
 /***/ })
 /******/ ]);

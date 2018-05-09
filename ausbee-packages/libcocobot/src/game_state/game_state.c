@@ -56,6 +56,11 @@ int cocobot_game_state_getScore()
     return _score;
 }
 
+void cocobot_game_state_set_score(int score)
+{
+   _score = score;
+}
+
 void cocobot_game_state_handle_async_com(void)
 {
   TickType_t now = xTaskGetTickCount();

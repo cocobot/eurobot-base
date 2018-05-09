@@ -25,7 +25,10 @@
 #define COCOBOT_COM_SEND_ASSERV_PARAMS_PID (0x800D)
 #define COCOBOT_COM_SET_ASSERV_PARAMS_PID (0x800E)
 
-typedef void (*cocobot_com_handler_t)(uint16_t pid);
+#define COCOBOT_COM_SET_SERVO_PID (0x1000)
+#define COCOBOT_COM_MECA_ACTION_PID (0x1001)
+
+typedef void (*cocobot_com_handler_t)(uint16_t pid, uint8_t * data, uint32_t len);
 
 /* Initialization of the com module. Need to be called before any other action 
  * Argument:
@@ -46,6 +49,7 @@ void cocobot_com_send(uint16_t pid, char * fmt, ...);
 void cocobot_com_printf(char * fmt, ...);
 
 uint32_t cocobot_com_read_B(uint8_t *data , uint32_t len, uint32_t offset, uint8_t * value);
+uint32_t cocobot_com_read_D(uint8_t *data , uint32_t len, uint32_t offset, int32_t * value);
 uint32_t cocobot_com_read_F(uint8_t *data , uint32_t len, uint32_t offset, float * value);
 
 #endif// COCOBOT_COM_H

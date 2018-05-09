@@ -6,6 +6,7 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import Cocoui from './components/cocoui';
 import USIR from './components/usir';
+import Meca from './components/meca';
 import Asserv from './components/asserv';
 import State from './state';
 
@@ -22,6 +23,10 @@ switch(page) {
 
   case 'Asserv':
     ReactDOM.render(<Provider store={State.getStore()}><Asserv /></Provider>, document.getElementById('app'));
+    break;
+
+  case 'Meca':
+    ReactDOM.render(<Provider store={State.getStore()}><Meca /></Provider>, document.getElementById('app'));
     break;
 
   default:

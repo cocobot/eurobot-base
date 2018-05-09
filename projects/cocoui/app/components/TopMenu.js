@@ -97,6 +97,9 @@ class TopMenuComponent extends React.Component {
             <DropdownItem onClick={() => this._openAsservWindow(key)}>
               Asserv
             </DropdownItem>
+            <DropdownItem onClick={() => this._openMecaWindow(key)}>
+              Meca
+            </DropdownItem>
             <DropdownItem divider />
             <DropdownItem onClick={() => this._reset(key)}>
               Reset
@@ -126,6 +129,13 @@ class TopMenuComponent extends React.Component {
   _openAsservWindow(cid) {
     ipcRenderer.send('window', {
       id: 'Asserv',
+      client: cid, 
+    });
+  }
+
+  _openMecaWindow(cid) {
+    ipcRenderer.send('window', {
+      id: 'Meca',
       client: cid, 
     });
   }
