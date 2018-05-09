@@ -43,30 +43,23 @@ void update_lcd(void * arg)
 
     vTaskDelay(50 / portTICK_PERIOD_MS);
   }
+}
 
-  while(1)
-  {
-    i += 1;
+void run_homologation(void * arg)
+{
+    (void)arg;
+    cocobot_game_state_wait_for_starter_removed();
 
-    //toggle led
-    vTaskDelay(500 / portTICK_PERIOD_MS);
-    platform_led_toggle(PLATFORM_LED0);
+    cocobot_trajectory_goto_d(200, 5000);
+    cocobot_trajectory_wait();
+    //cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_0);
+    //cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_1);
 
-    cocobot_game_state_display_score();
+   // strat_domotique_register();
+    //cocobot_action_scheduler_start();
 
-
-    platform_servo_set_value(PLATFORM_SERVO_0_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_1_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_2_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_3_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_4_ID, 300);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    platform_servo_set_value(PLATFORM_SERVO_0_ID, 400);
-    platform_servo_set_value(PLATFORM_SERVO_1_ID, 400);
-    platform_servo_set_value(PLATFORM_SERVO_2_ID, 400);
-    platform_servo_set_value(PLATFORM_SERVO_3_ID, 400);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-  }
+    while(1)
+        vTaskDelay(100/portTICK_PERIOD_MS);
 }
 
 void run_strategy(void * arg)
@@ -182,7 +175,8 @@ int main(int argc, char *argv[])
           break;
   }
       
-  xTaskCreate(run_strategy, "strat", 600, NULL, 2, NULL );
+  xTaskCreate(run_homologation, "strat", 600, NULL, 2, NULL );
+  //xTaskCreate(run_strategy, "strat", 600, NULL, 2, NULL );
   xTaskCreate(update_lcd, "blink", 200, NULL, 1, NULL );
 
   vTaskStartScheduler();
