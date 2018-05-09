@@ -380,20 +380,20 @@ void cocobot_asserv_send_params(void)
 {
   cocobot_com_send(COCOBOT_COM_SEND_ASSERV_PARAMS_PID,
                    "FFFFFFFFFFFFFF",
-                   cocobot_asserv_ramp_get_max_speed(&_ramp_dist),
-                   cocobot_asserv_ramp_get_max_accel(&_ramp_dist),
-                   cocobot_asserv_pid_get_kp(&_pid_dist),
-                   cocobot_asserv_pid_get_kd(&_pid_dist),
-                   cocobot_asserv_pid_get_ki(&_pid_dist),
-                   cocobot_asserv_pid_get_max_integral(&_pid_dist),
-                   cocobot_asserv_pid_get_max_error_for_integration(&_pid_dist),
-                   cocobot_asserv_ramp_get_max_speed(&_ramp_angu),
-                   cocobot_asserv_ramp_get_max_accel(&_ramp_angu),
-                   cocobot_asserv_pid_get_kp(&_pid_angu),
-                   cocobot_asserv_pid_get_kd(&_pid_angu),
-                   cocobot_asserv_pid_get_ki(&_pid_angu),
-                   cocobot_asserv_pid_get_max_integral(&_pid_angu),
-                   cocobot_asserv_pid_get_max_error_for_integration(&_pid_angu)
+                   (double)cocobot_asserv_ramp_get_max_speed(&_ramp_dist),
+                   (double)cocobot_asserv_ramp_get_max_accel(&_ramp_dist),
+                   (double)cocobot_asserv_pid_get_kp(&_pid_dist),
+                   (double)cocobot_asserv_pid_get_kd(&_pid_dist),
+                   (double)cocobot_asserv_pid_get_ki(&_pid_dist),
+                   (double)cocobot_asserv_pid_get_max_integral(&_pid_dist),
+                   (double)cocobot_asserv_pid_get_max_error_for_integration(&_pid_dist),
+                   (double)cocobot_asserv_ramp_get_max_speed(&_ramp_angu),
+                   (double)cocobot_asserv_ramp_get_max_accel(&_ramp_angu),
+                   (double)cocobot_asserv_pid_get_kp(&_pid_angu),
+                   (double)cocobot_asserv_pid_get_kd(&_pid_angu),
+                   (double)cocobot_asserv_pid_get_ki(&_pid_angu),
+                   (double)cocobot_asserv_pid_get_max_integral(&_pid_angu),
+                   (double)cocobot_asserv_pid_get_max_error_for_integration(&_pid_angu)
                   );
 
 }

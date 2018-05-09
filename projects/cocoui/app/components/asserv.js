@@ -136,13 +136,15 @@ class Chart extends React.Component {
 
     return(
       <Container style={{ marginTop: '5px' }}>
-        <Col md="1">
+        <Row>
            {this.props.children}
-        </Col>
+        </Row>
 
-        <Col md="11">
-          <canvas width={this.props.width} height={this.props.height} id={this.props.id}></canvas>
-        </Col>
+        <Row>
+          <Col md="11">
+            <canvas width={this.props.width} height={this.props.height} id={this.props.id}></canvas>
+          </Col>
+        </Row>
       </Container>
     );
   }
@@ -152,7 +154,9 @@ class ChartLine extends React.Component {
   render() {
     var style = {'backgroundColor': this.props.strokeStyle};
     return (
-            <span className="badge" style={style}>{this.props.name}</span>
+      <Col md="3">
+        <span className="badge" style={style}>{this.props.name}</span>
+      </Col>
     );
   }
 };

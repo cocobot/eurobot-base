@@ -15782,14 +15782,18 @@ var Chart = function (_React$Component2) {
         _reactstrap.Container,
         { style: { marginTop: '5px' } },
         _react2.default.createElement(
-          _reactstrap.Col,
-          { md: '1' },
+          _reactstrap.Row,
+          null,
           this.props.children
         ),
         _react2.default.createElement(
-          _reactstrap.Col,
-          { md: '11' },
-          _react2.default.createElement('canvas', { width: this.props.width, height: this.props.height, id: this.props.id })
+          _reactstrap.Row,
+          null,
+          _react2.default.createElement(
+            _reactstrap.Col,
+            { md: '11' },
+            _react2.default.createElement('canvas', { width: this.props.width, height: this.props.height, id: this.props.id })
+          )
         )
       );
     }
@@ -15812,9 +15816,13 @@ var ChartLine = function (_React$Component3) {
     value: function render() {
       var style = { 'backgroundColor': this.props.strokeStyle };
       return _react2.default.createElement(
-        'span',
-        { className: 'badge', style: style },
-        this.props.name
+        _reactstrap.Col,
+        { md: '3' },
+        _react2.default.createElement(
+          'span',
+          { className: 'badge', style: style },
+          this.props.name
+        )
       );
     }
   }]);
