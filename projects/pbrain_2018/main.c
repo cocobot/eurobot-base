@@ -66,7 +66,8 @@ void run_homologation(void * arg)
     (void)arg;
     cocobot_game_state_wait_for_starter_removed();
 
-    float x = 375; 
+    cocobot_game_state_add_points_to_score(5);
+    float x = 325; 
     if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
     {
         x = -x;
@@ -78,12 +79,29 @@ void run_homologation(void * arg)
     cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
     cocobot_trajectory_wait();
 
-    cocobot_trajectory_goto_d(-250, 5000);
-    cocobot_trajectory_wait();
+    #ifdef AUSBEE_SIM
+  int try = 5;
+#endif
+  while(1)
+  {
+      cocobot_trajectory_goto_d(-20, 1000);
+      if(cocobot_trajectory_wait() != COCOBOT_TRAJECTORY_SUCCESS)
+      {
+          break;
+      }
+#ifdef AUSBEE_SIM
+      try -= 1;
+      if(try == 0)
+      {
+          break;
+      }
+#endif
+  }
 
-    cocobot_trajectory_goto_d(250, 5000);
-    cocobot_trajectory_wait();
-    //cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_0);
+  cocobot_game_state_add_points_to_score(25);
+  cocobot_trajectory_goto_d(250, 5000);
+  cocobot_trajectory_wait();
+  //cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_0);
     //cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_1);
 
    // strat_domotique_register();
@@ -218,7 +236,7 @@ int main(int argc, char *argv[])
 #endif
   platform_init();
   cocobot_com_init(MCUAL_USART1, 1, 1, com_handler);
-  cocobot_lcd_init();
+  cocobot_shifters_init();
   cocobot_position_init(4);
   cocobot_action_scheduler_init();
   cocobot_asserv_init();
