@@ -1,3 +1,4 @@
+#include <cocobot.h>
 #include <cocobot/encoders.h>
 #include <platform.h>
 
@@ -43,6 +44,11 @@ void cocobot_encoders_get_motor_position(int32_t motor_position[2])
 {
   cocobot_encoders_update(0);
   cocobot_encoders_update(1);
+#ifdef COCOBOT_INVERT_ENCODERS
+  motor_position[0] = -_enc_value[0];
+  motor_position[1] = -_enc_value[1];
+#else
   motor_position[0] = _enc_value[0];
   motor_position[1] = _enc_value[1];
+#endif
 }
