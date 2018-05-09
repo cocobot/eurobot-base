@@ -25,12 +25,29 @@ void update_lcd(void * arg)
   {
     while(1)
     {
-      platform_gpio_toggle(PLATFORM_GPIO0);
+      int i;
+      for (i = 0; i < 8 * 3; i++)
+      {
+        cocobot_shifters_set(i, i % 2);
+      }
+      cocobot_shifters_update();
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+      platform_led_toggle(PLATFORM_LED0);
+      platform_led_toggle(PLATFORM_LED1);
+
+      for (i = 0; i < 8 * 3; i++)
+      {
+        cocobot_shifters_set(i, (i + 1) % 2);
+      }
+      cocobot_shifters_update();
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+      platform_led_toggle(PLATFORM_LED0);
+      platform_led_toggle(PLATFORM_LED2);
+
 
       //disable everything
       cocobot_asserv_set_state(COCOBOT_ASSERV_DISABLE);
 
-      vTaskDelay(500 / portTICK_PERIOD_MS);
     }
   }
 #endif
@@ -46,8 +63,6 @@ void update_lcd(void * arg)
 
   while(1)
   {
-    i += 1;
-
     //toggle led
     vTaskDelay(100 / portTICK_PERIOD_MS);
     platform_led_toggle(PLATFORM_LED0);
@@ -160,7 +175,6 @@ int main(int argc, char *argv[])
 #endif
   platform_init();
   cocobot_com_init(MCUAL_USART1, 1, 1, com_handler);
-  cocobot_lcd_init();
   cocobot_shifters_init();
   cocobot_position_init(4);
   cocobot_action_scheduler_init();
