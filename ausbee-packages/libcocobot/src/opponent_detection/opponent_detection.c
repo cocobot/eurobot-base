@@ -172,7 +172,7 @@ void cocobot_opponent_detection_init(unsigned int task_priority)
     _usirs[i].pos_y = 0;
   }
 
-  alert_threshold = 250;
+  alert_threshold = 350;
   _fakebot.x = 0;
   _fakebot.y = 0;
   _fakebot.activated = COCOBOT_OPPONENT_DETECTION_DEACTIVATED;

@@ -5,6 +5,7 @@
 #include <mcual.h>
 #include <cocobot.h>
 #include "cocobot/encoders.h"
+#include "strat_domotique.h"
 //#include "cocobot_pathfinder_config.h"
 
 //static unsigned int _shell_configuration;
@@ -34,11 +35,11 @@ void update_lcd(void * arg)
 #endif
 
 #ifdef AUSBEE_SIM
-  while(1)
-  {
-      cocobot_com_printf(".");
-      vTaskDelay(2000/portTICK_PERIOD_MS);
-  }
+  //while(1)
+  //{
+  //    cocobot_com_printf(".");
+  //    vTaskDelay(2000/portTICK_PERIOD_MS);
+  //}
 #endif
   //blink for the fun
   int i;
@@ -57,32 +58,22 @@ void update_lcd(void * arg)
     vTaskDelay(100 / portTICK_PERIOD_MS);
     platform_led_toggle(PLATFORM_LED0);
     cocobot_game_state_display_score();
-
-
-    platform_servo_set_value(PLATFORM_SERVO_0_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_1_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_2_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_3_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_4_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_5_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_6_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_7_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_8_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_9_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_10_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_11_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_12_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_13_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_14_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_15_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_16_ID, 300);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    platform_servo_set_value(PLATFORM_SERVO_0_ID, 600);
-    platform_servo_set_value(PLATFORM_SERVO_1_ID, 600);
-    platform_servo_set_value(PLATFORM_SERVO_2_ID, 600);
-    platform_servo_set_value(PLATFORM_SERVO_3_ID, 600);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
+}
+
+void run_homologation(void * arg)
+{
+    (void)arg;
+    cocobot_game_state_wait_for_starter_removed();
+
+    cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_0);
+    cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_1);
+
+    strat_domotique_register();
+    cocobot_action_scheduler_start();
+
+    while(1)
+        vTaskDelay(100/portTICK_PERIOD_MS);
 }
 
 void run_strategy(void * arg)
@@ -224,9 +215,9 @@ int main(int argc, char *argv[])
   switch(cocobot_game_state_get_color())
   {
     case COCOBOT_GAME_STATE_COLOR_NEG:
-  cocobot_position_set_x(-1300);
-      cocobot_position_set_y(250);
-      cocobot_position_set_angle(0);
+  cocobot_position_set_x(-1280);
+      cocobot_position_set_y(750);
+      cocobot_position_set_angle(-90);
       break;
 
     case COCOBOT_GAME_STATE_COLOR_POS:
@@ -236,7 +227,8 @@ int main(int argc, char *argv[])
       break;
   }
       
-  xTaskCreate(run_strategy, "strat", 600, NULL, 2, NULL );
+  //xTaskCreate(run_strategy, "strat", 600, NULL, 2, NULL );
+  xTaskCreate(run_homologation, "strat", 600, NULL, 2, NULL );
   xTaskCreate(update_lcd, "blink", 200, NULL, 1, NULL );
 
   vTaskStartScheduler();
