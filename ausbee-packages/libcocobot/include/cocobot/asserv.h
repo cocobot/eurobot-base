@@ -57,4 +57,6 @@ float cocobot_asserv_get_linear_speed(void);
 
 void cocobot_asserv_slow(void);
 
+void cocobot_asserv_handle_sync_com(uint16_t pid, uint8_t * data, uint32_t len);
+
 #endif// COCOBOT_ASSERV_H

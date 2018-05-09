@@ -116,6 +116,7 @@ void cocobot_com_sync_thread(void *arg)
           }
 
           cocobot_opponent_detection_handle_sync_com(header.pid, data, header.len);
+          cocobot_asserv_handle_sync_com(header.pid, data, header.len);
 
           for(i = 0; i < sizeof(header); i += 1) 
           {
@@ -576,5 +577,20 @@ uint32_t cocobot_com_read_B(uint8_t *data , uint32_t len, uint32_t offset, uint8
   (void)len; //TODO: check len
   *value = data[offset];
   offset += 1;
+  return offset;
+}
+
+uint32_t cocobot_com_read_F(uint8_t *data , uint32_t len, uint32_t offset, float * value)
+{
+  (void)len; //TODO: check len
+  uint8_t * ptr = (uint8_t *) value;
+  
+  int i;
+  for(i = 0; i < 4; i += 1)
+  {
+    *ptr = data[offset];
+    ptr += 1;
+    offset += 1;
+  }
   return offset;
 }
