@@ -80,6 +80,10 @@ void update_lcd(void * arg)
 
 void run_homologation(void * arg)
 {
+
+    meca_bee_init();
+    meca_water_init();
+
     (void)arg;
     cocobot_game_state_wait_for_starter_removed();
 
@@ -102,6 +106,7 @@ void run_strategy(void * arg)
   (void)arg;
 
   meca_bee_init();
+  meca_water_init();
 
   //strat_water_easy_register();
   strat_water_register();

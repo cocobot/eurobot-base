@@ -1,9 +1,16 @@
 #include <cocobot.h>
 #include <platform.h>
 
-#define MECA_BEE_SERVO_INIT     150
-
 #define MECA_BEE_SERVO_ID   PLATFORM_SERVO_3_ID
+
+#define MECA_BEE_SERVO_INIT     125
+
+#define MECA_BEE_SERVO_CLOSE_ORANGE    125
+#define MECA_BEE_SERVO_OPEN_ORANGE     500
+
+#define MECA_BEE_SERVO_CLOSE_GREEN    400
+#define MECA_BEE_SERVO_OPEN_GREEN     125
+
 
 static unsigned int servo_set_point;
 
@@ -21,16 +28,28 @@ void meca_bee_init(void)
 
 void meca_bee_action(void)
 {
-  //test
-  servo_set_point = 300;
+  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_POS)
+  {
+    servo_set_point = MECA_BEE_SERVO_CLOSE_ORANGE;
+  }
+  else
+  {
+    servo_set_point = MECA_BEE_SERVO_CLOSE_GREEN;
+  }
 
   meca_bee_update();
 }
 
 void meca_bee_prepare(void)
 {
-  //color dependant !
-  servo_set_point = 350;
+  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_POS)
+  {
+    servo_set_point = MECA_BEE_SERVO_OPEN_ORANGE;
+  }
+  else
+  {
+    servo_set_point = MECA_BEE_SERVO_OPEN_GREEN;
+  }
 
   meca_bee_update();
 }
