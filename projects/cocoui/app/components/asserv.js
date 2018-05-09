@@ -3,9 +3,10 @@ import React from 'react';
 import { 
   Container,
   Row, Col,
-  Form, FormGroup, Label, Input,
+  Form, FormGroup, Label,
   Card, CardHeader, CardBody, CardTitle, CardText,
   Badge,
+  InputGroup, InputGroupAddon, InputGroupText, Input,
 } from 'reactstrap';
 import { SmoothieChart, TimeSeries } from 'smoothie';
 
@@ -75,7 +76,10 @@ class Parameter extends React.Component {
   //  }
 
     return (
-     <div />
+     <InputGroup size="sm">
+      <InputGroupAddon addonType="prepend">{this.props.name}</InputGroupAddon>
+      <Input placeholder={this.props.name}/>
+     </InputGroup>
      //<div className={cls}>
      //   <label className="small-margin-right">{this.props.name}</label>
      //   <input type="text" className="form-control" value={value} onChange={this.handleChange}/>
@@ -144,14 +148,15 @@ class Chart extends React.Component {
     //}
 
     return(
-      <Row>
+      <Container style={{ marginTop: '5px' }}>
+        <Col md="1">
+           {this.props.children}
+        </Col>
+
         <Col md="11">
           <canvas width={this.props.width} height={this.props.height} id={this.props.id}></canvas>
         </Col>
-        <Col md="1">
-          {this.props.children}
-        </Col>
-      </Row>
+      </Container>
     );
   }
 }
@@ -160,9 +165,7 @@ class ChartLine extends React.Component {
   render() {
     var style = {'backgroundColor': this.props.strokeStyle};
     return (
-      <div>
-         <span className="badge" style={style}>{this.props.name}</span>
-      </div>
+            <span className="badge" style={style}>{this.props.name}</span>
     );
   }
 };
@@ -304,7 +307,7 @@ class Asserv extends React.Component {
               </CardHeader>
               <CardBody>
                 <Row>
-                  <Col md="8">
+                  <Col md="9">
                     <Chart ref="chartdp" width={this.state.width} height={this.state.height} id="asserv_position_dist">
                       <ChartLine ref="dpt" name="Distance - Position target" strokeStyle="rgba(66, 139, 202, 1)" lineWidth="2" />
                       <ChartLine ref="dpf" name="Distance - Position filtered" strokeStyle="rgba(240, 173, 78, 1)" lineWidth="2" />
@@ -321,7 +324,7 @@ class Asserv extends React.Component {
                       <ChartLine ref="dpidd" name="Distance - PID d" strokeStyle="rgba(60, 118, 61, 1)" lineWidth="2" />
                     </Chart>
                   </Col>
-                  <Col md="4">
+                  <Col md="3">
                     <Parameter name="Speed" command="ramp_distance_speed" show={this.props.show}/>
                     <Parameter name="Accel" command="ramp_distance_accel" show={this.props.show}/>
                     <Parameter name="Kp" command="pid_distance_kp" show={this.props.show}/>

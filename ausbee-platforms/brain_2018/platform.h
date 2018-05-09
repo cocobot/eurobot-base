@@ -30,6 +30,7 @@
 #define PLATFORM_GPIO_MOTOR_DIR_LEFT          (1 << 19)
 #define PLATFORM_GPIO_MOTOR_ENABLE            (1 << 20)
 #define PLATFORM_GPIO_SHIFT_SET               (1 << 21)
+#define PLATFORM_GPIO_MOTOR_DIR_DC0           (1 << 22)
 
 #define PLATFORM_USART_DEBUG MCUAL_USART1
 
@@ -109,6 +110,7 @@ uint8_t platform_spi_slave_transfert(uint8_t data);
 void platform_motor_set_frequency(uint32_t freq_Hz);
 void platform_motor_set_left_duty_cycle(uint32_t duty_cycle);
 void platform_motor_set_right_duty_cycle(uint32_t duty_cycle);
+void platform_motor_set_dc0_duty_cycle(uint32_t duty_cycle);
 
 void platform_servo_set_value(uint32_t servo_id, uint32_t value);
 

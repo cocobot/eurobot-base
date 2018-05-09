@@ -15690,7 +15690,16 @@ var Parameter = function (_React$Component) {
       //    btnc += " disabled";
       //  }
 
-      return _react2.default.createElement('div', null)
+      return _react2.default.createElement(
+        _reactstrap.InputGroup,
+        { size: 'sm' },
+        _react2.default.createElement(
+          _reactstrap.InputGroupAddon,
+          { addonType: 'prepend' },
+          this.props.name
+        ),
+        _react2.default.createElement(_reactstrap.Input, { placeholder: this.props.name })
+      )
       //<div className={cls}>
       //   <label className="small-margin-right">{this.props.name}</label>
       //   <input type="text" className="form-control" value={value} onChange={this.handleChange}/>
@@ -15769,17 +15778,17 @@ var Chart = function (_React$Component2) {
       //}
 
       return _react2.default.createElement(
-        _reactstrap.Row,
-        null,
-        _react2.default.createElement(
-          _reactstrap.Col,
-          { md: '11' },
-          _react2.default.createElement('canvas', { width: this.props.width, height: this.props.height, id: this.props.id })
-        ),
+        _reactstrap.Container,
+        { style: { marginTop: '5px' } },
         _react2.default.createElement(
           _reactstrap.Col,
           { md: '1' },
           this.props.children
+        ),
+        _react2.default.createElement(
+          _reactstrap.Col,
+          { md: '11' },
+          _react2.default.createElement('canvas', { width: this.props.width, height: this.props.height, id: this.props.id })
         )
       );
     }
@@ -15802,13 +15811,9 @@ var ChartLine = function (_React$Component3) {
     value: function render() {
       var style = { 'backgroundColor': this.props.strokeStyle };
       return _react2.default.createElement(
-        'div',
-        null,
-        _react2.default.createElement(
-          'span',
-          { className: 'badge', style: style },
-          this.props.name
-        )
+        'span',
+        { className: 'badge', style: style },
+        this.props.name
       );
     }
   }]);
@@ -15976,7 +15981,7 @@ var Asserv = function (_React$Component4) {
                   null,
                   _react2.default.createElement(
                     _reactstrap.Col,
-                    { md: '8' },
+                    { md: '9' },
                     _react2.default.createElement(
                       Chart,
                       { ref: 'chartdp', width: this.state.width, height: this.state.height, id: 'asserv_position_dist' },
@@ -16001,7 +16006,7 @@ var Asserv = function (_React$Component4) {
                   ),
                   _react2.default.createElement(
                     _reactstrap.Col,
-                    { md: '4' },
+                    { md: '3' },
                     _react2.default.createElement(Parameter, { name: 'Speed', command: 'ramp_distance_speed', show: this.props.show }),
                     _react2.default.createElement(Parameter, { name: 'Accel', command: 'ramp_distance_accel', show: this.props.show }),
                     _react2.default.createElement(Parameter, { name: 'Kp', command: 'pid_distance_kp', show: this.props.show }),

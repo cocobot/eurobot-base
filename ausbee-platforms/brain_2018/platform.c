@@ -113,6 +113,7 @@ void platform_init(void)
   mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN15, MCUAL_GPIO_INPUT);
   mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN1, MCUAL_GPIO_INPUT);
   mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN2, MCUAL_GPIO_INPUT);
+  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN8, MCUAL_GPIO_INPUT);
 
   mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN4, MCUAL_GPIO_INPUT);
   mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN8, MCUAL_GPIO_INPUT);
@@ -128,15 +129,18 @@ void platform_init(void)
   //init motor pwm pins
   mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN5, MCUAL_GPIO_OUTPUT);
   mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN6, MCUAL_GPIO_OUTPUT);
+  mcual_gpio_init(MCUAL_GPIOB, MCUAL_GPIO_PIN10, MCUAL_GPIO_OUTPUT);
   mcual_gpio_set_function(MCUAL_GPIOE, MCUAL_GPIO_PIN5, 3);
   mcual_gpio_set_function(MCUAL_GPIOE, MCUAL_GPIO_PIN6, 3);
+  mcual_gpio_set_function(MCUAL_GPIOB, MCUAL_GPIO_PIN10, 1);
   //set motors default frequency and duty cycle
-  platform_gpio_set_direction(PLATFORM_GPIO_MOTOR_DIR_RIGHT | PLATFORM_GPIO_MOTOR_DIR_LEFT | PLATFORM_GPIO_MOTOR_ENABLE, MCUAL_GPIO_OUTPUT);
-  platform_gpio_clear(PLATFORM_GPIO_MOTOR_DIR_RIGHT | PLATFORM_GPIO_MOTOR_DIR_LEFT | PLATFORM_GPIO_MOTOR_ENABLE);
+  platform_gpio_set_direction(PLATFORM_GPIO_MOTOR_DIR_RIGHT | PLATFORM_GPIO_MOTOR_DIR_LEFT | PLATFORM_GPIO_MOTOR_ENABLE | PLATFORM_GPIO_MOTOR_DIR_DC0 , MCUAL_GPIO_OUTPUT);
+  platform_gpio_clear(PLATFORM_GPIO_MOTOR_DIR_RIGHT | PLATFORM_GPIO_MOTOR_DIR_LEFT | PLATFORM_GPIO_MOTOR_ENABLE | PLATFORM_GPIO_MOTOR_DIR_DC0);
 #ifdef CONFIG_MCUAL_TIMER
   platform_motor_set_frequency(20000);
   platform_motor_set_left_duty_cycle(0x0000);
   platform_motor_set_right_duty_cycle(0x0000);
+  platform_motor_set_dc0_duty_cycle(0x0000);
   mcual_timer_enable_channel(MCUAL_TIMER9, MCUAL_TIMER_CHANNEL1 | MCUAL_TIMER_CHANNEL2);
 #endif
 
@@ -422,6 +426,10 @@ void platform_gpio_set_direction(uint32_t gpio, mcual_gpio_direction_t direction
   {
     mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN4, direction);
   }
+  if(gpio & PLATFORM_GPIO_MOTOR_DIR_DC0)
+  {
+    mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN8, direction);
+  }
   if(gpio & PLATFORM_GPIO_MOTOR_DIR_LEFT)
   {
     mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN3, direction);
@@ -513,6 +521,10 @@ void platform_gpio_set(uint32_t gpio)
   if(gpio & PLATFORM_GPIO_MOTOR_DIR_RIGHT)
   {
     mcual_gpio_set(MCUAL_GPIOE, MCUAL_GPIO_PIN4);
+  }
+  if(gpio & PLATFORM_GPIO_MOTOR_DIR_DC0)
+  {
+    mcual_gpio_set(MCUAL_GPIOA, MCUAL_GPIO_PIN8);
   }
   if(gpio & PLATFORM_GPIO_MOTOR_DIR_LEFT)
   {
@@ -606,6 +618,10 @@ void platform_gpio_clear(uint32_t gpio)
   {
     mcual_gpio_clear(MCUAL_GPIOE, MCUAL_GPIO_PIN4);
   }
+  if(gpio & PLATFORM_GPIO_MOTOR_DIR_DC0)
+  {
+    mcual_gpio_clear(MCUAL_GPIOA, MCUAL_GPIO_PIN8);
+  }
   if(gpio & PLATFORM_GPIO_MOTOR_DIR_LEFT)
   {
     mcual_gpio_clear(MCUAL_GPIOE, MCUAL_GPIO_PIN3);
@@ -697,6 +713,10 @@ void platform_gpio_toggle(uint32_t gpio)
   if(gpio & PLATFORM_GPIO_MOTOR_DIR_RIGHT)
   {
     mcual_gpio_toggle(MCUAL_GPIOE, MCUAL_GPIO_PIN4);
+  }
+  if(gpio & PLATFORM_GPIO_MOTOR_DIR_DC0)
+  {
+    mcual_gpio_toggle(MCUAL_GPIOA, MCUAL_GPIO_PIN8);
   }
   if(gpio & PLATFORM_GPIO_MOTOR_DIR_LEFT)
   {
@@ -791,6 +811,10 @@ uint32_t platform_gpio_get(uint32_t gpio)
   if(gpio & PLATFORM_GPIO_MOTOR_DIR_RIGHT)
   {
     value |= mcual_gpio_get(MCUAL_GPIOE, MCUAL_GPIO_PIN4) ? PLATFORM_GPIO_MOTOR_DIR_RIGHT : 0;
+  }
+  if(gpio & PLATFORM_GPIO_MOTOR_DIR_DC0)
+  {
+    value |= mcual_gpio_get(MCUAL_GPIOA, MCUAL_GPIO_PIN8) ? PLATFORM_GPIO_MOTOR_DIR_DC0 : 0;
   }
   if(gpio & PLATFORM_GPIO_MOTOR_DIR_LEFT)
   {
@@ -890,6 +914,7 @@ uint8_t platform_spi_position_transfert(uint8_t data)
 void platform_motor_set_frequency(uint32_t freq_Hz)
 {
   mcual_timer_init(MCUAL_TIMER9, freq_Hz);
+  mcual_timer_init(MCUAL_TIMER2, freq_Hz);
 }
 #endif
 
@@ -906,6 +931,14 @@ void platform_motor_set_right_duty_cycle(uint32_t duty_cycle)
   mcual_timer_set_duty_cycle(MCUAL_TIMER9, MCUAL_TIMER_CHANNEL2, duty_cycle);
 }
 #endif
+
+#ifdef CONFIG_MCUAL_TIMER
+void platform_motor_set_dc0_duty_cycle(uint32_t duty_cycle)
+{
+  mcual_timer_set_duty_cycle(MCUAL_TIMER2, MCUAL_TIMER_CHANNEL3, duty_cycle);
+}
+#endif
+
 
 #ifdef CONFIG_OS_USE_FREERTOS
 void platform_servo_set_value(uint32_t servo_id, uint32_t value)
