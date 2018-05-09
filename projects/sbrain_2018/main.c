@@ -49,23 +49,9 @@ void update_lcd(void * arg)
     i += 1;
 
     //toggle led
-    vTaskDelay(500 / portTICK_PERIOD_MS);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
     platform_led_toggle(PLATFORM_LED0);
-
     cocobot_game_state_display_score();
-
-
-    platform_servo_set_value(PLATFORM_SERVO_0_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_1_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_2_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_3_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_4_ID, 300);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    platform_servo_set_value(PLATFORM_SERVO_0_ID, 400);
-    platform_servo_set_value(PLATFORM_SERVO_1_ID, 400);
-    platform_servo_set_value(PLATFORM_SERVO_2_ID, 400);
-    platform_servo_set_value(PLATFORM_SERVO_3_ID, 400);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
 

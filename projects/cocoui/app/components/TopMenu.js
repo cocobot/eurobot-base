@@ -83,6 +83,7 @@ class TopMenuComponent extends React.Component {
               {robot}
               {battery}
               {time}
+              <Badge color="info">{this.props.robots.getIn([key, 'game_state', 'score'])}</Badge>
             </small>
           </DropdownToggle>
           <DropdownMenu >

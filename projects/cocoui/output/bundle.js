@@ -10215,7 +10215,12 @@ var TopMenuComponent = function (_React$Component) {
               _react2.default.createElement('br', null),
               robot,
               battery,
-              time
+              time,
+              _react2.default.createElement(
+                _reactstrap.Badge,
+                { color: 'info' },
+                this.props.robots.getIn([key, 'game_state', 'score'])
+              )
             )
           ),
           _react2.default.createElement(

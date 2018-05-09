@@ -63,11 +63,12 @@ void cocobot_game_state_handle_async_com(void)
   {
     _last_update_time = now;
     cocobot_com_send(COCOBOT_COM_GAME_STATE_DEBUG_PID,
-                     "BBDD",
+                     "BBDDD",
                      COCOBOT_ROBOT_ID,  //0 for principal, 1 for secondary 
                      _color,  //0 for x negative, 1 for x positive 
                      platform_adc_get_mV(PLATFORM_ADC_VBAT), //battery voltage
-                     cocobot_game_state_get_elapsed_time() / 1000 //elapsed time
+                     cocobot_game_state_get_elapsed_time() / 1000, //elapsed time
+                     _score
                     );
   }
 }
