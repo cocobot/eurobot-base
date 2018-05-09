@@ -6,6 +6,7 @@
 #include <mcual.h>
 #include <cocobot.h>
 #include "meca_bee.h"
+#include "meca_water.h"
 //#include "strat_water_easy.h"
 //#include "strat_water_shared.h"
 #include "strat_water.h"
@@ -160,6 +161,7 @@ void com_handler(uint16_t pid, uint8_t * data, uint32_t len)
   }
 
   com_bee_handler(pid, data, len);
+  com_water_handler(pid, data, len);
 }
 
 int main(int argc, char *argv[]) 

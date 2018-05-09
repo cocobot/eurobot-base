@@ -1,7 +1,7 @@
 #include <cocobot.h>
 #include <platform.h>
 
-#define MECA_BEE_SERVO_INIT     250
+#define MECA_BEE_SERVO_INIT     150
 
 #define MECA_BEE_SERVO_ID   PLATFORM_SERVO_3_ID
 

@@ -120,6 +120,24 @@ class MecaComponent extends React.Component {
                   <MecaAction active={this.props.active} id="1" name="Bee prepare"/> { ' ' }
                   <MecaAction active={this.props.active} id="2" name="Bee action"/> { ' ' }
                 </Row>
+                <Row>
+                  <p/>
+                  <p/>
+                </Row>
+                <Row>
+                  <MecaAction active={this.props.active} id="3" name="Water init"/> { ' '}
+                  <MecaAction active={this.props.active} id="4" name="Water prepare"/> { ' ' }
+                  <MecaAction active={this.props.active} id="5" name="Water take"/> { ' ' }
+                </Row>
+                <Row>
+                  <p/>
+                </Row>
+                <Row>
+                  <MecaAction active={this.props.active} id="6" name="Wat. shoot left"/> { ' '}
+                  <MecaAction active={this.props.active} id="7" name="Wat. shoot all"/> { ' ' }
+                  <MecaAction active={this.props.active} id="8" name="Wat. release bad"/> { ' ' }
+                </Row>
+
               </CardBody>
             </Card>
           </Col>

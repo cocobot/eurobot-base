@@ -22597,6 +22597,43 @@ var MecaComponent = function (_React$Component3) {
                   _react2.default.createElement(MecaAction, { active: this.props.active, id: '2', name: 'Bee action' }),
                   ' ',
                   ' '
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement('p', null),
+                  _react2.default.createElement('p', null)
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '3', name: 'Water init' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '4', name: 'Water prepare' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '5', name: 'Water take' }),
+                  ' ',
+                  ' '
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement('p', null)
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '6', name: 'Wat. shoot left' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '7', name: 'Wat. shoot all' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '8', name: 'Wat. release bad' }),
+                  ' ',
+                  ' '
                 )
               )
             )
