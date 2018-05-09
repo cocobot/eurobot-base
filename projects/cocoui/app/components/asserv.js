@@ -3,13 +3,15 @@ import React from 'react';
 import { 
   Container,
   Row, Col,
-  Form, FormGroup, Label, Input,
+  Form, FormGroup, Label,
   Card, CardHeader, CardBody, CardTitle, CardText,
   Badge,
+  InputGroup, InputGroupAddon, InputGroupText, Input,
 } from 'reactstrap';
 import { SmoothieChart, TimeSeries } from 'smoothie';
 
 const timeOffset = 0;
+
 
 class Parameter extends React.Component {
 
@@ -74,7 +76,10 @@ class Parameter extends React.Component {
   //  }
 
     return (
-     <div />
+     <InputGroup size="sm">
+      <InputGroupAddon addonType="prepend">{this.props.name}</InputGroupAddon>
+      <Input placeholder={this.props.name}/>
+     </InputGroup>
      //<div className={cls}>
      //   <label className="small-margin-right">{this.props.name}</label>
      //   <input type="text" className="form-control" value={value} onChange={this.handleChange}/>
@@ -111,6 +116,7 @@ class Chart extends React.Component {
 
     var self = this;
     React.Children.forEach(this.props.children, function(child) {
+      try {
         var ser = new TimeSeries();
         self.state.smoothie.addTimeSeries(ser,{
           lineWidth: child.props.lineWidth,
@@ -118,18 +124,17 @@ class Chart extends React.Component {
         });
 
         self.charts[child.ref] = {timeseries: ser, last: 0};
+      }
+      catch(e) {
+      }
     });
   }
 
   append(data) {
     if(data.key in this.charts) {
       var c = this.charts[data.key];
-      if(data.date > c.last - 500) {
-        c.timeseries.append(data.date, undefined);
-      }
-      
-      var dt = data.date + timeOffset / 2;
 
+      var dt = data.date + timeOffset / 2;
       c.timeseries.append(dt, parseFloat(data.value));
       c.last = data.date;
     }
@@ -143,14 +148,15 @@ class Chart extends React.Component {
     //}
 
     return(
-      <Row>
+      <Container style={{ marginTop: '5px' }}>
+        <Col md="1">
+           {this.props.children}
+        </Col>
+
         <Col md="11">
           <canvas width={this.props.width} height={this.props.height} id={this.props.id}></canvas>
         </Col>
-        <Col md="1">
-          {this.props.children}
-        </Col>
-      </Row>
+      </Container>
     );
   }
 }
@@ -159,9 +165,7 @@ class ChartLine extends React.Component {
   render() {
     var style = {'backgroundColor': this.props.strokeStyle};
     return (
-      <div>
-         <span className="badge" style={style}>{this.props.name}</span>
-      </div>
+            <span className="badge" style={style}>{this.props.name}</span>
     );
   }
 };
@@ -187,51 +191,107 @@ class Asserv extends React.Component {
     const now = Date.now();
     switch(pkt.data._name) {
       case "asserv_dist":
-        this.refs.chartdp.append({
-          key: "dpt",
-          date: now,
-          value: pkt.data.target,
-        });
-        this.refs.chartdp.append({
-          key: "dpf",
-          date: now,
-          value: pkt.data.ramp_out,
-        });
-        this.refs.chartdp.append({
-          key: "dpc",
-          date: now,
-          value: pkt.data.distance,
-        });
-        this.refs.chartds.append({
-          key: "dst",
-          date: now,
-          value: pkt.data.speed_target,
-        });
-        this.refs.chartds.append({
-          key: "dst",
-          date: now,
-          value: pkt.data.speed,
-        });
-        this.refs.chartdpid.append({
-          key: "dpido",
-          date: now,
-          value: pkt.data.pid_out,
-        });
-        this.refs.chartdpid.append({
-          key: "dpidp",
-          date: now,
-          value: pkt.data.pid_P,
-        });
-        this.refs.chartdpid.append({
-          key: "dpidpi",
-          date: now,
-          value: pkt.data.pid_I,
-        });
-        this.refs.chartdpid.append({
-          key: "dpidpd",
-          date: now,
-          value: pkt.data.pid_D,
-        });
+        try {
+          this.refs.chartdp.append({
+                                   key: "dpt",
+                                   date: now,
+                                   value: pkt.data.target,
+          });
+          this.refs.chartdp.append({
+                                   key: "dpf",
+                                   date: now,
+                                   value: pkt.data.ramp_out,
+          });
+          this.refs.chartdp.append({
+                                   key: "dpc",
+                                   date: now,
+                                   value: pkt.data.distance,
+          });
+          this.refs.chartds.append({
+                                   key: "dst",
+                                   date: now,
+                                   value: pkt.data.speed_target,
+          });
+          this.refs.chartds.append({
+                                   key: "dst",
+                                   date: now,
+                                   value: pkt.data.speed,
+          });
+          this.refs.chartdpid.append({
+                                     key: "dpido",
+                                     date: now,
+                                     value: pkt.data.pid_out,
+          });
+          this.refs.chartdpid.append({
+                                     key: "dpidp",
+                                     date: now,
+                                     value: pkt.data.pid_P,
+          });
+          this.refs.chartdpid.append({
+                                     key: "dpidpi",
+                                     date: now,
+                                     value: pkt.data.pid_I,
+          });
+          this.refs.chartdpid.append({
+                                     key: "dpidpd",
+                                     date: now,
+                                     value: pkt.data.pid_D,
+          });
+        }
+        catch(e) {
+        }
+        break;
+
+      case "asserv_angle":
+        try {
+          this.refs.chartap.append({
+                                   key: "apt",
+                                   date: now,
+                                   value: pkt.data.target,
+          });
+          this.refs.chartap.append({
+                                   key: "apf",
+                                   date: now,
+                                   value: pkt.data.ramp_out,
+          });
+          this.refs.chartap.append({
+                                   key: "apc",
+                                   date: now,
+                                   value: pkt.data.distance,
+          });
+          this.refs.chartas.append({
+                                   key: "ast",
+                                   date: now,
+                                   value: pkt.data.speed_target,
+          });
+          this.refs.chartas.append({
+                                   key: "ast",
+                                   date: now,
+                                   value: pkt.data.speed,
+          });
+          this.refs.chartapid.append({
+                                     key: "apido",
+                                     date: now,
+                                     value: pkt.data.pid_out,
+          });
+          this.refs.chartapid.append({
+                                     key: "apidp",
+                                     date: now,
+                                     value: pkt.data.pid_P,
+          });
+          this.refs.chartapid.append({
+                                     key: "apidpi",
+                                     date: now,
+                                     value: pkt.data.pid_I,
+          });
+          this.refs.chartapid.append({
+                                     key: "apidpd",
+                                     date: now,
+                                     value: pkt.data.pid_D,
+          });
+        }
+        catch(e) {
+        }
         break;
     }
   }
@@ -243,23 +303,11 @@ class Asserv extends React.Component {
           <Col>
             <Card>
               <CardHeader>
-                <Form inline className="float-right" style={{marginBottom: 0}}>
-                  <FormGroup inline className="mb-2 mr-sm-2 mb-sm-0">
-                    <Label check size="sm">
-                      <Input type="checkbox" onChange={(e, checked) => this._onChangeDebugPathfinder(e, checked)} checked={this.props.debugPathfinder} />Debug pathfinder
-                    </Label>
-                  <FormGroup inline className="mb-2 mr-sm-2 mb-sm-0">
-                  </FormGroup>
-                    <Label check size="sm">
-                      <Input type="checkbox" onChange={(e, checked) => this._onChangeDebugActionScheduler(e, checked)} checked={this.props.debugActionScheduler} />Debug strat
-                    </Label>
-                  </FormGroup>
-                </Form>
                 Asserv
               </CardHeader>
               <CardBody>
                 <Row>
-                  <Col md="8">
+                  <Col md="9">
                     <Chart ref="chartdp" width={this.state.width} height={this.state.height} id="asserv_position_dist">
                       <ChartLine ref="dpt" name="Distance - Position target" strokeStyle="rgba(66, 139, 202, 1)" lineWidth="2" />
                       <ChartLine ref="dpf" name="Distance - Position filtered" strokeStyle="rgba(240, 173, 78, 1)" lineWidth="2" />
@@ -276,7 +324,7 @@ class Asserv extends React.Component {
                       <ChartLine ref="dpidd" name="Distance - PID d" strokeStyle="rgba(60, 118, 61, 1)" lineWidth="2" />
                     </Chart>
                   </Col>
-                  <Col md="4">
+                  <Col md="3">
                     <Parameter name="Speed" command="ramp_distance_speed" show={this.props.show}/>
                     <Parameter name="Accel" command="ramp_distance_accel" show={this.props.show}/>
                     <Parameter name="Kp" command="pid_distance_kp" show={this.props.show}/>

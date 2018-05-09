@@ -15690,7 +15690,16 @@ var Parameter = function (_React$Component) {
       //    btnc += " disabled";
       //  }
 
-      return _react2.default.createElement('div', null)
+      return _react2.default.createElement(
+        _reactstrap.InputGroup,
+        { size: 'sm' },
+        _react2.default.createElement(
+          _reactstrap.InputGroupAddon,
+          { addonType: 'prepend' },
+          this.props.name
+        ),
+        _react2.default.createElement(_reactstrap.Input, { placeholder: this.props.name })
+      )
       //<div className={cls}>
       //   <label className="small-margin-right">{this.props.name}</label>
       //   <input type="text" className="form-control" value={value} onChange={this.handleChange}/>
@@ -15737,13 +15746,15 @@ var Chart = function (_React$Component2) {
 
       var self = this;
       _react2.default.Children.forEach(this.props.children, function (child) {
-        var ser = new _smoothie.TimeSeries();
-        self.state.smoothie.addTimeSeries(ser, {
-          lineWidth: child.props.lineWidth,
-          strokeStyle: child.props.strokeStyle
-        });
+        try {
+          var ser = new _smoothie.TimeSeries();
+          self.state.smoothie.addTimeSeries(ser, {
+            lineWidth: child.props.lineWidth,
+            strokeStyle: child.props.strokeStyle
+          });
 
-        self.charts[child.ref] = { timeseries: ser, last: 0 };
+          self.charts[child.ref] = { timeseries: ser, last: 0 };
+        } catch (e) {}
       });
     }
   }, {
@@ -15751,12 +15762,8 @@ var Chart = function (_React$Component2) {
     value: function append(data) {
       if (data.key in this.charts) {
         var c = this.charts[data.key];
-        if (data.date > c.last - 500) {
-          c.timeseries.append(data.date, undefined);
-        }
 
         var dt = data.date + timeOffset / 2;
-
         c.timeseries.append(dt, parseFloat(data.value));
         c.last = data.date;
       }
@@ -15771,17 +15778,17 @@ var Chart = function (_React$Component2) {
       //}
 
       return _react2.default.createElement(
-        _reactstrap.Row,
-        null,
-        _react2.default.createElement(
-          _reactstrap.Col,
-          { md: '11' },
-          _react2.default.createElement('canvas', { width: this.props.width, height: this.props.height, id: this.props.id })
-        ),
+        _reactstrap.Container,
+        { style: { marginTop: '5px' } },
         _react2.default.createElement(
           _reactstrap.Col,
           { md: '1' },
           this.props.children
+        ),
+        _react2.default.createElement(
+          _reactstrap.Col,
+          { md: '11' },
+          _react2.default.createElement('canvas', { width: this.props.width, height: this.props.height, id: this.props.id })
         )
       );
     }
@@ -15804,13 +15811,9 @@ var ChartLine = function (_React$Component3) {
     value: function render() {
       var style = { 'backgroundColor': this.props.strokeStyle };
       return _react2.default.createElement(
-        'div',
-        null,
-        _react2.default.createElement(
-          'span',
-          { className: 'badge', style: style },
-          this.props.name
-        )
+        'span',
+        { className: 'badge', style: style },
+        this.props.name
       );
     }
   }]);
@@ -15850,59 +15853,109 @@ var Asserv = function (_React$Component4) {
       var now = Date.now();
       switch (pkt.data._name) {
         case "asserv_dist":
-          this.refs.chartdp.append({
-            key: "dpt",
-            date: now,
-            value: pkt.data.target
-          });
-          this.refs.chartdp.append({
-            key: "dpf",
-            date: now,
-            value: pkt.data.ramp_out
-          });
-          this.refs.chartdp.append({
-            key: "dpc",
-            date: now,
-            value: pkt.data.distance
-          });
-          this.refs.chartds.append({
-            key: "dst",
-            date: now,
-            value: pkt.data.speed_target
-          });
-          this.refs.chartds.append({
-            key: "dst",
-            date: now,
-            value: pkt.data.speed
-          });
-          this.refs.chartdpid.append({
-            key: "dpido",
-            date: now,
-            value: pkt.data.pid_out
-          });
-          this.refs.chartdpid.append({
-            key: "dpidp",
-            date: now,
-            value: pkt.data.pid_P
-          });
-          this.refs.chartdpid.append({
-            key: "dpidpi",
-            date: now,
-            value: pkt.data.pid_I
-          });
-          this.refs.chartdpid.append({
-            key: "dpidpd",
-            date: now,
-            value: pkt.data.pid_D
-          });
+          try {
+            this.refs.chartdp.append({
+              key: "dpt",
+              date: now,
+              value: pkt.data.target
+            });
+            this.refs.chartdp.append({
+              key: "dpf",
+              date: now,
+              value: pkt.data.ramp_out
+            });
+            this.refs.chartdp.append({
+              key: "dpc",
+              date: now,
+              value: pkt.data.distance
+            });
+            this.refs.chartds.append({
+              key: "dst",
+              date: now,
+              value: pkt.data.speed_target
+            });
+            this.refs.chartds.append({
+              key: "dst",
+              date: now,
+              value: pkt.data.speed
+            });
+            this.refs.chartdpid.append({
+              key: "dpido",
+              date: now,
+              value: pkt.data.pid_out
+            });
+            this.refs.chartdpid.append({
+              key: "dpidp",
+              date: now,
+              value: pkt.data.pid_P
+            });
+            this.refs.chartdpid.append({
+              key: "dpidpi",
+              date: now,
+              value: pkt.data.pid_I
+            });
+            this.refs.chartdpid.append({
+              key: "dpidpd",
+              date: now,
+              value: pkt.data.pid_D
+            });
+          } catch (e) {}
+          break;
+
+        case "asserv_angle":
+          try {
+            this.refs.chartap.append({
+              key: "apt",
+              date: now,
+              value: pkt.data.target
+            });
+            this.refs.chartap.append({
+              key: "apf",
+              date: now,
+              value: pkt.data.ramp_out
+            });
+            this.refs.chartap.append({
+              key: "apc",
+              date: now,
+              value: pkt.data.distance
+            });
+            this.refs.chartas.append({
+              key: "ast",
+              date: now,
+              value: pkt.data.speed_target
+            });
+            this.refs.chartas.append({
+              key: "ast",
+              date: now,
+              value: pkt.data.speed
+            });
+            this.refs.chartapid.append({
+              key: "apido",
+              date: now,
+              value: pkt.data.pid_out
+            });
+            this.refs.chartapid.append({
+              key: "apidp",
+              date: now,
+              value: pkt.data.pid_P
+            });
+            this.refs.chartapid.append({
+              key: "apidpi",
+              date: now,
+              value: pkt.data.pid_I
+            });
+            this.refs.chartapid.append({
+              key: "apidpd",
+              date: now,
+              value: pkt.data.pid_D
+            });
+          } catch (e) {}
           break;
       }
     }
   }, {
     key: 'render',
     value: function render() {
-      var _this5 = this;
-
       return _react2.default.createElement(
         _reactstrap.Container,
         { style: { marginTop: '15px' } },
@@ -15918,31 +15971,6 @@ var Asserv = function (_React$Component4) {
               _react2.default.createElement(
                 _reactstrap.CardHeader,
                 null,
-                _react2.default.createElement(
-                  _reactstrap.Form,
-                  { inline: true, className: 'float-right', style: { marginBottom: 0 } },
-                  _react2.default.createElement(
-                    _reactstrap.FormGroup,
-                    { inline: true, className: 'mb-2 mr-sm-2 mb-sm-0' },
-                    _react2.default.createElement(
-                      _reactstrap.Label,
-                      { check: true, size: 'sm' },
-                      _react2.default.createElement(_reactstrap.Input, { type: 'checkbox', onChange: function onChange(e, checked) {
-                          return _this5._onChangeDebugPathfinder(e, checked);
-                        }, checked: this.props.debugPathfinder }),
-                      'Debug pathfinder'
-                    ),
-                    _react2.default.createElement(_reactstrap.FormGroup, { inline: true, className: 'mb-2 mr-sm-2 mb-sm-0' }),
-                    _react2.default.createElement(
-                      _reactstrap.Label,
-                      { check: true, size: 'sm' },
-                      _react2.default.createElement(_reactstrap.Input, { type: 'checkbox', onChange: function onChange(e, checked) {
-                          return _this5._onChangeDebugActionScheduler(e, checked);
-                        }, checked: this.props.debugActionScheduler }),
-                      'Debug strat'
-                    )
-                  )
-                ),
                 'Asserv'
               ),
               _react2.default.createElement(
@@ -15953,7 +15981,7 @@ var Asserv = function (_React$Component4) {
                   null,
                   _react2.default.createElement(
                     _reactstrap.Col,
-                    { md: '8' },
+                    { md: '9' },
                     _react2.default.createElement(
                       Chart,
                       { ref: 'chartdp', width: this.state.width, height: this.state.height, id: 'asserv_position_dist' },
@@ -15978,7 +16006,7 @@ var Asserv = function (_React$Component4) {
                   ),
                   _react2.default.createElement(
                     _reactstrap.Col,
-                    { md: '4' },
+                    { md: '3' },
                     _react2.default.createElement(Parameter, { name: 'Speed', command: 'ramp_distance_speed', show: this.props.show }),
                     _react2.default.createElement(Parameter, { name: 'Accel', command: 'ramp_distance_accel', show: this.props.show }),
                     _react2.default.createElement(Parameter, { name: 'Kp', command: 'pid_distance_kp', show: this.props.show }),

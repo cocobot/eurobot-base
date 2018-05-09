@@ -60,23 +60,11 @@ void update_lcd(void * arg)
     platform_servo_set_value(PLATFORM_SERVO_2_ID, 300);
     platform_servo_set_value(PLATFORM_SERVO_3_ID, 300);
     platform_servo_set_value(PLATFORM_SERVO_4_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_5_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_6_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_7_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_8_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_9_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_10_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_11_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_12_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_13_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_14_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_15_ID, 300);
-    platform_servo_set_value(PLATFORM_SERVO_16_ID, 300);
     vTaskDelay(1000 / portTICK_PERIOD_MS);
-    platform_servo_set_value(PLATFORM_SERVO_0_ID, 600);
-    platform_servo_set_value(PLATFORM_SERVO_1_ID, 600);
-    platform_servo_set_value(PLATFORM_SERVO_2_ID, 600);
-    platform_servo_set_value(PLATFORM_SERVO_3_ID, 600);
+    platform_servo_set_value(PLATFORM_SERVO_0_ID, 400);
+    platform_servo_set_value(PLATFORM_SERVO_1_ID, 400);
+    platform_servo_set_value(PLATFORM_SERVO_2_ID, 400);
+    platform_servo_set_value(PLATFORM_SERVO_3_ID, 400);
     vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
