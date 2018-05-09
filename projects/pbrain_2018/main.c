@@ -66,11 +66,28 @@ void run_homologation(void * arg)
     (void)arg;
     cocobot_game_state_wait_for_starter_removed();
 
-    cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_0);
-    cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_1);
+    float x = 375; 
+    if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+    {
+        x = -x;
+    }
+    float y = 800; 
+    cocobot_trajectory_goto_xy(x, y, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+    cocobot_trajectory_wait();
 
-    strat_domotique_register();
-    cocobot_action_scheduler_start();
+    cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+    cocobot_trajectory_wait();
+
+    cocobot_trajectory_goto_d(-250, 5000);
+    cocobot_trajectory_wait();
+
+    cocobot_trajectory_goto_d(250, 5000);
+    cocobot_trajectory_wait();
+    //cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_0);
+    //cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_1);
+
+   // strat_domotique_register();
+    //cocobot_action_scheduler_start();
 
     while(1)
         vTaskDelay(100/portTICK_PERIOD_MS);
@@ -215,15 +232,15 @@ int main(int argc, char *argv[])
   switch(cocobot_game_state_get_color())
   {
     case COCOBOT_GAME_STATE_COLOR_NEG:
-  cocobot_position_set_x(-1280);
-      cocobot_position_set_y(750);
-      cocobot_position_set_angle(-90);
+  cocobot_position_set_x(-1225);
+      cocobot_position_set_y(800);
+      cocobot_position_set_angle(0);
       break;
 
     case COCOBOT_GAME_STATE_COLOR_POS:
-      cocobot_position_set_x(1280);
-      cocobot_position_set_y(750);
-      cocobot_position_set_angle(-90);
+      cocobot_position_set_x(1225);
+      cocobot_position_set_y(800);
+      cocobot_position_set_angle(180);
       break;
   }
       

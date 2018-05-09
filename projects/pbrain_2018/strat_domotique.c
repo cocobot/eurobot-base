@@ -68,7 +68,7 @@ static cocobot_action_callback_result_t strat_domotique_cleanup(void * arg)
 static cocobot_action_callback_result_t strat_domotique_exec(void * arg)
 {
     (void)arg;
-    cocobot_trajectory_goto_d(-250, 2000);
+    cocobot_trajectory_goto_d(-250, 5000);
     cocobot_trajectory_wait();
     return COCOBOT_RETURN_ACTION_SUCCESS;
 }
