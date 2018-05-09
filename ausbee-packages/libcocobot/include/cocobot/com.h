@@ -21,6 +21,9 @@
 #define COCOBOT_COM_GET_USIR_PID          (0x8009)
 #define COCOBOT_COM_SEND_USIR_PID         (0x800A)
 #define COCOBOT_COM_FORCE_USIR_PID        (0x800B)
+#define COCOBOT_COM_GET_ASSERV_PARAMS_PID (0x800C)
+#define COCOBOT_COM_SEND_ASSERV_PARAMS_PID (0x800D)
+#define COCOBOT_COM_SET_ASSERV_PARAMS_PID (0x800E)
 
 typedef void (*cocobot_com_handler_t)(uint16_t pid);
 
@@ -43,5 +46,6 @@ void cocobot_com_send(uint16_t pid, char * fmt, ...);
 void cocobot_com_printf(char * fmt, ...);
 
 uint32_t cocobot_com_read_B(uint8_t *data , uint32_t len, uint32_t offset, uint8_t * value);
+uint32_t cocobot_com_read_F(uint8_t *data , uint32_t len, uint32_t offset, float * value);
 
 #endif// COCOBOT_COM_H

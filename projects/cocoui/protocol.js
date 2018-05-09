@@ -18,7 +18,7 @@ DECODERS[0x8005] = "{printf}S(msg)"
 DECODERS[0x8006] = "{game_state}B(robot_id)B(color)D(battery)D(time)"
 DECODERS[0x8008] = "{action_scheduler}[S(name)F(x)F(y)F(score)](strategies)"
 DECODERS[0x800a] = "{usirs}[H(us)H(ir)B(force_on)B(alert)B(alert_activated)](usir)"
-
+DECODERS[0x800d] = "{asserv_params}F(d_ramp_speed)F(d_ramp_accel)F(d_pid_kp)F(d_pid_kd)F(d_pid_ki)F(d_pid_max_i)F(d_pid_max_e)F(a_ramp_speed)F(a_ramp_accel)F(a_pid_kp)F(a_pid_kd)F(a_pid_ki)F(a_pid_max_i)F(a_pid_max_e)";
 
 const GRAMMAR = `
 {
@@ -284,6 +284,10 @@ class Client {
             size += 1;
             break;
 
+          case 'F':
+            size += 4;
+            break;
+
           default:
             console.log("TODO !!! " + fmt[i]);
         }
@@ -300,6 +304,11 @@ class Client {
          case 'B':
           pkt.data.writeUInt8(pkt.args.shift(), offset);
           offset += 1;
+          break;
+
+        case 'F':
+          pkt.data.writeFloatLE(pkt.args.shift(), offset);
+          offset += 4;
           break;
 
         default:

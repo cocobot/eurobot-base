@@ -9,6 +9,9 @@ import {
   InputGroup, InputGroupAddon, InputGroupText, Input,
 } from 'reactstrap';
 import { SmoothieChart, TimeSeries } from 'smoothie';
+import { connect } from 'react-redux';
+
+const ipcRenderer = electron.ipcRenderer;
 
 const timeOffset = 0;
 
@@ -25,71 +28,55 @@ class Parameter extends React.Component {
   }
 
 
-  //componentDidMount: function() {
-  //  utils.onReceiveCommand(this.props.command, this.handleReceive);
-  //  setTimeout(this.update, this.UPDATE_PERIOD_MS);
-  //},
+  handleChange(event) {
+    event.preventDefault();
+    this.setState({modified_value: event.target.value});
+  }
 
-  //update: function() {
-  //  if(this.props.show) {
-  //    utils.sendCommand({command: this.props.command, argument: null});
-  //  }
-
-  //  setTimeout(this.update, this.UPDATE_PERIOD_MS);
-  //},
-
-  //handleReceive: function(data) {
-  //  this.setState({value: data.answer.data[0]});
-  //},
-
-  //handleChange: function(event) {
-  //  this.setState({modified_value: event.target.value});
-  //},
-
-  //send: function(event) {
-  //  event.preventDefault();
-
-  //  if(this.state.modified_value != null) {
-  //    this.setState({value: this.state.modified_value, modified_value: null});
-  //    utils.sendCommand({command: this.props.command, argument: this.state.modified_value});
-  //  }
-  //},
-
-  //cancel: function(event) {
-  //  event.preventDefault();
-
-  //  this.setState({modified_value: null});
-  //},
+  handleKeyPress(event) {
+    if (event.key === 'Enter') {
+      this.props.active.map((x, key) => {
+        ipcRenderer.send('pkt', {
+          pid: 0x800E,
+          fmt: "BF",
+          args: [this.props.id, parseFloat(this.state.modified_value)],
+          client: key, 
+        });
+      });
+      this.setState({modified_value: null});
+    }
+  }
 
   render() {
-  //  var value = this.state.value;
+    var value = '';
+    var uartValue = '';
+
+    if(this.props.data != null) {
+      if(this.props.data.length > 0) {
+        const data = this.props.data[0];
+        value = data.get(this.props.command);
+        uartValue = value;
+      }
+    }
+
+
   //  var cls = "form-group form-inline pull-right";
   //  var btns = "btn btn-success";
   //  var btnc = "btn btn-default";
-  //  if(this.state.modified_value != null) {
-  //    value = this.state.modified_value;
+    if(this.state.modified_value != null) {
+      value = this.state.modified_value;
   //    cls += " has-warning";
-  //  }
+    }
   //  else {
   //    btns += " disabled";
   //    btnc += " disabled";
   //  }
 
     return (
-     <InputGroup size="sm">
+     <InputGroup size="sm" >
       <InputGroupAddon addonType="prepend">{this.props.name}</InputGroupAddon>
-      <Input placeholder={this.props.name}/>
+      <Input placeholder={"current value: " + uartValue} value={value} onChange={(e) => this.handleChange(e)} onKeyPress={(e) => this.handleKeyPress(e)} />
      </InputGroup>
-     //<div className={cls}>
-     //   <label className="small-margin-right">{this.props.name}</label>
-     //   <input type="text" className="form-control" value={value} onChange={this.handleChange}/>
-     //   <button type="submit" className={btns} onClick={this.send}>
-     //     <span className="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>&nbsp;
-     //   </button>
-     //   <button type="submit" className={btnc} onClick={this.cancel}>
-     //     <span className="glyphicon glyphicon-repeat" aria-hidden="true"></span>&nbsp;
-     //   </button>
-     // </div>
     );
   }
 }
@@ -170,7 +157,7 @@ class ChartLine extends React.Component {
   }
 };
 
-class Asserv extends React.Component {
+class AsservComponent extends React.Component {
   constructor(props) {
     super(props);
 
@@ -185,6 +172,18 @@ class Asserv extends React.Component {
       debugRampAngular: false,
       debugPIDAngular: false,
     };
+
+    setInterval(() => {
+
+      this.props.active.map((x, key) => {
+        ipcRenderer.send('pkt', {
+          pid: 0x800C,
+          fmt: "",
+          args: [],
+          client: key, 
+        });
+      });
+    }, 2000);
   }
 
   _handlePkt(pkt) {
@@ -325,13 +324,13 @@ class Asserv extends React.Component {
                     </Chart>
                   </Col>
                   <Col md="3">
-                    <Parameter name="Speed" command="ramp_distance_speed" show={this.props.show}/>
-                    <Parameter name="Accel" command="ramp_distance_accel" show={this.props.show}/>
-                    <Parameter name="Kp" command="pid_distance_kp" show={this.props.show}/>
-                    <Parameter name="Ki" command="pid_distance_ki" show={this.props.show}/>
-                    <Parameter name="Kd" command="pid_distance_kd" show={this.props.show}/>
-                    <Parameter name="Max I" command="pid_distance_max_i" show={this.props.show}/>
-                    <Parameter name="Max E" command="pid_distance_max_e" show={this.props.show}/>
+                    <Parameter active={this.props.active} id={0} name="Speed" data={this.props.asservs} command="d_ramp_speed" show={this.props.show}/>
+                    <Parameter active={this.props.active} id={1} name="Accel" data={this.props.asservs} command="d_ramp_accel" show={this.props.show}/>
+                    <Parameter active={this.props.active} id={2} name="Kp" data={this.props.asservs} command="d_pid_kp" show={this.props.show}/>
+                    <Parameter active={this.props.active} id={3} name="Kd" data={this.props.asservs} command="d_pid_kd" show={this.props.show}/>
+                    <Parameter active={this.props.active} id={4} name="Ki" data={this.props.asservs} command="d_pid_ki" show={this.props.show}/>
+                    <Parameter active={this.props.active} id={5} name="Max I" data={this.props.asservs} command="d_pid_max_i" show={this.props.show}/>
+                    <Parameter active={this.props.active} id={6} name="Max E" data={this.props.asservs} command="d_pid_max_e" show={this.props.show}/>
                   </Col>
                 </Row>
                 <Row>
@@ -353,13 +352,13 @@ class Asserv extends React.Component {
                     </Chart>
                   </Col>
                   <Col md="4">
-                    <Parameter name="Speed" command="ramp_angular_speed" show={this.props.show}/>
-                    <Parameter name="Accel" command="ramp_angular_accel" show={this.props.show}/>
-                    <Parameter name="Kp" command="pid_angular_kp" show={this.props.show}/>
-                    <Parameter name="Ki" command="pid_angular_ki" show={this.props.show}/>
-                    <Parameter name="Kd" command="pid_angular_kd" show={this.props.show}/>
-                    <Parameter name="Max I" command="pid_angular_max_i" show={this.props.show}/>
-                    <Parameter name="Max E" command="pid_angular_max_e" show={this.props.show}/>
+                    <Parameter active={this.props.active} id={7} name="Speed" data={this.props.asservs} command="a_ramp_speed" show={this.props.show}/>
+                    <Parameter active={this.props.active} id={8} name="Accel" data={this.props.asservs} command="a_ramp_accel" show={this.props.show}/>
+                    <Parameter active={this.props.active} id={9} name="Kp" data={this.props.asservs} command="a_pid_kp" show={this.props.show}/>
+                    <Parameter active={this.props.active} id={10} name="Kd" data={this.props.asservs} command="a_pid_kd" show={this.props.show}/>
+                    <Parameter active={this.props.active} id={11} name="Ki" data={this.props.asservs} command="a_pid_ki" show={this.props.show}/>
+                    <Parameter active={this.props.active} id={12} name="Max I" data={this.props.asservs} command="a_pid_max_i" show={this.props.show}/>
+                    <Parameter active={this.props.active} id={13} name="Max E" data={this.props.asservs} command="a_pid_max_e" show={this.props.show}/>
                   </Col>
                 </Row>
               </CardBody>
@@ -370,6 +369,27 @@ class Asserv extends React.Component {
     );
   }
 }
+
+const mapStateToProps = (state, ownProps) => {
+  const asservs = [];
+  state.conns.get('active').map((x, key) => {
+    const asserv = state.robots.getIn([key, 'asserv_params'], new Map());
+    if(asserv != null) {
+      asservs.push(asserv);
+    }
+  });
+  return {
+    active: state.conns.get('active'),
+    asservs: asservs,
+  }
+}
+
+const Asserv = connect(
+  mapStateToProps,
+  null,
+)(AsservComponent);
+
+
 
 export default Asserv;
 
