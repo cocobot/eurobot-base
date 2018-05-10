@@ -72,8 +72,10 @@ void update_lcd(void * arg)
     cocobot_game_state_set_score((int)cocobot_position_get_distance() - zero);
     cocobot_game_state_display_score();
 
+    /* turn the DC motor ON
     platform_gpio_set(PLATFORM_GPIO_MOTOR_DIR_DC0);
     platform_motor_set_dc0_duty_cycle(0x8000);
+    */
   }
 }
 
