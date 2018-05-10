@@ -105,7 +105,7 @@ void run_homologation(void * arg)
     //cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_1);
 
    // strat_domotique_register();
-    //cocobot_action_scheduler_start();
+u   //cocobot_action_scheduler_start();
 
     while(1)
         vTaskDelay(100/portTICK_PERIOD_MS);
