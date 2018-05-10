@@ -6,6 +6,7 @@
 #include "task.h"
 #include "strat_bee.h"
 #include "meca_bee.h"
+#include "meca_water.h"
 
 static unsigned int strat_bee_get_score()
 {
@@ -65,6 +66,9 @@ static cocobot_action_callback_result_t strat_bee_cleanup(void * arg)
 {
     (void) arg;
     meca_bee_init();
+    meca_water_take_from_distributor();
+    vTaskDelay(1000/portTICK_PERIOD_MS);
+    meca_water_init();
     return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 

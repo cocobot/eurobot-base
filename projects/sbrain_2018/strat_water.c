@@ -31,7 +31,7 @@ static float strat_water_take_get_x(waterDistributor_e water)
     if(water == WATER_EASY)
         target = 1175;
     else
-        target = -900;
+        target = -890;
 
     if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
     {
@@ -89,9 +89,12 @@ float strat_water_take_get_success_proba(waterDistributor_e water)
 
 static cocobot_action_callback_result_t strat_water_take_preexec(void * arg)
 {
-    (void)arg;
+    waterDistributor_e water = (waterDistributor_e) arg;
     //TODO: Set loader in ready position?
-    cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_BACKWARD);
+    if(water == WATER_EASY)
+    {
+        cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_BACKWARD);
+    }
     return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
@@ -100,6 +103,7 @@ static cocobot_action_callback_result_t strat_water_take_cleanup(void * arg)
     waterDistributor_e water = (waterDistributor_e) arg;
     cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_FORWARD);
 
+    meca_water_prepare();
     if(water == WATER_LESS_EASY)
     {
         if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
@@ -114,18 +118,28 @@ static cocobot_action_callback_result_t strat_water_take_cleanup(void * arg)
 static cocobot_action_callback_result_t strat_water_take_exec(void * arg)
 {
     waterDistributor_e water = (waterDistributor_e )arg;
+
+    if(water == WATER_EASY)
+    {
+        if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+        {
+            cocobot_trajectory_goto_a(0, 6000);
+        }
+        else
+        {
+            cocobot_trajectory_goto_a(180, 6000);
+        }
+    }
+    else
+    {
+            cocobot_trajectory_goto_a(90, 6000);
+    }
+    cocobot_trajectory_wait();
+
     //Move just under the water castle
     cocobot_trajectory_goto_d(-130, 2500);
     cocobot_trajectory_wait();
 
-    if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
-    {
-        cocobot_trajectory_goto_a(180, 2500);
-    }
-    else
-    {
-        cocobot_trajectory_goto_a(0, 2500);
-    }
     cocobot_trajectory_wait();
     meca_water_take_from_distributor();
     vTaskDelay(1000/portTICK_PERIOD_MS);
