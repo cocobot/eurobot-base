@@ -6,8 +6,8 @@
 #define TABLE_WIDTH             2000
 
 //Robot dimensions (mm)
-#define ROBOT_LENGTH            200
-#define ROBOT_WIDTH             200
+#define ROBOT_LENGTH            232
+#define ROBOT_WIDTH             281
 
 //Opponent half diag dimension
 #define OPPONENT_HALF_DIAG      225
@@ -21,11 +21,11 @@
 
 // (ROBOT_WIDTH / GRID_SIZE) / 2
 // rounded to superior
-#define ROBOT_HALF_WIDTH_GRID   2
+#define ROBOT_HALF_WIDTH_GRID   3
 
 // (sqrt((ROBOT_WIDTH * ROBOT_WIDTH) + (ROBOT_LENGTH * ROBOT_LENGTH))/ GRID_SIZE) / 2
 // rounded to superior
-#define ROBOT_HALF_DIAG_GRID    3
+#define ROBOT_HALF_DIAG_GRID    4
 
 //Depart zone position and dimension (grid type)
 //WARNING, Calculated with a GRID_SIZE = 50
