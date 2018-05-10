@@ -80,9 +80,9 @@ float strat_water_take_get_exec_time(waterDistributor_e water)
 float strat_water_take_get_success_proba(waterDistributor_e water)
 {
     if(water == WATER_EASY)
-        return 1;
+        return 0.65;
     else
-        return 0.75;
+        return 0.55;
 }
 
 static cocobot_action_callback_result_t strat_water_take_preexec(void * arg)
@@ -116,7 +116,7 @@ static cocobot_action_callback_result_t strat_water_take_exec(void * arg)
     cocobot_trajectory_goto_d(-150, 2500);
     cocobot_trajectory_wait();
 
-    //TBD:Get the water
+    meca_water_take_from_distributor();
     
     //Get away from the water castle
     cocobot_trajectory_goto_d(250, 2500);
@@ -125,6 +125,7 @@ static cocobot_action_callback_result_t strat_water_take_exec(void * arg)
     //The robot is now under water
     isFlooded[water] = 1;
 
+    cocobot_game_state_add_points_to_score(10);
     return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
@@ -199,8 +200,20 @@ static cocobot_action_callback_result_t strat_water_shoot_cleanup(void * arg)
 
 static cocobot_action_callback_result_t strat_water_shoot_exec(void * arg)
 {
-    (void)arg;
     //TODO: Open fire!
+    waterDistributor_e water = (waterDistributor_e )arg;
+    if(water == WATER_EASY)
+    {
+        //shoot for 8 balls
+        meca_water_shoot_all();
+        cocobot_game_state_add_points_to_score(40);
+    }
+    else
+    {
+        //shoot for 4 balls.
+        meca_water_shoot_left();
+        cocobot_game_state_add_points_to_score(20);
+    }
     return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
@@ -258,6 +271,7 @@ float strat_water_recycle_get_success_proba()
 static cocobot_action_callback_result_t strat_water_recycle_preexec(void * arg)
 {
     (void)arg;
+    
     return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
@@ -272,9 +286,10 @@ static cocobot_action_callback_result_t strat_water_recycle_exec(void * arg)
     (void)arg;
     cocobot_trajectory_goto_d(-100, 2500);
     cocobot_trajectory_wait();
-    //TODO: Dump wasted water
+    meca_water_release_bad_water();
     cocobot_trajectory_goto_d(250, 2500);
     cocobot_trajectory_wait();
+    cocobot_game_state_add_points_to_score(40);
     return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
