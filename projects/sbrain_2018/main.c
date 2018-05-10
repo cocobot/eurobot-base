@@ -7,9 +7,8 @@
 #include <cocobot.h>
 #include "meca_bee.h"
 #include "meca_water.h"
-//#include "strat_water_easy.h"
-//#include "strat_water_shared.h"
 #include "strat_water.h"
+#include "strat_bee.h"
 //#include "cocobot_pathfinder_config.h"
 
 //static unsigned int _shell_configuration;
@@ -108,8 +107,8 @@ void run_strategy(void * arg)
   meca_bee_init();
   meca_water_init();
 
-  //strat_water_easy_register();
-  strat_water_register();
+  //strat_water_register();
+  strat_bee_register();
 
   cocobot_game_state_wait_for_starter_removed();
 
@@ -193,20 +192,20 @@ int main(int argc, char *argv[])
   switch(cocobot_game_state_get_color())
   {
       case COCOBOT_GAME_STATE_COLOR_NEG:
-          cocobot_position_set_x(-1300);
-          cocobot_position_set_y(500);
-          cocobot_position_set_angle(0);
+          cocobot_position_set_x(-1240);
+          cocobot_position_set_y(467);
+          cocobot_position_set_angle(-90);
           break;
 
       case COCOBOT_GAME_STATE_COLOR_POS:
-          cocobot_position_set_x(1300);
-          cocobot_position_set_y(500);
-          cocobot_position_set_angle(180);
+          cocobot_position_set_x(1240);
+          cocobot_position_set_y(467);
+          cocobot_position_set_angle(-90);
           break;
   }
       
-  xTaskCreate(run_homologation, "strat", 600, NULL, 2, NULL );
-  //xTaskCreate(run_strategy, "strat", 600, NULL, 2, NULL );
+  //xTaskCreate(run_homologation, "strat", 600, NULL, 2, NULL );
+  xTaskCreate(run_strategy, "strat", 600, NULL, 2, NULL );
   xTaskCreate(update_lcd, "blink", 200, NULL, 1, NULL );
 
   vTaskStartScheduler();
