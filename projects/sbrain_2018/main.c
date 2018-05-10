@@ -9,6 +9,7 @@
 #include "meca_water.h"
 #include "strat_water.h"
 #include "strat_bee.h"
+#include "strat_domotique.h"
 //#include "cocobot_pathfinder_config.h"
 
 //static unsigned int _shell_configuration;
@@ -109,6 +110,7 @@ void run_strategy(void * arg)
 
   strat_water_register();
   strat_bee_register();
+  //strat_domotique_register();
 
   cocobot_game_state_wait_for_starter_removed();
   cocobot_game_state_add_points_to_score(5);
