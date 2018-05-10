@@ -254,7 +254,12 @@ static cocobot_action_goto_return_value_t cocobot_action_scheduler_goto(cocobot_
 
   if (current_game_state.use_pathfinder)
   {
-    cocobot_pathfinder_execute(cocobot_position_get_x(), cocobot_position_get_y(), x, y, COCOBOT_PATHFINDER_MODE_EXECUTE_TRAJ_FORWARD);
+      uint16_t result =  cocobot_pathfinder_execute(cocobot_position_get_x(), cocobot_position_get_y(), x, y, COCOBOT_PATHFINDER_MODE_EXECUTE_TRAJ_FORWARD);
+
+      if((result == NO_ROUTE_TO_TARGET) || (result == DESTINATION_NOT_AVAILABLE))
+      {
+          return COCOBOT_ACTION_NOT_REACHED;
+      }
   }
   else
   {
