@@ -107,7 +107,7 @@ void run_strategy(void * arg)
   meca_bee_init();
   meca_water_init();
 
-  //strat_water_register();
+  strat_water_register();
   strat_bee_register();
 
   cocobot_game_state_wait_for_starter_removed();
@@ -144,7 +144,9 @@ void run_strategy(void * arg)
   //cocobot_trajectory_wait();
 
   while(1)
-      ;
+  {
+      vTaskDelay(10/portTICK_PERIOD_MS);
+  }
   //cocobot_action_scheduler_start();
 }
 

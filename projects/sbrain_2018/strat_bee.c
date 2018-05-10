@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <math.h>
+#include "FreeRTOS.h"
+#include "task.h"
 #include "strat_bee.h"
 #include "meca_bee.h"
 
@@ -12,7 +14,7 @@ static unsigned int strat_bee_get_score()
 
 static float strat_bee_get_x()
 {
-    float target = 1299;
+    float target = 1275;
 
     if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
     {
@@ -90,8 +92,12 @@ static cocobot_action_callback_result_t strat_bee_exec(void * arg)
     }
     meca_bee_action();
 
+    vTaskDelay(1000/portTICK_PERIOD_MS);
+    cocobot_position_set_y(-910);
+
     cocobot_trajectory_goto_d(-250, 5000);
     cocobot_game_state_add_points_to_score(50);
+    cocobot_trajectory_wait();
     return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 

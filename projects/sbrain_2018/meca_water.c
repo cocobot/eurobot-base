@@ -6,6 +6,8 @@
 #define MECA_WATER_SERVO_BALL_RIGHT_CLOSE     150
 
 #define MECA_WATER_SERVO_TAQUET_ID   PLATFORM_SERVO_0_ID
+#define MECA_WATER_SERVO_TAQUET_OPEN    150
+#define MECA_WATER_SERVO_TAQUET_CLOSE   450
 
 #define MECA_WATER_SERVO_ROTATION_ID    PLATFORM_SERVO_2_ID
 #define MECA_WATER_SERVO_ROTATION_OPEN    350
@@ -14,29 +16,32 @@
 
 static unsigned int servo_rotation_set_point;
 static unsigned int servo_ball_right_set_point;
+static unsigned int servo_taquet_set_point;
 
 static void meca_water_update(void)
 {
   platform_servo_set_value(MECA_WATER_SERVO_BALL_RIGHT_ID, servo_ball_right_set_point);
   platform_servo_set_value(MECA_WATER_SERVO_ROTATION_ID, servo_rotation_set_point);
+  platform_servo_set_value(MECA_WATER_SERVO_TAQUET_ID, servo_taquet_set_point);
 }
 
 void meca_water_init(void)
 {
   servo_rotation_set_point = MECA_WATER_SERVO_ROTATION_CLOSE;
   servo_ball_right_set_point = MECA_WATER_SERVO_BALL_RIGHT_CLOSE;
+  servo_taquet_set_point = MECA_WATER_SERVO_TAQUET_OPEN;
   meca_water_update();
 }
 
 void meca_water_prepare(void)
 {
-  //servo_set_point = MECA_BEE_SERVO_INIT;
+  servo_taquet_set_point = MECA_WATER_SERVO_TAQUET_OPEN;
   meca_water_update();
 }
 
 void meca_water_take_from_distributor(void)
 {
-  //servo_set_point = MECA_BEE_SERVO_INIT;
+  servo_taquet_set_point = MECA_WATER_SERVO_TAQUET_CLOSE;
   meca_water_update();
 }
 

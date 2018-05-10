@@ -5,11 +5,11 @@
 
 #define MECA_BEE_SERVO_INIT     125
 
-#define MECA_BEE_SERVO_CLOSE_ORANGE    125
-#define MECA_BEE_SERVO_OPEN_ORANGE     500
+#define MECA_BEE_SERVO_CLOSE_GREEN    125
+#define MECA_BEE_SERVO_OPEN_GREEN     500
 
-#define MECA_BEE_SERVO_CLOSE_GREEN    400
-#define MECA_BEE_SERVO_OPEN_GREEN     125
+#define MECA_BEE_SERVO_CLOSE_ORANGE    400
+#define MECA_BEE_SERVO_OPEN_ORANGE     125
 
 
 static unsigned int servo_set_point;
