@@ -29,7 +29,7 @@
 #define MECA_WATER_SERVO_ROTATION_CLOSE   200
 
 
-static unsigned int servo_take_tube[11] = {260, 270, 280, 290, 300, 310, 320, 330, 340, 350, 360};
+//static unsigned int servo_take_tube[11] = {260, 270, 280, 290, 300, 310, 320, 330, 340, 350, 360};
 static unsigned int servo_rotation_set_point;
 static unsigned int servo_ball_right_set_point;
 static unsigned int servo_taquet_set_point;
@@ -41,25 +41,25 @@ static void meca_water_update(void)
   platform_servo_set_value(MECA_WATER_SERVO_TAQUET_ID, servo_taquet_set_point);
 }
 
-static void meca_water_run_goto_static_tube()
-{
-    for(int i = 11; i > 0; i--)
-    {
-        servo_taquet_set_point = servo_take_tube[i];
-        meca_water_update();
-        vTaskDelay(80/portTICK_PERIOD_MS);
-    } 
-}
-
-static void meca_water_run_goto_pivot_tube()
-{
-    for(int i = 0; i < 11; i++)
-    {
-        servo_taquet_set_point = servo_take_tube[i];
-        meca_water_update();
-        vTaskDelay(80/portTICK_PERIOD_MS);
-    } 
-}
+//static void meca_water_run_goto_static_tube()
+//{
+//    for(int i = 11; i > 0; i--)
+//    {
+//        servo_taquet_set_point = servo_take_tube[i];
+//        meca_water_update();
+//        vTaskDelay(80/portTICK_PERIOD_MS);
+//    } 
+//}
+//
+//static void meca_water_run_goto_pivot_tube()
+//{
+//    for(int i = 0; i < 11; i++)
+//    {
+//        servo_taquet_set_point = servo_take_tube[i];
+//        meca_water_update();
+//        vTaskDelay(80/portTICK_PERIOD_MS);
+//    } 
+//}
 
 void meca_water_init(void)
 {
@@ -80,11 +80,11 @@ void meca_water_take_from_distributor(void)
   servo_taquet_set_point = MECA_WATER_SERVO_TAQUET_CLOSE;
   meca_water_update();
   vTaskDelay(500/portTICK_PERIOD_MS);
-  for(int i = 0; i < 4; i++)
-  {
-      meca_water_run_goto_static_tube();
-      meca_water_run_goto_pivot_tube();
-  }
+  //for(int i = 0; i < 4; i++)
+  //{
+  //    meca_water_run_goto_static_tube();
+  //    meca_water_run_goto_pivot_tube();
+  //}
 }
 
 void meca_water_shoot_left(void)
