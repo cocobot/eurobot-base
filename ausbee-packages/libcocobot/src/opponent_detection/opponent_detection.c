@@ -197,6 +197,22 @@ void cocobot_opponent_detection_set_on_map()
 #endif
 }
 
+int cocobot_opponent_detection_get_us(int i)
+{
+    if((i >= 0) && (i < 4))
+    {
+        if(_usirs[i].us != 0)
+        {
+            return _usirs[i].us;
+        }
+        else
+        {
+            return 3000;
+        }
+    }
+    return 3000;
+}
+
 void cocobot_opponent_detection_send_debug(void)
 {
   cocobot_com_send(COCOBOT_COM_SEND_USIR_PID,
