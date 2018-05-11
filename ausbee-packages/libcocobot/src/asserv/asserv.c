@@ -18,6 +18,7 @@ static cocobot_asserv_state_t _state = COCOBOT_ASSERV_DISABLE;
 static int stop = 0;
 static float stop_angular = 0;
 static float stop_distance = 0;
+static int _no_angle = 0;
 
 void cocobot_asserv_init(void)
 {
@@ -29,6 +30,7 @@ void cocobot_asserv_init(void)
 
   //asserv disabled until all is initialized
   cocobot_asserv_set_state(COCOBOT_ASSERV_DISABLE);
+  _no_angle = 0;
 
   //init ramps
   cocobot_asserv_ramp_init(&_ramp_dist);
@@ -57,6 +59,11 @@ void cocobot_asserv_init(void)
   cocobot_asserv_pid_set_max_error_for_integration(&_pid_angu, CONFIG_LIBCOCOBOT_ANGU_PID_MAX_ERROR_FOR_INTEGRATION / 1000.0f);
 
   cocobot_action_scheduler_set_average_linear_speed(cocobot_asserv_get_linear_speed());
+}
+
+void cocobot_asserv_set_angle_activation(uint8_t angle)
+{
+   _no_angle = !angle;
 }
 
 void cocobot_asserv_slow(void)
@@ -93,6 +100,7 @@ void cocobot_asserv_compute(void)
       stop = 0;
     }
 
+
     //compute ramps
     cocobot_asserv_ramp_set_feedback(&_ramp_dist, cocobot_position_get_distance());
     cocobot_asserv_ramp_set_feedback(&_ramp_angu, cocobot_position_get_angle());
@@ -105,13 +113,29 @@ void cocobot_asserv_compute(void)
     cocobot_asserv_pid_set_feedback(&_pid_dist, cocobot_position_get_distance());
     cocobot_asserv_pid_set_feedback(&_pid_angu, cocobot_position_get_angle());
 
-    //compute PIDs
-    cocobot_asserv_pid_compute(&_pid_dist);
-    cocobot_asserv_pid_compute(&_pid_angu);
 
-    //send PIDs output as command
-    cocobot_position_set_speed_distance_angle(cocobot_asserv_pid_get_output(&_pid_dist),
-                                              cocobot_asserv_pid_get_output(&_pid_angu));
+    
+    if(_no_angle)
+    {
+      cocobot_asserv_pid_compute(&_pid_dist);
+
+      cocobot_asserv_ramp_reset(&_ramp_angu, cocobot_position_get_angle());
+      cocobot_asserv_pid_reset(&_pid_angu);
+
+      //send PIDs output as command
+      cocobot_position_set_speed_distance_angle(cocobot_asserv_pid_get_output(&_pid_dist),
+                                                0);
+    }
+    else
+    {
+      //compute PIDs
+      cocobot_asserv_pid_compute(&_pid_dist);
+      cocobot_asserv_pid_compute(&_pid_angu);
+
+      //send PIDs output as command
+      cocobot_position_set_speed_distance_angle(cocobot_asserv_pid_get_output(&_pid_dist),
+                                                cocobot_asserv_pid_get_output(&_pid_angu));
+    }
     
     //enable motors
 #ifdef COCOBOT_L298
