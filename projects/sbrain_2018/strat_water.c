@@ -29,22 +29,30 @@ static float strat_water_take_get_x(waterDistributor_e water)
 {
     float target = 0;
     if(water == WATER_EASY)
-        target = 1175;
-    else
-        target = -890;
-
-    if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
     {
-        return -target;
+        target = 1175;
+        if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+        {
+            return -target;
+        }
+        return target;
     }
-    return target;
+    else
+    {
+        if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+        {
+            return 860;
+        }
+        else
+            return -920;
+    }
 }
 
 static float strat_water_take_get_y(waterDistributor_e water)
 {
     float target = 0;
     if(water == WATER_EASY)
-        target = 160;
+        target = 200;
     else
         target = -675;//TODO
 
@@ -132,15 +140,22 @@ static cocobot_action_callback_result_t strat_water_take_exec(void * arg)
     }
     else
     {
-            cocobot_trajectory_goto_a(90, 6000);
+        cocobot_trajectory_goto_a(90, 6000);
     }
     cocobot_trajectory_wait();
 
     //Move just under the water castle
-    cocobot_trajectory_goto_d(-130, 2500);
-    cocobot_trajectory_wait();
+#ifndef AUSBEE_SIM
+    cocobot_com_printf("%d, %d", cocobot_opponent_detection_get_us(2), cocobot_opponent_detection_get_us(3)); 
+    while((cocobot_opponent_detection_get_us(2) > 150) || (cocobot_opponent_detection_get_us(3) > 150))
+    {
+        cocobot_trajectory_goto_d(-20, 2500);
+        cocobot_trajectory_wait();
+    }
+#else
+    cocobot_trajectory_goto_d(-150, 2500);
+#endif
 
-    cocobot_trajectory_wait();
     meca_water_take_from_distributor();
     vTaskDelay(1000/portTICK_PERIOD_MS);
     
@@ -148,10 +163,13 @@ static cocobot_action_callback_result_t strat_water_take_exec(void * arg)
     cocobot_trajectory_goto_d(250, 2500);
     cocobot_trajectory_wait();
 
+    cocobot_game_state_add_points_to_score(10);
+   
+     
+    
     //The robot is now under water
     isFlooded[water] = 1;
 
-    cocobot_game_state_add_points_to_score(10);
     return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
