@@ -34,7 +34,6 @@ void cocobot_shifters_set(uint32_t bit, uint8_t value)
 void cocobot_shifters_update(void)
 {
   unsigned int i;
-
   platform_spi_slave_select(PLATFORM_SPI_SHIFT_SELECT);
 
   for(i = 0; i < sizeof(_out_shifters)/sizeof(_out_shifters[0]); i += 1)

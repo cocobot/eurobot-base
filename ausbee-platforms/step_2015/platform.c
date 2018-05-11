@@ -10,7 +10,7 @@
 void platform_init(void)
 {
   //init clock
-  mcual_clock_init(MCUAL_CLOCK_SOURCE_EXTERNAL, PLATFORM_MAIN_CLOCK_KHZ); 
+  mcual_clock_init(MCUAL_CLOCK_SOURCE_INTERNAL, PLATFORM_MAIN_CLOCK_KHZ); 
   
   //init leds
   mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN3, MCUAL_GPIO_OUTPUT);

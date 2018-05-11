@@ -22439,6 +22439,10 @@ var MecaAction = function (_React$Component) {
     value: function render() {
       var _this3 = this;
 
+      var color = this.props.color;
+      if (color == undefined) {
+        color = "primary";
+      }
       return _react2.default.createElement(
         _reactstrap.Col,
         { md: '3' },
@@ -22446,7 +22450,7 @@ var MecaAction = function (_React$Component) {
           _reactstrap.Button,
           { onClick: function onClick() {
               return _this3._action();
-            }, color: 'primary' },
+            }, color: color },
           this.props.name
         )
       );
@@ -22632,6 +22636,147 @@ var MecaComponent = function (_React$Component3) {
                   ' ',
                   ' ',
                   _react2.default.createElement(MecaAction, { active: this.props.active, id: '8', name: 'Wat. release bad' }),
+                  ' ',
+                  ' '
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement('p', null)
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8c, name: 'init' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8d, name: 'prepare' }),
+                  ' ',
+                  ' '
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement('p', null)
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8e, name: 'L take' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8f, name: 'L release' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x90, name: 'R take' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x91, name: 'R release' }),
+                  ' ',
+                  ' '
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement('p', null)
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8a, name: 'CL L up' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8b, name: 'CL L down' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x88, name: 'CL R up' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x89, name: 'CL R down' }),
+                  ' ',
+                  ' '
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement('p', null)
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8a, name: 'CL L up' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8b, name: 'CL L down' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x88, name: 'CL R up' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x89, name: 'CL R down' }),
+                  ' ',
+                  ' '
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement('p', null)
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x80, name: 'T L left' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x81, name: 'T L cget' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x82, name: 'T L cpush' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x83, name: 'T L right' }),
+                  ' ',
+                  ' '
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement('p', null)
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x84, name: 'T R right' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x85, name: 'T R cget' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x86, name: 'T R cpush' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x87, name: 'T R left' }),
+                  ' ',
+                  ' '
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement('p', null)
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0xC0, name: 'Chore 1' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0xC0, name: 'Chore 2' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0xC0, name: 'Chore 3' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0xC0, name: 'Chore 4' }),
                   ' ',
                   ' '
                 )

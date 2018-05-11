@@ -6,11 +6,13 @@
 #include <cocobot.h>
 #include "cocobot/encoders.h"
 #include "strat_domotique.h"
+#include "meca.h"
 //#include "cocobot_pathfinder_config.h"
 
 //static unsigned int _shell_configuration;
 extern cocobot_pathfinder_table_init_s initTable [];
 extern cocobot_opponent_detection_fake_robot_t _fakebot;
+uint8_t no_bat = 1;
 
 void update_lcd(void * arg)
 {
@@ -24,15 +26,36 @@ void update_lcd(void * arg)
   {
     while(1)
     {
+      no_bat = 1;
+      int i;
+      for (i = 0; i < 8 * 3; i++)
+      {
+        cocobot_shifters_set(i, i % 2);
+      }
+      cocobot_shifters_update();
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+      platform_led_toggle(PLATFORM_LED0);
+      platform_led_toggle(PLATFORM_LED1);
+
+      for (i = 0; i < 8 * 3; i++)
+      {
+        cocobot_shifters_set(i, (i + 1) % 2);
+      }
+      cocobot_shifters_update();
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+      platform_led_toggle(PLATFORM_LED0);
+      platform_led_toggle(PLATFORM_LED2);
+
+
+
       platform_gpio_toggle(PLATFORM_GPIO0);
 
       //disable everything
       cocobot_asserv_set_state(COCOBOT_ASSERV_DISABLE);
-
-      vTaskDelay(500 / portTICK_PERIOD_MS);
     }
   }
 #endif
+  no_bat = 0;
 
 #ifdef AUSBEE_SIM
   //while(1)
@@ -63,9 +86,12 @@ void update_lcd(void * arg)
 
 void run_homologation(void * arg)
 {
+     meca_init();
+
     (void)arg;
     cocobot_game_state_wait_for_starter_removed();
 
+    //panneau domotique
     cocobot_game_state_add_points_to_score(5);
     float x = 325; 
     if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
@@ -78,6 +104,7 @@ void run_homologation(void * arg)
 
     cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
     cocobot_trajectory_wait();
+
 
     #ifdef AUSBEE_SIM
   int try = 5;
@@ -98,6 +125,31 @@ void run_homologation(void * arg)
 #endif
   }
 
+  cocobot_trajectory_goto_d(40, 1000);
+
+  cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  cocobot_trajectory_wait();
+
+  #ifdef AUSBEE_SIM
+  try = 5;
+#endif
+  while(1)
+  {
+      cocobot_trajectory_goto_d(-20, 1000);
+      if(cocobot_trajectory_wait() != COCOBOT_TRAJECTORY_SUCCESS)
+      {
+          break;
+      }
+#ifdef AUSBEE_SIM
+      try -= 1;
+      if(try == 0)
+      {
+          break;
+      }
+#endif
+  }
+
+
   cocobot_game_state_add_points_to_score(25);
   cocobot_trajectory_goto_d(250, 5000);
   cocobot_trajectory_wait();
@@ -105,7 +157,60 @@ void run_homologation(void * arg)
     //cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_1);
 
    // strat_domotique_register();
-u   //cocobot_action_scheduler_start();
+   //cocobot_action_scheduler_start();
+
+  vTaskDelay(100 / portTICK_PERIOD_MS);
+
+  while(cocobot_game_state_get_elapsed_time() < 75000)
+  {
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+  }
+
+
+  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+  {
+    cocobot_trajectory_goto_a(180 + 35, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  }
+  else
+  {
+    cocobot_trajectory_goto_a(-35, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  }
+  cocobot_trajectory_wait();
+
+  //meca
+  meca_prepare(); 
+
+  cocobot_trajectory_goto_d(400, 5000);
+  cocobot_trajectory_wait();
+
+  cocobot_trajectory_goto_a(90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  cocobot_trajectory_wait();
+
+
+  cocobot_trajectory_goto_d(300, 5000);
+  cocobot_trajectory_wait();
+#ifdef AUSBEE_SIM
+  try = 5;
+#endif
+  while(1)
+  {
+      cocobot_trajectory_goto_d(10, 1000);
+      if(cocobot_trajectory_wait() != COCOBOT_TRAJECTORY_SUCCESS)
+      {
+          break;
+      }
+#ifdef AUSBEE_SIM
+      try -= 1;
+      if(try == 0)
+      {
+          break;
+      }
+#endif
+  }
+  cocobot_game_state_add_points_to_score(3);
+  cocobot_trajectory_goto_d(-20, 1000);
+  cocobot_trajectory_wait();
+
 
     while(1)
         vTaskDelay(100/portTICK_PERIOD_MS);
@@ -196,19 +301,23 @@ void run_strategy(void * arg)
 
 void com_handler(uint16_t pid, uint8_t * data, uint32_t len)
 {
-  switch(pid)
+  if(!no_bat)
   {
-    case COCOBOT_COM_SET_SERVO_PID:
-      {
-        uint8_t id;
-        int32_t value;
-        uint32_t offset = 0;
+    switch(pid)
+    {
+      case COCOBOT_COM_SET_SERVO_PID:
+        {
+          uint8_t id;
+          int32_t value;
+          uint32_t offset = 0;
 
-        offset += cocobot_com_read_B(data, len, offset, &id);
-        offset += cocobot_com_read_D(data, len, offset, &value);
-        platform_servo_set_value(id, value);
-      }
-      break;
+          offset += cocobot_com_read_B(data, len, offset, &id);
+          offset += cocobot_com_read_D(data, len, offset, &value);
+          platform_servo_set_value(id, value);
+        }
+        break;
+    }
+    meca_com_handler(pid, data, len);
   }
 }
 
@@ -236,7 +345,7 @@ int main(int argc, char *argv[])
   switch(cocobot_game_state_get_color())
   {
     case COCOBOT_GAME_STATE_COLOR_NEG:
-  cocobot_position_set_x(-1225);
+      cocobot_position_set_x(-1225);
       cocobot_position_set_y(800);
       cocobot_position_set_angle(0);
       break;
