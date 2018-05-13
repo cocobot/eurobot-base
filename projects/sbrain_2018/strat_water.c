@@ -52,7 +52,16 @@ static float strat_water_take_get_y(waterDistributor_e water)
 {
     float target = 0;
     if(water == WATER_EASY)
-        target = 200;
+    {
+        if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+        {
+            target = 210;
+        }
+        else
+        {
+            target = 110;
+        }
+    }
     else
         target = -675;//TODO
 
@@ -90,19 +99,16 @@ float strat_water_take_get_exec_time(waterDistributor_e water)
 float strat_water_take_get_success_proba(waterDistributor_e water)
 {
     if(water == WATER_EASY)
-        return 0.65;
-    else
         return 0.55;
+    else
+        return 0.45;
 }
 
 static cocobot_action_callback_result_t strat_water_take_preexec(void * arg)
 {
-    waterDistributor_e water = (waterDistributor_e) arg;
+    (void) arg;
     //TODO: Set loader in ready position?
-    if(water == WATER_EASY)
-    {
-        cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_BACKWARD);
-    }
+    cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_BACKWARD);
     return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
@@ -143,11 +149,16 @@ static cocobot_action_callback_result_t strat_water_take_exec(void * arg)
         cocobot_trajectory_goto_a(90, 6000);
     }
     cocobot_trajectory_wait();
+    meca_water_activate();
+    vTaskDelay(1000/portTICK_PERIOD_MS);
+    meca_water_init();
+    vTaskDelay(500/portTICK_PERIOD_MS);
+
 
     //Move just under the water castle
 #ifndef AUSBEE_SIM
     cocobot_com_printf("%d, %d", cocobot_opponent_detection_get_us(2), cocobot_opponent_detection_get_us(3)); 
-    while((cocobot_opponent_detection_get_us(2) > 150) || (cocobot_opponent_detection_get_us(3) > 150))
+    while(cocobot_opponent_detection_get_us(2) > 160)
     {
         cocobot_trajectory_goto_d(-20, 2500);
         cocobot_trajectory_wait();
@@ -160,12 +171,10 @@ static cocobot_action_callback_result_t strat_water_take_exec(void * arg)
     vTaskDelay(1000/portTICK_PERIOD_MS);
     
     //Get away from the water castle
-    cocobot_trajectory_goto_d(250, 2500);
+    cocobot_trajectory_goto_d(300, 2500);
     cocobot_trajectory_wait();
 
     cocobot_game_state_add_points_to_score(10);
-   
-     
     
     //The robot is now under water
     isFlooded[water] = 1;
