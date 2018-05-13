@@ -154,4 +154,6 @@ void cocobot_trajectory_set_opponent_detection(int enable);
 
 void cocobot_trajectory_handle_async_com(void);
 
+void cocobot_asserv_set_angle_activation(uint8_t angle);
+
 #endif// COCOBOT_TRAJECTORY_H

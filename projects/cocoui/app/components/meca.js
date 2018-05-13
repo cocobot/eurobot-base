@@ -26,9 +26,13 @@ class MecaAction extends React.Component {
   }
 
   render() {
+    let color = this.props.color;
+    if(color == undefined) {
+      color = "primary";
+    }
     return (
       <Col md="3">
-        <Button  onClick={() => this._action()} color="primary">{this.props.name}</Button>
+        <Button  onClick={() => this._action()} color={color}>{this.props.name}</Button>
       </Col>
     );
   }
@@ -137,7 +141,73 @@ class MecaComponent extends React.Component {
                   <MecaAction active={this.props.active} id="7" name="Wat. shoot all"/> { ' ' }
                   <MecaAction active={this.props.active} id="8" name="Wat. release bad"/> { ' ' }
                 </Row>
+                <Row>
+                  <p/>
+                </Row>
+                 <Row>
+                  <MecaAction color="warning" active={this.props.active} id={0x8c} name="init"/> { ' '}
+                  <MecaAction color="warning" active={this.props.active} id={0x8d} name="prepare"/> { ' ' }
+                </Row>
 
+                <Row>
+                  <p/>
+                </Row>
+                 <Row>
+                  <MecaAction color="warning" active={this.props.active} id={0x8e} name="L take"/> { ' '}
+                  <MecaAction color="warning" active={this.props.active} id={0x8f} name="L release"/> { ' ' }
+                  <MecaAction color="warning" active={this.props.active} id={0x90} name="R take"/> { ' '}
+                  <MecaAction color="warning" active={this.props.active} id={0x91} name="R release"/> { ' ' }
+                </Row>
+
+
+                <Row>
+                  <p/>
+                </Row>
+                 <Row>
+                  <MecaAction color="warning" active={this.props.active} id={0x8a} name="CL L up"/> { ' '}
+                  <MecaAction color="warning" active={this.props.active} id={0x8b} name="CL L down"/> { ' ' }
+                  <MecaAction color="warning" active={this.props.active} id={0x88} name="CL R up"/> { ' ' }
+                  <MecaAction color="warning" active={this.props.active} id={0x89} name="CL R down"/> { ' ' }
+                </Row>
+
+                <Row>
+                  <p/>
+                </Row>
+                 <Row>
+                  <MecaAction color="warning" active={this.props.active} id={0x8a} name="CL L up"/> { ' '}
+                  <MecaAction color="warning" active={this.props.active} id={0x8b} name="CL L down"/> { ' ' }
+                  <MecaAction color="warning" active={this.props.active} id={0x88} name="CL R up"/> { ' ' }
+                  <MecaAction color="warning" active={this.props.active} id={0x89} name="CL R down"/> { ' ' }
+                </Row>
+                <Row>
+                  <p/>
+                </Row>
+                 <Row>
+                  <MecaAction color="warning" active={this.props.active} id={0x80} name="T L left"/> { ' '}
+                  <MecaAction color="warning" active={this.props.active} id={0x81} name="T L cget"/> { ' ' }
+                  <MecaAction color="warning" active={this.props.active} id={0x82} name="T L cpush"/> { ' ' }
+                  <MecaAction color="warning" active={this.props.active} id={0x83} name="T L right"/> { ' ' }
+                </Row>
+
+                <Row>
+                  <p/>
+                </Row>
+                 <Row>
+                  <MecaAction color="warning" active={this.props.active} id={0x84} name="T R right"/> { ' '}
+                  <MecaAction color="warning" active={this.props.active} id={0x85} name="T R cget"/> { ' ' }
+                  <MecaAction color="warning" active={this.props.active} id={0x86} name="T R cpush"/> { ' ' }
+                  <MecaAction color="warning" active={this.props.active} id={0x87} name="T R left"/> { ' ' }
+                </Row>
+
+                <Row>
+                  <p/>
+                </Row>
+                 <Row>
+                  <MecaAction color="warning" active={this.props.active} id={0xC0} name="Chore 1"/> { ' '}
+                  <MecaAction color="warning" active={this.props.active} id={0xC0} name="Chore 2"/> { ' ' }
+                  <MecaAction color="warning" active={this.props.active} id={0xC0} name="Chore 3"/> { ' ' }
+                  <MecaAction color="warning" active={this.props.active} id={0xC0} name="Chore 4"/> { ' ' }
+                </Row>
               </CardBody>
             </Card>
           </Col>

@@ -59,4 +59,6 @@ void cocobot_asserv_slow(void);
 
 void cocobot_asserv_handle_sync_com(uint16_t pid, uint8_t * data, uint32_t len);
 
+void cococbot_asserv_set_angle_activation(uint8_t angle);
+
 #endif// COCOBOT_ASSERV_H
