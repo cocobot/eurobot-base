@@ -66,7 +66,7 @@ static cocobot_action_callback_result_t strat_bee_cleanup(void * arg)
 {
     (void) arg;
     meca_bee_init();
-    meca_water_take_from_distributor();
+    meca_water_activate();
     vTaskDelay(1000/portTICK_PERIOD_MS);
     meca_water_init();
     return COCOBOT_RETURN_ACTION_SUCCESS;

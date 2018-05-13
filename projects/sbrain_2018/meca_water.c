@@ -8,8 +8,9 @@
 #define MECA_WATER_SERVO_BALL_RIGHT_CLOSE     150
 
 #define MECA_WATER_SERVO_TAQUET_ID   PLATFORM_SERVO_0_ID
-#define MECA_WATER_SERVO_TAQUET_OPEN    150
-#define MECA_WATER_SERVO_TAQUET_CLOSE   400
+#define MECA_WATER_SERVO_TAQUET_OPEN    200
+#define MECA_WATER_SERVO_TAQUET_CLOSE   430
+#define MECA_WATER_SERVO_TAQUET_INITIATE   480
 
 //Used for 
 #define MECA_WATER_SERVO_TAQUET_SCALE_MIN  260
@@ -72,6 +73,12 @@ void meca_water_init(void)
 void meca_water_prepare(void)
 {
   servo_taquet_set_point = MECA_WATER_SERVO_TAQUET_OPEN;
+  meca_water_update();
+}
+
+void meca_water_activate(void)
+{
+  servo_taquet_set_point = MECA_WATER_SERVO_TAQUET_INITIATE;
   meca_water_update();
 }
 

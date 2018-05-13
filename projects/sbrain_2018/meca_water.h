@@ -4,6 +4,7 @@
 void meca_water_init(void);
 void meca_water_prepare(void);
 void meca_water_take_from_distributor(void);
+void meca_water_activate(void);
 void meca_water_shoot_left(void);
 void meca_water_shoot_all(void);
 void meca_water_release_bad_water(void);
