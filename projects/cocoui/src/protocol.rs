@@ -174,10 +174,45 @@ impl Protocol {
         let mut bytes = io::Cursor::new(bytes);
         match pid {
             0x8000 => {
-                Packet::PositionDebug {
+                Packet::Position {
                     x: bytes.get_f32_le() as f64,
                     y: bytes.get_f32_le() as f64,
                     a: bytes.get_f32_le() as f64,
+                }
+            },
+            0x8001 => {
+                Packet::AsservDistance {
+                    position_target: bytes.get_f32_le() as f64,
+                    position_current: bytes.get_f32_le() as f64,
+                    ramp_output: bytes.get_f32_le() as f64,
+                    ramp_speed_target: bytes.get_f32_le() as f64,
+                    speed_current: bytes.get_f32_le() as f64,
+                    pid_output: bytes.get_f32_le() as f64,
+                    pid_p: bytes.get_f32_le() as f64,
+                    pid_i: bytes.get_f32_le() as f64,
+                    pid_d: bytes.get_f32_le() as f64,
+                }
+            },
+            0x8002 => {
+                Packet::AsservAngular {
+                    position_target: bytes.get_f32_le() as f64,
+                    position_current: bytes.get_f32_le() as f64,
+                    ramp_output: bytes.get_f32_le() as f64,
+                    ramp_speed_target: bytes.get_f32_le() as f64,
+                    speed_current: bytes.get_f32_le() as f64,
+                    pid_output: bytes.get_f32_le() as f64,
+                    pid_p: bytes.get_f32_le() as f64,
+                    pid_i: bytes.get_f32_le() as f64,
+                    pid_d: bytes.get_f32_le() as f64,
+                }
+            },
+            0x8006 => {
+                Packet::GameState {
+                    secondary: bytes.get_u8() != 0,
+                    positive_color: bytes.get_u8() != 0,
+                    battery_mV: bytes.get_i32_le(),
+                    elapsed_time: bytes.get_i32_le(),
+                    score: bytes.get_i32_le(),
                 }
             },
             _ => Packet::Unknown { pid }
@@ -187,7 +222,37 @@ impl Protocol {
 
 #[derive(Debug)]
 pub enum Packet {
-    PositionDebug {x: f64, y: f64, a: f64},
+    Position {x: f64, y: f64, a: f64},
+    AsservDistance {
+        position_target: f64,
+        position_current: f64,
+        ramp_output: f64,
+        ramp_speed_target: f64,
+        speed_current: f64,
+        pid_output: f64,
+        pid_p: f64,
+        pid_i: f64,
+        pid_d: f64,
+    },
+    AsservAngular {
+        position_target: f64,
+        position_current: f64,
+        ramp_output: f64,
+        ramp_speed_target: f64,
+        speed_current: f64,
+        pid_output: f64,
+        pid_p: f64,
+        pid_i: f64,
+        pid_d: f64,
+    },
+    #[allow(non_snake_case)]
+    GameState {
+        secondary: bool,
+        positive_color: bool,
+        battery_mV: i32,
+        elapsed_time: i32,
+        score: i32,
+    },
 
     //specials
     SelectRobot {secondary: bool},

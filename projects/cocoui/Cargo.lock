@@ -43,8 +43,17 @@ name = "cocoui"
 version = "0.1.0"
 dependencies = [
  "bytes 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "colored 1.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.24 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "colored"
+version = "1.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "lazy_static 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -519,6 +528,7 @@ dependencies = [
 "checksum bytes 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)" = "0ce55bd354b095246fc34caf4e9e242f5297a7fd938b090cadfea6eee614aa62"
 "checksum cfg-if 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "0c4e7bb64a8ebb0d856483e1e682ea3422f883c5f5615a90d51a2c82fe87fdd3"
 "checksum cloudabi 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "ddfc5b9aa5d4507acaf872de71051dfd0e309860e88966e1051e462a077aac4f"
+"checksum colored 1.6.1 (registry+https://github.com/rust-lang/crates.io-index)" = "dc0a60679001b62fb628c4da80e574b9645ab4646056d7c9018885efffe45533"
 "checksum crossbeam-deque 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)" = "3486aefc4c0487b9cb52372c97df0a48b8c249514af1ee99703bf70d2f2ceda1"
 "checksum crossbeam-epoch 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)" = "30fecfcac6abfef8771151f8be4abc9e4edc112c2bcb233314cafde2680536e9"
 "checksum crossbeam-utils 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "677d453a17e8bd2b913fa38e8b9cf04bcdbb5be790aa294f2389661d72036015"

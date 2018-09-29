@@ -1,8 +1,11 @@
 extern crate tokio;
 extern crate bytes;
+extern crate colored;
 
 use std::io;
 use futures::sync::mpsc;
+
+use robot::colored::*;
 use robot::tokio::prelude::*;
 use robot::bytes::Bytes;
 
@@ -64,10 +67,10 @@ impl Future for Robot {
             if let Some(packet) = packet {
                 match packet {
                     Packet::Unknown{pid} => {
-                        println!("Unknown PID received : 0x{:X}", pid);
+                        eprintln!("{} 0x{:X}", "Unknown PID received:".red(), pid);
                     }
                     _ => {
-                         println!("Unhandled received packet : {:?}", packet);
+                        eprintln!("{} {:?}", "Unhandled received packet:".yellow(), packet);
                     }
                 }
     

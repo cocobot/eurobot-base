@@ -7,3 +7,4 @@ authors = ["Damien Espitallier <damien.espitallier@gmail.com>"]
 tokio = "0.1.10"
 bytes = "0.4.10"
 futures = "0.1.24"
+colored = "1.6.1"
