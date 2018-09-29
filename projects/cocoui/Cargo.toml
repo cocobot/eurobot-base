@@ -1,0 +1,9 @@
+[package]
+name = "cocoui"
+version = "0.1.0"
+authors = ["Damien Espitallier <damien.espitallier@gmail.com>"]
+
+[dependencies]
+tokio = "0.1.10"
+bytes = "0.4.10"
+futures = "0.1.24"
