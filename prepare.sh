@@ -3,6 +3,8 @@
 #getting hardware
 git clone git@github.com:cocobot/hardware.git
 
+#getting meca
+git clone git@github.com:cocobot/meca.git
 
 #getting aussbee fork
 git clone git@github.com:cocobot/ausbee.git
