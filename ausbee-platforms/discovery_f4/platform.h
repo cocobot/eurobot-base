@@ -30,6 +30,8 @@
 #define PLATFORM_SPI_ENCL_SELECT      2
 #define PLATFORM_SPI_ENCG_SELECT      3
 
+#define PLATFORM_I2C_VL53L0X          MCUAL_I2C1
+
 void platform_init(void);
 void platform_led_toggle(uint8_t led);
 void platform_led_set(uint8_t led);
@@ -41,10 +43,6 @@ void platform_gpio_clear(uint32_t gpio);
 void platform_gpio_toggle(uint32_t gpio);
 uint32_t platform_gpio_get(uint32_t gpio);
 
-void platform_spi_position_select(uint8_t select);
-uint8_t platform_spi_position_transfert(uint8_t data);
-
-void platform_spi_slave_select(uint8_t select);
-uint8_t platform_spi_slave_transfert(uint8_t data);
+uint8_t platform_i2c_transmit(mcual_i2c_id_t id, uint8_t addr, uint8_t * txbuf, uint8_t tx_size, uint8_t * rxbuf, uint8_t rx_size);
 
 #endif// PLATFORM_H
