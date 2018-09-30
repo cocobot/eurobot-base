@@ -1,16 +1,21 @@
 #[macro_use]
 extern crate futures;
 
+mod ui;
 mod network;
 mod protocol;
-mod state;
 mod robot;
 
-use std::sync::{Arc, Mutex};
-use state::State;
+use std::sync::mpsc::{Sender, Receiver};
+use std::sync::mpsc;
+
+use robot::RobotData;
 
 fn main() {
-    let state = Arc::new(Mutex::new(State::new()));
+    let (tx_rdata, rx_rdata): (Sender<RobotData>, Receiver<RobotData>) = mpsc::channel();
 
-    network::init(state.clone());
+    network::init(&tx_rdata);
+
+    ui::init(rx_rdata);
+    ui::start();
 }

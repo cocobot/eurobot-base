@@ -8,3 +8,8 @@ tokio = "0.1.10"
 bytes = "0.4.10"
 futures = "0.1.24"
 colored = "1.6.1"
+glib = "0.6.0"
+
+[dependencies.gtk]
+version = "0.5.0"
+features = ["v3_20"]

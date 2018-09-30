@@ -210,8 +210,8 @@ impl Protocol {
                 Packet::GameState {
                     secondary: bytes.get_u8() != 0,
                     positive_color: bytes.get_u8() != 0,
-                    battery_mV: bytes.get_i32_le(),
-                    elapsed_time: bytes.get_i32_le(),
+                    battery_mv: bytes.get_i32_le(),
+                    elapsed_time_s: bytes.get_i32_le(),
                     score: bytes.get_i32_le(),
                 }
             },
@@ -249,8 +249,8 @@ pub enum Packet {
     GameState {
         secondary: bool,
         positive_color: bool,
-        battery_mV: i32,
-        elapsed_time: i32,
+        battery_mv: i32,
+        elapsed_time_s: i32,
         score: i32,
     },
 
