@@ -16,76 +16,16 @@ static SemaphoreHandle_t mutex_spi_position;
 static SemaphoreHandle_t mutex_i2c;
 #endif
 
-typedef struct 
-{
-  uint16_t last_value;
-  uint16_t rising_edge;
-} platform_us_t;
-static platform_us_t us[4];
-
-#ifdef CONFIG_MCUAL_TIMER
-void platform_us_0_interrupt(void)
-{
-//  uint16_t now = mcual_timer_get_value(MCUAL_TIMER4);
-//  if(mcual_gpio_get(MCUAL_GPIOB, MCUAL_GPIO_PIN8))
-//  {
-//    us[0].rising_edge = now;
-//  }
-//  else
-//  {
-//    us[0].last_value = now - us[0].rising_edge;
-//  }
-}
-//
-void platform_us_1_interrupt(void)
-{
-//  uint16_t now = mcual_timer_get_value(MCUAL_TIMER4);
-//  if(mcual_gpio_get(MCUAL_GPIOB, MCUAL_GPIO_PIN9))
-//  {
-//    us[1].rising_edge = now;
-//  }
-//  else
-//  {
-//    us[1].last_value = now - us[1].rising_edge;
-//  }
-}
-//
-void platform_us_2_interrupt(void)
-{
-//  uint16_t now = mcual_timer_get_value(MCUAL_TIMER4);
-//  if(mcual_gpio_get(MCUAL_GPIOC, MCUAL_GPIO_PIN6))
-//  {
-//    us[2].rising_edge = now;
-//  }
-//  else
-//  {
-//    us[2].last_value = now - us[2].rising_edge;
-//  }
-}
-//
-void platform_us_3_interrupt(void)
-{
-//  uint16_t now = mcual_timer_get_value(MCUAL_TIMER4);
-//  if(mcual_gpio_get(MCUAL_GPIOD, MCUAL_GPIO_PIN12))
-//  {
-//    us[3].rising_edge = now;
-//  }
-//  else
-//  {
-//    us[3].last_value = now - us[3].rising_edge;
-//  }
-}
-#endif
 
 void platform_init(void)
 {
   //init mutexes
-//#ifdef CONFIG_OS_USE_FREERTOS
-//  mutex_spi_position = xSemaphoreCreateMutex();
-//  mutex_spi_slave = xSemaphoreCreateMutex();
-//  mutex_i2c = xSemaphoreCreateMutex();
-//#endif
-//
+#ifdef CONFIG_OS_USE_FREERTOS
+  mutex_spi_position = xSemaphoreCreateMutex();
+  mutex_spi_slave = xSemaphoreCreateMutex();
+  mutex_i2c = xSemaphoreCreateMutex();
+#endif
+
   //init clock
     mcual_clock_init(MCUAL_CLOCK_SOURCE_EXTERNAL, PLATFORM_MAIN_CLOCK_KHZ); 
   
@@ -103,67 +43,12 @@ void platform_init(void)
     mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN0, MCUAL_GPIO_INPUT);
 
 
-//  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN7, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN8, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN9, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN10, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN11, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN12, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN13, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN14, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN15, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN13, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN14, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN15, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN1, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN2, MCUAL_GPIO_INPUT);
-//
-//  mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN4, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN8, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN9, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN7, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN2, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN3, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN4, MCUAL_GPIO_INPUT);
-//  
-//  //init motor pwm pins
-//  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN5, MCUAL_GPIO_OUTPUT);
-//  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN6, MCUAL_GPIO_OUTPUT);
-//  mcual_gpio_set_function(MCUAL_GPIOE, MCUAL_GPIO_PIN5, 3);
-//  mcual_gpio_set_function(MCUAL_GPIOE, MCUAL_GPIO_PIN6, 3);
-//  //set motors default frequency and duty cycle
-//  platform_gpio_set_direction(PLATFORM_GPIO_MOTOR_DIR_RIGHT | PLATFORM_GPIO_MOTOR_DIR_LEFT | PLATFORM_GPIO_MOTOR_ENABLE, MCUAL_GPIO_OUTPUT);
-//  platform_gpio_clear(PLATFORM_GPIO_MOTOR_DIR_RIGHT | PLATFORM_GPIO_MOTOR_DIR_LEFT | PLATFORM_GPIO_MOTOR_ENABLE);
-//#ifdef CONFIG_MCUAL_TIMER
-//  platform_motor_set_frequency(20000);
-//  platform_motor_set_left_duty_cycle(0x0000);
-//  platform_motor_set_right_duty_cycle(0x0000);
-//  mcual_timer_enable_channel(MCUAL_TIMER9, MCUAL_TIMER_CHANNEL1 | MCUAL_TIMER_CHANNEL2);
-//#endif
-//
-//
 //  //init uart dbg pins
 //  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN9, MCUAL_GPIO_OUTPUT);
 //  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN10, MCUAL_GPIO_INPUT);
 //  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN9, 7);
 //  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN10, 7);
 //  mcual_usart_init(PLATFORM_USART_DEBUG, 115200);
-//
-//  //init adc
-//  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN0, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN1, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN2, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN3, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN4, MCUAL_GPIO_INPUT);
-//  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN0, MCUAL_GPIO_FUNCTION_ANALOG);
-//  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN1, MCUAL_GPIO_FUNCTION_ANALOG);
-//  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN2, MCUAL_GPIO_FUNCTION_ANALOG);
-//  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN3, MCUAL_GPIO_FUNCTION_ANALOG);
-//  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN4, MCUAL_GPIO_FUNCTION_ANALOG);
-//  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN5, MCUAL_GPIO_FUNCTION_ANALOG);
-//#ifdef CONFIG_MCUAL_ADC
-//  mcual_adc_init();
-//#endif
 //
 //  //init spi
 //  mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN0 | MCUAL_GPIO_PIN1 | MCUAL_GPIO_PIN2 | MCUAL_GPIO_PIN3, MCUAL_GPIO_OUTPUT);
@@ -188,79 +73,8 @@ void platform_init(void)
 //  mcual_spi_master_init(MCUAL_SPI2, MCUAL_SPI_MODE_3, 400000);
 //#endif
 //
-//#ifdef CONFIG_MCUAL_I2C
-//  //init i2c
-//  mcual_gpio_init(MCUAL_GPIOB, MCUAL_GPIO_PIN6 | MCUAL_GPIO_PIN7, MCUAL_GPIO_INPUT);
-//  mcual_gpio_set_function(MCUAL_GPIOB, MCUAL_GPIO_PIN6, 4);
-//  mcual_gpio_set_function(MCUAL_GPIOB, MCUAL_GPIO_PIN7, 4);
-//  mcual_gpio_set_output_type(MCUAL_GPIOB, MCUAL_GPIO_PIN6, MCUAL_GPIO_OPEN_DRAIN);
-//  mcual_gpio_set_output_type(MCUAL_GPIOB, MCUAL_GPIO_PIN7, MCUAL_GPIO_OPEN_DRAIN);
-//  mcual_i2c_master_init(MCUAL_I2C1, 100000);
-//#endif
-//
-//#ifdef CONFIG_MCUAL_TIMER
-//  //init us
-//  mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN0 | MCUAL_GPIO_PIN1, MCUAL_GPIO_OUTPUT);
-//  mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN13 | MCUAL_GPIO_PIN14, MCUAL_GPIO_OUTPUT);
-//  mcual_gpio_init(MCUAL_GPIOB, MCUAL_GPIO_PIN8 | MCUAL_GPIO_PIN9, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN6, MCUAL_GPIO_INPUT);
-//  mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN12, MCUAL_GPIO_INPUT);
-//  mcual_gpio_clear(MCUAL_GPIOE, MCUAL_GPIO_PIN0 | MCUAL_GPIO_PIN1);
-//  mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN13 | MCUAL_GPIO_PIN14);
-//  mcual_gpio_set_interrupt(MCUAL_GPIOB, MCUAL_GPIO_PIN8, MCUAL_GPIO_BOTH_EDGE, platform_us_0_interrupt);
-//  mcual_gpio_set_interrupt(MCUAL_GPIOB, MCUAL_GPIO_PIN9, MCUAL_GPIO_BOTH_EDGE, platform_us_1_interrupt);
-//  mcual_gpio_set_interrupt(MCUAL_GPIOC, MCUAL_GPIO_PIN6, MCUAL_GPIO_BOTH_EDGE, platform_us_2_interrupt);
-//  mcual_gpio_set_interrupt(MCUAL_GPIOD, MCUAL_GPIO_PIN12, MCUAL_GPIO_BOTH_EDGE, platform_us_3_interrupt);
-//  mcual_timer_init(MCUAL_TIMER4, -64); //counter only
-//#endif
 }
 
-#ifdef CONFIG_MCUAL_TIMER
-void platform_us_send_trig(uint32_t us_id)
-{
-//  switch(us_id)
-//  {
-//    case PLATFORM_US_0:
-//      mcual_gpio_set(MCUAL_GPIOE, MCUAL_GPIO_PIN0);
-//      break;
-//
-//    case PLATFORM_US_1:
-//      mcual_gpio_set(MCUAL_GPIOE, MCUAL_GPIO_PIN1);
-//      break;
-//
-//    case PLATFORM_US_2:
-//      mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN14);
-//      break;
-//
-//    case PLATFORM_US_3:
-//      mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN13);
-//      break;
-//  }
-}
-//
-void platform_us_reset_trig(uint32_t us_id)
-{
-//  switch(us_id)
-//  {
-//    case PLATFORM_US_0:
-//      mcual_gpio_clear(MCUAL_GPIOE, MCUAL_GPIO_PIN0);
-//      break;
-//
-//    case PLATFORM_US_1:
-//      mcual_gpio_clear(MCUAL_GPIOE, MCUAL_GPIO_PIN1);
-//      break;
-//
-//    case PLATFORM_US_2:
-//      mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN14);
-//      break;
-//
-//    case PLATFORM_US_3:
-//      mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN13);
-//      break;
-//  }
-}
-#endif
-//
 void platform_led_toggle(uint8_t led)
 {
   if(led & PLATFORM_LED_GREEN)
@@ -283,35 +97,7 @@ void platform_led_toggle(uint8_t led)
     mcual_gpio_toggle(MCUAL_GPIOD, MCUAL_GPIO_PIN15);
   }
 }
-//
-float platform_us_get_value(uint32_t us_id)
-{
-//  float value = 0;
-//  switch(us_id)
-//  {
-//    case PLATFORM_US_0:
-//      value = us[0].last_value;
-//      break;
-//
-//    case PLATFORM_US_1:
-//      value = us[1].last_value;
-//      break;
-//
-//    case PLATFORM_US_2:
-//      value = us[2].last_value;
-//      break;
-//
-//    case PLATFORM_US_3:
-//      value = us[3].last_value;
-//      break;
-//  }
-//
-//  value *= mcual_timer_get_timer_tick(MCUAL_TIMER4);
-//  value *= 0.34;
-//  value /= 4;
-//  return value /1000.0;
-}
-//
+
 void platform_led_set(uint8_t led)
 {
   if(led & PLATFORM_LED_GREEN)
@@ -402,29 +188,6 @@ uint32_t platform_gpio_get(uint32_t gpio)
     return value;
 }
 
-int32_t platform_adc_get_mV(uint32_t adc)
-{
-//  int32_t raw = mcual_adc_get(adc);
-//
-//  raw *= 3300000 / 4096;
-//
-//  switch(adc)
-//  {
-//    case PLATFORM_ADC_VBAT:
-//      raw *= 11;
-//      break;
-//
-//    case PLATFORM_ADC_IR0:
-//    case PLATFORM_ADC_IR1:
-//    case PLATFORM_ADC_IR2:
-//    case PLATFORM_ADC_IR3:
-//      raw *= 2;
-//      break;
-//  }
-//
-//  return raw / 1000;
-}
-//
 #ifdef CONFIG_OS_USE_FREERTOS
 void platform_spi_slave_select(uint8_t select)
 {
@@ -504,23 +267,4 @@ void platform_motor_set_right_duty_cycle(uint32_t duty_cycle)
 //  mcual_timer_set_duty_cycle(MCUAL_TIMER9, MCUAL_TIMER_CHANNEL2, duty_cycle);
 }
 #endif
-//
-#ifdef CONFIG_OS_USE_FREERTOS
-void platform_servo_set_value(uint32_t servo_id, uint32_t value)
-{
-//  pcm9685_set_channel(servo_id, 0, value);
-}
-#endif
-//
-uint8_t platform_i2c_transmit(mcual_i2c_id_t id, uint8_t addr, uint8_t * txbuf, uint8_t tx_size, uint8_t * rxbuf, uint8_t rx_size)
-{
-#ifdef CONFIG_OS_USE_FREERTOS
-//  xSemaphoreTake(mutex_i2c, portMAX_DELAY);
-#endif
-//  uint8_t ret = mcual_i2c_transmit(id, addr, txbuf, tx_size, rxbuf, rx_size);
-#ifdef CONFIG_OS_USE_FREERTOS
-//  xSemaphoreGive(mutex_i2c);
-#endif
-//
-//  return ret;
-}
+
