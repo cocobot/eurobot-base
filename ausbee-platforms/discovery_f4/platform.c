@@ -45,6 +45,9 @@ void platform_init(void)
   mcual_gpio_set_function(MCUAL_GPIOB, MCUAL_GPIO_PIN7, 4);
   mcual_gpio_set_output_type(MCUAL_GPIOB, MCUAL_GPIO_PIN6, MCUAL_GPIO_OPEN_DRAIN);
   mcual_gpio_set_output_type(MCUAL_GPIOB, MCUAL_GPIO_PIN7, MCUAL_GPIO_OPEN_DRAIN);
+  //ugly internal pull up for i2c...
+  GPIOB->PUPDR |= 0x01 << 12;
+  GPIOB->PUPDR |= 0x01 << 14;
   mcual_i2c_master_init(MCUAL_I2C1, 100000);
 #endif
 //  //init uart dbg pins
