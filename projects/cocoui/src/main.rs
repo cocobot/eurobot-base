@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate futures;
+#[macro_use]
+extern crate lazy_static;
 
 mod ui;
 mod network;

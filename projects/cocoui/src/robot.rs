@@ -63,7 +63,7 @@ impl Future for Robot {
             if let Some(packet) = packet {
                 match packet {
                     Packet::Unknown{pid} => {
-                        eprintln!("{} 0x{:X}", "Unknown PID received:".red(), pid);
+   //                     eprintln!("{} 0x{:X}", "Unknown PID received:".red(), pid);
                     },
                     Packet::Position{x, y, a} => {
                          self.data.x_mm = x;
@@ -76,7 +76,7 @@ impl Future for Robot {
                          self.data.score = score;
                     },
                     _ => {
-                        eprintln!("{} {:?}", "Unhandled received packet:".yellow(), packet);
+ //                       eprintln!("{} {:?}", "Unhandled received packet:".yellow(), packet);
                     }
                 }
                 self.tx_rdata.send(self.data.clone()).unwrap();
