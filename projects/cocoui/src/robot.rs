@@ -11,7 +11,7 @@ use robot::tokio::prelude::*;
 use protocol::{Packet, Protocol};
 use ui;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct RobotData {
     pub x_mm: f64,
     pub y_mm: f64,

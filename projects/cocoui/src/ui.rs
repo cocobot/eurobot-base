@@ -3,10 +3,9 @@ extern crate glib;
 extern crate cairo;
 extern crate config;
 
-use std::collections::HashMap;
-
 use std::cell::RefCell;
 use std::sync::mpsc::Receiver;
+use std::f64::consts::PI;
 use ui::gtk::prelude::*;
 use ui::config::{Config, Value};
 
@@ -45,6 +44,9 @@ struct UI {
     pr_info_elapsed_time: Option<gtk::Label>,
     pr_info_battery: Option<gtk::Label>,
     field: Option<gtk::DrawingArea>,
+
+    //data
+    pr: Option<RobotData>,
 }
 
 impl UI {
@@ -58,77 +60,130 @@ impl UI {
               pr_info_elapsed_time: None,
               pr_info_battery: None,
               field: None,
+              pr: None,
           }
      }
 }
 
 pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibit {
+    UII.with(|ui| {
+        let ui = ui.borrow();
 
-    let width = field.get_allocated_width() as f64;
-    let height = field.get_allocated_height() as f64;
-    let field = SETTINGS.get("field").and_then(Value::into_table).unwrap();
+        let width = field.get_allocated_width() as f64;
+        let height = field.get_allocated_height() as f64;
+        let field = SETTINGS.get("field").and_then(Value::into_table).unwrap();
 
-    let min_x = field.get("min_x").unwrap().clone().into_float().unwrap();
-    let max_x = field.get("max_x").unwrap().clone().into_float().unwrap();
-    let min_y = field.get("min_y").unwrap().clone().into_float().unwrap();
-    let max_y = field.get("max_y").unwrap().clone().into_float().unwrap();
+        let min_x = field.get("min_x").unwrap().clone().into_float().unwrap();
+        let max_x = field.get("max_x").unwrap().clone().into_float().unwrap();
+        let min_y = field.get("min_y").unwrap().clone().into_float().unwrap();
+        let max_y = field.get("max_y").unwrap().clone().into_float().unwrap();
 
-    let ratio = (max_x - min_x) / (max_y - min_y);
-    let coef_x = width / (max_x - min_x);
-    let coef_y = height / (max_y - min_y);
-    let mut coef = coef_x.abs();
+        let coef_x = width / (max_x - min_x);
+        let coef_y = height / (max_y - min_y);
+        let mut coef = coef_x.abs();
 
-    if coef_x.abs() > coef_y.abs() {
-        coef = coef_y.abs();
-    }
+        if coef_x.abs() > coef_y.abs() {
+            coef = coef_y.abs();
+        }
 
-    //set scale
-    ctx.scale(coef * coef_x.signum(),coef * coef_y.signum());
-    ctx.translate(-min_x, -min_y);
+        //set scale
+        ctx.scale(coef * coef_x.signum(),coef * coef_y.signum());
+        ctx.translate(-min_x, -min_y);
 
-
-    let borders = SETTINGS.get("field.borders").and_then(Value::into_array);
-    let borders = borders.as_ref().unwrap();
-    for b in borders {
-        let b = b.clone().into_table().unwrap();
-
-        //set color
-        let color = b.get("color").unwrap().clone().into_array().unwrap();
-        let color: Vec<f64> = color.iter().map(|x|-> f64 {
-            x.clone().into_float().unwrap()
-        }).collect();
-        ctx.set_source_rgb(*color.get(0).unwrap(), *color.get(1).unwrap(), *color.get(2).unwrap());
 
         //draw borders
-        let rect = b.get("rect").unwrap().clone().into_array().unwrap();
-        let rect: Vec<f64> = rect.iter().map(|x|-> f64 {
-            x.clone().into_float().unwrap()
-        }).collect();
-        ctx.set_source_rgb(*color.get(0).unwrap(), *color.get(1).unwrap(), *color.get(2).unwrap());
-        ctx.rectangle(
-            *rect.get(0).unwrap(),
-            *rect.get(1).unwrap(),
-            *rect.get(2).unwrap(),
-            *rect.get(3).unwrap()
-            );
-        ctx.fill();
+        let borders = SETTINGS.get("field.borders").and_then(Value::into_array);
+        let borders = borders.as_ref().unwrap();
+        for b in borders {
+            let b = b.clone().into_table().unwrap();
 
-        ctx.set_line_width(1.0);
-        ctx.set_source_rgb(0.0, 0.0, 0.0);
-        ctx.rectangle(
-            *rect.get(0).unwrap(),
-            *rect.get(1).unwrap(),
-            *rect.get(2).unwrap(),
-            *rect.get(3).unwrap()
-            );
-        ctx.stroke();
-    }
+            //set color
+            let color = b.get("color").unwrap().clone().into_array().unwrap();
+            let color: Vec<f64> = color.iter().map(|x|-> f64 {
+                x.clone().into_float().unwrap()
+            }).collect();
+            ctx.set_source_rgb(*color.get(0).unwrap(), *color.get(1).unwrap(), *color.get(2).unwrap());
 
-//    set_gray_silex_color(ctx);
-//
-//    //draw borders
-//    ctx.set_source_rgb(0.0, 0.0, 0.0);
-//    ctx.stroke();
+            //draw borders
+            let rect = b.get("rect").unwrap().clone().into_array().unwrap();
+            let rect: Vec<f64> = rect.iter().map(|x|-> f64 {
+                x.clone().into_float().unwrap()
+            }).collect();
+            ctx.set_source_rgb(*color.get(0).unwrap(), *color.get(1).unwrap(), *color.get(2).unwrap());
+            ctx.rectangle(
+                *rect.get(0).unwrap(),
+                *rect.get(1).unwrap(),
+                *rect.get(2).unwrap(),
+                *rect.get(3).unwrap()
+                );
+            ctx.fill();
+
+            ctx.set_line_width(1.0 / coef);
+            ctx.set_source_rgb(0.0, 0.0, 0.0);
+            ctx.rectangle(
+                *rect.get(0).unwrap(),
+                *rect.get(1).unwrap(),
+                *rect.get(2).unwrap(),
+                *rect.get(3).unwrap()
+                );
+            ctx.stroke();
+        }
+
+
+        //draw robots
+        if ui.pr.is_some() {
+            ctx.save();
+
+            let pr = ui.pr.as_ref().unwrap();
+            ctx.translate(pr.x_mm, pr.y_mm);
+            ctx.rotate(pr.a_deg * PI / 180.0);
+
+            let prshape = SETTINGS.get("pr.shape").and_then(Value::into_array).unwrap();
+            let prshape: Vec<[f64; 2]> = prshape.iter().map(|x|-> [f64; 2] {
+                let pt = x.clone().into_array().unwrap();
+                [
+                    pt.get(0).unwrap().clone().into_float().unwrap(),
+                    pt.get(1).unwrap().clone().into_float().unwrap()
+                ]
+            }).collect();
+
+            let mut iter = prshape.iter();
+            let first = iter.next().unwrap();
+            ctx.new_path();
+            ctx.move_to(first[0], first[1]);
+            iter.for_each(|x| {
+                ctx.line_to(x[0], x[1]);
+            });
+            ctx.close_path();
+
+            let fill = SETTINGS.get("pr.fill").and_then(Value::into_array).unwrap();
+            let fill: Vec<f64> = fill.iter().map(|x|-> f64 {
+                x.clone().into_float().unwrap()
+            }).collect();
+            ctx.set_source_rgb(*fill.get(0).unwrap(), *fill.get(1).unwrap(), *fill.get(2).unwrap());
+            ctx.fill();
+
+            let mut iter = prshape.iter();
+            let first = iter.next().unwrap();
+            ctx.new_path();
+            ctx.move_to(first[0], first[1]);
+            iter.for_each(|x| {
+                ctx.line_to(x[0], x[1]);
+            });
+            ctx.close_path();
+
+            let stroke = SETTINGS.get("pr.stroke").and_then(Value::into_array).unwrap();
+            let stroke: Vec<f64> = stroke.iter().map(|x|-> f64 {
+                x.clone().into_float().unwrap()
+            }).collect();
+            ctx.set_line_width(1.0 / coef);
+            ctx.set_source_rgb(*stroke.get(0).unwrap(), *stroke.get(1).unwrap(), *stroke.get(2).unwrap());
+            ctx.stroke();
+
+            
+            ctx.restore();
+        }
+    });
 
     gtk::Inhibit(false)
 }
@@ -150,6 +205,7 @@ pub fn update() {
             }
 
             if pr.is_some() {
+                ui.pr = pr.clone();
                 let pr = pr.unwrap();
                 update_elm!(ui.pr_info_x, |x: &mut gtk::Label| {x.set_text(&format!("x : {:.0} mm", pr.x_mm))});
                 update_elm!(ui.pr_info_y, |x: &mut gtk::Label| {x.set_text(&format!("y : {:.0} mm", pr.y_mm))});
