@@ -180,7 +180,6 @@ pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibi
             ctx.set_source_rgb(*stroke.get(0).unwrap(), *stroke.get(1).unwrap(), *stroke.get(2).unwrap());
             ctx.stroke();
 
-            
             ctx.restore();
         }
     });
