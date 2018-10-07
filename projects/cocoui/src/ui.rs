@@ -2,12 +2,14 @@ extern crate gtk;
 extern crate glib;
 extern crate cairo;
 extern crate config;
+extern crate time;
 
 use std::cell::RefCell;
 use std::sync::mpsc::Receiver;
 use std::f64::consts::PI;
 use ui::gtk::prelude::*;
 use ui::config::{Config, Value};
+use ui::time::PreciseTime;
 
 use robot::RobotData;
 
@@ -32,6 +34,114 @@ lazy_static! {
     };
 }
 
+struct UIBorder {
+    pub color: [f64; 4],
+    pub rectangle: [f64; 4],
+}
+
+impl UIBorder {
+    pub fn draw(&self, ctx: &cairo::Context) {
+        ctx.set_source_rgba(
+            self.color[0],
+            self.color[1],
+            self.color[2],
+            self.color[3],
+            );
+        ctx.rectangle(
+            self.rectangle[0],
+            self.rectangle[1],
+            self.rectangle[2],
+            self.rectangle[3],
+            );
+        ctx.fill();
+        ctx.set_source_rgb(0.0, 0.0, 0.0);
+        ctx.rectangle(
+            self.rectangle[0],
+            self.rectangle[1],
+            self.rectangle[2],
+            self.rectangle[3],
+            );
+        ctx.stroke();
+    }
+}
+
+struct UICache {
+    loaded: bool,
+    borders: Vec<UIBorder>,
+
+    //display
+    width: f64,
+    height: f64,
+
+    //surface
+    borders_surface: Option<cairo::ImageSurface>,
+    
+}
+
+impl UICache {
+    pub fn new() -> UICache{
+        UICache {
+            loaded: false,
+            borders : Vec::new(),
+            borders_surface: None,
+            width: -1.0,
+            height: -1.0,
+        }
+    }
+
+    pub fn invalidate_surface(&mut self, width: f64, height: f64) {
+         if (width != self.width) || (height != self.height) {
+             self.width = width;
+             self.height = height;
+
+             self.borders_surface = None;
+         }
+    }
+
+    pub fn load(&mut self) {
+        if !self.loaded {
+            self.reload()
+        }
+    }
+    
+    pub fn reload(&mut self) {
+        self.loaded = false;
+
+        //load config file
+        let mut config = Config::default();
+        config.merge(config::File::with_name("config")).unwrap();
+
+        //load borders
+        self.borders = Vec::new();
+        let borders = config.get("field.borders").and_then(Value::into_array);
+        let borders = borders.as_ref().unwrap();
+        for b in borders {
+            let b = b.clone().into_table().unwrap();
+
+            //parse color
+            let mut parsed_color = [1.0; 4];
+            let color = b.get("color").unwrap().clone().into_array().unwrap();
+            for (i, value) in color.iter().enumerate() {
+                parsed_color[i] = value.clone().into_float().unwrap();
+            }
+
+            //parse rectange
+            let mut parsed_rectangle = [0.0; 4];
+            let rect = b.get("rect").unwrap().clone().into_array().unwrap();
+            for (i, value) in rect.iter().enumerate() {
+                parsed_rectangle[i] = value.clone().into_float().unwrap();
+            }
+
+            self.borders.push(UIBorder {
+                color: parsed_color,
+                rectangle: parsed_rectangle,
+            });
+        }
+
+        self.loaded = true;
+    }
+}
+
 struct UI {
     //chans
     rx_rdata: Option<Receiver<RobotData>>,
@@ -47,6 +157,9 @@ struct UI {
 
     //data
     pr: Option<RobotData>,
+
+    //cache
+    cache: UICache,
 }
 
 impl UI {
@@ -61,16 +174,27 @@ impl UI {
               pr_info_battery: None,
               field: None,
               pr: None,
+              cache: UICache::new(),
           }
      }
 }
 
 pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibit {
+    let start = PreciseTime::now();
+    let mut inter1 = PreciseTime::now();
+    let mut inter2 = PreciseTime::now();
+    let mut inter3 = PreciseTime::now();
+    let mut inter4 = PreciseTime::now();
     UII.with(|ui| {
-        let ui = ui.borrow();
+        let mut ui = ui.borrow_mut();
+        inter1 = PreciseTime::now();
+
+        ui.cache.load();
 
         let width = field.get_allocated_width() as f64;
         let height = field.get_allocated_height() as f64;
+        ui.cache.invalidate_surface(width, height);
+
         let field = SETTINGS.get("field").and_then(Value::into_table).unwrap();
 
         let min_x = field.get("min_x").unwrap().clone().into_float().unwrap();
@@ -86,49 +210,34 @@ pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibi
             coef = coef_y.abs();
         }
 
+
+        //draw borders
+        if ui.cache.borders_surface.is_none() {
+            let borders = cairo::ImageSurface::create(cairo::Format::ARgb32, width as i32, height as i32).unwrap();
+            let ctx = cairo::Context::new(&borders);
+
+            //set scale
+            ctx.scale(coef * coef_x.signum(),coef * coef_y.signum());
+            ctx.translate(-min_x, -min_y);
+
+            ctx.set_line_width(1.0 / coef);
+            ui.cache.borders.iter().for_each(|b| {
+                b.draw(&ctx);
+            });
+
+            ui.cache.borders_surface = Some(borders);
+        }
+        ctx.set_operator(cairo::Operator::Over);
+        ctx.set_source_surface(ui.cache.borders_surface.as_ref().unwrap(), 0.0, 0.0);
+        ctx.paint();
+
+        inter2 = PreciseTime::now();
+        inter3 = PreciseTime::now();
+        inter4 = PreciseTime::now();
+        
         //set scale
         ctx.scale(coef * coef_x.signum(),coef * coef_y.signum());
         ctx.translate(-min_x, -min_y);
-
-
-        //draw borders
-        let borders = SETTINGS.get("field.borders").and_then(Value::into_array);
-        let borders = borders.as_ref().unwrap();
-        for b in borders {
-            let b = b.clone().into_table().unwrap();
-
-            //set color
-            let color = b.get("color").unwrap().clone().into_array().unwrap();
-            let color: Vec<f64> = color.iter().map(|x|-> f64 {
-                x.clone().into_float().unwrap()
-            }).collect();
-            ctx.set_source_rgb(*color.get(0).unwrap(), *color.get(1).unwrap(), *color.get(2).unwrap());
-
-            //draw borders
-            let rect = b.get("rect").unwrap().clone().into_array().unwrap();
-            let rect: Vec<f64> = rect.iter().map(|x|-> f64 {
-                x.clone().into_float().unwrap()
-            }).collect();
-            ctx.set_source_rgb(*color.get(0).unwrap(), *color.get(1).unwrap(), *color.get(2).unwrap());
-            ctx.rectangle(
-                *rect.get(0).unwrap(),
-                *rect.get(1).unwrap(),
-                *rect.get(2).unwrap(),
-                *rect.get(3).unwrap()
-                );
-            ctx.fill();
-
-            ctx.set_line_width(1.0 / coef);
-            ctx.set_source_rgb(0.0, 0.0, 0.0);
-            ctx.rectangle(
-                *rect.get(0).unwrap(),
-                *rect.get(1).unwrap(),
-                *rect.get(2).unwrap(),
-                *rect.get(3).unwrap()
-                );
-            ctx.stroke();
-        }
-
 
         //draw robots
         if ui.pr.is_some() {
@@ -200,6 +309,13 @@ pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibi
 
     });
 
+    let end = PreciseTime::now();
+    println!("draw_field exec time:   {} ms", start.to(end) * 1000);
+    println!("draw_field exec inter1: {} ms", start.to(inter1) * 1000);
+    println!("draw_field exec inter2: {} ms", inter1.to(inter2) * 1000);
+    println!("draw_field exec inter3: {} ms", inter2.to(inter3) * 1000);
+    println!("draw_field exec inter4: {} ms", inter3.to(inter4) * 1000);
+    println!("draw_field exec inter3: {} ms", inter3.to(end) * 1000);
     gtk::Inhibit(false)
 }
 
