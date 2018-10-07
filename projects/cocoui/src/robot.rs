@@ -53,6 +53,7 @@ pub struct RobotData {
     pub battery_mv: i32,
     pub asserv_distance: AsservData,
     pub asserv_angular: AsservData,
+    pub pathfinder: Vec<Vec<usize>>,
 }
 
 impl RobotData {
@@ -66,6 +67,7 @@ impl RobotData {
               battery_mv: 0,
               asserv_distance: AsservData::new(),
               asserv_angular: AsservData::new(),
+              pathfinder: Vec::new(),
          }
     }
 }
@@ -153,6 +155,23 @@ impl Future for Robot {
                          self.data.elapsed_time_s = elapsed_time_s;
                          self.data.score = score;
                     },
+                    Packet::Pathfinder{length, width, grid} => {
+                        let mut iter = grid.iter();
+                        let mut pathfinder = vec![];
+                        for _i in 0..length {
+                            let mut v : Vec<usize> = vec![0; width];
+                            for j in 0..width {
+                                let nxt = iter.next();
+                                if nxt.is_some() {
+                                    v[j] = *nxt.unwrap();
+                                }
+                            }
+                            pathfinder.push(v);
+                        }
+
+                        self.data.pathfinder = pathfinder;
+                    },
+
                     _ => {
                         eprintln!("{} {:?}", "Unhandled received packet:".yellow(), packet);
                     }

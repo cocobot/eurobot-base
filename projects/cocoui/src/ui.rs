@@ -181,7 +181,23 @@ pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibi
             ctx.stroke();
 
             ctx.restore();
+
+            /*
+            //draw pathfinder
+            let length = pr.pathfinder.len();
+            if length > 0 {
+                let width = pr.pathfinder[0].len();
+                for (i, line) in pr.pathfinder.iter().enumerate() {
+                    for (j, value) in line.iter().enumerate() {
+                        ctx.rectangle((j * 5) as f64, (i * 5) as f64, 5.0, 5.0);
+                        ctx.set_source_rgba(1.0, 0.0, 0.0, 0.5);
+                        ctx.fill();
+                    }
+                }
+            }
+            */
         }
+
     });
 
     gtk::Inhibit(false)

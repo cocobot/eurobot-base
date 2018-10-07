@@ -206,6 +206,21 @@ impl Protocol {
                     pid_d: bytes.get_f32_le() as f64,
                 }
             },
+            0x8004 => {
+                let length = bytes.get_u16_le() as usize;
+                let width = bytes.get_u16_le() as usize;
+                let mut grid = vec![];
+
+                while bytes.has_remaining() {
+                    grid.push(bytes.get_u16_le() as usize);
+                }
+                
+                Packet::Pathfinder {
+                    length,
+                    width,
+                    grid,
+                }
+            },
             0x8006 => {
                 Packet::GameState {
                     secondary: bytes.get_u8() != 0,
@@ -245,13 +260,17 @@ pub enum Packet {
         pid_i: f64,
         pid_d: f64,
     },
-    #[allow(non_snake_case)]
     GameState {
         secondary: bool,
         positive_color: bool,
         battery_mv: i32,
         elapsed_time_s: i32,
         score: i32,
+    },
+    Pathfinder {
+        length: usize,
+        width: usize,
+        grid: Vec<usize>,
     },
 
     //specials
