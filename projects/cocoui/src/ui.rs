@@ -343,7 +343,7 @@ pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibi
                         for (i, line) in pr.pathfinder.iter().enumerate() {
                             for (j, value) in line.iter().enumerate() {
                                 let sx = -1500.0 + (i as f64) * step_x;
-                                let sy = 1000.0 - (j as f64) * step_y;
+                                let sy = 1000.0 - ((j + 1) as f64) * step_y;
                                 ctx.rectangle(sx, sy, step_x, step_y);
 
                                 match ui.cache.pathfinder_colors.get(&(*value as u32)) {
