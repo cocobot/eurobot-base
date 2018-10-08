@@ -3,6 +3,10 @@ shape = [[-100, -150], [-100, 150], [100, 150], [100, -150]]
 fill = [0.3, 0.3, 0.3]
 stroke = [0.0, 0.0, 0.0]
 
+[pathfinder]
+color_opacity = 0.3
+grid_color = [0.0, 0.0, 0.0, 1.0]
+
 #TODO: faire choisir les couleurs par Vincent
 [pathfinder.grid_colors]
 0x0960 = [0.0, 1.0, 0.0]

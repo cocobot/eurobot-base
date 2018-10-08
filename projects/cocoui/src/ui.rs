@@ -74,6 +74,8 @@ struct UICache {
     //cached settings
     borders: Vec<UIBorder>,
     pathfinder_colors: HashMap<u32, [f64; 3]>,
+    pathfinder_color_opacity: f64,
+    pathfinder_grid_color: [f64; 4],
 
     //display
     width: f64,
@@ -92,6 +94,8 @@ impl UICache {
             loaded: false,
             borders: Vec::new(),
             pathfinder_colors: HashMap::new(),
+            pathfinder_color_opacity: 1.0,
+            pathfinder_grid_color: [1.0; 4],
             borders_surface: None,
             pathfinder_pr_surface: None,
             pathfinder_pr_idx: 0,
@@ -149,6 +153,22 @@ impl UICache {
                 rectangle: parsed_rectangle,
             });
         }
+
+
+        //load pathfinder settings
+        let pathfinder = config.get("pathfinder").and_then(Value::into_table);
+        let pathfinder = pathfinder.as_ref().unwrap();
+
+        let pathfinder_color_opacity = pathfinder.get("color_opacity").clone().unwrap();
+        let pathfinder_color_opacity = pathfinder_color_opacity.clone().into_float().unwrap();
+        self.pathfinder_color_opacity = pathfinder_color_opacity;
+
+        let pathfinder_grid_color = pathfinder.get("grid_color").clone().unwrap();
+        let pathfinder_grid_color = pathfinder_grid_color.clone().into_array().unwrap();
+        for (i, value) in pathfinder_grid_color.iter().enumerate() {
+            self.pathfinder_grid_color[i] = value.clone().into_float().unwrap();
+        }
+
 
         //load pathfinder colors
         self.pathfinder_colors = HashMap::new();
@@ -348,7 +368,7 @@ pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibi
 
                                 match ui.cache.pathfinder_colors.get(&(*value as u32)) {
                                     Some(&color) => {
-                                        ctx.set_source_rgba(color[0], color[1], color[2], 0.3);
+                                        ctx.set_source_rgba(color[0], color[1], color[2], ui.cache.pathfinder_color_opacity);
                                     }
                                     _ => {
                                         ctx.set_source_rgba(0.0, 0.0, 0.0, 1.0);
@@ -359,7 +379,12 @@ pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibi
 
                                 ctx.rectangle(sx, sy, step_x, step_y);
                                 ctx.set_line_width(2.0);
-                                ctx.set_source_rgba(0.0, 0.0, 0.0, 1.0);
+                                ctx.set_source_rgba(
+                                    ui.cache.pathfinder_grid_color[0],
+                                    ui.cache.pathfinder_grid_color[1],
+                                    ui.cache.pathfinder_grid_color[2],
+                                    ui.cache.pathfinder_grid_color[3]
+                                    );
                                 ctx.stroke();
                             }
                         }
