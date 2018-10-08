@@ -3,13 +3,16 @@ extern crate glib;
 extern crate cairo;
 extern crate config;
 extern crate time;
+extern crate colored;
 
 use std::cell::RefCell;
 use std::sync::mpsc::Receiver;
 use std::f64::consts::PI;
+use std::collections::HashMap;
 use ui::gtk::prelude::*;
 use ui::config::{Config, Value};
 use ui::time::PreciseTime;
+use ui::colored::*;
 
 use robot::RobotData;
 
@@ -67,7 +70,10 @@ impl UIBorder {
 
 struct UICache {
     loaded: bool,
+
+    //cached settings
     borders: Vec<UIBorder>,
+    pathfinder_colors: HashMap<u32, [f64; 3]>,
 
     //display
     width: f64,
@@ -75,6 +81,8 @@ struct UICache {
 
     //surface
     borders_surface: Option<cairo::ImageSurface>,
+    pathfinder_pr_surface: Option<cairo::ImageSurface>,
+    pathfinder_pr_idx: usize,
     
 }
 
@@ -82,8 +90,11 @@ impl UICache {
     pub fn new() -> UICache{
         UICache {
             loaded: false,
-            borders : Vec::new(),
+            borders: Vec::new(),
+            pathfinder_colors: HashMap::new(),
             borders_surface: None,
+            pathfinder_pr_surface: None,
+            pathfinder_pr_idx: 0,
             width: -1.0,
             height: -1.0,
         }
@@ -95,6 +106,7 @@ impl UICache {
              self.height = height;
 
              self.borders_surface = None;
+             self.pathfinder_pr_surface = None;
          }
     }
 
@@ -136,6 +148,22 @@ impl UICache {
                 color: parsed_color,
                 rectangle: parsed_rectangle,
             });
+        }
+
+        //load pathfinder colors
+        self.pathfinder_colors = HashMap::new();
+        let colors = config.get("pathfinder.grid_colors").and_then(Value::into_table);
+        let colors = colors.as_ref().unwrap();
+        for (key, val) in colors.iter() {
+            let ikey = u32::from_str_radix(&key[2..], 16).unwrap();
+
+            let mut parsed_color = [1.0; 3];
+            let color = val.clone().into_array().unwrap();
+            for (i, value) in color.iter().enumerate() {
+                parsed_color[i] = value.clone().into_float().unwrap();
+            }
+
+            self.pathfinder_colors.insert(ikey, parsed_color);
         }
 
         self.loaded = true;
@@ -231,91 +259,140 @@ pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibi
         ctx.set_source_surface(ui.cache.borders_surface.as_ref().unwrap(), 0.0, 0.0);
         ctx.paint();
 
-        inter2 = PreciseTime::now();
-        inter3 = PreciseTime::now();
-        inter4 = PreciseTime::now();
         
-        //set scale
-        ctx.scale(coef * coef_x.signum(),coef * coef_y.signum());
-        ctx.translate(-min_x, -min_y);
 
         //draw robots
         if ui.pr.is_some() {
             ctx.save();
+            //set scale
+            ctx.scale(coef * coef_x.signum(),coef * coef_y.signum());
+            ctx.translate(-min_x, -min_y);
 
-            let pr = ui.pr.as_ref().unwrap();
-            ctx.translate(pr.x_mm, pr.y_mm);
-            ctx.rotate(pr.a_deg * PI / 180.0);
+            let mut pathfinder_pr_surface = None;
+            let pathfinder_idx;
 
-            let prshape = SETTINGS.get("pr.shape").and_then(Value::into_array).unwrap();
-            let prshape: Vec<[f64; 2]> = prshape.iter().map(|x|-> [f64; 2] {
-                let pt = x.clone().into_array().unwrap();
-                [
-                    pt.get(0).unwrap().clone().into_float().unwrap(),
-                    pt.get(1).unwrap().clone().into_float().unwrap()
-                ]
-            }).collect();
+            {
+                let pr = ui.pr.as_ref().unwrap();
+                pathfinder_idx = pr.pathfinder_idx;
 
-            let mut iter = prshape.iter();
-            let first = iter.next().unwrap();
-            ctx.new_path();
-            ctx.move_to(first[0], first[1]);
-            iter.for_each(|x| {
-                ctx.line_to(x[0], x[1]);
-            });
-            ctx.close_path();
+                ctx.translate(pr.x_mm, pr.y_mm);
+                ctx.rotate(pr.a_deg * PI / 180.0);
 
-            let fill = SETTINGS.get("pr.fill").and_then(Value::into_array).unwrap();
-            let fill: Vec<f64> = fill.iter().map(|x|-> f64 {
-                x.clone().into_float().unwrap()
-            }).collect();
-            ctx.set_source_rgb(*fill.get(0).unwrap(), *fill.get(1).unwrap(), *fill.get(2).unwrap());
-            ctx.fill();
+                let prshape = SETTINGS.get("pr.shape").and_then(Value::into_array).unwrap();
+                let prshape: Vec<[f64; 2]> = prshape.iter().map(|x|-> [f64; 2] {
+                    let pt = x.clone().into_array().unwrap();
+                    [
+                        pt.get(0).unwrap().clone().into_float().unwrap(),
+                        pt.get(1).unwrap().clone().into_float().unwrap()
+                    ]
+                }).collect();
 
-            let mut iter = prshape.iter();
-            let first = iter.next().unwrap();
-            ctx.new_path();
-            ctx.move_to(first[0], first[1]);
-            iter.for_each(|x| {
-                ctx.line_to(x[0], x[1]);
-            });
-            ctx.close_path();
+                let mut iter = prshape.iter();
+                let first = iter.next().unwrap();
+                ctx.new_path();
+                ctx.move_to(first[0], first[1]);
+                iter.for_each(|x| {
+                    ctx.line_to(x[0], x[1]);
+                });
+                ctx.close_path();
 
-            let stroke = SETTINGS.get("pr.stroke").and_then(Value::into_array).unwrap();
-            let stroke: Vec<f64> = stroke.iter().map(|x|-> f64 {
-                x.clone().into_float().unwrap()
-            }).collect();
-            ctx.set_line_width(1.0 / coef);
-            ctx.set_source_rgb(*stroke.get(0).unwrap(), *stroke.get(1).unwrap(), *stroke.get(2).unwrap());
-            ctx.stroke();
+                let fill = SETTINGS.get("pr.fill").and_then(Value::into_array).unwrap();
+                let fill: Vec<f64> = fill.iter().map(|x|-> f64 {
+                    x.clone().into_float().unwrap()
+                }).collect();
+                ctx.set_source_rgb(*fill.get(0).unwrap(), *fill.get(1).unwrap(), *fill.get(2).unwrap());
+                ctx.fill();
 
-            ctx.restore();
+                let mut iter = prshape.iter();
+                let first = iter.next().unwrap();
+                ctx.new_path();
+                ctx.move_to(first[0], first[1]);
+                iter.for_each(|x| {
+                    ctx.line_to(x[0], x[1]);
+                });
+                ctx.close_path();
 
-            /*
-            //draw pathfinder
-            let length = pr.pathfinder.len();
-            if length > 0 {
-                let width = pr.pathfinder[0].len();
-                for (i, line) in pr.pathfinder.iter().enumerate() {
-                    for (j, value) in line.iter().enumerate() {
-                        ctx.rectangle((j * 5) as f64, (i * 5) as f64, 5.0, 5.0);
-                        ctx.set_source_rgba(1.0, 0.0, 0.0, 0.5);
-                        ctx.fill();
+                let stroke = SETTINGS.get("pr.stroke").and_then(Value::into_array).unwrap();
+                let stroke: Vec<f64> = stroke.iter().map(|x|-> f64 {
+                    x.clone().into_float().unwrap()
+                }).collect();
+                ctx.set_line_width(1.0 / coef);
+                ctx.set_source_rgb(*stroke.get(0).unwrap(), *stroke.get(1).unwrap(), *stroke.get(2).unwrap());
+                ctx.stroke();
+
+                ctx.restore();
+
+                //draw pathfinder
+                inter2 = PreciseTime::now();
+                inter3 = PreciseTime::now();
+                if ui.cache.pathfinder_pr_surface.is_none() || ui.cache.pathfinder_pr_idx != pr.pathfinder_idx {
+                    let cpathfinder_pr_surface = cairo::ImageSurface::create(cairo::Format::ARgb32, width as i32, height as i32).unwrap();
+                    let ctx = cairo::Context::new(&cpathfinder_pr_surface);
+
+                    //set scale
+                    ctx.scale(coef * coef_x.signum(),coef * coef_y.signum());
+                    ctx.translate(-min_x, -min_y);
+
+                    let length = pr.pathfinder.len();
+                    if length > 0 {
+                        let width = pr.pathfinder[0].len();
+
+                        let step_x = 3000.0 / (length as f64);
+                        let step_y = 2000.0 / (width as f64);
+
+                        for (i, line) in pr.pathfinder.iter().enumerate() {
+                            for (j, value) in line.iter().enumerate() {
+                                let sx = -1500.0 + (i as f64) * step_x;
+                                let sy = 1000.0 - (j as f64) * step_y;
+                                ctx.rectangle(sx, sy, step_x, step_y);
+
+                                match ui.cache.pathfinder_colors.get(&(*value as u32)) {
+                                    Some(&color) => {
+                                        ctx.set_source_rgba(color[0], color[1], color[2], 0.3);
+                                    }
+                                    _ => {
+                                        ctx.set_source_rgba(0.0, 0.0, 0.0, 1.0);
+                                        eprintln!("{} no color defined for 0x{:X}", "Pathfinder:".yellow(), value);
+                                    }
+                                }
+                                ctx.fill();
+
+                                ctx.rectangle(sx, sy, step_x, step_y);
+                                ctx.set_line_width(2.0);
+                                ctx.set_source_rgba(0.0, 0.0, 0.0, 1.0);
+                                ctx.stroke();
+                            }
+                        }
                     }
+                    pathfinder_pr_surface = Some(cpathfinder_pr_surface);
+                }
+                if pathfinder_pr_surface.is_some() {
+                    ctx.set_operator(cairo::Operator::Over);
+                    ctx.set_source_surface(pathfinder_pr_surface.as_ref().unwrap(), 0.0, 0.0);
+                    ctx.paint();
+                }
+                else if ui.cache.pathfinder_pr_surface.is_some() {
+                    ctx.set_operator(cairo::Operator::Over);
+                    ctx.set_source_surface(ui.cache.pathfinder_pr_surface.as_ref().unwrap(), 0.0, 0.0);
+                    ctx.paint();
                 }
             }
-            */
+            if pathfinder_pr_surface.is_some() {
+                ui.cache.pathfinder_pr_idx = pathfinder_idx;
+                ui.cache.pathfinder_pr_surface = pathfinder_pr_surface;
+            }
         }
 
+        inter4 = PreciseTime::now();
     });
 
     let end = PreciseTime::now();
-    println!("draw_field exec time:   {} ms", start.to(end) * 1000);
-    println!("draw_field exec inter1: {} ms", start.to(inter1) * 1000);
-    println!("draw_field exec inter2: {} ms", inter1.to(inter2) * 1000);
-    println!("draw_field exec inter3: {} ms", inter2.to(inter3) * 1000);
-    println!("draw_field exec inter4: {} ms", inter3.to(inter4) * 1000);
-    println!("draw_field exec inter3: {} ms", inter3.to(end) * 1000);
+    //println!("draw_field exec time:   {} ms", start.to(end) * 1000);
+    //println!("draw_field exec inter1: {} ms", start.to(inter1) * 1000);
+    //println!("draw_field exec inter2: {} ms", inter1.to(inter2) * 1000);
+    //println!("draw_field exec inter3: {} ms", inter2.to(inter3) * 1000);
+    //println!("draw_field exec inter4: {} ms", inter3.to(inter4) * 1000);
+    //println!("draw_field exec inter3: {} ms", inter3.to(end) * 1000);
     gtk::Inhibit(false)
 }
 

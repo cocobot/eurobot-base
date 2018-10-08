@@ -54,6 +54,7 @@ pub struct RobotData {
     pub asserv_distance: AsservData,
     pub asserv_angular: AsservData,
     pub pathfinder: Vec<Vec<usize>>,
+    pub pathfinder_idx: usize,
 }
 
 impl RobotData {
@@ -68,6 +69,7 @@ impl RobotData {
               asserv_distance: AsservData::new(),
               asserv_angular: AsservData::new(),
               pathfinder: Vec::new(),
+              pathfinder_idx: 0,
          }
     }
 }
@@ -170,6 +172,7 @@ impl Future for Robot {
                         }
 
                         self.data.pathfinder = pathfinder;
+                        self.data.pathfinder_idx = self.data.pathfinder_idx.wrapping_add(1);
                     },
 
                     _ => {
