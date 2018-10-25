@@ -19,6 +19,13 @@ config PLATFORM_BRAIN_2018
   select USE_FPU
   select PLATFORM_DEVICE_STM32F429_439xx
 
+config PLATFORM_BRAIN_2019
+  bool "Brain 2019"
+  #select device
+  select PLATFORM_ARM_CORE_CORTEX_M4
+  select USE_FPU
+  select PLATFORM_DEVICE_STM32F429_439xx
+
 config PLATFORM_NUCLEO_401
   bool "Nucleo 401"
   #select device

@@ -177,54 +177,12 @@ if (true) {
 
 /***/ }),
 /* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * 
- */
-
-function makeEmptyFunction(arg) {
-  return function () {
-    return arg;
-  };
-}
-
-/**
- * This function accepts and discards inputs; it has no side effects. This is
- * primarily useful idiomatically for overridable function endpoints which
- * always need to be callable, since JS lacks a null-call idiom ala Cocoa.
- */
-var emptyFunction = function emptyFunction() {};
-
-emptyFunction.thatReturns = makeEmptyFunction;
-emptyFunction.thatReturnsFalse = makeEmptyFunction(false);
-emptyFunction.thatReturnsTrue = makeEmptyFunction(true);
-emptyFunction.thatReturnsNull = makeEmptyFunction(null);
-emptyFunction.thatReturnsThis = function () {
-  return this;
-};
-emptyFunction.thatReturnsArgument = function (arg) {
-  return arg;
-};
-
-module.exports = emptyFunction;
-
-/***/ }),
-/* 5 */
 /***/ (function(module, exports) {
 
 module.exports = require("electron");
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5893,6 +5851,48 @@ var UncontrolledTooltip = function (_Component) {
 
 
 /***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * 
+ */
+
+function makeEmptyFunction(arg) {
+  return function () {
+    return arg;
+  };
+}
+
+/**
+ * This function accepts and discards inputs; it has no side effects. This is
+ * primarily useful idiomatically for overridable function endpoints which
+ * always need to be callable, since JS lacks a null-call idiom ala Cocoa.
+ */
+var emptyFunction = function emptyFunction() {};
+
+emptyFunction.thatReturns = makeEmptyFunction;
+emptyFunction.thatReturnsFalse = makeEmptyFunction(false);
+emptyFunction.thatReturnsTrue = makeEmptyFunction(true);
+emptyFunction.thatReturnsNull = makeEmptyFunction(null);
+emptyFunction.thatReturnsThis = function () {
+  return this;
+};
+emptyFunction.thatReturnsArgument = function (arg) {
+  return arg;
+};
+
+module.exports = emptyFunction;
+
+/***/ }),
 /* 7 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -7013,15 +7013,15 @@ var _usir = __webpack_require__(102);
 
 var _usir2 = _interopRequireDefault(_usir);
 
-var _meca = __webpack_require__(108);
+var _meca = __webpack_require__(103);
 
 var _meca2 = _interopRequireDefault(_meca);
 
-var _asserv = __webpack_require__(103);
+var _asserv = __webpack_require__(104);
 
 var _asserv2 = _interopRequireDefault(_asserv);
 
-var _state = __webpack_require__(105);
+var _state = __webpack_require__(106);
 
 var _state2 = _interopRequireDefault(_state);
 
@@ -7676,7 +7676,7 @@ module.exports = function (css) {
  * LICENSE file in the root directory of this source tree.
  */
 
-var m=__webpack_require__(8),n=__webpack_require__(9),p=__webpack_require__(4),q="function"===typeof Symbol&&Symbol["for"],r=q?Symbol["for"]("react.element"):60103,t=q?Symbol["for"]("react.call"):60104,u=q?Symbol["for"]("react.return"):60105,v=q?Symbol["for"]("react.portal"):60106,w=q?Symbol["for"]("react.fragment"):60107,x="function"===typeof Symbol&&Symbol.iterator;
+var m=__webpack_require__(8),n=__webpack_require__(9),p=__webpack_require__(6),q="function"===typeof Symbol&&Symbol["for"],r=q?Symbol["for"]("react.element"):60103,t=q?Symbol["for"]("react.call"):60104,u=q?Symbol["for"]("react.return"):60105,v=q?Symbol["for"]("react.portal"):60106,w=q?Symbol["for"]("react.fragment"):60107,x="function"===typeof Symbol&&Symbol.iterator;
 function y(a){for(var b=arguments.length-1,e="Minified React error #"+a+"; visit http://facebook.github.io/react/docs/error-decoder.html?invariant\x3d"+a,c=0;c<b;c++)e+="\x26args[]\x3d"+encodeURIComponent(arguments[c+1]);b=Error(e+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings.");b.name="Invariant Violation";b.framesToPop=1;throw b;}
 var z={isMounted:function(){return!1},enqueueForceUpdate:function(){},enqueueReplaceState:function(){},enqueueSetState:function(){}};function A(a,b,e){this.props=a;this.context=b;this.refs=n;this.updater=e||z}A.prototype.isReactComponent={};A.prototype.setState=function(a,b){"object"!==typeof a&&"function"!==typeof a&&null!=a?y("85"):void 0;this.updater.enqueueSetState(this,a,b,"setState")};A.prototype.forceUpdate=function(a){this.updater.enqueueForceUpdate(this,a,"forceUpdate")};
 function B(a,b,e){this.props=a;this.context=b;this.refs=n;this.updater=e||z}function C(){}C.prototype=A.prototype;var D=B.prototype=new C;D.constructor=B;m(D,A.prototype);D.isPureReactComponent=!0;function E(a,b,e){this.props=a;this.context=b;this.refs=n;this.updater=e||z}var F=E.prototype=new C;F.constructor=E;m(F,A.prototype);F.unstable_isAsyncReactComponent=!0;F.render=function(){return this.props.children};var G={current:null},H=Object.prototype.hasOwnProperty,I={key:!0,ref:!0,__self:!0,__source:!0};
@@ -7707,7 +7707,7 @@ isValidElement:K,version:"16.2.0",__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_F
 /*
  Modernizr 3.0.0pre (Custom Build) | MIT
 */
-var aa=__webpack_require__(0),l=__webpack_require__(31),B=__webpack_require__(8),C=__webpack_require__(4),ba=__webpack_require__(32),da=__webpack_require__(33),ea=__webpack_require__(34),fa=__webpack_require__(35),ia=__webpack_require__(38),D=__webpack_require__(9);
+var aa=__webpack_require__(0),l=__webpack_require__(31),B=__webpack_require__(8),C=__webpack_require__(6),ba=__webpack_require__(32),da=__webpack_require__(33),ea=__webpack_require__(34),fa=__webpack_require__(35),ia=__webpack_require__(38),D=__webpack_require__(9);
 function E(a){for(var b=arguments.length-1,c="Minified React error #"+a+"; visit http://facebook.github.io/react/docs/error-decoder.html?invariant\x3d"+a,d=0;d<b;d++)c+="\x26args[]\x3d"+encodeURIComponent(arguments[d+1]);b=Error(c+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings.");b.name="Invariant Violation";b.framesToPop=1;throw b;}aa?void 0:E("227");
 var oa={children:!0,dangerouslySetInnerHTML:!0,defaultValue:!0,defaultChecked:!0,innerHTML:!0,suppressContentEditableWarning:!0,suppressHydrationWarning:!0,style:!0};function pa(a,b){return(a&b)===b}
 var ta={MUST_USE_PROPERTY:1,HAS_BOOLEAN_VALUE:4,HAS_NUMERIC_VALUE:8,HAS_POSITIVE_NUMERIC_VALUE:24,HAS_OVERLOADED_BOOLEAN_VALUE:32,HAS_STRING_BOOLEAN_VALUE:64,injectDOMPropertyConfig:function(a){var b=ta,c=a.Properties||{},d=a.DOMAttributeNamespaces||{},e=a.DOMAttributeNames||{};a=a.DOMMutationMethods||{};for(var f in c){ua.hasOwnProperty(f)?E("48",f):void 0;var g=f.toLowerCase(),h=c[f];g={attributeName:g,attributeNamespace:null,propertyName:f,mutationMethod:null,mustUseProperty:pa(h,b.MUST_USE_PROPERTY),
@@ -7981,7 +7981,7 @@ module.exports = ExecutionEnvironment;
  * @typechecks
  */
 
-var emptyFunction = __webpack_require__(4);
+var emptyFunction = __webpack_require__(6);
 
 /**
  * Upstream version of event listener. Does not take into account specific
@@ -8386,7 +8386,7 @@ function createProvider() {
 
 
 
-var emptyFunction = __webpack_require__(4);
+var emptyFunction = __webpack_require__(6);
 var invariant = __webpack_require__(41);
 var ReactPropTypesSecret = __webpack_require__(42);
 
@@ -10087,7 +10087,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _electron = __webpack_require__(5);
+var _electron = __webpack_require__(4);
 
 var _electron2 = _interopRequireDefault(_electron);
 
@@ -10095,7 +10095,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactstrap = __webpack_require__(6);
+var _reactstrap = __webpack_require__(5);
 
 var _reactRedux = __webpack_require__(1);
 
@@ -14051,7 +14051,7 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = __webpack_require__(1);
 
-var _reactstrap = __webpack_require__(6);
+var _reactstrap = __webpack_require__(5);
 
 var _actions = __webpack_require__(22);
 
@@ -15365,7 +15365,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _electron = __webpack_require__(5);
+var _electron = __webpack_require__(4);
 
 var _electron2 = _interopRequireDefault(_electron);
 
@@ -15373,7 +15373,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactstrap = __webpack_require__(6);
+var _reactstrap = __webpack_require__(5);
 
 var _reactRedux = __webpack_require__(1);
 
@@ -15631,7 +15631,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _electron = __webpack_require__(5);
+var _electron = __webpack_require__(4);
 
 var _electron2 = _interopRequireDefault(_electron);
 
@@ -15639,9 +15639,442 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactstrap = __webpack_require__(6);
+var _reactstrap = __webpack_require__(5);
 
-var _smoothie = __webpack_require__(104);
+var _reactRedux = __webpack_require__(1);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var ipcRenderer = _electron2.default.ipcRenderer;
+
+var MecaAction = function (_React$Component) {
+  _inherits(MecaAction, _React$Component);
+
+  function MecaAction() {
+    _classCallCheck(this, MecaAction);
+
+    return _possibleConstructorReturn(this, (MecaAction.__proto__ || Object.getPrototypeOf(MecaAction)).apply(this, arguments));
+  }
+
+  _createClass(MecaAction, [{
+    key: '_action',
+    value: function _action() {
+      var _this2 = this;
+
+      this.props.active.map(function (x, key) {
+        ipcRenderer.send('pkt', {
+          pid: 0x1001,
+          fmt: "B",
+          args: [parseInt(_this2.props.id)],
+          client: key
+        });
+      });
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this3 = this;
+
+      var color = this.props.color;
+      if (color == undefined) {
+        color = "primary";
+      }
+      return _react2.default.createElement(
+        _reactstrap.Col,
+        { md: '3' },
+        _react2.default.createElement(
+          _reactstrap.Button,
+          { onClick: function onClick() {
+              return _this3._action();
+            }, color: color },
+          this.props.name
+        )
+      );
+    }
+  }]);
+
+  return MecaAction;
+}(_react2.default.Component);
+
+var ServoParameter = function (_React$Component2) {
+  _inherits(ServoParameter, _React$Component2);
+
+  function ServoParameter(props) {
+    _classCallCheck(this, ServoParameter);
+
+    var _this4 = _possibleConstructorReturn(this, (ServoParameter.__proto__ || Object.getPrototypeOf(ServoParameter)).call(this, props));
+
+    _this4.UPDATE_PERIOD_MS = 1000;
+    _this4.state = {
+      value: ""
+    };
+    return _this4;
+  }
+
+  _createClass(ServoParameter, [{
+    key: 'handleChange',
+    value: function handleChange(event) {
+      event.preventDefault();
+      this.setState({ value: event.target.value });
+    }
+  }, {
+    key: 'handleKeyPress',
+    value: function handleKeyPress(event) {
+      var _this5 = this;
+
+      if (event.key === 'Enter') {
+        this.props.active.map(function (x, key) {
+          ipcRenderer.send('pkt', {
+            pid: 0x1000,
+            fmt: "BD",
+            args: [_this5.props.id, parseInt(_this5.state.value)],
+            client: key
+          });
+        });
+        this.setState({ value: '' });
+      }
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this6 = this;
+
+      return _react2.default.createElement(
+        _reactstrap.Row,
+        null,
+        _react2.default.createElement(
+          _reactstrap.InputGroup,
+          { size: 'sm' },
+          _react2.default.createElement(
+            _reactstrap.InputGroupAddon,
+            { addonType: 'prepend' },
+            'Servo ',
+            this.props.id,
+            ': '
+          ),
+          _react2.default.createElement(_reactstrap.Input, { value: this.state.value, onChange: function onChange(e) {
+              return _this6.handleChange(e);
+            }, onKeyPress: function onKeyPress(e) {
+              return _this6.handleKeyPress(e);
+            } })
+        )
+      );
+    }
+  }]);
+
+  return ServoParameter;
+}(_react2.default.Component);
+
+var MecaComponent = function (_React$Component3) {
+  _inherits(MecaComponent, _React$Component3);
+
+  function MecaComponent(props) {
+    _classCallCheck(this, MecaComponent);
+
+    var _this7 = _possibleConstructorReturn(this, (MecaComponent.__proto__ || Object.getPrototypeOf(MecaComponent)).call(this, props));
+
+    _this7.state = {};
+    return _this7;
+  }
+
+  _createClass(MecaComponent, [{
+    key: 'render',
+    value: function render() {
+
+      var servos = [];
+
+      for (var i = 0; i < 12; i += 1) {
+        servos.push(_react2.default.createElement(ServoParameter, { key: i, id: i, active: this.props.active }));
+      }
+
+      return _react2.default.createElement(
+        _reactstrap.Container,
+        { style: { marginTop: '15px' } },
+        _react2.default.createElement(
+          _reactstrap.Row,
+          null,
+          _react2.default.createElement(
+            _reactstrap.Col,
+            { md: '6' },
+            _react2.default.createElement(
+              _reactstrap.Card,
+              null,
+              _react2.default.createElement(
+                _reactstrap.CardHeader,
+                null,
+                'Servo'
+              ),
+              _react2.default.createElement(
+                _reactstrap.CardBody,
+                null,
+                servos
+              )
+            )
+          ),
+          _react2.default.createElement(
+            _reactstrap.Col,
+            { md: '6' },
+            _react2.default.createElement(
+              _reactstrap.Card,
+              null,
+              _react2.default.createElement(
+                _reactstrap.CardHeader,
+                null,
+                'Meca 2'
+              ),
+              _react2.default.createElement(
+                _reactstrap.CardBody,
+                null,
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '0', name: 'Bee init' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '1', name: 'Bee prepare' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '2', name: 'Bee action' }),
+                  ' ',
+                  ' '
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement('p', null),
+                  _react2.default.createElement('p', null)
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '3', name: 'Water init' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '4', name: 'Water prepare' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '5', name: 'Water take' }),
+                  ' ',
+                  ' '
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement('p', null)
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '6', name: 'Wat. shoot left' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '7', name: 'Wat. shoot all' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '8', name: 'Wat. release bad' }),
+                  ' ',
+                  ' '
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement('p', null)
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8c, name: 'init' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8d, name: 'prepare' }),
+                  ' ',
+                  ' '
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement('p', null)
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8e, name: 'L take' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8f, name: 'L release' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x90, name: 'R take' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x91, name: 'R release' }),
+                  ' ',
+                  ' '
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement('p', null)
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8a, name: 'CL L up' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8b, name: 'CL L down' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x88, name: 'CL R up' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x89, name: 'CL R down' }),
+                  ' ',
+                  ' '
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement('p', null)
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8a, name: 'CL L up' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8b, name: 'CL L down' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x88, name: 'CL R up' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x89, name: 'CL R down' }),
+                  ' ',
+                  ' '
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement('p', null)
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x80, name: 'T L left' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x81, name: 'T L cget' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x82, name: 'T L cpush' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x83, name: 'T L right' }),
+                  ' ',
+                  ' '
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement('p', null)
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x84, name: 'T R right' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x85, name: 'T R cget' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x86, name: 'T R cpush' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x87, name: 'T R left' }),
+                  ' ',
+                  ' '
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement('p', null)
+                ),
+                _react2.default.createElement(
+                  _reactstrap.Row,
+                  null,
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0xC0, name: 'Chore 1' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0xC0, name: 'Chore 2' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0xC0, name: 'Chore 3' }),
+                  ' ',
+                  ' ',
+                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0xC0, name: 'Chore 4' }),
+                  ' ',
+                  ' '
+                )
+              )
+            )
+          )
+        )
+      );
+    }
+  }]);
+
+  return MecaComponent;
+}(_react2.default.Component);
+
+var mapStateToProps = function mapStateToProps(state, ownProps) {
+  var asservs = [];
+  state.conns.get('active').map(function (x, key) {
+    var asserv = state.robots.getIn([key, 'asserv_params'], new Map());
+    if (asserv != null) {
+      asservs.push(asserv);
+    }
+  });
+  return {
+    active: state.conns.get('active'),
+    asservs: asservs
+  };
+};
+
+var Meca = (0, _reactRedux.connect)(mapStateToProps, null)(MecaComponent);
+
+exports.default = Meca;
+
+/***/ }),
+/* 104 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _electron = __webpack_require__(4);
+
+var _electron2 = _interopRequireDefault(_electron);
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactstrap = __webpack_require__(5);
+
+var _smoothie = __webpack_require__(105);
 
 var _reactRedux = __webpack_require__(1);
 
@@ -16133,7 +16566,7 @@ var Asserv = (0, _reactRedux.connect)(mapStateToProps, null)(AsservComponent);
 exports.default = Asserv;
 
 /***/ }),
-/* 104 */
+/* 105 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // MIT License:
@@ -17186,7 +17619,7 @@ exports.default = Asserv;
 
 
 /***/ }),
-/* 105 */
+/* 106 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17198,13 +17631,13 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _electron = __webpack_require__(5);
+var _electron = __webpack_require__(4);
 
 var _electron2 = _interopRequireDefault(_electron);
 
 var _actions = __webpack_require__(22);
 
-var _reducers = __webpack_require__(106);
+var _reducers = __webpack_require__(107);
 
 var _redux = __webpack_require__(12);
 
@@ -17280,7 +17713,7 @@ var instance = new State();
 exports.default = instance;
 
 /***/ }),
-/* 106 */
+/* 107 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17291,7 +17724,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.options = exports.win = exports.conns = exports.robots = undefined;
 
-var _immutable = __webpack_require__(107);
+var _immutable = __webpack_require__(108);
 
 var defaultConnsState = new _immutable.Map({
   active: (0, _immutable.Map)()
@@ -17395,7 +17828,7 @@ var options = exports.options = function options() {
 };
 
 /***/ }),
-/* 107 */
+/* 108 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -22375,439 +22808,6 @@ var options = exports.options = function options() {
   return Immutable;
 
 }));
-
-/***/ }),
-/* 108 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _electron = __webpack_require__(5);
-
-var _electron2 = _interopRequireDefault(_electron);
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactstrap = __webpack_require__(6);
-
-var _reactRedux = __webpack_require__(1);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var ipcRenderer = _electron2.default.ipcRenderer;
-
-var MecaAction = function (_React$Component) {
-  _inherits(MecaAction, _React$Component);
-
-  function MecaAction() {
-    _classCallCheck(this, MecaAction);
-
-    return _possibleConstructorReturn(this, (MecaAction.__proto__ || Object.getPrototypeOf(MecaAction)).apply(this, arguments));
-  }
-
-  _createClass(MecaAction, [{
-    key: '_action',
-    value: function _action() {
-      var _this2 = this;
-
-      this.props.active.map(function (x, key) {
-        ipcRenderer.send('pkt', {
-          pid: 0x1001,
-          fmt: "B",
-          args: [parseInt(_this2.props.id)],
-          client: key
-        });
-      });
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      var _this3 = this;
-
-      var color = this.props.color;
-      if (color == undefined) {
-        color = "primary";
-      }
-      return _react2.default.createElement(
-        _reactstrap.Col,
-        { md: '3' },
-        _react2.default.createElement(
-          _reactstrap.Button,
-          { onClick: function onClick() {
-              return _this3._action();
-            }, color: color },
-          this.props.name
-        )
-      );
-    }
-  }]);
-
-  return MecaAction;
-}(_react2.default.Component);
-
-var ServoParameter = function (_React$Component2) {
-  _inherits(ServoParameter, _React$Component2);
-
-  function ServoParameter(props) {
-    _classCallCheck(this, ServoParameter);
-
-    var _this4 = _possibleConstructorReturn(this, (ServoParameter.__proto__ || Object.getPrototypeOf(ServoParameter)).call(this, props));
-
-    _this4.UPDATE_PERIOD_MS = 1000;
-    _this4.state = {
-      value: ""
-    };
-    return _this4;
-  }
-
-  _createClass(ServoParameter, [{
-    key: 'handleChange',
-    value: function handleChange(event) {
-      event.preventDefault();
-      this.setState({ value: event.target.value });
-    }
-  }, {
-    key: 'handleKeyPress',
-    value: function handleKeyPress(event) {
-      var _this5 = this;
-
-      if (event.key === 'Enter') {
-        this.props.active.map(function (x, key) {
-          ipcRenderer.send('pkt', {
-            pid: 0x1000,
-            fmt: "BD",
-            args: [_this5.props.id, parseInt(_this5.state.value)],
-            client: key
-          });
-        });
-        this.setState({ value: '' });
-      }
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      var _this6 = this;
-
-      return _react2.default.createElement(
-        _reactstrap.Row,
-        null,
-        _react2.default.createElement(
-          _reactstrap.InputGroup,
-          { size: 'sm' },
-          _react2.default.createElement(
-            _reactstrap.InputGroupAddon,
-            { addonType: 'prepend' },
-            'Servo ',
-            this.props.id,
-            ': '
-          ),
-          _react2.default.createElement(_reactstrap.Input, { value: this.state.value, onChange: function onChange(e) {
-              return _this6.handleChange(e);
-            }, onKeyPress: function onKeyPress(e) {
-              return _this6.handleKeyPress(e);
-            } })
-        )
-      );
-    }
-  }]);
-
-  return ServoParameter;
-}(_react2.default.Component);
-
-var MecaComponent = function (_React$Component3) {
-  _inherits(MecaComponent, _React$Component3);
-
-  function MecaComponent(props) {
-    _classCallCheck(this, MecaComponent);
-
-    var _this7 = _possibleConstructorReturn(this, (MecaComponent.__proto__ || Object.getPrototypeOf(MecaComponent)).call(this, props));
-
-    _this7.state = {};
-    return _this7;
-  }
-
-  _createClass(MecaComponent, [{
-    key: 'render',
-    value: function render() {
-
-      var servos = [];
-
-      for (var i = 0; i < 12; i += 1) {
-        servos.push(_react2.default.createElement(ServoParameter, { key: i, id: i, active: this.props.active }));
-      }
-
-      return _react2.default.createElement(
-        _reactstrap.Container,
-        { style: { marginTop: '15px' } },
-        _react2.default.createElement(
-          _reactstrap.Row,
-          null,
-          _react2.default.createElement(
-            _reactstrap.Col,
-            { md: '6' },
-            _react2.default.createElement(
-              _reactstrap.Card,
-              null,
-              _react2.default.createElement(
-                _reactstrap.CardHeader,
-                null,
-                'Servo'
-              ),
-              _react2.default.createElement(
-                _reactstrap.CardBody,
-                null,
-                servos
-              )
-            )
-          ),
-          _react2.default.createElement(
-            _reactstrap.Col,
-            { md: '6' },
-            _react2.default.createElement(
-              _reactstrap.Card,
-              null,
-              _react2.default.createElement(
-                _reactstrap.CardHeader,
-                null,
-                'Meca 2'
-              ),
-              _react2.default.createElement(
-                _reactstrap.CardBody,
-                null,
-                _react2.default.createElement(
-                  _reactstrap.Row,
-                  null,
-                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '0', name: 'Bee init' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '1', name: 'Bee prepare' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '2', name: 'Bee action' }),
-                  ' ',
-                  ' '
-                ),
-                _react2.default.createElement(
-                  _reactstrap.Row,
-                  null,
-                  _react2.default.createElement('p', null),
-                  _react2.default.createElement('p', null)
-                ),
-                _react2.default.createElement(
-                  _reactstrap.Row,
-                  null,
-                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '3', name: 'Water init' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '4', name: 'Water prepare' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '5', name: 'Water take' }),
-                  ' ',
-                  ' '
-                ),
-                _react2.default.createElement(
-                  _reactstrap.Row,
-                  null,
-                  _react2.default.createElement('p', null)
-                ),
-                _react2.default.createElement(
-                  _reactstrap.Row,
-                  null,
-                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '6', name: 'Wat. shoot left' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '7', name: 'Wat. shoot all' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { active: this.props.active, id: '8', name: 'Wat. release bad' }),
-                  ' ',
-                  ' '
-                ),
-                _react2.default.createElement(
-                  _reactstrap.Row,
-                  null,
-                  _react2.default.createElement('p', null)
-                ),
-                _react2.default.createElement(
-                  _reactstrap.Row,
-                  null,
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8c, name: 'init' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8d, name: 'prepare' }),
-                  ' ',
-                  ' '
-                ),
-                _react2.default.createElement(
-                  _reactstrap.Row,
-                  null,
-                  _react2.default.createElement('p', null)
-                ),
-                _react2.default.createElement(
-                  _reactstrap.Row,
-                  null,
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8e, name: 'L take' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8f, name: 'L release' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x90, name: 'R take' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x91, name: 'R release' }),
-                  ' ',
-                  ' '
-                ),
-                _react2.default.createElement(
-                  _reactstrap.Row,
-                  null,
-                  _react2.default.createElement('p', null)
-                ),
-                _react2.default.createElement(
-                  _reactstrap.Row,
-                  null,
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8a, name: 'CL L up' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8b, name: 'CL L down' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x88, name: 'CL R up' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x89, name: 'CL R down' }),
-                  ' ',
-                  ' '
-                ),
-                _react2.default.createElement(
-                  _reactstrap.Row,
-                  null,
-                  _react2.default.createElement('p', null)
-                ),
-                _react2.default.createElement(
-                  _reactstrap.Row,
-                  null,
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8a, name: 'CL L up' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x8b, name: 'CL L down' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x88, name: 'CL R up' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x89, name: 'CL R down' }),
-                  ' ',
-                  ' '
-                ),
-                _react2.default.createElement(
-                  _reactstrap.Row,
-                  null,
-                  _react2.default.createElement('p', null)
-                ),
-                _react2.default.createElement(
-                  _reactstrap.Row,
-                  null,
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x80, name: 'T L left' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x81, name: 'T L cget' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x82, name: 'T L cpush' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x83, name: 'T L right' }),
-                  ' ',
-                  ' '
-                ),
-                _react2.default.createElement(
-                  _reactstrap.Row,
-                  null,
-                  _react2.default.createElement('p', null)
-                ),
-                _react2.default.createElement(
-                  _reactstrap.Row,
-                  null,
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x84, name: 'T R right' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x85, name: 'T R cget' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x86, name: 'T R cpush' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0x87, name: 'T R left' }),
-                  ' ',
-                  ' '
-                ),
-                _react2.default.createElement(
-                  _reactstrap.Row,
-                  null,
-                  _react2.default.createElement('p', null)
-                ),
-                _react2.default.createElement(
-                  _reactstrap.Row,
-                  null,
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0xC0, name: 'Chore 1' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0xC0, name: 'Chore 2' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0xC0, name: 'Chore 3' }),
-                  ' ',
-                  ' ',
-                  _react2.default.createElement(MecaAction, { color: 'warning', active: this.props.active, id: 0xC0, name: 'Chore 4' }),
-                  ' ',
-                  ' '
-                )
-              )
-            )
-          )
-        )
-      );
-    }
-  }]);
-
-  return MecaComponent;
-}(_react2.default.Component);
-
-var mapStateToProps = function mapStateToProps(state, ownProps) {
-  var asservs = [];
-  state.conns.get('active').map(function (x, key) {
-    var asserv = state.robots.getIn([key, 'asserv_params'], new Map());
-    if (asserv != null) {
-      asservs.push(asserv);
-    }
-  });
-  return {
-    active: state.conns.get('active'),
-    asservs: asservs
-  };
-};
-
-var Meca = (0, _reactRedux.connect)(mapStateToProps, null)(MecaComponent);
-
-exports.default = Meca;
 
 /***/ })
 /******/ ]);
