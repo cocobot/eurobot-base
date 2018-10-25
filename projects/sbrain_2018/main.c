@@ -9,6 +9,7 @@
 #include "meca_water.h"
 #include "strat_water.h"
 #include "strat_bee.h"
+#include "strat_domotique.h"
 //#include "cocobot_pathfinder_config.h"
 
 //static unsigned int _shell_configuration;
@@ -63,19 +64,17 @@ void update_lcd(void * arg)
     vTaskDelay(50 / portTICK_PERIOD_MS);
   }
 
-  int32_t zero = cocobot_position_get_distance();
+  //int32_t zero = cocobot_position_get_distance();
   while(1)
   {
     //toggle led
     vTaskDelay(100 / portTICK_PERIOD_MS);
     platform_led_toggle(PLATFORM_LED0);
-    cocobot_game_state_set_score((int)cocobot_position_get_distance() - zero);
+    //cocobot_game_state_set_score((int)cocobot_position_get_distance() - zero);
     cocobot_game_state_display_score();
 
-    /* turn the DC motor ON
-    platform_gpio_set(PLATFORM_GPIO_MOTOR_DIR_DC0);
-    platform_motor_set_dc0_duty_cycle(0x8000);
-    */
+    //platform_gpio_set(PLATFORM_GPIO_MOTOR_DIR_DC0);
+    //platform_motor_set_dc0_duty_cycle(0x8000);
   }
 }
 
@@ -109,13 +108,15 @@ void run_strategy(void * arg)
   meca_bee_init();
   meca_water_init();
 
-  //strat_water_register();
+  strat_water_register();
   strat_bee_register();
+  //strat_domotique_register();
 
   cocobot_game_state_wait_for_starter_removed();
+  cocobot_game_state_add_points_to_score(5);
 
-  cocobot_trajectory_goto_d(100, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  cocobot_trajectory_wait();
+  //cocobot_trajectory_goto_d(100, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  //cocobot_trajectory_wait();
   cocobot_action_scheduler_start();
 
   //cocobot_trajectory_goto_d(00, 1000);
@@ -145,7 +146,9 @@ void run_strategy(void * arg)
   //cocobot_trajectory_wait();
 
   while(1)
-      ;
+  {
+      vTaskDelay(10/portTICK_PERIOD_MS);
+  }
   //cocobot_action_scheduler_start();
 }
 

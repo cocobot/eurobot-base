@@ -2,8 +2,11 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <math.h>
+#include "FreeRTOS.h"
+#include "task.h"
 #include "strat_bee.h"
 #include "meca_bee.h"
+#include "meca_water.h"
 
 static unsigned int strat_bee_get_score()
 {
@@ -49,7 +52,7 @@ float strat_bee_get_exec_time( )
 
 float strat_bee_get_success_proba( )
 {
-    return 0.75;
+    return 1;
 }
 
 static cocobot_action_callback_result_t strat_bee_preexec(void * arg)
@@ -63,6 +66,9 @@ static cocobot_action_callback_result_t strat_bee_cleanup(void * arg)
 {
     (void) arg;
     meca_bee_init();
+    meca_water_activate();
+    vTaskDelay(1000/portTICK_PERIOD_MS);
+    meca_water_init();
     return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
@@ -90,14 +96,19 @@ static cocobot_action_callback_result_t strat_bee_exec(void * arg)
     }
     meca_bee_action();
 
+    vTaskDelay(1000/portTICK_PERIOD_MS);
+    cocobot_position_set_y(-910);
+
     cocobot_trajectory_goto_d(-250, 5000);
+    cocobot_game_state_add_points_to_score(50);
+    cocobot_trajectory_wait();
     return COCOBOT_RETURN_ACTION_SUCCESS;
 }
 
 void strat_bee_register(void)
 {
     cocobot_action_scheduler_add_action(
-            "get_water_easy",
+            "get_bee",
             strat_bee_get_score(),
             strat_bee_pos,
             strat_bee_get_exec_time(),

@@ -39,6 +39,8 @@ void cocobot_opponent_detection_set_enable(int id, int status);
 
 int cocobot_opponent_detection_is_in_alert(void);
 
+int cocobot_opponent_detection_get_us(int i);
+
 /**
  * Set an obstacle on map if detected
  */
