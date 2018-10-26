@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_OPPONENT_DETECTION
+
 #include <FreeRTOS.h>
 #include <task.h>
 #include <cocobot.h>
@@ -253,3 +256,4 @@ void cocobot_opponent_detection_handle_sync_com(uint16_t pid, uint8_t * data, ui
       break;
   }
 }
+#endif

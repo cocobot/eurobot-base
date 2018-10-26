@@ -11,6 +11,8 @@ int main(void)
 {
   platform_init();
 
+  cocobon_can_init();
+
   mcual_loader_init(MCUAL_USART1, event);
   mcual_loader_run();
 

@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_ASSERV
+
 #include <cocobot.h>
 #include <cocobot/encoders.h>
 #include <platform.h>
@@ -52,3 +55,4 @@ void cocobot_encoders_get_motor_position(int32_t motor_position[2])
   motor_position[1] = _enc_value[1];
 #endif
 }
+#endif

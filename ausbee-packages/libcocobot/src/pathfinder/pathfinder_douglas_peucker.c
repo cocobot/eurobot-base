@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_PATHFINDER
+
 #include "cocobot/pathfinder_douglas_peucker.h"
 #include <cocobot.h>
 #include <math.h>
@@ -89,4 +92,4 @@ uint8_t cocobot_pathfinder_find_farthest_point(cocobot_trajectory_final_s *traj,
 
     return returnValue;
 }
-
+#endif

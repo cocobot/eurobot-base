@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_ASSERV
+
 #include <stdlib.h>
 #include <cocobot.h>
 #include <FreeRTOS.h>
@@ -165,3 +168,4 @@ void * cocobot_game_state_get_userdata(unsigned int id)
 {
   return _userdata[id];
 }
+#endif

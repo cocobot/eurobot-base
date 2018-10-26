@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_PATHFINDER
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -376,3 +379,4 @@ cocobot_node_s * cocobot_pathfinder_find_closest_new_node(cocobot_node_s table[]
     }
     return realStart;
 }
+#endif

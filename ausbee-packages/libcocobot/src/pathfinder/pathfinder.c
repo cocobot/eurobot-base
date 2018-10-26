@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_PATHFINDER
+
 #include <cocobot.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -172,3 +175,4 @@ void cocobot_pathfinder_handle_async_com(void)
                 );
     }
 }
+#endif

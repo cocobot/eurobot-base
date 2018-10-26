@@ -1,3 +1,50 @@
+config LIBCOCOBOT_ASSERV
+	bool "+ Asserv"
+	default n
+	depends on LIBCOCOBOT
+
+config LIBCOCOBOT_GAME_STATE
+	bool "+ Game state"
+	default n
+	depends on LIBCOCOBOT
+
+config LIBCOCOBOT_PATHFINDER
+	bool "+ Pathfinder"
+	default n
+	depends on LIBCOCOBOT
+
+config LIBCOCOBOT_SHIFTERS
+	bool "+ Shifters"
+	default n
+	depends on LIBCOCOBOT
+
+config LIBCOCOBOT_LCD
+	bool "+ LCD"
+	default n
+	depends on LIBCOCOBOT
+
+config LIBCOCOBOT_OPPONENT_DETECTION
+	bool "+ Opponent detection"
+	default n
+	depends on LIBCOCOBOT
+
+config LIBCOCOBOT_POSITION
+	bool "+ Position"
+	default n
+	depends on LIBCOCOBOT
+
+config LIBCOCOBOT_ACTION_SCHEDULER
+	bool "+ Action scheduler"
+	default n
+	depends on LIBCOCOBOT
+
+config LIBCOCOBOT_TRAJECTORY
+	bool "+ Trajectory"
+	default n
+	depends on LIBCOCOBOT
+
+
+
 choice
     prompt "Pathfinder Table"
 
