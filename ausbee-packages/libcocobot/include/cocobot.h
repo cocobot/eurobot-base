@@ -13,5 +13,6 @@
 #include <cocobot/game_state.h>
 #include <cocobot/opponent_detection.h>
 #include <cocobot/shifters.h>
+#include <cocobot/can.h>
 
 #endif// COCOBOT_H

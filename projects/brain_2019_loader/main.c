@@ -1,6 +1,5 @@
-#include <stdio.h>
 #include <platform.h>
-#include <mcual.h>
+#include <cocobot.h>
 
 static void event(void)
 {
@@ -11,7 +10,7 @@ int main(void)
 {
   platform_init();
 
-  cocobon_can_init();
+  cocobot_can_init();
 
   mcual_loader_init(MCUAL_USART1, event);
   mcual_loader_run();

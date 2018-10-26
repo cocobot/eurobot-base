@@ -1,6 +1,9 @@
 #ifndef COCOBOT_PATHFINDER_H
 #define COCOBOT_PATHFINDER_H
 
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_PATHFINDER
+
 #include "cocobot/pathfinder_table_utils.h"
 
 #define TRAJECTORY_NBR_POINTS_MAX   160
@@ -64,5 +67,7 @@ void cocobot_pathfinder_remove_game_element(uint8_t x, uint8_t y, uint8_t radius
 void cocobot_pathfinder_init(cocobot_pathfinder_table_init_s * initTable);
 
 void cocobot_pathfinder_handle_async_com(void);
+
+#endif
 
 #endif //COCOBOT_PATHFINDER_H
