@@ -17,6 +17,7 @@ void mcual_arch_main(int argc, char *argv[]);
 #endif //AUSBEE_SIM
 
 void mcual_bootloader(void);
+void mcual_get_unique_id(uint8_t buffer[12]);
 
 
 #endif //MCUAL_ARCH_H

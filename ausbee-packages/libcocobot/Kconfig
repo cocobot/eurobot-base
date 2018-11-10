@@ -162,6 +162,11 @@ config LIBCOCOBOT_CAN_MEMORY_POOL_SIZE
   depends on LIBCOCOBOT && LIBCOCOBOT_CAN
   default 1024
 
+config LIBCOCOBOT_CAN_TIMER
+  int " + Timer ID"
+  depends on LIBCOCOBOT && LIBCOCOBOT_CAN
+  default 1
+
 config LIBCOCOBOT_LOADER
 	bool "+ Loader"
 	default n

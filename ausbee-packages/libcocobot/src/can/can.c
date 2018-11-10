@@ -3,6 +3,7 @@
 
 #include <cocobot.h>
 #include <mcual.h>
+#include <platform.h>
 #ifdef CONFIG_OS_USE_FREERTOS
 # include <FreeRTOS.h>
 # include <task.h>
@@ -15,12 +16,15 @@
 #include "dsdl/uavcan/protocol/GetNodeInfo.h"
 #include "dsdl/uavcan/protocol/RestartNode.h"
 #include "dsdl/uavcan/protocol/NodeStatus.h"
+#include <include/generated/git.h>
 
 static CanardInstance _canard;
 static uint8_t _canard_memory_pool[CONFIG_LIBCOCOBOT_CAN_MEMORY_POOL_SIZE];
 static uint8_t _internal_buffer[UAVCAN_PROTOCOL_GETNODEINFO_RESPONSE_MAX_SIZE];
 static uint8_t _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_OK;
 static uint8_t _mode = UAVCAN_PROTOCOL_NODESTATUS_MODE_INITIALIZATION;
+static uint16_t _last_timer_ticks;
+static uint64_t _timestamp_ms;
 
 
 static void cocobot_can_on_transfer_received(CanardInstance* ins,
@@ -31,25 +35,28 @@ static void cocobot_can_on_transfer_received(CanardInstance* ins,
   {
     canardReleaseRxTransferPayload(ins, transfer);
 
-#pragma message "TODO: set real information"
     uavcan_protocol_GetNodeInfoResponse nir; 
-    nir.status.uptime_sec = 42;
+    nir.status.uptime_sec = _timestamp_ms;
     nir.status.health = _health;
     nir.status.mode = _mode;
     nir.status.sub_mode = 0;
     nir.status.vendor_specific_status_code = 0;
     nir.software_version.major = 19; 
     nir.software_version.minor = 0; 
-    nir.software_version.optional_field_flags = 0; 
-    nir.software_version.vcs_commit = 0; 
+    nir.software_version.optional_field_flags = UAVCAN_PROTOCOL_SOFTWAREVERSION_OPTIONAL_FIELD_FLAG_VCS_COMMIT; 
+    nir.software_version.vcs_commit = GIT_COMMIT_SHORT8_ID; 
     nir.software_version.image_crc = 0; 
-    nir.hardware_version.major = 1; 
-    nir.hardware_version.minor = 0; 
-    nir.hardware_version.unique_id[0] = 0; 
+    nir.hardware_version.major = PLATFORM_MAJOR; 
+    nir.hardware_version.minor = PLATFORM_MINOR; 
+    mcual_get_unique_id(nir.hardware_version.unique_id);
+    nir.hardware_version.unique_id[12] = 0; 
+    nir.hardware_version.unique_id[13] = 0; 
+    nir.hardware_version.unique_id[14] = 0; 
+    nir.hardware_version.unique_id[15] = 0; 
     nir.hardware_version.certificate_of_authenticity.len = 0; 
     nir.hardware_version.certificate_of_authenticity.data = NULL; 
-    nir.name.len = 0;
-    nir.name.data = NULL; 
+    nir.name.data = (uint8_t *)PROJECT_NAME; 
+    nir.name.len = strlen(PROJECT_NAME);
 
     const uint32_t size = uavcan_protocol_GetNodeInfoResponse_encode(&nir, &_internal_buffer[0]);
 
@@ -150,6 +157,11 @@ void cocobot_can_task(void)
 {
   for (;;)
   {
+    uint16_t ticks = mcual_timer_get_value(CONFIG_LIBCOCOBOT_CAN_TIMER);
+    uint16_t delta = ticks - _last_timer_ticks;
+    _last_timer_ticks = ticks;
+    _timestamp_ms += delta;
+
     //Transmit Tx queue
     for (const CanardCANFrame* txf = NULL; (txf = canardPeekTxQueue(&_canard)) != NULL;)
     {
@@ -183,8 +195,7 @@ void cocobot_can_task(void)
     else if (rx_res > 0)
     {
       // Success - process the frame
-      //////canardHandleRxFrame(&_canard, &rx_frame, timestamp);
-      canardHandleRxFrame(&_canard, &rx_frame, rx_res);//REMOVE ME
+      canardHandleRxFrame(&_canard, &rx_frame, _timestamp_ms * 1000);
     }
 
     /*
@@ -211,6 +222,10 @@ void cocobot_can_init(void)
 
 #pragma message "TODO: read id from flash or eeprom"
 	canardSetLocalNodeID(&_canard, 127);
+
+  _last_timer_ticks = 0;
+  _timestamp_ms = 0;
+  mcual_timer_init(CONFIG_LIBCOCOBOT_CAN_TIMER, 1000);
 }
 
 #ifdef CONFIG_OS_USE_FREERTOS

@@ -1,7 +1,6 @@
 #include <platform.h>
 #include <cocobot.h>
-
-
+ 
 int main(void) 
 {
   platform_init();

@@ -4,6 +4,9 @@
 #include <mcual.h>
 #include <stdint.h>
 
+#define PLATFORM_MAJOR                19
+#define PLATFORM_MINOR                0
+
 #define PLATFORM_LED0                 (1 << 0)
 
 #define PLATFORM_GPIO_STARTER         (1 << 0)
