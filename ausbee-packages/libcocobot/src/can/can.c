@@ -3,8 +3,12 @@
 
 #include <cocobot.h>
 #include <mcual.h>
-#include <FreeRTOS.h>
-#include <task.h>
+#ifdef CONFIG_OS_USE_FREERTOS
+# include <FreeRTOS.h>
+# include <task.h>
+#else
+# include <malloc_wrapper.h>
+#endif
 #include <canard.h>
 #include <canard_stm32.h>
 #include <unistd.h>
@@ -209,6 +213,7 @@ void cocobot_can_init(void)
 	canardSetLocalNodeID(&_canard, 127);
 }
 
+#ifdef CONFIG_OS_USE_FREERTOS
 static void cocobot_can_thread(void * arg)
 {
   (void)arg;
@@ -219,6 +224,7 @@ void cocobot_can_run(void)
 {
   xTaskCreate(cocobot_can_thread, "can", 512, NULL, 1, NULL);
 }
+#endif
 
 void cocobot_can_set_mode(uint8_t mode)
 {

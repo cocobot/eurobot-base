@@ -2,7 +2,7 @@
 #ifdef CONFIG_LIBCOCOBOT_LOADER
 
 #include <cocobot.h>
-#include <FreeRTOS.h>
+#include <malloc_wrapper.h>
 #include <mcual.h>
 #include "../can/dsdl/uavcan/protocol/GetNodeInfo.h"
 #include "../can/dsdl/uavcan/protocol/file/BeginFirmwareUpdate.h"
