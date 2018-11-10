@@ -25,6 +25,7 @@ static uint8_t _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_OK;
 static uint8_t _mode = UAVCAN_PROTOCOL_NODESTATUS_MODE_INITIALIZATION;
 static uint16_t _last_timer_ticks;
 static uint64_t _timestamp_ms;
+static uint64_t _next_1hz_service_at;
 
 
 static void cocobot_can_on_transfer_received(CanardInstance* ins,
@@ -60,19 +61,14 @@ static void cocobot_can_on_transfer_received(CanardInstance* ins,
 
     const uint32_t size = uavcan_protocol_GetNodeInfoResponse_encode(&nir, &_internal_buffer[0]);
 
-    const int16_t resp_res = canardRequestOrRespond(ins,
-                                                    transfer->source_node_id,
-                                                    UAVCAN_PROTOCOL_GETNODEINFO_SIGNATURE,
-                                                    UAVCAN_PROTOCOL_GETNODEINFO_ID,
-                                                    &transfer->transfer_id,
-                                                    transfer->priority,
-                                                    CanardResponse,
-                                                    &_internal_buffer[0],
-                                                    (uint16_t)size);
-    if (resp_res <= 0)
-    {
-      _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
-    }
+    cocobot_can_request_or_respond(transfer->source_node_id,
+                                   UAVCAN_PROTOCOL_GETNODEINFO_SIGNATURE,
+                                   UAVCAN_PROTOCOL_GETNODEINFO_ID,
+                                   &transfer->transfer_id,
+                                   transfer->priority,
+                                   CanardResponse,
+                                   &_internal_buffer[0],
+                                   (uint16_t)size);
 
     return;
   }
@@ -99,20 +95,14 @@ static void cocobot_can_on_transfer_received(CanardInstance* ins,
 
     const uint32_t size = uavcan_protocol_RestartNodeResponse_encode(&rnr, &_internal_buffer[0]);
 
-    const int16_t resp_res = canardRequestOrRespond(ins,
-                                                    transfer->source_node_id,
-                                                    UAVCAN_PROTOCOL_RESTARTNODE_SIGNATURE,
-                                                    UAVCAN_PROTOCOL_RESTARTNODE_ID,
-                                                    &transfer->transfer_id,
-                                                    transfer->priority,
-                                                    CanardResponse,
-                                                    &_internal_buffer[0],
-                                                    (uint16_t)size);
-    //Error happened. declare bad health
-    if (resp_res <= 0)
-    {
-      _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
-    }
+    cocobot_can_request_or_respond(transfer->source_node_id,
+                                   UAVCAN_PROTOCOL_RESTARTNODE_SIGNATURE,
+                                   UAVCAN_PROTOCOL_RESTARTNODE_ID,
+                                   &transfer->transfer_id,
+                                   transfer->priority,
+                                   CanardResponse,
+                                   &_internal_buffer[0],
+                                   (uint16_t)size);
     
     //free memory
     if(dynbuf != NULL)
@@ -221,15 +211,14 @@ void cocobot_can_task(void)
       canardHandleRxFrame(&_canard, &rx_frame, _timestamp_ms * 1000);
     }
 
-    /*
-       const uint64_t ts = getMonotonicTimestampUSec();
 
-       if (ts >= next_1hz_service_at)
-       {
-       next_1hz_service_at += 1000000;
-       process1HzTasks(ts);
-       }
-       */
+    if (_timestamp_ms >= _next_1hz_service_at)
+    {
+      _next_1hz_service_at += 1000;
+
+      //clean up every seconds 
+      canardCleanupStaleTransfers(&_canard, _timestamp_ms * 1000);
+    }
   }
 }
 
@@ -248,6 +237,7 @@ void cocobot_can_init(void)
 
   _last_timer_ticks = 0;
   _timestamp_ms = 0;
+  _next_1hz_service_at = 0;
   mcual_timer_init(CONFIG_LIBCOCOBOT_CAN_TIMER, 1000);
 }
 
@@ -280,15 +270,21 @@ int16_t cocobot_can_request_or_respond(uint8_t destination_node_id,
                                        uint16_t payload_len)
 {
 #pragma message "TODO: Add mutex for libcanard API access"
-  return canardRequestOrRespond(&_canard,
-                                destination_node_id,
-                                data_type_signature,
-                                data_type_id,
-                                inout_transfer_id,
-                                priority,
-                                kind,
-                                payload,
-                                payload_len);
+  int16_t r = canardRequestOrRespond(&_canard,
+                                     destination_node_id,
+                                     data_type_signature,
+                                     data_type_id,
+                                     inout_transfer_id,
+                                     priority,
+                                     kind,
+                                     payload,
+                                     payload_len);
+  if(r <= 0)
+  {
+    _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
+  }
+
+  return r;
 }
 
 void cocobot_can_release_rx_transfer_payload(CanardRxTransfer* transfer)
