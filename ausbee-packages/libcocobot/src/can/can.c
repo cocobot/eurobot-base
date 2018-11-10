@@ -80,11 +80,22 @@ static void cocobot_can_on_transfer_received(CanardInstance* ins,
   if ((transfer->transfer_type == CanardTransferTypeRequest) &&
       (transfer->data_type_id == UAVCAN_PROTOCOL_RESTARTNODE_ID))
   {
-    canardReleaseRxTransferPayload(ins, transfer);
-
     uavcan_protocol_RestartNodeResponse rnr; 
     rnr.ok = 0; 
-#pragma message "TODO: check magic and restart if neeeded"
+
+    uavcan_protocol_RestartNodeRequest reqrnr; 
+    void * dynbuf = NULL;
+    uint8_t * pdynbuf = dynbuf;
+    dynbuf = pvPortMalloc(UAVCAN_PROTOCOL_RESTARTNODE_REQUEST_MAX_SIZE);
+    if(uavcan_protocol_RestartNodeRequest_decode(transfer, 0, &reqrnr, &pdynbuf) >= 0)
+    {
+      if(reqrnr.magic_number == UAVCAN_PROTOCOL_RESTARTNODE_MAGIC_NUMBER)
+      {
+        rnr.ok = 1;
+      }
+    }
+    canardReleaseRxTransferPayload(ins, transfer);
+
 
     const uint32_t size = uavcan_protocol_RestartNodeResponse_encode(&rnr, &_internal_buffer[0]);
 
@@ -97,9 +108,21 @@ static void cocobot_can_on_transfer_received(CanardInstance* ins,
                                                     CanardResponse,
                                                     &_internal_buffer[0],
                                                     (uint16_t)size);
+    //Error happened. declare bad health
     if (resp_res <= 0)
     {
       _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
+    }
+    
+    //free memory
+    if(dynbuf != NULL)
+    {
+       vPortFree(dynbuf);
+    }
+
+    if(rnr.ok)
+    {
+      mcual_bootloader();
     }
 
     return;

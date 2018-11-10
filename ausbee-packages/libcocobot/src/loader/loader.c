@@ -183,46 +183,46 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
     uavcan_protocol_file_ReadResponse read; 
     void * dynbuf = NULL;
 
-      //get file bytes
-      dynbuf = pvPortMalloc(UAVCAN_PROTOCOL_FILE_READ_RESPONSE_MAX_SIZE);
-      if(dynbuf != NULL)
+    //get file bytes
+    dynbuf = pvPortMalloc(UAVCAN_PROTOCOL_FILE_READ_RESPONSE_MAX_SIZE);
+    if(dynbuf != NULL)
+    {
+      uint8_t * pdynbuf = dynbuf;
+      if(uavcan_protocol_file_ReadResponse_decode(transfer, 0, &read, &pdynbuf) >= 0)
       {
-        uint8_t * pdynbuf = dynbuf;
-        if(uavcan_protocol_file_ReadResponse_decode(transfer, 0, &read, &pdynbuf) >= 0)
+        //release rx memory before tx
+        cocobot_can_release_rx_transfer_payload(transfer);
+
+        if(read.error.value == 0)
         {
-          //release rx memory before tx
-          cocobot_can_release_rx_transfer_payload(transfer);
+          mcual_loader_flash_pgm(_offset, read.data.data, read.data.len);
 
-          if(read.error.value == 0)
+          if(read.data.len < UAVCAN_PROTOCOL_FILE_READ_RESPONSE_DATA_MAX_LENGTH)
           {
-            mcual_loader_flash_pgm(_offset, read.data.data, read.data.len);
-
-            if(read.data.len < UAVCAN_PROTOCOL_FILE_READ_RESPONSE_DATA_MAX_LENGTH)
-            {
-              //ended !
-              mcual_loader_boot();
-            }
-            else
-            {
-              //read next bytes
-              _offset += UAVCAN_PROTOCOL_FILE_READ_RESPONSE_DATA_MAX_LENGTH;
-              cocobot_loader_read();
-            }
+            //ended !
+            mcual_loader_boot();
           }
           else
           {
-            //File error. Abort
-            _mode = LOADER_MODE_IDLE;
-            cocobot_can_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_MAINTENANCE);
+            //read next bytes
+            _offset += UAVCAN_PROTOCOL_FILE_READ_RESPONSE_DATA_MAX_LENGTH;
+            cocobot_loader_read();
           }
         }
+        else
+        {
+          //File error. Abort
+          _mode = LOADER_MODE_IDLE;
+          cocobot_can_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_MAINTENANCE);
+        }
       }
+    }
 
-      //free memory
-      if(dynbuf != NULL)
-      {
-        vPortFree(dynbuf);
-      }
+    //free memory
+    if(dynbuf != NULL)
+    {
+      vPortFree(dynbuf);
+    }
 
     return 1;
   }
