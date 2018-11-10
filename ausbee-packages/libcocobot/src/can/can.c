@@ -218,6 +218,26 @@ void cocobot_can_task(void)
 
       //clean up every seconds 
       canardCleanupStaleTransfers(&_canard, _timestamp_ms * 1000);
+
+      //send node info
+      uavcan_protocol_NodeStatus ns;
+      ns.uptime_sec = _timestamp_ms;
+      ns.health = _health;
+      ns.mode = _mode;
+      ns.sub_mode = 0;
+      ns.vendor_specific_status_code = 0;
+
+      ///!\ do not remove static !!!
+      static uint8_t transfer_id;
+
+      const uint32_t size = uavcan_protocol_NodeStatus_encode(&ns, &_internal_buffer[0]);
+
+      cocobot_can_broadcast(UAVCAN_PROTOCOL_NODESTATUS_SIGNATURE,
+                            UAVCAN_PROTOCOL_NODESTATUS_ID,
+                            &transfer_id,
+                            CANARD_TRANSFER_PRIORITY_LOW,
+                            &_internal_buffer[0],
+                            size);
     }
   }
 }
@@ -279,6 +299,29 @@ int16_t cocobot_can_request_or_respond(uint8_t destination_node_id,
                                      kind,
                                      payload,
                                      payload_len);
+  if(r <= 0)
+  {
+    _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
+  }
+
+  return r;
+}
+
+int16_t cocobot_can_broadcast(uint64_t data_type_signature,
+                              uint16_t data_type_id,
+                              uint8_t* inout_transfer_id,
+                              uint8_t priority,
+                              const void* payload,
+                              uint16_t payload_len)
+{
+#pragma message "TODO: Add mutex for libcanard API access"
+  int16_t r = canardBroadcast(&_canard,
+                              data_type_signature,
+                              data_type_id,
+                              inout_transfer_id,
+                              priority,
+                              payload,
+                              payload_len);
   if(r <= 0)
   {
     _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;

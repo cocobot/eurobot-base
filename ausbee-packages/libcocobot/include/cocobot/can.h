@@ -15,6 +15,12 @@ int16_t cocobot_can_request_or_respond(uint8_t destination_node_id,
                                        CanardRequestResponse kind,
                                        const void* payload,
                                        uint16_t payload_len);
+int16_t cocobot_can_broadcast(uint64_t data_type_signature,
+                              uint16_t data_type_id,
+                              uint8_t* inout_transfer_id,
+                              uint8_t priority,
+                              const void* payload,
+                              uint16_t payload_len);
 void cocobot_can_release_rx_transfer_payload(CanardRxTransfer* transfer);
 
 #endif// COCOBOT_CAN_H
