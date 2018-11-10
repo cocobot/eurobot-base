@@ -27,6 +27,14 @@ static uint16_t _last_timer_ticks;
 static uint64_t _timestamp_ms;
 static uint64_t _next_1hz_service_at;
 
+static void cocobot_can_fill_status(uavcan_protocol_NodeStatus * ns)
+{
+  ns->uptime_sec = _timestamp_ms;
+  ns->health = _health;
+  ns->mode = _mode;
+  ns->sub_mode = 0;
+  ns->vendor_specific_status_code = 0;
+}
 
 static void cocobot_can_on_transfer_received(CanardInstance* ins,
                                              CanardRxTransfer* transfer)
@@ -37,11 +45,7 @@ static void cocobot_can_on_transfer_received(CanardInstance* ins,
     canardReleaseRxTransferPayload(ins, transfer);
 
     uavcan_protocol_GetNodeInfoResponse nir; 
-    nir.status.uptime_sec = _timestamp_ms;
-    nir.status.health = _health;
-    nir.status.mode = _mode;
-    nir.status.sub_mode = 0;
-    nir.status.vendor_specific_status_code = 0;
+    cocobot_can_fill_status(&nir.status);
     nir.software_version.major = 19; 
     nir.software_version.minor = 0; 
     nir.software_version.optional_field_flags = UAVCAN_PROTOCOL_SOFTWAREVERSION_OPTIONAL_FIELD_FLAG_VCS_COMMIT; 
@@ -76,23 +80,22 @@ static void cocobot_can_on_transfer_received(CanardInstance* ins,
   if ((transfer->transfer_type == CanardTransferTypeRequest) &&
       (transfer->data_type_id == UAVCAN_PROTOCOL_RESTARTNODE_ID))
   {
-    uavcan_protocol_RestartNodeResponse rnr; 
-    rnr.ok = 0; 
+    uint8_t ok = 0;
 
     uavcan_protocol_RestartNodeRequest reqrnr; 
-    void * dynbuf = NULL;
-    uint8_t * pdynbuf = dynbuf;
-    dynbuf = pvPortMalloc(UAVCAN_PROTOCOL_RESTARTNODE_REQUEST_MAX_SIZE);
+    uint8_t * pdynbuf = &_internal_buffer[0];
     if(uavcan_protocol_RestartNodeRequest_decode(transfer, 0, &reqrnr, &pdynbuf) >= 0)
     {
       if(reqrnr.magic_number == UAVCAN_PROTOCOL_RESTARTNODE_MAGIC_NUMBER)
       {
-        rnr.ok = 1;
+        ok = 1;
       }
     }
     canardReleaseRxTransferPayload(ins, transfer);
 
 
+    uavcan_protocol_RestartNodeResponse rnr; 
+    rnr.ok = ok; 
     const uint32_t size = uavcan_protocol_RestartNodeResponse_encode(&rnr, &_internal_buffer[0]);
 
     cocobot_can_request_or_respond(transfer->source_node_id,
@@ -104,13 +107,7 @@ static void cocobot_can_on_transfer_received(CanardInstance* ins,
                                    &_internal_buffer[0],
                                    (uint16_t)size);
     
-    //free memory
-    if(dynbuf != NULL)
-    {
-       vPortFree(dynbuf);
-    }
-
-    if(rnr.ok)
+    if(ok)
     {
       mcual_bootloader();
     }
@@ -166,80 +163,75 @@ static bool cocobot_can_should_accept_transfert(const CanardInstance* ins,
   return r;
 }
 
-void cocobot_can_task(void)
+uint64_t cocobot_can_process_event(void)
 {
-  for (;;)
+  uint16_t ticks = mcual_timer_get_value(CONFIG_LIBCOCOBOT_CAN_TIMER);
+  uint16_t delta = ticks - _last_timer_ticks;
+  _last_timer_ticks = ticks;
+  _timestamp_ms += delta;
+
+  //Transmit Tx queue
+  for (const CanardCANFrame* txf = NULL; (txf = canardPeekTxQueue(&_canard)) != NULL;)
   {
-    uint16_t ticks = mcual_timer_get_value(CONFIG_LIBCOCOBOT_CAN_TIMER);
-    uint16_t delta = ticks - _last_timer_ticks;
-    _last_timer_ticks = ticks;
-    _timestamp_ms += delta;
-
-    //Transmit Tx queue
-    for (const CanardCANFrame* txf = NULL; (txf = canardPeekTxQueue(&_canard)) != NULL;)
+    const int16_t tx_res = canardSTM32Transmit(txf);
+    if (tx_res < 0)
     {
-      const int16_t tx_res = canardSTM32Transmit(txf);
-      if (tx_res < 0)
-      {
-        // Failure - drop the frame
-        canardPopTxQueue(&_canard);
-        _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
-      }
-      else if (tx_res > 0)
-      {
-        // Success - just drop the frame
-        canardPopTxQueue(&_canard);
-      }
-      else
-      {
-        // Timeout - try again later
-        break;
-      }
-    }
-
-    //Receiving
-    CanardCANFrame rx_frame;
-    const int16_t rx_res = canardSTM32Receive(&rx_frame);
-    if (rx_res < 0)
-    {
-      // Failure - report
+      // Failure - drop the frame
+      canardPopTxQueue(&_canard);
       _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
     }
-    else if (rx_res > 0)
+    else if (tx_res > 0)
     {
-      // Success - process the frame
-      canardHandleRxFrame(&_canard, &rx_frame, _timestamp_ms * 1000);
+      // Success - just drop the frame
+      canardPopTxQueue(&_canard);
     }
-
-
-    if (_timestamp_ms >= _next_1hz_service_at)
+    else
     {
-      _next_1hz_service_at += 1000;
-
-      //clean up every seconds 
-      canardCleanupStaleTransfers(&_canard, _timestamp_ms * 1000);
-
-      //send node info
-      uavcan_protocol_NodeStatus ns;
-      ns.uptime_sec = _timestamp_ms;
-      ns.health = _health;
-      ns.mode = _mode;
-      ns.sub_mode = 0;
-      ns.vendor_specific_status_code = 0;
-
-      ///!\ do not remove static !!!
-      static uint8_t transfer_id;
-
-      const uint32_t size = uavcan_protocol_NodeStatus_encode(&ns, &_internal_buffer[0]);
-
-      cocobot_can_broadcast(UAVCAN_PROTOCOL_NODESTATUS_SIGNATURE,
-                            UAVCAN_PROTOCOL_NODESTATUS_ID,
-                            &transfer_id,
-                            CANARD_TRANSFER_PRIORITY_LOW,
-                            &_internal_buffer[0],
-                            size);
+      // Timeout - try again later
+      break;
     }
   }
+
+  //Receiving
+  CanardCANFrame rx_frame;
+  const int16_t rx_res = canardSTM32Receive(&rx_frame);
+  if (rx_res < 0)
+  {
+    // Failure - report
+    _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
+  }
+  else if (rx_res > 0)
+  {
+    // Success - process the frame
+    canardHandleRxFrame(&_canard, &rx_frame, _timestamp_ms * 1000);
+  }
+
+
+  if (_timestamp_ms >= _next_1hz_service_at)
+  {
+    _next_1hz_service_at += 1000;
+
+    //clean up every seconds 
+    canardCleanupStaleTransfers(&_canard, _timestamp_ms * 1000);
+
+    //send node info
+    uavcan_protocol_NodeStatus ns;
+    cocobot_can_fill_status(&ns);
+
+    ///!\ do not remove static !!!
+    static uint8_t transfer_id;
+
+    const uint32_t size = uavcan_protocol_NodeStatus_encode(&ns, &_internal_buffer[0]);
+
+    cocobot_can_broadcast(UAVCAN_PROTOCOL_NODESTATUS_SIGNATURE,
+                          UAVCAN_PROTOCOL_NODESTATUS_ID,
+                          &transfer_id,
+                          CANARD_TRANSFER_PRIORITY_LOW,
+                          &_internal_buffer[0],
+                          size);
+  }
+
+  return _timestamp_ms;
 }
 
 void cocobot_can_init(void)
@@ -265,7 +257,10 @@ void cocobot_can_init(void)
 static void cocobot_can_thread(void * arg)
 {
   (void)arg;
-  cocobot_can_run();
+  for(;;)
+  {
+    cocobot_can_process_event();
+  }
 }
 
 void cocobot_can_run(void)
@@ -338,11 +333,11 @@ void cocobot_can_release_rx_transfer_payload(CanardRxTransfer* transfer)
 //canard stm32 compat
 int usleep(useconds_t usec)
 {
-#ifdef CONFIG_LIBCOCOBOT_LOADER
+#ifdef CONFIG_OS_USE_FREERTOS
+  vTaskDelay((usec / 1000) / portTICK_PERIOD_MS);
+#else
   volatile unsigned int i;
   for(i = 0; i < usec * 100; i += 1);
-#else
-  vTaskDelay((usec / 1000) / portTICK_PERIOD_MS);
 #endif
 
   return 0;

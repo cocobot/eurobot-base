@@ -21,6 +21,8 @@ static uint8_t * _path;
 static uint8_t _path_len;
 static uint64_t _offset;
 static uint8_t _read_transfer_id;
+static uint64_t _timestamp_ms;
+static uint64_t _last_activity_ms;
 
 static void cocobot_loader_read(void)
 {
@@ -84,8 +86,6 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
     uavcan_protocol_file_BeginFirmwareUpdateRequest reqbfu; 
     void * dynbuf = NULL;
 
-#pragma message "TODO: also allow timeout"
-
     bfu.optional_error_message.len = 0;
     bfu.optional_error_message.data = NULL;
 
@@ -146,6 +146,7 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
 
       //We are ready ! Time to announce it to everybody
       _mode = LOADER_MODE_LOADING;
+      _last_activity_ms = _timestamp_ms;
       cocobot_can_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_SOFTWARE_UPDATE);
       _path = pvPortMalloc(reqbfu.image_file_remote_path.path.len + 1);
       _offset = 0;
@@ -207,6 +208,7 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
             //read next bytes
             _offset += UAVCAN_PROTOCOL_FILE_READ_RESPONSE_DATA_MAX_LENGTH;
             cocobot_loader_read();
+            _last_activity_ms = _timestamp_ms;
           }
         }
         else
@@ -238,11 +240,33 @@ void cocobot_loader_init(void)
   _path = NULL;
   _offset = 0;
   _src_node_id = 0;
+  _last_activity_ms = 0;
 
   //set node status as MAINTENANCE (bootloader running but reflash is not in progress)
   cocobot_can_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_MAINTENANCE);
 
-  cocobot_can_task();
+  for(;;)
+  {
+    _timestamp_ms = cocobot_can_process_event();
+
+    if(_mode != LOADER_MODE_IDLE)
+    {
+      if(_timestamp_ms - _last_activity_ms > 1000)
+      {
+        //bootloader has stalled. Abort
+        _mode = LOADER_MODE_IDLE;
+        cocobot_can_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_MAINTENANCE);
+      }
+    }
+    else
+    {
+      //2s and no request -> start pgm
+      if(_timestamp_ms > 2000)
+      {
+        mcual_loader_boot();
+      }
+    }
+  }
 }
 
 #endif
