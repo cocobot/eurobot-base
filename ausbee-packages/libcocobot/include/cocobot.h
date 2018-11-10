@@ -14,5 +14,6 @@
 #include <cocobot/opponent_detection.h>
 #include <cocobot/shifters.h>
 #include <cocobot/can.h>
+#include <cocobot/loader.h>
 
 #endif// COCOBOT_H

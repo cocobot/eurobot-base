@@ -10,16 +10,24 @@
 
 #ifdef CONFIG_OS_USE_FREERTOS
 //mutexes for spi access
+#ifdef CONFIG_MCUAL_SPI
 static SemaphoreHandle_t mutex_spi;
+#endif
+#ifdef CONFIG_MCUAL_I2C
 static SemaphoreHandle_t mutex_i2c;
+#endif
 #endif
 
 void platform_init(void)
 {
   //init mutexes
 #ifdef CONFIG_OS_USE_FREERTOS
+#ifdef CONFIG_MCUAL_SPI
   mutex_spi = xSemaphoreCreateMutex();
+#endif
+#ifdef CONFIG_MCUAL_I2C
   mutex_i2c = xSemaphoreCreateMutex();
+#endif
 #endif
 
   //init clock
@@ -36,15 +44,16 @@ void platform_init(void)
   //init uart dbg pins
   mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN9, MCUAL_GPIO_OUTPUT);
   mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN10, MCUAL_GPIO_INPUT);
+#ifdef CONFIG_MCUAL_USART
   mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN9, 7);
   mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN10, 7);
   mcual_usart_init(PLATFORM_USART_DEBUG, 115200);
+#endif
 
   //init adc
   mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN0, MCUAL_GPIO_INPUT);
-  mcual_gpio_set_function(MCUAL_GPIOC, MCUAL_GPIO_PIN0, MCUAL_GPIO_FUNCTION_ANALOG);
-
 #ifdef CONFIG_MCUAL_ADC
+  mcual_gpio_set_function(MCUAL_GPIOC, MCUAL_GPIO_PIN0, MCUAL_GPIO_FUNCTION_ANALOG);
   mcual_adc_init();
 #endif
 
@@ -52,19 +61,23 @@ void platform_init(void)
   mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN2, MCUAL_GPIO_OUTPUT);
   mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN11, MCUAL_GPIO_INPUT);
   mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN10 | MCUAL_GPIO_PIN12, MCUAL_GPIO_OUTPUT);
+#ifdef CONFIG_MCUAL_SPI
   mcual_gpio_set_function(MCUAL_GPIOC, MCUAL_GPIO_PIN10, 6);
   mcual_gpio_set_function(MCUAL_GPIOC, MCUAL_GPIO_PIN11, 6);
   mcual_gpio_set_function(MCUAL_GPIOC, MCUAL_GPIO_PIN12, 6);
+#endif
   mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN2);
 
 #ifdef CONFIG_OS_USE_FREERTOS
-  platform_spi_slave_select(PLATFORM_SPI_CS_UNSELECT);
+#ifdef CONFIG_MCUAL_SPI
+  platform_spi_select(PLATFORM_SPI_CS_UNSELECT);
   mcual_spi_master_init(MCUAL_SPI3, MCUAL_SPI_MODE_3, 400000);
 #endif
+#endif
 
-#ifdef CONFIG_MCUAL_I2C
   //init i2c
   mcual_gpio_init(MCUAL_GPIOB, MCUAL_GPIO_PIN6 | MCUAL_GPIO_PIN7, MCUAL_GPIO_INPUT);
+#ifdef CONFIG_MCUAL_I2C
   mcual_gpio_set_function(MCUAL_GPIOB, MCUAL_GPIO_PIN6, 4);
   mcual_gpio_set_function(MCUAL_GPIOB, MCUAL_GPIO_PIN7, 4);
   mcual_gpio_set_output_type(MCUAL_GPIOB, MCUAL_GPIO_PIN6, MCUAL_GPIO_OPEN_DRAIN);
@@ -158,6 +171,7 @@ int32_t platform_adc_get_mV(uint32_t adc)
 
 
 #ifdef CONFIG_OS_USE_FREERTOS
+#ifdef CONFIG_MCUAL_SPI
 void platform_spi_select(uint8_t select)
 {
   //reset chip select
@@ -177,12 +191,16 @@ void platform_spi_select(uint8_t select)
   }
 }
 #endif
+#endif
 
+#ifdef CONFIG_MCUAL_SPI
 uint8_t platform_spi_transfert(uint8_t data)
 {
   return mcual_spi_master_transfert(MCUAL_SPI3, data);
 }
+#endif
 
+#ifdef CONFIG_MCUAL_I2C
 uint8_t platform_i2c_transmit(mcual_i2c_id_t id, uint8_t addr, uint8_t * txbuf, uint8_t tx_size, uint8_t * rxbuf, uint8_t rx_size)
 {
 #ifdef CONFIG_OS_USE_FREERTOS
@@ -195,3 +213,4 @@ uint8_t platform_i2c_transmit(mcual_i2c_id_t id, uint8_t addr, uint8_t * txbuf, 
 
   return ret;
 }
+#endif

@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_MCUAL_SPI
+
 #include <mcual.h>
 #include <stm32f4xx.h>
 #include <string.h>
@@ -106,3 +109,4 @@ uint8_t mcual_spi_master_transfert(mcual_spi_id_t spi_id, uint8_t byte)
   while(!(reg->SR & SPI_SR_RXNE));
   return reg->DR;
 }
+#endif

@@ -156,3 +156,13 @@ config LIBCOCOBOT_CAN
 	bool "+ CAN"
 	default n
 	depends on LIBCOCOBOT
+
+config LIBCOCOBOT_CAN_MEMORY_POOL_SIZE
+  int " + Memory pool size"
+  depends on LIBCOCOBOT && LIBCOCOBOT_CAN
+  default 1024
+
+config LIBCOCOBOT_LOADER
+	bool "+ Loader"
+	default n
+	depends on LIBCOCOBOT && LIBCOCOBOT_CAN

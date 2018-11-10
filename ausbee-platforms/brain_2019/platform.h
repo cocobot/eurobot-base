@@ -18,6 +18,12 @@
 
 #define PLATFORM_I2C_EEPROM           MCUAL_I2C1
 
+#define PLATFORM_FLASH_SECTOR_BOOTLOADER_START  0
+#define PLATFORM_FLASH_SECTOR_BOOTLOADER_END    1
+#define PLATFORM_FLASH_SECTOR_PGM_START         2
+#define PLATFORM_FLASH_SECTOR_PGM_END           7
+#define PLATFORM_FLASH_PGM_START                0x08004000
+
 void platform_init(void);
 void platform_led_toggle(uint8_t led);
 void platform_led_set(uint8_t led);
