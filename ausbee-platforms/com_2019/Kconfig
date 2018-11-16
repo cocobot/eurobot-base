@@ -1,0 +1,12 @@
+choice
+    prompt "+ Mode"
+
+config PLATFORM_BRAIN_2019_CAN
+    bool "CAN"
+
+config PLATFORM_BRAIN_2019_USB
+    bool "USB"
+
+
+endchoice
+
