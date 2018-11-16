@@ -32,7 +32,7 @@ void test(void * arg)
         platform_led_clear(1 << (i + 10));
       }
 
-      vTaskDelay(500 / portTICK_PERIOD_MS);
+      vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 
     color += 1;
