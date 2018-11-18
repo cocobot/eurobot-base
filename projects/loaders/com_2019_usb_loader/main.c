@@ -1,3 +1,4 @@
+#include <mcual.h>
 #include <platform.h>
 #include <cocobot.h>
 #include <FreeRTOS.h>
@@ -12,7 +13,7 @@ void test(void * arg)
   while(1)
   {
 
-    for(i = 0; i < 10; i += 1)
+    for(i = 0; i < 5; i += 1)
     {
       if(color & 1)
       {
@@ -33,6 +34,7 @@ void test(void * arg)
       }
 
       vTaskDelay(100 / portTICK_PERIOD_MS);
+      mcual_usart_send(PLATFORM_USART_USER, 'a');
     }
 
     color += 1;
@@ -43,9 +45,10 @@ int main(void)
 {
   platform_init();
 
-  //cocobot_can_init();
+  cocobot_com_init();
   //cocobot_loader_init();
 
+  //cocobot_com_run();
 
   xTaskCreate(test, "test", 600, NULL, 2, NULL );
   vTaskStartScheduler();

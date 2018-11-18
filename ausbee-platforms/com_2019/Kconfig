@@ -1,12 +1,4 @@
-choice
-    prompt "+ Mode"
-
-config PLATFORM_BRAIN_2019_CAN
-    bool "CAN"
-
-config PLATFORM_BRAIN_2019_USB
-    bool "USB"
-
-
-endchoice
-
+config PLATFORM_COM_2019_USB
+  bool " + com 2019 USB"
+  default n
+  depends on PLATFORM_COM_2019

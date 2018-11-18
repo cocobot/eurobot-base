@@ -9,9 +9,9 @@
 # include <malloc_wrapper.h>
 #endif
 #include <mcual.h>
-#include "../can/dsdl/uavcan/protocol/GetNodeInfo.h"
-#include "../can/dsdl/uavcan/protocol/file/BeginFirmwareUpdate.h"
-#include "../can/dsdl/uavcan/protocol/file/Read.h"
+#include "../com/dsdl/uavcan/protocol/GetNodeInfo.h"
+#include "../com/dsdl/uavcan/protocol/file/BeginFirmwareUpdate.h"
+#include "../com/dsdl/uavcan/protocol/file/Read.h"
 
 typedef enum {
   LOADER_MODE_IDLE,
@@ -41,7 +41,7 @@ static void cocobot_loader_read(void)
   void * buf = pvPortMalloc(UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_RESPONSE_MAX_SIZE); 
   if(buf != NULL) {
     const int size = uavcan_protocol_file_ReadRequest_encode(&rr, buf);
-    cocobot_can_request_or_respond(_src_node_id,
+    cocobot_com_request_or_respond(_src_node_id,
                                    UAVCAN_PROTOCOL_FILE_READ_SIGNATURE,
                                    UAVCAN_PROTOCOL_FILE_READ_ID,
                                    &_read_transfer_id,
@@ -127,13 +127,13 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
     }
 
     //release rx memory before tx
-    cocobot_can_release_rx_transfer_payload(transfer);
+    cocobot_com_release_rx_transfer_payload(transfer);
 
     //send response if we have enough free memory 
     void * buf = pvPortMalloc(UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_RESPONSE_MAX_SIZE); 
     if(buf != NULL) {
       const uint32_t size = uavcan_protocol_file_BeginFirmwareUpdateResponse_encode(&bfu, buf);
-      cocobot_can_request_or_respond(transfer->source_node_id,
+      cocobot_com_request_or_respond(transfer->source_node_id,
                                      UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_SIGNATURE,
                                      UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_ID,
                                      &transfer->transfer_id,
@@ -152,7 +152,7 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
       //We are ready ! Time to announce it to everybody
       _mode = LOADER_MODE_LOADING;
       _last_activity_ms = _timestamp_ms;
-      cocobot_can_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_SOFTWARE_UPDATE);
+      cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_SOFTWARE_UPDATE);
       _path = pvPortMalloc(reqbfu.image_file_remote_path.path.len + 1);
       _offset = 0;
       for(i = 0; i < reqbfu.image_file_remote_path.path.len; i += 1)
@@ -197,7 +197,7 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
       if(uavcan_protocol_file_ReadResponse_decode(transfer, 0, &read, &pdynbuf) >= 0)
       {
         //release rx memory before tx
-        cocobot_can_release_rx_transfer_payload(transfer);
+        cocobot_com_release_rx_transfer_payload(transfer);
 
         if(read.error.value == 0)
         {
@@ -220,7 +220,7 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
         {
           //File error. Abort
           _mode = LOADER_MODE_IDLE;
-          cocobot_can_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_MAINTENANCE);
+          cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_MAINTENANCE);
         }
       }
     }
@@ -248,11 +248,13 @@ void cocobot_loader_init(void)
   _last_activity_ms = 0;
 
   //set node status as MAINTENANCE (bootloader running but reflash is not in progress)
-  cocobot_can_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_MAINTENANCE);
+  cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_MAINTENANCE);
 
+#ifdef CONFIG_OS_USE_FREERTOS
+#else
   for(;;)
   {
-    _timestamp_ms = cocobot_can_process_event();
+    _timestamp_ms = cocobot_com_process_event();
 
     if(_mode != LOADER_MODE_IDLE)
     {
@@ -260,7 +262,7 @@ void cocobot_loader_init(void)
       {
         //bootloader has stalled. Abort
         _mode = LOADER_MODE_IDLE;
-        cocobot_can_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_MAINTENANCE);
+        cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_MAINTENANCE);
       }
     }
     else
@@ -272,6 +274,7 @@ void cocobot_loader_init(void)
       }
     }
   }
+#endif
 }
 
 #endif

@@ -1,6 +1,7 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
+#include "generated/autoconf.h"
 #include <mcual.h>
 #include <stdint.h>
 
@@ -43,7 +44,7 @@
 #define PLATFORM_GPIO_SDN             (1 << 12)
 
 #define PLATFORM_USART_DEBUG          MCUAL_USART1
-#ifdef PLATFORM_BRAIN_2019_USB
+#ifdef CONFIG_PLATFORM_COM_2019_USB
 # define PLATFORM_USART_USER          MCUAL_USART2
 #endif
 

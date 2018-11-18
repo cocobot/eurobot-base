@@ -152,22 +152,32 @@ config LIBCOCOBOT_TRAJECTORY
 	depends on LIBCOCOBOT
 
 ###
-config LIBCOCOBOT_CAN
-	bool "+ CAN"
+config LIBCOCOBOT_COM
+	bool "+ COM"
 	default n
 	depends on LIBCOCOBOT
 
-config LIBCOCOBOT_CAN_MEMORY_POOL_SIZE
+config LIBCOCOBOT_COM_MEMORY_POOL_SIZE
   int " + Memory pool size"
-  depends on LIBCOCOBOT && LIBCOCOBOT_CAN
+  depends on LIBCOCOBOT && LIBCOCOBOT_COM
   default 1024
 
-config LIBCOCOBOT_CAN_TIMER
+config LIBCOCOBOT_COM_TIMER
   int " + Timer ID"
-  depends on LIBCOCOBOT && LIBCOCOBOT_CAN
+  depends on LIBCOCOBOT && LIBCOCOBOT_COM
   default 1
+
+config LIBCOCOBOT_COM_USART
+	bool " + USART"
+	default n
+	depends on LIBCOCOBOT && LIBCOCOBOT_COM
+
+config LIBCOCOBOT_COM_CAN
+	bool " + CAN"
+	default n
+	depends on LIBCOCOBOT && LIBCOCOBOT_COM
 
 config LIBCOCOBOT_LOADER
 	bool "+ Loader"
 	default n
-	depends on LIBCOCOBOT && LIBCOCOBOT_CAN
+	depends on LIBCOCOBOT && LIBCOCOBOT_COM

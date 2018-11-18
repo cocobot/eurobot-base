@@ -167,11 +167,6 @@ static int mcual_usart_get_tx_buffer_size(mcual_usart_id_t usart_id)
       return CONFIG_MCUAL_USART_2_TX_SIZE;
 #endif
 
-#ifdef CONFIG_MCUAL_USART_2_TX_SIZE
-    case MCUAL_USART2:
-      return CONFIG_MCUAL_USART_2_TX_SIZE;
-#endif
-
 #ifdef CONFIG_MCUAL_USART_3_TX_SIZE
     case MCUAL_USART3:
       return CONFIG_MCUAL_USART_3_TX_SIZE;
@@ -218,11 +213,6 @@ static int mcual_usart_get_rx_buffer_size(mcual_usart_id_t usart_id)
 #ifdef CONFIG_MCUAL_USART_1_RX_SIZE
     case MCUAL_USART1:
       return CONFIG_MCUAL_USART_1_RX_SIZE;
-#endif
-
-#ifdef CONFIG_MCUAL_USART_2_RX_SIZE
-    case MCUAL_USART2:
-      return CONFIG_MCUAL_USART_2_RX_SIZE;
 #endif
 
 #ifdef CONFIG_MCUAL_USART_2_RX_SIZE
@@ -447,7 +437,7 @@ void mcual_usart_init(mcual_usart_id_t usart_id, uint32_t baudrate)
   
   int irq_id = mcual_usart_get_irq_id(usart_id);
   NVIC->IP[irq_id] = 15 << 4;
-  NVIC->ISER[irq_id / 32] |= (1 << (USART1_IRQn % 32));
+  NVIC->ISER[irq_id / 32] |= (1 << (irq_id % 32));
 }
 
 
