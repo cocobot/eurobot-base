@@ -55,10 +55,10 @@ void platform_init(void)
   mcual_usart_init(PLATFORM_USART_DEBUG, 115200);
 #endif
   
-#ifdef PLATFORM_BRAIN_2019_USB
+#ifdef CONFIG_PLATFORM_COM_2019_USB
   //init uart user pins
-  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN9, MCUAL_GPIO_OUTPUT);
-  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN10, MCUAL_GPIO_INPUT);
+  mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN5, MCUAL_GPIO_OUTPUT);
+  mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN6, MCUAL_GPIO_INPUT);
 #ifdef CONFIG_MCUAL_USART
   mcual_gpio_set_function(MCUAL_GPIOD, MCUAL_GPIO_PIN5, 7);
   mcual_gpio_set_function(MCUAL_GPIOD, MCUAL_GPIO_PIN6, 7);
