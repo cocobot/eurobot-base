@@ -9,3 +9,7 @@ endif
 ifeq ($(CONFIG_VREP),y)
 include $(CONFIG_CUSTOM_PACKAGES_PATH)/vrep/package.mk
 endif
+
+ifeq ($(CONFIG_LIBCANARD),y)
+include $(CONFIG_CUSTOM_PACKAGES_PATH)/libcanard/package.mk
+endif
