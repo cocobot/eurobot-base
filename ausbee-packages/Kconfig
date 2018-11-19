@@ -15,3 +15,9 @@ config VREP
   default n
 
 source "$AUSBEE_CUSTOM_PACKAGES_PATH/vrep/Kconfig"
+
+config LIBCANARD
+  bool "Libcanard"
+  default n
+
+source "$AUSBEE_CUSTOM_PACKAGES_PATH/libcanard/Kconfig"

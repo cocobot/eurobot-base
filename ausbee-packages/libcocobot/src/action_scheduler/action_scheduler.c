@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_ACTION_SCHEDULER
+
 #include <cocobot.h>
 #include <FreeRTOS.h>
 #include <task.h>
@@ -545,3 +548,4 @@ int cocobot_action_scheduler_handle_console(char * command)
   return 0;
 }
 */
+#endif

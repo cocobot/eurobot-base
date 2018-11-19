@@ -2,6 +2,7 @@ LIBCOCOBOT_LOCAL_FILE_PATH=$(CONFIG_CUSTOM_PACKAGES_PATH)/libcocobot
 
 # Include files
 LIBCOCOBOT_LOCAL_INCLUDE_PATH=include/
+LIBCOCOBOT_LOCAL_INCLUDE_PATH+=src/com/dsdl/
 
 #find all .c files and populate LIBCOCOBOT_SRC_FILES
 $(eval $(call pkg-generic-auto-discover-local-common-srcs,LIBCOCOBOT))

@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_ASSERV
+
 #include <cocobot.h>
 #include <platform.h>
 #include "cocobot/asserv_ramp.h"
@@ -504,3 +507,4 @@ void cocobot_asserv_handle_sync_com(uint16_t pid, uint8_t * data, uint32_t len)
       break;
   }
 }
+#endif

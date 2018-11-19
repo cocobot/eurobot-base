@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_ASSERV
+
 #include <FreeRTOS.h>
 #include <task.h>
 #include <cocobot.h>
@@ -269,3 +272,4 @@ void cocobot_lcd_init(void)
   cocobot_lcd_clear();
   cocobot_lcd_render();
 }
+#endif

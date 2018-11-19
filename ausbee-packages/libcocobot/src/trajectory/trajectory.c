@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_TRAJECTORY
+
 #include <string.h>
 #include <cocobot.h>
 #include <FreeRTOS.h>
@@ -959,3 +962,4 @@ void cocobot_trajectory_set_opponent_detection(int enable)
 {
   enable_opponent_detection = enable;
 }
+#endif

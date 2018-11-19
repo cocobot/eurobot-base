@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_ASSERV
+
 #include <cocobot.h>
 #include <platform.h>
 #include <math.h>
@@ -382,3 +385,4 @@ void cocobot_position_set_angle(float angle)
 
   cocobot_asserv_set_state(saved_state);
 }
+#endif

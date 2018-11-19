@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_ASSERV
+
 #include <cocobot.h>
 #include "cocobot/asserv_ramp.h"
 
@@ -151,3 +154,4 @@ float cocobot_asserv_ramp_get_output(cocobot_asserv_ramp_t * ramp)
 {
   return ramp->position_current;
 }
+#endif

@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_SHIFTERS
+
 #include <cocobot.h>
 #include <FreeRTOS.h>
 #include <platform.h>
@@ -50,3 +53,4 @@ void cocobot_shifters_update(void)
   platform_gpio_clear(PLATFORM_GPIO_SHIFT_SET);
   platform_spi_slave_select(PLATFORM_SPI_CS_UNSELECT);
 }
+#endif
