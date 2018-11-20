@@ -1,6 +1,8 @@
 #ifndef COCOBOT_GAME_STATE_H
 #define COCOBOT_GAME_STATE_H
 
+#define COCOBOT_GAME_DURATION 100000 // in ms
+
 typedef enum
 {
   COCOBOT_GAME_STATE_COLOR_NEG = 0,

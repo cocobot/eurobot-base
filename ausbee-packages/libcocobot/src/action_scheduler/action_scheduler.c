@@ -55,8 +55,6 @@ static cocobot_action_debug_t action_list_debug[SCHEDULER_MAX_ACTIONS];
 static unsigned int action_list_end;
 static int action_scheduler_updated;
 
-#define INITIAL_REMAINING_TIME 90000
-
 static struct cocobot_game_state_t
 {
   cocobot_strategy_t  strat;
@@ -76,7 +74,7 @@ void cocobot_action_scheduler_init(void)
   current_game_state.robot_pos.y = 0;
   current_game_state.robot_pos.a = 0;
   current_game_state.robot_average_linear_speed = 0;
-  current_game_state.remaining_time = INITIAL_REMAINING_TIME;
+  current_game_state.remaining_time = COCOBOT_GAME_DURATION;
   current_game_state.paused = 0;
   current_game_state.use_pathfinder = 0;
   current_game_state.time_gets_short = 0;
@@ -128,7 +126,7 @@ void cocobot_action_scheduler_start(void)
 
 static void cocobot_action_scheduler_update_game_state(void)
 {
-  current_game_state.remaining_time = INITIAL_REMAINING_TIME - cocobot_game_state_get_elapsed_time();
+  current_game_state.remaining_time = COCOBOT_GAME_DURATION - cocobot_game_state_get_elapsed_time();
 
   current_game_state.robot_pos.x = cocobot_position_get_x();
   current_game_state.robot_pos.y = cocobot_position_get_y();

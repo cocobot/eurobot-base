@@ -112,8 +112,8 @@ void cocobot_game_state_init(cocobot_game_state_funny_action_t funny_action)
   }
 #endif
 
-  //create 100s timer
-  _end_match_timer = xTimerCreate("end_match", 100000 / portTICK_PERIOD_MS, pdFALSE, NULL, cocobot_game_state_match_ended_event);
+  //create timer for the game duration
+  _end_match_timer = xTimerCreate("end_match", COCOBOT_GAME_DURATION / portTICK_PERIOD_MS, pdFALSE, NULL, cocobot_game_state_match_ended_event);
 }
 
 uint8_t cocobot_game_state_is_starter_removed(void)
