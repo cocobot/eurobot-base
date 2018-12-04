@@ -34,7 +34,6 @@ void test(void * arg)
       }
 
       vTaskDelay(100 / portTICK_PERIOD_MS);
-      mcual_usart_send(PLATFORM_USART_USER, 'a');
     }
 
     color += 1;
@@ -46,9 +45,9 @@ int main(void)
   platform_init();
 
   cocobot_com_init();
-  //cocobot_loader_init();
+  cocobot_loader_init();
 
-  //cocobot_com_run();
+  cocobot_com_run();
 
   xTaskCreate(test, "test", 600, NULL, 2, NULL );
   vTaskStartScheduler();

@@ -1,0 +1,6 @@
+[package]
+name = "canars"
+version = "0.1.0"
+authors = ["Damien Espitallier <damien.espitallier@gmail.com>"]
+
+[dependencies]

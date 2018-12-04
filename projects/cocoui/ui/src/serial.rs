@@ -126,7 +126,7 @@ fn find_serial_port(ith: UavcanInterface, opened_serial_port: &mut Vec<SerialMan
                 match serialport::open_with_settings(&p.port_name, &settings) {
                     Ok(mut port) => {
                         println!("Open {}", &p.port_name);
-                        let port = SerialManager::new(ith, port);
+                        let port = SerialManager::new(ith, port, opened_serial_port.clone());
                         opened_serial_port.push(port)
                     },
                     Err(e) => {

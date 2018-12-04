@@ -26,8 +26,8 @@ static uint8_t * _path;
 static uint8_t _path_len;
 static uint64_t _offset;
 static uint8_t _read_transfer_id;
-static uint64_t _timestamp_ms;
-static uint64_t _last_activity_ms;
+static uint64_t _timestamp_us;
+static uint64_t _last_activity_us;
 
 static void cocobot_loader_read(void)
 {
@@ -100,7 +100,7 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
       _mode = LOADER_MODE_PRELOADING;
       
       //intialize response with an error by default
-      bfu.error = UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_ERROR_UNKNOWN;
+      bfu.error = UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_RESPONSE_ERROR_UNKNOWN;
 
       //get all informations
       dynbuf = pvPortMalloc(UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_REQUEST_MAX_SIZE);
@@ -110,11 +110,11 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
         if(uavcan_protocol_file_BeginFirmwareUpdateRequest_decode(transfer, 0, &reqbfu, &pdynbuf) >= 0)
         {
           //success, we have enough memory !
-          bfu.error = UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_ERROR_OK;
+          bfu.error = UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_RESPONSE_ERROR_OK;
         }
       }
       
-      if(bfu.error != UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_ERROR_OK)
+      if(bfu.error != UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_RESPONSE_ERROR_OK)
       {
         //we didn't reach the success block. Cancel bootloading
         _mode = LOADER_MODE_IDLE;
@@ -123,7 +123,7 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
     else
     {
       //bootloader already in progress. Abort begin request
-      bfu.error = UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_ERROR_IN_PROGRESS;
+      bfu.error = UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_RESPONSE_ERROR_IN_PROGRESS;
     }
 
     //release rx memory before tx
@@ -151,7 +151,7 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
 
       //We are ready ! Time to announce it to everybody
       _mode = LOADER_MODE_LOADING;
-      _last_activity_ms = _timestamp_ms;
+      _last_activity_us = _timestamp_us;
       cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_SOFTWARE_UPDATE);
       _path = pvPortMalloc(reqbfu.image_file_remote_path.path.len + 1);
       _offset = 0;
@@ -213,7 +213,7 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
             //read next bytes
             _offset += UAVCAN_PROTOCOL_FILE_READ_RESPONSE_DATA_MAX_LENGTH;
             cocobot_loader_read();
-            _last_activity_ms = _timestamp_ms;
+            _last_activity_us = _timestamp_us;
           }
         }
         else
@@ -254,11 +254,11 @@ void cocobot_loader_init(void)
 #else
   for(;;)
   {
-    _timestamp_ms = cocobot_com_process_event();
+    _timestamp_us = cocobot_com_process_event();
 
     if(_mode != LOADER_MODE_IDLE)
     {
-      if(_timestamp_ms - _last_activity_ms > 1000)
+      if(_timestamp_us - _last_activity_us > 1000000)
       {
         //bootloader has stalled. Abort
         _mode = LOADER_MODE_IDLE;
@@ -268,7 +268,7 @@ void cocobot_loader_init(void)
     else
     {
       //2s and no request -> start pgm
-      if(_timestamp_ms > 2000)
+      if(_timestamp_us > 2000000)
       {
         mcual_loader_boot();
       }

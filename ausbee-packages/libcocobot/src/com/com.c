@@ -1,6 +1,7 @@
 #include <include/generated/autoconf.h>
 #ifdef CONFIG_LIBCOCOBOT_COM
 
+#include <stm32f4xx.h>
 #include <cocobot.h>
 #include <mcual.h>
 #include <platform.h>
@@ -24,14 +25,15 @@ static uint8_t _internal_buffer[UAVCAN_PROTOCOL_GETNODEINFO_RESPONSE_MAX_SIZE];
 static uint8_t _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_OK;
 static uint8_t _mode = UAVCAN_PROTOCOL_NODESTATUS_MODE_INITIALIZATION;
 static uint16_t _last_timer_ticks;
-static uint64_t _timestamp_ms;
+static uint64_t _timestamp_us;
 static uint64_t _next_1hz_service_at;
 
 #ifdef CONFIG_LIBCOCOBOT_COM_USART
 #define COCOBOT_COM_USART_START 'C'
-typedef struct 
+typedef struct __attribute__((__packed__))
 {
   uint8_t start;
+  uint32_t id;
   uint8_t len;
   uint8_t data[8];
   uint16_t crc;
@@ -40,7 +42,7 @@ typedef struct
 
 static void cocobot_com_fill_status(uavcan_protocol_NodeStatus * ns)
 {
-  ns->uptime_sec = _timestamp_ms;
+  ns->uptime_sec = _timestamp_us / 1000000;
   ns->health = _health;
   ns->mode = _mode;
   ns->sub_mode = 0;
@@ -97,7 +99,7 @@ static void cocobot_com_on_transfer_received(CanardInstance* ins,
     uint8_t * pdynbuf = &_internal_buffer[0];
     if(uavcan_protocol_RestartNodeRequest_decode(transfer, 0, &reqrnr, &pdynbuf) >= 0)
     {
-      if(reqrnr.magic_number == UAVCAN_PROTOCOL_RESTARTNODE_MAGIC_NUMBER)
+      if(reqrnr.magic_number == UAVCAN_PROTOCOL_RESTARTNODE_REQUEST_MAGIC_NUMBER)
       {
         ok = 1;
       }
@@ -177,12 +179,11 @@ static bool cocobot_com_should_accept_transfert(const CanardInstance* ins,
 #ifdef CONFIG_LIBCOCOBOT_COM_USART
 int16_t cocobot_com_usart_transmit(const CanardCANFrame* const frame)
 {
-   platform_led_toggle(1 << 8);
-
   unsigned int i;
   cocobot_com_usart_frame_t uframe;
 
   uframe.start = COCOBOT_COM_USART_START;
+  uframe.id = frame->id;
   uframe.len = frame->data_len;
   for(i = 0; i < 8; i += 1)
   {
@@ -205,7 +206,7 @@ uint64_t cocobot_com_process_event(void)
   uint16_t ticks = mcual_timer_get_value(CONFIG_LIBCOCOBOT_COM_TIMER);
   uint16_t delta = ticks - _last_timer_ticks;
   _last_timer_ticks = ticks;
-  _timestamp_ms += delta;
+  _timestamp_us += delta;
 
   //Transmit Tx queue
   for (const CanardCANFrame* txf = NULL; (txf = canardPeekTxQueue(&_canard)) != NULL;)
@@ -248,20 +249,17 @@ uint64_t cocobot_com_process_event(void)
   else if (rx_res > 0)
   {
     // Success - process the frame
-    canardHandleRxFrame(&_canard, &rx_frame, _timestamp_ms * 1000);
+    canardHandleRxFrame(&_canard, &rx_frame, _timestamp_us);
   }
 #endif
 
 
-  if (_timestamp_ms >= _next_1hz_service_at)
+  if (_timestamp_us >= _next_1hz_service_at)
   {
-    mcual_usart_send(PLATFORM_USART_USER, 'a');
-    platform_led_toggle(1 << 10);
-    _next_1hz_service_at += 1000;
+    _next_1hz_service_at = _timestamp_us + 1000000;
 
     //clean up every seconds 
-    canardCleanupStaleTransfers(&_canard, _timestamp_ms * 1000);
-    mcual_usart_send(PLATFORM_USART_USER, '0');
+    canardCleanupStaleTransfers(&_canard, _timestamp_us);
 
     //send node info
     uavcan_protocol_NodeStatus ns;
@@ -278,10 +276,9 @@ uint64_t cocobot_com_process_event(void)
                           CANARD_TRANSFER_PRIORITY_LOW,
                           &_internal_buffer[0],
                           size);
-    mcual_usart_send(PLATFORM_USART_USER, '1');
   }
 
-  return _timestamp_ms;
+  return _timestamp_us;
 }
 
 void cocobot_com_init(void)
@@ -304,9 +301,9 @@ void cocobot_com_init(void)
 	canardSetLocalNodeID(&_canard, 127);
 
   _last_timer_ticks = 0;
-  _timestamp_ms = 0;
+  _timestamp_us = 0;
   _next_1hz_service_at = 0;
-  mcual_timer_init(CONFIG_LIBCOCOBOT_COM_TIMER, 1000);
+  mcual_timer_init(CONFIG_LIBCOCOBOT_COM_TIMER, -1000000);
 }
 
 #ifdef CONFIG_OS_USE_FREERTOS
@@ -315,9 +312,7 @@ static void cocobot_com_thread(void * arg)
   (void)arg;
   for(;;)
   {
-    platform_led_toggle(1 << 9);
     cocobot_com_process_event();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 

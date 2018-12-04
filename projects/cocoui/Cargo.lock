@@ -94,6 +94,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "canars"
+version = "0.1.0"
+
+[[package]]
 name = "cc"
 version = "1.0.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -185,6 +189,13 @@ version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cfg-if 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "dsdl"
+version = "0.1.0"
+dependencies = [
+ "canars 0.1.0",
 ]
 
 [[package]]
@@ -841,6 +852,16 @@ version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "state_manager"
+version = "0.1.0"
+dependencies = [
+ "canars 0.1.0",
+ "dsdl 0.1.0",
+ "serialport 3.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "uavcan 0.1.0-preview0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "syn"
 version = "0.11.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1035,6 +1056,13 @@ version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "serde 1.0.80 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "tui"
+version = "0.1.0"
+dependencies = [
+ "state_manager 0.1.0",
 ]
 
 [[package]]

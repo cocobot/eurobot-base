@@ -130,7 +130,7 @@ void mcual_timer_init(mcual_timer_t timer, int32_t freq_Hz)
   {
     reg->ARR = 0xFFFFFFFF;
     int32_t pres = -freq_Hz;
-    reg->PSC = (pres - 1);
+    reg->PSC = mcual_clock_get_frequency_Hz(clock) * 2 / pres;
   }
   reg->CCMR1 = 0;
   reg->CCMR2 = 0;

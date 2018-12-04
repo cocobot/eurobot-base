@@ -1,0 +1,13 @@
+[package]
+name = "state_manager"
+version = "0.1.0"
+authors = ["Damien Espitallier <damien.espitallier@gmail.com>"]
+
+[dependencies]
+canars = { path = "../canars" }
+dsdl = { path = "../dsdl" }
+serialport = "3.1.0"
+
+[dependencies.uavcan]
+version = "0.1.0-preview0" 
+features = ["std"]

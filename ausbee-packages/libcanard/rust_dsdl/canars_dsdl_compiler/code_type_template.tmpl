@@ -1,0 +1,147 @@
+
+<!--(macro generate_struct)--> #! type_name, dtid, signature, fields
+#[derive(Debug)]
+pub struct ${type_name} {
+  <!--(macro expand_attr_types)--> #! group_name, attrs
+  // ${group_name}
+    % for a in attrs:
+        %if a.type_category == t.CATEGORY_ARRAY
+            %if a.dynamic_array == True
+    ${'%s: Vec<%s>, // %s' % (a.name, a.rust_type, a.rust_type_comment, )}
+            %else
+    ${'%s: [%s; %d], // %s' % (a.name, a.rust_type, a.max_array_elements, a.rust_type_comment, )}
+            %endif
+        %elif a.type_category == t.CATEGORY_VOID:
+    // ${a.rust_type_comment}
+        %else
+    ${'%s: %s, // %s' % (a.name, a.rust_type, a.rust_type_comment, )}
+        %endif
+    % endfor
+  <!--(end)-->
+${expand_attr_types(group_name='FieldTypes', attrs=fields)}
+}
+
+impl ${type_name} {
+  %if dtid != None:
+  const ID: u16 = ${dtid};
+  %endif
+  const SIGNATURE: u64 = ${'0x%08X' % signature};
+
+  %if dtid != None:
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == ${type_name}::ID
+  }
+  %endif
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = ${type_name}::SIGNATURE;
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<${type_name}> {
+
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = ${type_name}::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = ${type_name}::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+  fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<${type_name}> {
+    let mut offset = offset;
+    % for f in fields:
+      %if f.type_category == t.CATEGORY_ARRAY
+        %if f.dynamic_array == True
+    let ${'%s' % ((f.name + '_len'))};
+          %if f.last_item
+            %if f.bitlen > 7
+    //  - Last item in struct & Root item & (Array Size > 8 bit), tail array optimization
+    if xfer.get_payload_len() > 0 && tao {
+      //  - Calculate Array length from MSG length
+      ${'%s' % ((f.name + '_len'))} = ((xfer.get_payload_len() as usize * 8) - *offset) / ${f.bitlen}; // ${f.bitlen} bit array item size
+    }
+    else {
+      // - Array length ${f.array_max_size_bit_len} bits
+      ${'%s' % ((f.name + '_len'))} = match xfer.decode_scalar_u${f.array_max_size_bit_len_expanded}(offset, ${f.array_max_size_bit_len}) {
+       Some(s) => s as usize,
+       None => return None,
+      };
+    }
+            %else
+    ${'%s' % ((f.name + '_len'))} = match xfer.decode_scalar_u${f.array_max_size_bit_len}(offset, ${f.array_max_size_bit_len}) {
+     Some(s) => s,
+     None => return None,
+    };
+            %endif
+          %else
+    //  - Array length, not last item ${f.array_max_size_bit_len} bits
+    ${'%s' % ((f.name + '_len'))} = match xfer.decode_scalar_u${f.array_max_size_bit_len}(offset, ${f.array_max_size_bit_len}) {
+     Some(s) => s,
+     None => return None,
+    };
+          %endif
+    let mut ${f.name} = Vec::new();
+    for _c in 0..${'%s' % ((f.name + '_len'))} {
+          %if f.rust_type_category == t.CATEGORY_COMPOUND:
+            unimplemented!(); //1
+          %else
+      let data = match xfer.decode_scalar_${f.rust_type}(offset, ${f.bitlen}) {
+        Some(s) => s,
+        None => return None,
+      };
+      ${f.name}.push(data);
+          %endif
+    }
+    //  - Get Array
+        %else
+    // Static array (${f.name})
+    let mut ${f.name} = [0 as ${f.rust_type}; ${f.max_array_elements}];
+    for c in 0..${f.max_array_elements} {
+      ${f.name}[c] = match xfer.decode_scalar_${f.rust_type}(offset, ${f.bitlen}) {
+       Some(s) => s,
+       None => return None,
+      };
+    }
+
+        %endif
+      %elif f.type_category == t.CATEGORY_VOID:
+        unimplemented!(); //3
+      %elif f.type_category == t.CATEGORY_COMPOUND:
+    let ${f.name} = match ${f.rust_type}::decode_internal(xfer, offset, tao) {
+      Some(s) => s,
+      None => return None,
+    };
+      %else
+    let ${f.name} = match xfer.decode_scalar_${f.rust_type}(offset, ${f.bitlen}) {
+     Some(s) => s,
+     None => return None,
+    };
+      %endif
+    % endfor
+
+    Some(${type_name} {
+    % for f in fields:
+      ${f.name},
+    % endfor
+    })
+  }
+
+}
+
+<!--(end)-->
+
+
+
+% if t.kind == t.KIND_SERVICE:
+${generate_struct(type_name=t.struct_name+'Request', dtid=t.default_dtid, signature=t.get_data_type_signature(),fields=t.request_fields)}
+${generate_struct(type_name=t.struct_name+'Response', dtid=t.default_dtid, signature=t.get_data_type_signature(),fields=t.response_fields)}
+% else:
+${generate_struct(type_name=t.struct_name, dtid=t.default_dtid, signature=t.get_data_type_signature(),fields=t.fields)}
+% endif
+
+
