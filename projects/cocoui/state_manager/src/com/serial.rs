@@ -5,6 +5,8 @@ use super::ComInstance;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::io;
+use std::time::SystemTime;
+use std::time::UNIX_EPOCH;
 
 use std::{thread, time};
 
@@ -116,8 +118,19 @@ impl SerialManager {
                             decoder.add_byte(*b);
                         }
                         while let Some(frame) = decoder.decode() {
+                            let timestamp =  SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
+                            let timestamp = timestamp.as_secs() * 1_000 +
+                                timestamp.subsec_nanos() as u64 / 1_000_000;
+
                             match com.lock() {
-                                Ok(mut c) => c.handle_rx_frame(frame.get_can_frame()),
+                                Ok(mut c) => {
+                                    let mut node = c.get_node();
+                                    drop(c);
+                                    match node {
+                                        Some(ref mut s) => s.lock().unwrap().handle_rx_frame(frame.get_can_frame(), timestamp),
+                                        None => {},
+                                    };
+                                },
                                 Err(e) => eprintln!("{:?}", e),
                             }
                         }

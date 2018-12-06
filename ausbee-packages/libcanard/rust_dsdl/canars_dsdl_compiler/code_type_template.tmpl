@@ -7,14 +7,14 @@ pub struct ${type_name} {
     % for a in attrs:
         %if a.type_category == t.CATEGORY_ARRAY
             %if a.dynamic_array == True
-    ${'%s: Vec<%s>, // %s' % (a.name, a.rust_type, a.rust_type_comment, )}
+    pub ${'%s: Vec<%s>, // %s' % (a.name, a.rust_type, a.rust_type_comment, )}
             %else
-    ${'%s: [%s; %d], // %s' % (a.name, a.rust_type, a.max_array_elements, a.rust_type_comment, )}
+    pub ${'%s: [%s; %d], // %s' % (a.name, a.rust_type, a.max_array_elements, a.rust_type_comment, )}
             %endif
         %elif a.type_category == t.CATEGORY_VOID:
     // ${a.rust_type_comment}
         %else
-    ${'%s: %s, // %s' % (a.name, a.rust_type, a.rust_type_comment, )}
+    pub ${'%s: %s, // %s' % (a.name, a.rust_type, a.rust_type_comment, )}
         %endif
     % endfor
   <!--(end)-->
@@ -26,6 +26,10 @@ impl ${type_name} {
   const ID: u16 = ${dtid};
   %endif
   const SIGNATURE: u64 = ${'0x%08X' % signature};
+  % for a in constants:
+  pub const ${'%s: %s = %s;' % (a.name, a.rust_type, a.init_expression)}
+  % endfor
+
 
   %if dtid != None:
   pub fn check_id(data_type: u16) -> bool {
@@ -138,10 +142,10 @@ impl ${type_name} {
 
 
 % if t.kind == t.KIND_SERVICE:
-${generate_struct(type_name=t.struct_name+'Request', dtid=t.default_dtid, signature=t.get_data_type_signature(),fields=t.request_fields)}
-${generate_struct(type_name=t.struct_name+'Response', dtid=t.default_dtid, signature=t.get_data_type_signature(),fields=t.response_fields)}
+${generate_struct(type_name=t.struct_name+'Request', dtid=t.default_dtid, signature=t.get_data_type_signature(),fields=t.request_fields, constants=t.request_constants)}
+${generate_struct(type_name=t.struct_name+'Response', dtid=t.default_dtid, signature=t.get_data_type_signature(),fields=t.response_fields, constants=t.response_constants)}
 % else:
-${generate_struct(type_name=t.struct_name, dtid=t.default_dtid, signature=t.get_data_type_signature(),fields=t.fields)}
+${generate_struct(type_name=t.struct_name, dtid=t.default_dtid, signature=t.get_data_type_signature(),fields=t.fields, constants=t.constants)}
 % endif
 
 

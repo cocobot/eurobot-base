@@ -8,6 +8,7 @@
 #ifdef CONFIG_OS_USE_FREERTOS
 # include <FreeRTOS.h>
 # include <task.h>
+# include <semphr.h>
 #else
 # include <malloc_wrapper.h>
 #endif
@@ -27,6 +28,9 @@ static uint8_t _mode = UAVCAN_PROTOCOL_NODESTATUS_MODE_INITIALIZATION;
 static uint16_t _last_timer_ticks;
 static uint64_t _timestamp_us;
 static uint64_t _next_1hz_service_at;
+#ifdef CONFIG_OS_USE_FREERTOS
+static SemaphoreHandle_t _mutex;
+#endif
 
 #ifdef CONFIG_LIBCOCOBOT_COM_USART
 #define COCOBOT_COM_USART_START 'C'
@@ -297,6 +301,13 @@ void cocobot_com_init(void)
   mcual_usart_init(PLATFORM_USART_USER, 115200);
 #endif
 
+#ifdef CONFIG_OS_USE_FREERTOS
+  //create mutex
+  _mutex = xSemaphoreCreateMutex();
+#endif
+
+
+
 #pragma message "TODO: read id from flash or eeprom"
 	canardSetLocalNodeID(&_canard, 127);
 
@@ -337,7 +348,7 @@ int16_t cocobot_com_request_or_respond(uint8_t destination_node_id,
                                        const void* payload,
                                        uint16_t payload_len)
 {
-#pragma message "TODO: Add mutex for libcanard API access"
+  xSemaphoreTake(_mutex, portMAX_DELAY);
   int16_t r = canardRequestOrRespond(&_canard,
                                      destination_node_id,
                                      data_type_signature,
@@ -347,6 +358,7 @@ int16_t cocobot_com_request_or_respond(uint8_t destination_node_id,
                                      kind,
                                      payload,
                                      payload_len);
+  xSemaphoreGive(_mutex);
   if(r <= 0)
   {
     _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
@@ -362,7 +374,7 @@ int16_t cocobot_com_broadcast(uint64_t data_type_signature,
                               const void* payload,
                               uint16_t payload_len)
 {
-#pragma message "TODO: Add mutex for libcanard API access"
+  xSemaphoreTake(_mutex, portMAX_DELAY);
   int16_t r = canardBroadcast(&_canard,
                               data_type_signature,
                               data_type_id,
@@ -370,6 +382,7 @@ int16_t cocobot_com_broadcast(uint64_t data_type_signature,
                               priority,
                               payload,
                               payload_len);
+  xSemaphoreGive(_mutex);
   if(r <= 0)
   {
     _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;

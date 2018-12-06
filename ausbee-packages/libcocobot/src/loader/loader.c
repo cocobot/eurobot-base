@@ -245,7 +245,7 @@ void cocobot_loader_init(void)
   _path = NULL;
   _offset = 0;
   _src_node_id = 0;
-  _last_activity_ms = 0;
+  _last_activity_us = 0;
 
   //set node status as MAINTENANCE (bootloader running but reflash is not in progress)
   cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_MAINTENANCE);

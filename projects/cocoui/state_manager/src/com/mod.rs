@@ -2,19 +2,20 @@ extern crate canars;
 extern crate dsdl;
 
 mod serial;
+pub mod msg;
 
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::time::SystemTime;
-use std::time::UNIX_EPOCH;
 
 use com::canars::Instance;
 use com::canars::TransferType;
 use com::canars::RxTransfer;
 use com::canars::Node;
-use com::canars::CANFrame;
 
-type ComInstance = Arc<Mutex<Com>>;
+use super::state::StateManager;
+use super::state::StateManagerInstance;
+
+pub type ComInstance = Arc<Mutex<Com>>;
 
 struct ComHandler {
 }
@@ -36,49 +37,59 @@ impl Node<ComInstance> for ComHandler {
         }
     }
 
-    fn on_transfer_reception(&self, _com: &mut ComInstance, xfer: &RxTransfer) {
+    fn on_transfer_reception(&self, com: &mut ComInstance, xfer: &RxTransfer) {
+        let mut com = com.lock().unwrap();
+        let mut state_manager = com.get_state_manager_mut().lock().unwrap();
+
         if dsdl::uavcan::protocol::NodeStatus::check_id(xfer.get_data_type_id()) {
-            let status = dsdl::uavcan::protocol::NodeStatus::decode(xfer);
-            println!("OTC: {:?}", status);
+            let status = dsdl::uavcan::protocol::NodeStatus::decode(xfer).unwrap();
+            state_manager.set_node_status(xfer.get_source_node_id(), status);
         }
     }
 }
 
 pub struct Com {
-    node: Option<Instance<ComHandler, ComInstance>>,
+    node: Option<Arc<Mutex<Instance<ComHandler, ComInstance>>>>,
+    state_manager: StateManagerInstance,
 }
 
 impl Com {
-    fn new() -> Com {
+    fn new(state_manager: StateManagerInstance) -> Com {
          Com {
              node: None,
+             state_manager,
          }
     }
 
     fn set_node(&mut self, node: Instance<ComHandler, ComInstance>) {
-        self.node = Some(node);
+        self.node = Some(Arc::new(Mutex::new(node)));
     }
 
-    fn handle_rx_frame(&mut self, frame: CANFrame) {
-        let timestamp =  SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
-        let timestamp = timestamp.as_secs() * 1_000 +
-            timestamp.subsec_nanos() as u64 / 1_000_000;
-
+    fn get_node(&mut self) -> Option<Arc<Mutex<Instance<ComHandler, ComInstance>>>> {
         match self.node {
-            Some(ref mut n) =>  n.handle_rx_frame(frame, timestamp),
-            None => (),
+            Some(ref mut s) => Some(s.clone()),
+            None => None,
         }
+    }
 
+    fn get_state_manager_mut(&mut self) -> &mut StateManagerInstance {
+         &mut self.state_manager
+    }
+
+    pub fn message(&mut self, msg: msg::Msg) {
+        println!("Todo: {:?}", msg);
     }
 }
 
-pub fn init(node_id: u8) {
-    let com = Arc::new(Mutex::new(Com::new()));
+pub fn init(node_id: u8, state_manager: StateManagerInstance) {
+    let com = Arc::new(Mutex::new(Com::new(state_manager)));
     let node = Instance::init(ComHandler::new(), com.clone());
 
     //acquire lock for configuration
+    let com_cpy = com.clone();
     let mut mcom = com.lock().unwrap();
     mcom.set_node(node);
+    StateManager::start(mcom.get_state_manager_mut().clone(), com_cpy);
     drop(mcom);
 
     serial::init(com.clone());

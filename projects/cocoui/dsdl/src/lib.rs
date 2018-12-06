@@ -14,10 +14,10 @@ pub mod protocol {
 #[derive(Debug)]
 pub struct HardwareVersion {
   // FieldTypes
-    major: u8, // bit len 8
-    minor: u8, // bit len 8
-    unique_id: [u8; 16], // Static Array 8bit[16] max items
-    certificate_of_authenticity: Vec<u8>, // Dynamic Array 8bit[255] max items
+    pub major: u8, // bit len 8
+    pub minor: u8, // bit len 8
+    pub unique_id: [u8; 16], // Static Array 8bit[16] max items
+    pub certificate_of_authenticity: Vec<u8>, // Dynamic Array 8bit[255] max items
 
 }
 
@@ -97,12 +97,14 @@ impl HardwareVersion {
 #[derive(Debug)]
 pub struct DataTypeKind {
   // FieldTypes
-    value: u8, // bit len 8
+    pub value: u8, // bit len 8
 
 }
 
 impl DataTypeKind {
   const SIGNATURE: u64 = 0x9420A73E008E5930;
+  pub const SERVICE: u8 = 0;
+  pub const MESSAGE: u8 = 1;
 
   pub fn set_signature(signature: &mut u64){
     *signature = DataTypeKind::SIGNATURE;
@@ -180,10 +182,10 @@ impl GetNodeInfoRequest {
 #[derive(Debug)]
 pub struct GetNodeInfoResponse {
   // FieldTypes
-    status: ::uavcan::protocol::NodeStatus, //
-    software_version: ::uavcan::protocol::SoftwareVersion, //
-    hardware_version: ::uavcan::protocol::HardwareVersion, //
-    name: Vec<u8>, // Dynamic Array 8bit[80] max items
+    pub status: ::uavcan::protocol::NodeStatus, //
+    pub software_version: ::uavcan::protocol::SoftwareVersion, //
+    pub hardware_version: ::uavcan::protocol::HardwareVersion, //
+    pub name: Vec<u8>, // Dynamic Array 8bit[80] max items
 
 }
 
@@ -263,13 +265,14 @@ impl GetNodeInfoResponse {
 #[derive(Debug)]
 pub struct RestartNodeRequest {
   // FieldTypes
-    magic_number: u64, // bit len 40
+    pub magic_number: u64, // bit len 40
 
 }
 
 impl RestartNodeRequest {
   const ID: u16 = 5;
   const SIGNATURE: u64 = 0x569E05394A3017F0;
+  pub const MAGIC_NUMBER: u64 = 0xACCE551B1E;
 
   pub fn check_id(data_type: u16) -> bool {
     data_type == RestartNodeRequest::ID
@@ -310,7 +313,7 @@ impl RestartNodeRequest {
 #[derive(Debug)]
 pub struct RestartNodeResponse {
   // FieldTypes
-    ok: bool, // bit len 1
+    pub ok: bool, // bit len 1
 
 }
 
@@ -357,16 +360,18 @@ impl RestartNodeResponse {
 #[derive(Debug)]
 pub struct SoftwareVersion {
   // FieldTypes
-    major: u8, // bit len 8
-    minor: u8, // bit len 8
-    optional_field_flags: u8, // bit len 8
-    vcs_commit: u32, // bit len 32
-    image_crc: u64, // bit len 64
+    pub major: u8, // bit len 8
+    pub minor: u8, // bit len 8
+    pub optional_field_flags: u8, // bit len 8
+    pub vcs_commit: u32, // bit len 32
+    pub image_crc: u64, // bit len 64
 
 }
 
 impl SoftwareVersion {
   const SIGNATURE: u64 = 0xDD46FD376527FEA1;
+  pub const OPTIONAL_FIELD_FLAG_VCS_COMMIT: u8 = 1;
+  pub const OPTIONAL_FIELD_FLAG_IMAGE_CRC: u8 = 2;
 
   pub fn set_signature(signature: &mut u64){
     *signature = SoftwareVersion::SIGNATURE;
@@ -423,17 +428,29 @@ impl SoftwareVersion {
 #[derive(Debug)]
 pub struct NodeStatus {
   // FieldTypes
-    uptime_sec: u32, // bit len 32
-    health: u8, // bit len 2
-    mode: u8, // bit len 3
-    sub_mode: u8, // bit len 3
-    vendor_specific_status_code: u16, // bit len 16
+    pub uptime_sec: u32, // bit len 32
+    pub health: u8, // bit len 2
+    pub mode: u8, // bit len 3
+    pub sub_mode: u8, // bit len 3
+    pub vendor_specific_status_code: u16, // bit len 16
 
 }
 
 impl NodeStatus {
   const ID: u16 = 341;
   const SIGNATURE: u64 = 0xF0868D0C1A7C6F1;
+  pub const MAX_BROADCASTING_PERIOD_MS: u16 = 1000;
+  pub const MIN_BROADCASTING_PERIOD_MS: u16 = 2;
+  pub const OFFLINE_TIMEOUT_MS: u16 = 3000;
+  pub const HEALTH_OK: u8 = 0;
+  pub const HEALTH_WARNING: u8 = 1;
+  pub const HEALTH_ERROR: u8 = 2;
+  pub const HEALTH_CRITICAL: u8 = 3;
+  pub const MODE_OPERATIONAL: u8 = 0;
+  pub const MODE_INITIALIZATION: u8 = 1;
+  pub const MODE_MAINTENANCE: u8 = 2;
+  pub const MODE_SOFTWARE_UPDATE: u8 = 3;
+  pub const MODE_OFFLINE: u8 = 7;
 
   pub fn check_id(data_type: u16) -> bool {
     data_type == NodeStatus::ID
@@ -494,9 +511,9 @@ impl NodeStatus {
 #[derive(Debug)]
 pub struct GetDataTypeInfoRequest {
   // FieldTypes
-    id: u16, // bit len 16
-    kind: ::uavcan::protocol::DataTypeKind, //
-    name: Vec<u8>, // Dynamic Array 8bit[80] max items
+    pub id: u16, // bit len 16
+    pub kind: ::uavcan::protocol::DataTypeKind, //
+    pub name: Vec<u8>, // Dynamic Array 8bit[80] max items
 
 }
 
@@ -571,17 +588,21 @@ impl GetDataTypeInfoRequest {
 #[derive(Debug)]
 pub struct GetDataTypeInfoResponse {
   // FieldTypes
-    signature: u64, // bit len 64
-    id: u16, // bit len 16
-    kind: ::uavcan::protocol::DataTypeKind, //
-    flags: u8, // bit len 8
-    name: Vec<u8>, // Dynamic Array 8bit[80] max items
+    pub signature: u64, // bit len 64
+    pub id: u16, // bit len 16
+    pub kind: ::uavcan::protocol::DataTypeKind, //
+    pub flags: u8, // bit len 8
+    pub name: Vec<u8>, // Dynamic Array 8bit[80] max items
 
 }
 
 impl GetDataTypeInfoResponse {
   const ID: u16 = 2;
   const SIGNATURE: u64 = 0x1B283338A7BED2D8;
+  pub const FLAG_KNOWN: u8 = 1;
+  pub const FLAG_SUBSCRIBED: u8 = 2;
+  pub const FLAG_PUBLISHING: u8 = 4;
+  pub const FLAG_SERVING: u8 = 8;
 
   pub fn check_id(data_type: u16) -> bool {
     data_type == GetDataTypeInfoResponse::ID

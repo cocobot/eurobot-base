@@ -56,6 +56,7 @@ impl<'a> RxTransfer<'a> {
     }
 
     pub fn decode_scalar_u8(&self, offset: &mut usize, size: u8) -> Option<u8> {
+        //println!("-> offset {}/{}", offset, size);
         let mut storage = 0;
         let size = size as usize;
         let mut bit = 0;
@@ -64,13 +65,16 @@ impl<'a> RxTransfer<'a> {
                 Some(s) => *s,
                 None => return None,
             };
+            //println!("   data {}/{}/{}/{}", data, storage, i, bit);
             if data & (1 << (i % 8)) != 0 {
                 storage |= (1 << bit);
             }
+            //println!("   step {}/{}/{}/{}", data, storage, i, bit);
             bit += 1;
             assert!(bit <= 8);
         }
         *offset += size;
+        //println!("   final {}", storage);
         Some(storage)
     }
 
@@ -124,6 +128,10 @@ impl<'a> RxTransfer<'a> {
 
     pub fn get_payload_len(&self) -> u8 {
          self.payload_len
+    }
+
+    pub fn get_source_node_id(&self) -> u8 {
+         self.source_node_id
     }
 }
 
