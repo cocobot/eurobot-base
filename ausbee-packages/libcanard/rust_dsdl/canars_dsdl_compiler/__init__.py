@@ -203,8 +203,11 @@ def strip_name(name):
     return name.split('.')[-1]
 
 def type_to_rust_type(t):
-    print(vars(t))
     if t.category == t.CATEGORY_PRIMITIVE:
+        saturate = {
+            t.CAST_MODE_SATURATED: True,
+            t.CAST_MODE_TRUNCATED: False,
+        }[t.cast_mode]
         if t.kind == t.KIND_FLOAT:
             print("ERR1");
             pass
@@ -214,18 +217,33 @@ def type_to_rust_type(t):
                 t.KIND_UNSIGNED_INT: 'u',
                 t.KIND_SIGNED_INT: 's',
             }[t.kind]
+            signedness = {
+                t.KIND_BOOLEAN: 'false',
+                t.KIND_UNSIGNED_INT: 'false',
+                t.KIND_SIGNED_INT: 'true',
+            }[t.kind]
             if t.kind == t.KIND_BOOLEAN:
                 return {
                         'rust_type':'bool',
                         'rust_type_comment':'bit len %d' % (t.bitlen, ),
                         'bitlen':t.bitlen,
+                        'max_size':get_max_size(t.bitlen, False),
+                        'signedness':signedness,
+                        'saturate':saturate,
                        }
 
             else:
+                if saturate:
+                    # Do not staturate if struct field length is equal bitlen
+                    if (expand_to_next_full(t.bitlen) == t.bitlen):
+                        saturate = False
                 return {
                         'rust_type':'%s%d' % (rust_type, expand_to_next_full(t.bitlen)),
                         'rust_type_comment':'bit len %d' % (t.bitlen, ),
                         'bitlen':t.bitlen,
+                        'max_size':get_max_size(t.bitlen, t.kind == t.KIND_UNSIGNED_INT),
+                        'signedness':signedness,
+                        'saturate':saturate,
                         }
     elif t.category == t.CATEGORY_ARRAY:
         values = type_to_rust_type(t.value_type)

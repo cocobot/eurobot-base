@@ -3,6 +3,8 @@
 use std::cell::RefCell;
 use std::cell::RefMut;
 use std::mem::swap;
+use std::collections::BinaryHeap;
+use std::cmp::Ordering;
 
  const BROADCAST_NODE_ID: u8 = 0;
  const MIN_NODE_ID: u8 = 1;
@@ -16,6 +18,17 @@ use std::mem::swap;
 const ANON_MSG_DATA_TYPE_ID_BIT_LEN: u16 = 2;
 const TRANSFER_TIMEOUT_USEC: u64 = 2000000;
 const TRANSFER_ID_BIT_LEN: usize = 5;
+pub const TRANSFER_PRIORITY_HIGHEST: u8 = 0;
+pub const TRANSFER_PRIORITY_HIGH: u8 = 8;
+pub const TRANSFER_PRIORITY_MEDIUM: u8 = 16;
+pub const TRANSFER_PRIORITY_LOW: u8 = 24;
+pub const TRANSFER_PRIORITY_LOWEST: u8 = 31;
+
+#[derive(PartialEq, Copy, Clone)]
+pub enum RequestResponse{
+    Response,
+    Request,
+}
 
 pub struct RxTransfer<'a> {
     timestamp_usec: u64,
@@ -56,25 +69,25 @@ impl<'a> RxTransfer<'a> {
     }
 
     pub fn decode_scalar_u8(&self, offset: &mut usize, size: u8) -> Option<u8> {
-        //println!("-> offset {}/{}", offset, size);
+        //println!("START DECODE -> offset {}/{}", offset, size);
         let mut storage = 0;
         let size = size as usize;
         let mut bit = 0;
         for i in *offset..(*offset+size) {
+            storage <<= 1;
             let data = match self.payload.get(i / 8) {
                 Some(s) => *s,
                 None => return None,
             };
             //println!("   data {}/{}/{}/{}", data, storage, i, bit);
-            if data & (1 << (i % 8)) != 0 {
-                storage |= (1 << bit);
+            if data & ((1 as u8) << (7 - (i % 8))) != 0 {
+                storage |= 1;
             }
-            //println!("   step {}/{}/{}/{}", data, storage, i, bit);
             bit += 1;
             assert!(bit <= 8);
         }
         *offset += size;
-        //println!("   final {}", storage);
+        //println!("   final {}/{}/{}", storage, offset, *offset /8);
         Some(storage)
     }
 
@@ -119,7 +132,24 @@ impl<'a> RxTransfer<'a> {
     }
 
     pub fn decode_scalar_u64(&self, offset: &mut usize, size: u8) -> Option<u64> {
-        unimplemented!();
+        let mut r = 0;
+        let mut i = 0;
+        let mut size = size;
+        while size > 0 {
+            let mut to_read = size;
+            if to_read > 8 {
+                 to_read = 8;
+            }
+            let p1 = match self.decode_scalar_u8(offset, to_read) {
+                Some(s) => s as u64,
+                None => return None,
+            };
+            r |= p1 << i;
+            size -= to_read;
+            i += 8;
+        }
+        Some(r)
+
     }
 
     pub fn decode_scalar_bool(&self, offset: &mut usize, size: u8) -> Option<bool> {
@@ -134,6 +164,27 @@ impl<'a> RxTransfer<'a> {
          self.source_node_id
     }
 }
+
+pub fn encode_scalar_u8(buffer: &mut Vec<u8>, offset: usize, size: usize, value: u8) {
+    unimplemented!();
+}
+
+pub fn encode_scalar_u16(buffer: &mut Vec<u8>, offset: usize, size: usize, value: u16) {
+    unimplemented!();
+}
+
+pub fn encode_scalar_u32(buffer: &mut Vec<u8>, offset: usize, size: usize, value: u32) {
+    unimplemented!();
+}
+
+pub fn encode_scalar_u64(buffer: &mut Vec<u8>, offset: usize, size: usize, value: u64) {
+    unimplemented!();
+}
+
+pub fn encode_scalar_bool(buffer: &mut Vec<u8>, offset: usize, size: usize, value: bool) {
+    unimplemented!();
+}
+
 
 pub trait Node<U> {
     fn on_transfer_reception(&self, &mut U, &RxTransfer);
@@ -157,7 +208,7 @@ impl TransferType {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq)]
 pub struct CANFrame {
     id: u32,
     data: [u8; CANFrame::CAN_FRAME_MAX_DATA_LEN],
@@ -226,20 +277,38 @@ impl CANFrame {
         }
     }
 
-     fn get_id(&self) -> u32 {
+    pub fn get_id(&self) -> u32 {
         self.id
     }
 
-     fn get_data_len(&self) -> u8 {
+    pub fn get_data_len(&self) -> u8 {
         self.data_len
     }
 
-     fn get_data(&self) -> &[u8; CANFrame::CAN_FRAME_MAX_DATA_LEN] {
+    pub fn get_data(&self) -> &[u8; CANFrame::CAN_FRAME_MAX_DATA_LEN] {
         &self.data
     }
 }
 
- struct RxState {
+impl Ord for CANFrame {
+    fn cmp(&self, other: &CANFrame) -> Ordering {
+        self.id.cmp(&other.get_id()).reverse()
+    }
+}
+
+impl PartialOrd for CANFrame {
+    fn partial_cmp(&self, other: &CANFrame) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for CANFrame {
+    fn eq(&self, other: &CANFrame) -> bool {
+        self.id == other.get_id()
+    }
+}
+
+struct RxState {
     buffer: Vec<u8>,
     dtid_tt_snid_dnid: u32,
     calculated_crc: u16,
@@ -338,6 +407,7 @@ pub struct Instance<T: Node<U>, U> {
     handler: T,
     user_reference: U,
     rx_states: Vec<RefCell<RxState>>,
+    queue: BinaryHeap<CANFrame>,
 }
 
 impl<T: Node<U>, U> Instance<T, U> {
@@ -350,7 +420,12 @@ impl<T: Node<U>, U> Instance<T, U> {
             handler,
             user_reference,
             rx_states: Vec::new(),
+            queue: BinaryHeap::new(),
         }
+    }
+
+    pub fn pop_tx_queue(&mut self) -> Option<CANFrame> {
+        self.queue.pop()
     }
 
      fn get_user_reference(&self) -> &U {
@@ -361,12 +436,12 @@ impl<T: Node<U>, U> Instance<T, U> {
         &mut self.user_reference
     }
 
-     fn set_local_node_id(&mut self, self_node_id: u8) {
+     pub fn set_local_node_id(&mut self, node_id: u8) {
         if (self.node_id == BROADCAST_NODE_ID)
-            && (self.node_id >= MIN_NODE_ID)
-            && (self.node_id <= MAX_NODE_ID)
+            && (node_id >= MIN_NODE_ID)
+            && (node_id <= MAX_NODE_ID)
         {
-            self.node_id = self_node_id;
+            self.node_id = node_id;
         } else {
             assert!(false);
         }
@@ -482,12 +557,14 @@ impl<T: Node<U>, U> Instance<T, U> {
             || (frame.get_id() & CAN_FRAME_ERR) != 0
             || (frame.get_data_len() < 1)
         {
+            println!("Unsuported frame");
             return; // Unsupported frame, not UAVCAN - ignore
         }
 
         if transfer_type != TransferType::Broadcast
             && destination_node_id != self.get_local_node_id()
         {
+            println!("DEST MISMATCH {}/{}", destination_node_id, self.get_local_node_id());
             return; // Address mismatch
         }
 
@@ -537,12 +614,14 @@ impl<T: Node<U>, U> Instance<T, U> {
                     }
                 }
             } else {
+                println!("Nobody wants: {}", data_type_id); 
                 return; // The application doesn't want this transfer
             }
         } else {
             rx_state = self.find(transfer_descriptor);
 
             if rx_state.is_none() {
+                println!("CONTINUE TX :(");
                 return;
             }
         }
@@ -615,25 +694,25 @@ impl<T: Node<U>, U> Instance<T, U> {
 
             // take off the crc and store the payload
             rx_state.set_timestamp_usec(timestamp_usec);
-            rx_state.buffer_push_bytes(&frame.get_data()[2..]);
+            rx_state.buffer_push_bytes(&frame.get_data()[2..(frame.get_data().len() - 1)]);
             rx_state.set_payload_crc(
                 (frame.get_data()[0] as u16) | ((frame.get_data()[1] as u16) << 8),
             );
             let calc_crc = rx_state.get_calculated_crc();
             rx_state.set_calculated_crc(Instance::<T, U>::crc_add(
                 calc_crc, 
-                &frame.get_data()[2..],
+                &frame.get_data()[2..(frame.get_data().len() - 1)],
                 frame.get_data_len() - 3,
             ));
         } else if !Instance::<T, U>::is_start_of_transfer(tail_byte)
             && !Instance::<T, U>::is_end_of_transfer(tail_byte)
         // Middle of a multi-frame transfer
         {
-            rx_state.buffer_push_bytes(&frame.get_data()[..]);
+            rx_state.buffer_push_bytes(&frame.get_data()[..(frame.get_data().len() - 1)]);
             let calc_crc = rx_state.get_calculated_crc();
             rx_state.set_calculated_crc(Instance::<T, U>::crc_add(
                 calc_crc,
-                &frame.get_data()[..],
+                &frame.get_data()[..(frame.get_data().len() - 1)],
                 frame.get_data_len() - 1,
             ));
         } else
@@ -649,7 +728,7 @@ impl<T: Node<U>, U> Instance<T, U> {
             let calc_crc = rx_state.get_calculated_crc();
             rx_state.set_calculated_crc(Instance::<T, U>::crc_add(
                     calc_crc,
-                &frame.get_data()[..],
+                &frame.get_data()[..(frame.get_data().len() - 1)],
                 frame.get_data_len() - 1,
             ));
 
@@ -683,5 +762,102 @@ impl<T: Node<U>, U> Instance<T, U> {
             0 => rx_state.set_next_toggle(1),
             _ => rx_state.set_next_toggle(0),
         }
+    }
+
+    pub fn request_or_respond(&mut self,destination_node_id :u8,
+                               data_type_signature: u64,
+                               data_type_id: u8,
+                               inout_transfer_id: &mut u8,
+                               priority: u8,
+                               kind: RequestResponse,
+                               payload: &[u8]) {
+        if self.get_local_node_id() == 0 {
+            panic!("Node ID is not set");
+        }
+
+        let can_id = ((priority as u32) << 24) | ((data_type_id as u32) << 16) |
+                 ((kind as u32) << 15) | ((destination_node_id as u32) << 8) |
+                 ((1 as u32) << 7) | (self.get_local_node_id() as u32);
+        let mut crc = 0xFFFF;
+
+        if payload.len() > 7 {
+            crc = Instance::<T, U>::crc_add_signature(crc, data_type_signature);
+            crc = Instance::<T, U>::crc_add(crc, payload, payload.len() as u8);
+        }
+
+        self.enqueue_tx_frames(can_id, inout_transfer_id, crc, payload);
+
+        if kind == RequestResponse::Request {                      // Response Transfer ID must not be altered
+            Instance::<T, U>::increment_transfer_id(inout_transfer_id);
+        }
+    }
+
+    fn increment_transfer_id(transfer_id: &mut u8) {
+        *transfer_id += 1;
+        if *transfer_id >= 32 {
+            *transfer_id = 0;
+        }
+    }
+
+    fn enqueue_tx_frames(&mut self, can_id: u32, transfer_id: &mut u8, crc: u16, payload: &[u8]) {
+
+    if payload.len() < CANFrame::CAN_FRAME_MAX_DATA_LEN {                      // Single frame transfer
+        let id = can_id | CAN_FRAME_EFF;
+        let data_len = (payload.len() + 1) as u8;
+        let mut data = [0; CANFrame::CAN_FRAME_MAX_DATA_LEN];
+        for i in 0..payload.len() {
+            data[i] = payload[i];
+        }
+        data[payload.len()] = 0xC0 | (*transfer_id & 31);
+
+        let frame = CANFrame::new(id, data, data_len);
+        self.queue.push(frame);
+    }
+    else {                                                                  // Multi frame transfer
+        unimplemented!();
+    //    uint16_t data_index = 0;
+    //    uint8_t toggle = 0;
+    //    uint8_t sot_eot = 0x80;
+
+    //    CanardTxQueueItem* queue_item = NULL;
+
+    //    while (payload_len - data_index != 0)
+    //    {
+    //        queue_item = createTxItem(&ins->allocator);
+    //        if (queue_item == NULL)
+    //        {
+    //            return -CANARD_ERROR_OUT_OF_MEMORY;          // TODO: Purge all frames enqueued so far
+    //        }
+
+    //        uint8_t i = 0;
+    //        if (data_index == 0)
+    //        {
+    //            // add crc
+    //            queue_item->frame.data[0] = (uint8_t) (crc);
+    //            queue_item->frame.data[1] = (uint8_t) (crc >> 8U);
+    //            i = 2;
+    //        }
+    //        else
+    //        {
+    //            i = 0;
+    //        }
+
+    //        for (; i < (CANARD_CAN_FRAME_MAX_DATA_LEN - 1) && data_index < payload_len; i++, data_index++)
+    //        {
+    //            queue_item->frame.data[i] = payload[data_index];
+    //        }
+    //        // tail byte
+    //        sot_eot = (data_index == payload_len) ? (uint8_t)0x40 : sot_eot;
+
+    //        queue_item->frame.data[i] = (uint8_t)(sot_eot | ((uint32_t)toggle << 5U) | ((uint32_t)*transfer_id & 31U));
+    //        queue_item->frame.id = can_id | CANARD_CAN_FRAME_EFF;
+    //        queue_item->frame.data_len = (uint8_t)(i + 1);
+    //        pushTxQueue(ins, queue_item);
+
+    //        result++;
+    //        toggle ^= 1;
+    //        sot_eot = 0;
+    //    }
+    }
     }
 }

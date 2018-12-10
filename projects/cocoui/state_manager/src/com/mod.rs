@@ -32,6 +32,10 @@ impl Node<ComInstance> for ComHandler {
             dsdl::uavcan::protocol::NodeStatus::set_signature(data_type_signature);
             true
         }
+        else  if dsdl::uavcan::protocol::GetNodeInfoResponse::check_id(data_type_id) {
+            dsdl::uavcan::protocol::GetNodeInfoResponse::set_signature(data_type_signature);
+            true
+        }
         else {
             false
         }
@@ -44,6 +48,10 @@ impl Node<ComInstance> for ComHandler {
         if dsdl::uavcan::protocol::NodeStatus::check_id(xfer.get_data_type_id()) {
             let status = dsdl::uavcan::protocol::NodeStatus::decode(xfer).unwrap();
             state_manager.set_node_status(xfer.get_source_node_id(), status);
+        }
+        else if dsdl::uavcan::protocol::GetNodeInfoResponse::check_id(xfer.get_data_type_id()) {
+            let node_info = dsdl::uavcan::protocol::GetNodeInfoResponse::decode(xfer).unwrap();
+            state_manager.set_node_info(xfer.get_source_node_id(), node_info);
         }
     }
 }
@@ -77,13 +85,14 @@ impl Com {
     }
 
     pub fn message(&mut self, msg: msg::Msg) {
-        println!("Todo: {:?}", msg);
+        msg.send(self);
     }
 }
 
 pub fn init(node_id: u8, state_manager: StateManagerInstance) {
     let com = Arc::new(Mutex::new(Com::new(state_manager)));
-    let node = Instance::init(ComHandler::new(), com.clone());
+    let mut node = Instance::init(ComHandler::new(), com.clone());
+    node.set_local_node_id(node_id);
 
     //acquire lock for configuration
     let com_cpy = com.clone();

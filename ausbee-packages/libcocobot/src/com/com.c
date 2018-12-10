@@ -181,10 +181,32 @@ static bool cocobot_com_should_accept_transfert(const CanardInstance* ins,
 }
 
 #ifdef CONFIG_LIBCOCOBOT_COM_USART
+static uint16_t cocobot_com_crc16_update(uint16_t crc, uint8_t a)
+{
+  int i;
+
+  crc ^= a;
+  for(i = 0; i < 8; i += 1)
+  {
+    if (crc & 1)
+    {
+      crc = (crc >> 1) ^ 0xA001;
+    }
+    else
+    {
+      crc = (crc >> 1);
+    }
+  }
+
+  return crc;
+}
+
 int16_t cocobot_com_usart_transmit(const CanardCANFrame* const frame)
 {
   unsigned int i;
   cocobot_com_usart_frame_t uframe;
+
+  uint16_t crc = 0xFFFF;
 
   uframe.start = COCOBOT_COM_USART_START;
   uframe.id = frame->id;
@@ -193,15 +215,66 @@ int16_t cocobot_com_usart_transmit(const CanardCANFrame* const frame)
   {
      uframe.data[i] = frame->data[i];
   }
-  uframe.crc = 0x1310;
 
   uint8_t * ptr = (uint8_t *)&uframe;
+  for(i = 0; i < sizeof(uframe) - 2; i += 1, ptr += 1)
+  {
+    crc = cocobot_com_crc16_update(crc, *ptr);
+  }
+  uframe.crc = crc;
+
+  ptr = (uint8_t *)&uframe;
   for(i = 0; i < sizeof(cocobot_com_usart_frame_t); i += 1, ptr += 1)
   {
     mcual_usart_send(PLATFORM_USART_USER, *ptr);
   }
 
   return sizeof(cocobot_com_usart_frame_t);
+}
+
+int16_t cocobot_com_usart_receive(CanardCANFrame* const frame)
+{
+  static cocobot_com_usart_frame_t uframe;
+
+  while(1)
+  {
+    int16_t byte = mcual_usart_recv_no_wait(PLATFORM_USART_USER);
+    if(byte < 0)
+    {
+    platform_led_toggle(1 << 1);
+      return -1;
+    }
+    platform_led_toggle(1 << 0);
+
+    unsigned int i;
+    uint8_t * ptr = (uint8_t *)&uframe;
+    for(i = 0; i < sizeof(cocobot_com_usart_frame_t) - 1; i += 1)
+    {
+      *ptr = *(ptr + 1);
+      ptr += 1;
+    }
+    *ptr = byte & 0xFF;
+
+    if(uframe.start == COCOBOT_COM_USART_START)
+    {
+      uint16_t crc = 0xFFFF;
+      uint8_t * ptr = (uint8_t *)&uframe;
+      for(i = 0; i < sizeof(cocobot_com_usart_frame_t) - 2; i += 1, ptr += 1)
+      {
+        crc = cocobot_com_crc16_update(crc, *ptr);
+      }
+      if(crc == uframe.crc)
+      {
+        frame->id = uframe.id;
+        frame->data_len = uframe.len;
+        for(i = 0; i < 8; i += 1)
+        {
+          frame->data[i] = uframe.data[i];
+          return 1;
+        }
+      }
+    }
+  }
 }
 #endif
 
@@ -245,6 +318,22 @@ uint64_t cocobot_com_process_event(void)
   //Receiving
   CanardCANFrame rx_frame;
   const int16_t rx_res = canardSTM32Receive(&rx_frame);
+  if (rx_res < 0)
+  {
+    // Failure - report
+    _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
+  }
+  else if (rx_res > 0)
+  {
+    // Success - process the frame
+    canardHandleRxFrame(&_canard, &rx_frame, _timestamp_us);
+  }
+#endif
+
+#ifdef CONFIG_LIBCOCOBOT_COM_USART
+  //Receiving
+  CanardCANFrame rx_frame;
+  const int16_t rx_res = cocobot_com_usart_receive(&rx_frame);
   if (rx_res < 0)
   {
     // Failure - report
@@ -348,7 +437,9 @@ int16_t cocobot_com_request_or_respond(uint8_t destination_node_id,
                                        const void* payload,
                                        uint16_t payload_len)
 {
+#ifdef CONFIG_OS_USE_FREERTOS
   xSemaphoreTake(_mutex, portMAX_DELAY);
+#endif
   int16_t r = canardRequestOrRespond(&_canard,
                                      destination_node_id,
                                      data_type_signature,
@@ -358,7 +449,9 @@ int16_t cocobot_com_request_or_respond(uint8_t destination_node_id,
                                      kind,
                                      payload,
                                      payload_len);
+#ifdef CONFIG_OS_USE_FREERTOS
   xSemaphoreGive(_mutex);
+#endif
   if(r <= 0)
   {
     _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
@@ -374,7 +467,9 @@ int16_t cocobot_com_broadcast(uint64_t data_type_signature,
                               const void* payload,
                               uint16_t payload_len)
 {
+#ifdef CONFIG_OS_USE_FREERTOS
   xSemaphoreTake(_mutex, portMAX_DELAY);
+#endif
   int16_t r = canardBroadcast(&_canard,
                               data_type_signature,
                               data_type_id,
@@ -382,7 +477,9 @@ int16_t cocobot_com_broadcast(uint64_t data_type_signature,
                               priority,
                               payload,
                               payload_len);
+#ifdef CONFIG_OS_USE_FREERTOS
   xSemaphoreGive(_mutex);
+#endif
   if(r <= 0)
   {
     _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;

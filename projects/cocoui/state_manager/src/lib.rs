@@ -1,3 +1,5 @@
+#![feature(nll)]
+
 mod com;
 mod state;
 

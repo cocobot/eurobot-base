@@ -43,12 +43,16 @@ impl NodeInfoMode {
      }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct NodeInfo {
     pub id: u8,
     pub uptime_sec: Option<u32>,
     pub health: Option<NodeInfoHealth>,
     pub mode: Option<NodeInfoMode>,
+    pub soft_version: Option<String>,
+    pub git: Option<u32>,
+    pub hard_version: Option<String>,
+    pub name: Option<String>,
 
     last_stamp : SystemTime,
     last_node_info : SystemTime,
@@ -63,6 +67,10 @@ impl NodeInfo {
             mode: None,
             last_stamp: SystemTime::now(),
             last_node_info: SystemTime::UNIX_EPOCH,
+            soft_version: None,
+            git: None,
+            hard_version: None,
+            name: None,
         }
     }
 

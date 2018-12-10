@@ -8,6 +8,16 @@ extern crate canars;
 
 use canars::RxTransfer;
 
+fn saturate<T>(data: T, max: usize) ->T {
+  unimplemented!();
+  data
+}
+
+fn saturate_unsigned<T>(data: T, max: usize) -> T {
+  unimplemented!();
+  data
+}
+
 pub mod uavcan {
 pub mod protocol {
 
@@ -22,10 +32,32 @@ pub struct HardwareVersion {
 }
 
 impl HardwareVersion {
-  const SIGNATURE: u64 = 0xAD5C4C933F4A0C4;
+  pub const SIGNATURE: u64 = 0xAD5C4C933F4A0C4;
 
   pub fn set_signature(signature: &mut u64){
     *signature = HardwareVersion::SIGNATURE;
+  }
+
+  pub fn encode(instance: HardwareVersion) -> (Vec<u8>, usize) {
+    let (vec, mut size) = HardwareVersion::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+  fn encode_internal(instance: HardwareVersion, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+    let major = instance.major;
+    canars::encode_scalar_u8(&mut buffer, offset, 8, major); // 255
+    offset += 8;
+
+    let minor = instance.minor;
+    canars::encode_scalar_u8(&mut buffer, offset, 8, minor); // 255
+    offset += 8;
+
+    unimplemented!(); //E1
+    unimplemented!(); //E1
+    (buffer, offset)
   }
 
   pub fn decode(xfer: &::RxTransfer) -> Option<HardwareVersion> {
@@ -102,12 +134,28 @@ pub struct DataTypeKind {
 }
 
 impl DataTypeKind {
-  const SIGNATURE: u64 = 0x9420A73E008E5930;
+  pub const SIGNATURE: u64 = 0x9420A73E008E5930;
   pub const SERVICE: u8 = 0;
   pub const MESSAGE: u8 = 1;
 
   pub fn set_signature(signature: &mut u64){
     *signature = DataTypeKind::SIGNATURE;
+  }
+
+  pub fn encode(instance: DataTypeKind) -> (Vec<u8>, usize) {
+    let (vec, mut size) = DataTypeKind::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+  fn encode_internal(instance: DataTypeKind, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+    let value = instance.value;
+    canars::encode_scalar_u8(&mut buffer, offset, 8, value); // 255
+    offset += 8;
+
+    (buffer, offset)
   }
 
   pub fn decode(xfer: &::RxTransfer) -> Option<DataTypeKind> {
@@ -145,8 +193,8 @@ pub struct GetNodeInfoRequest {
 }
 
 impl GetNodeInfoRequest {
-  const ID: u16 = 1;
-  const SIGNATURE: u64 = 0xEE468A8121C46A9E;
+  pub const ID: u16 = 1;
+  pub const SIGNATURE: u64 = 0xEE468A8121C46A9E;
 
   pub fn check_id(data_type: u16) -> bool {
     data_type == GetNodeInfoRequest::ID
@@ -154,6 +202,18 @@ impl GetNodeInfoRequest {
 
   pub fn set_signature(signature: &mut u64){
     *signature = GetNodeInfoRequest::SIGNATURE;
+  }
+
+  pub fn encode(instance: GetNodeInfoRequest) -> (Vec<u8>, usize) {
+    let (vec, mut size) = GetNodeInfoRequest::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+  fn encode_internal(instance: GetNodeInfoRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+    (buffer, offset)
   }
 
   pub fn decode(xfer: &::RxTransfer) -> Option<GetNodeInfoRequest> {
@@ -190,8 +250,8 @@ pub struct GetNodeInfoResponse {
 }
 
 impl GetNodeInfoResponse {
-  const ID: u16 = 1;
-  const SIGNATURE: u64 = 0xEE468A8121C46A9E;
+  pub const ID: u16 = 1;
+  pub const SIGNATURE: u64 = 0xEE468A8121C46A9E;
 
   pub fn check_id(data_type: u16) -> bool {
     data_type == GetNodeInfoResponse::ID
@@ -199,6 +259,22 @@ impl GetNodeInfoResponse {
 
   pub fn set_signature(signature: &mut u64){
     *signature = GetNodeInfoResponse::SIGNATURE;
+  }
+
+  pub fn encode(instance: GetNodeInfoResponse) -> (Vec<u8>, usize) {
+    let (vec, mut size) = GetNodeInfoResponse::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+  fn encode_internal(instance: GetNodeInfoResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+    unimplemented!(); //E3
+    unimplemented!(); //E3
+    unimplemented!(); //E3
+    unimplemented!(); //E1
+    (buffer, offset)
   }
 
   pub fn decode(xfer: &::RxTransfer) -> Option<GetNodeInfoResponse> {
@@ -217,15 +293,15 @@ impl GetNodeInfoResponse {
 
   fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<GetNodeInfoResponse> {
     let mut offset = offset;
-    let status = match ::uavcan::protocol::NodeStatus::decode_internal(xfer, offset, tao) {
+    let status = match ::uavcan::protocol::NodeStatus::decode_internal(xfer, offset, false) {
       Some(s) => s,
       None => return None,
     };
-    let software_version = match ::uavcan::protocol::SoftwareVersion::decode_internal(xfer, offset, tao) {
+    let software_version = match ::uavcan::protocol::SoftwareVersion::decode_internal(xfer, offset, false) {
       Some(s) => s,
       None => return None,
     };
-    let hardware_version = match ::uavcan::protocol::HardwareVersion::decode_internal(xfer, offset, tao) {
+    let hardware_version = match ::uavcan::protocol::HardwareVersion::decode_internal(xfer, offset, false) {
       Some(s) => s,
       None => return None,
     };
@@ -270,8 +346,8 @@ pub struct RestartNodeRequest {
 }
 
 impl RestartNodeRequest {
-  const ID: u16 = 5;
-  const SIGNATURE: u64 = 0x569E05394A3017F0;
+  pub const ID: u16 = 5;
+  pub const SIGNATURE: u64 = 0x569E05394A3017F0;
   pub const MAGIC_NUMBER: u64 = 0xACCE551B1E;
 
   pub fn check_id(data_type: u16) -> bool {
@@ -280,6 +356,22 @@ impl RestartNodeRequest {
 
   pub fn set_signature(signature: &mut u64){
     *signature = RestartNodeRequest::SIGNATURE;
+  }
+
+  pub fn encode(instance: RestartNodeRequest) -> (Vec<u8>, usize) {
+    let (vec, mut size) = RestartNodeRequest::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+  fn encode_internal(instance: RestartNodeRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+    let magic_number = ::saturate_unsigned(instance.magic_number, 1099511627775);
+    canars::encode_scalar_u64(&mut buffer, offset, 40, magic_number); // 1099511627775
+    offset += 40;
+
+    (buffer, offset)
   }
 
   pub fn decode(xfer: &::RxTransfer) -> Option<RestartNodeRequest> {
@@ -318,8 +410,8 @@ pub struct RestartNodeResponse {
 }
 
 impl RestartNodeResponse {
-  const ID: u16 = 5;
-  const SIGNATURE: u64 = 0x569E05394A3017F0;
+  pub const ID: u16 = 5;
+  pub const SIGNATURE: u64 = 0x569E05394A3017F0;
 
   pub fn check_id(data_type: u16) -> bool {
     data_type == RestartNodeResponse::ID
@@ -327,6 +419,22 @@ impl RestartNodeResponse {
 
   pub fn set_signature(signature: &mut u64){
     *signature = RestartNodeResponse::SIGNATURE;
+  }
+
+  pub fn encode(instance: RestartNodeResponse) -> (Vec<u8>, usize) {
+    let (vec, mut size) = RestartNodeResponse::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+  fn encode_internal(instance: RestartNodeResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+    let ok = ::saturate_unsigned(instance.ok, 0);
+    canars::encode_scalar_bool(&mut buffer, offset, 1, ok); // 0
+    offset += 1;
+
+    (buffer, offset)
   }
 
   pub fn decode(xfer: &::RxTransfer) -> Option<RestartNodeResponse> {
@@ -369,12 +477,44 @@ pub struct SoftwareVersion {
 }
 
 impl SoftwareVersion {
-  const SIGNATURE: u64 = 0xDD46FD376527FEA1;
+  pub const SIGNATURE: u64 = 0xDD46FD376527FEA1;
   pub const OPTIONAL_FIELD_FLAG_VCS_COMMIT: u8 = 1;
   pub const OPTIONAL_FIELD_FLAG_IMAGE_CRC: u8 = 2;
 
   pub fn set_signature(signature: &mut u64){
     *signature = SoftwareVersion::SIGNATURE;
+  }
+
+  pub fn encode(instance: SoftwareVersion) -> (Vec<u8>, usize) {
+    let (vec, mut size) = SoftwareVersion::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+  fn encode_internal(instance: SoftwareVersion, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+    let major = instance.major;
+    canars::encode_scalar_u8(&mut buffer, offset, 8, major); // 255
+    offset += 8;
+
+    let minor = instance.minor;
+    canars::encode_scalar_u8(&mut buffer, offset, 8, minor); // 255
+    offset += 8;
+
+    let optional_field_flags = instance.optional_field_flags;
+    canars::encode_scalar_u8(&mut buffer, offset, 8, optional_field_flags); // 255
+    offset += 8;
+
+    let vcs_commit = instance.vcs_commit;
+    canars::encode_scalar_u32(&mut buffer, offset, 32, vcs_commit); // 4294967295
+    offset += 32;
+
+    let image_crc = instance.image_crc;
+    canars::encode_scalar_u64(&mut buffer, offset, 64, image_crc); // 18446744073709551615
+    offset += 64;
+
+    (buffer, offset)
   }
 
   pub fn decode(xfer: &::RxTransfer) -> Option<SoftwareVersion> {
@@ -437,8 +577,8 @@ pub struct NodeStatus {
 }
 
 impl NodeStatus {
-  const ID: u16 = 341;
-  const SIGNATURE: u64 = 0xF0868D0C1A7C6F1;
+  pub const ID: u16 = 341;
+  pub const SIGNATURE: u64 = 0xF0868D0C1A7C6F1;
   pub const MAX_BROADCASTING_PERIOD_MS: u16 = 1000;
   pub const MIN_BROADCASTING_PERIOD_MS: u16 = 2;
   pub const OFFLINE_TIMEOUT_MS: u16 = 3000;
@@ -458,6 +598,38 @@ impl NodeStatus {
 
   pub fn set_signature(signature: &mut u64){
     *signature = NodeStatus::SIGNATURE;
+  }
+
+  pub fn encode(instance: NodeStatus) -> (Vec<u8>, usize) {
+    let (vec, mut size) = NodeStatus::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+  fn encode_internal(instance: NodeStatus, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+    let uptime_sec = instance.uptime_sec;
+    canars::encode_scalar_u32(&mut buffer, offset, 32, uptime_sec); // 4294967295
+    offset += 32;
+
+    let health = ::saturate_unsigned(instance.health, 3);
+    canars::encode_scalar_u8(&mut buffer, offset, 2, health); // 3
+    offset += 2;
+
+    let mode = ::saturate_unsigned(instance.mode, 7);
+    canars::encode_scalar_u8(&mut buffer, offset, 3, mode); // 7
+    offset += 3;
+
+    let sub_mode = ::saturate_unsigned(instance.sub_mode, 7);
+    canars::encode_scalar_u8(&mut buffer, offset, 3, sub_mode); // 7
+    offset += 3;
+
+    let vendor_specific_status_code = instance.vendor_specific_status_code;
+    canars::encode_scalar_u16(&mut buffer, offset, 16, vendor_specific_status_code); // 65535
+    offset += 16;
+
+    (buffer, offset)
   }
 
   pub fn decode(xfer: &::RxTransfer) -> Option<NodeStatus> {
@@ -518,8 +690,8 @@ pub struct GetDataTypeInfoRequest {
 }
 
 impl GetDataTypeInfoRequest {
-  const ID: u16 = 2;
-  const SIGNATURE: u64 = 0x1B283338A7BED2D8;
+  pub const ID: u16 = 2;
+  pub const SIGNATURE: u64 = 0x1B283338A7BED2D8;
 
   pub fn check_id(data_type: u16) -> bool {
     data_type == GetDataTypeInfoRequest::ID
@@ -527,6 +699,24 @@ impl GetDataTypeInfoRequest {
 
   pub fn set_signature(signature: &mut u64){
     *signature = GetDataTypeInfoRequest::SIGNATURE;
+  }
+
+  pub fn encode(instance: GetDataTypeInfoRequest) -> (Vec<u8>, usize) {
+    let (vec, mut size) = GetDataTypeInfoRequest::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+  fn encode_internal(instance: GetDataTypeInfoRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+    let id = instance.id;
+    canars::encode_scalar_u16(&mut buffer, offset, 16, id); // 65535
+    offset += 16;
+
+    unimplemented!(); //E3
+    unimplemented!(); //E1
+    (buffer, offset)
   }
 
   pub fn decode(xfer: &::RxTransfer) -> Option<GetDataTypeInfoRequest> {
@@ -549,7 +739,7 @@ impl GetDataTypeInfoRequest {
      Some(s) => s,
      None => return None,
     };
-    let kind = match ::uavcan::protocol::DataTypeKind::decode_internal(xfer, offset, tao) {
+    let kind = match ::uavcan::protocol::DataTypeKind::decode_internal(xfer, offset, false) {
       Some(s) => s,
       None => return None,
     };
@@ -597,8 +787,8 @@ pub struct GetDataTypeInfoResponse {
 }
 
 impl GetDataTypeInfoResponse {
-  const ID: u16 = 2;
-  const SIGNATURE: u64 = 0x1B283338A7BED2D8;
+  pub const ID: u16 = 2;
+  pub const SIGNATURE: u64 = 0x1B283338A7BED2D8;
   pub const FLAG_KNOWN: u8 = 1;
   pub const FLAG_SUBSCRIBED: u8 = 2;
   pub const FLAG_PUBLISHING: u8 = 4;
@@ -610,6 +800,32 @@ impl GetDataTypeInfoResponse {
 
   pub fn set_signature(signature: &mut u64){
     *signature = GetDataTypeInfoResponse::SIGNATURE;
+  }
+
+  pub fn encode(instance: GetDataTypeInfoResponse) -> (Vec<u8>, usize) {
+    let (vec, mut size) = GetDataTypeInfoResponse::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+  fn encode_internal(instance: GetDataTypeInfoResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+    let signature = instance.signature;
+    canars::encode_scalar_u64(&mut buffer, offset, 64, signature); // 18446744073709551615
+    offset += 64;
+
+    let id = instance.id;
+    canars::encode_scalar_u16(&mut buffer, offset, 16, id); // 65535
+    offset += 16;
+
+    unimplemented!(); //E3
+    let flags = instance.flags;
+    canars::encode_scalar_u8(&mut buffer, offset, 8, flags); // 255
+    offset += 8;
+
+    unimplemented!(); //E1
+    (buffer, offset)
   }
 
   pub fn decode(xfer: &::RxTransfer) -> Option<GetDataTypeInfoResponse> {
@@ -636,7 +852,7 @@ impl GetDataTypeInfoResponse {
      Some(s) => s,
      None => return None,
     };
-    let kind = match ::uavcan::protocol::DataTypeKind::decode_internal(xfer, offset, tao) {
+    let kind = match ::uavcan::protocol::DataTypeKind::decode_internal(xfer, offset, false) {
       Some(s) => s,
       None => return None,
     };

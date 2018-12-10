@@ -23,9 +23,9 @@ ${expand_attr_types(group_name='FieldTypes', attrs=fields)}
 
 impl ${type_name} {
   %if dtid != None:
-  const ID: u16 = ${dtid};
+  pub const ID: u16 = ${dtid};
   %endif
-  const SIGNATURE: u64 = ${'0x%08X' % signature};
+  pub const SIGNATURE: u64 = ${'0x%08X' % signature};
   % for a in constants:
   pub const ${'%s: %s = %s;' % (a.name, a.rust_type, a.init_expression)}
   % endfor
@@ -40,6 +40,42 @@ impl ${type_name} {
   pub fn set_signature(signature: &mut u64){
     *signature = ${type_name}::SIGNATURE;
   }
+
+  pub fn encode(instance: ${type_name}) -> (Vec<u8>, usize) {
+
+    let (vec, mut size) = ${type_name}::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+  fn encode_internal(instance: ${type_name}, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+  %for f in fields:
+    %if f.type_category == t.CATEGORY_ARRAY
+    unimplemented!(); //E1
+    %elif f.type_category == t.CATEGORY_VOID:
+    unimplemented!(); //E2
+    %elif f.type_category == t.CATEGORY_COMPOUND:
+    unimplemented!(); //E3
+    %else
+      %if f.saturate
+        %if f.signedness == 'true'
+    let ${f.name} = ::saturate(instance.${f.name}, ${f.max_size});
+        %else
+    let ${f.name} = ::saturate_unsigned(instance.${f.name}, ${f.max_size});
+        %endif
+      %else
+    let ${f.name} = instance.${f.name};
+      %endif
+    canars::encode_scalar_${f.rust_type}(&mut buffer, offset, ${f.bitlen}, ${f.name}); // ${f.max_size}
+    offset += ${f.bitlen};
+
+    %endif
+  %endfor
+    (buffer, offset)
+  }
+
 
   pub fn decode(xfer: &::RxTransfer) -> Option<${type_name}> {
 
@@ -116,7 +152,11 @@ impl ${type_name} {
       %elif f.type_category == t.CATEGORY_VOID:
         unimplemented!(); //3
       %elif f.type_category == t.CATEGORY_COMPOUND:
+        %if f.last_item
     let ${f.name} = match ${f.rust_type}::decode_internal(xfer, offset, tao) {
+        %else
+    let ${f.name} = match ${f.rust_type}::decode_internal(xfer, offset, false) {
+        %endif
       Some(s) => s,
       None => return None,
     };
