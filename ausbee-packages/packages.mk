@@ -13,3 +13,7 @@ endif
 ifeq ($(CONFIG_LIBCANARD),y)
 include $(CONFIG_CUSTOM_PACKAGES_PATH)/libcanard/package.mk
 endif
+
+ifeq ($(CONFIG_SPIRIT1),y)
+include $(CONFIG_CUSTOM_PACKAGES_PATH)/spirit1/package.mk
+endif

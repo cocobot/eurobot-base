@@ -20,4 +20,8 @@ config LIBCANARD
   bool "Libcanard"
   default n
 
+config SPIRIT1
+  bool "Spirit1"
+  default n
+
 source "$AUSBEE_CUSTOM_PACKAGES_PATH/libcanard/Kconfig"
