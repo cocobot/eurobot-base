@@ -1439,7 +1439,7 @@ OokPeakDecay SpiritRadioGetOokPeakDecay(void)
 */
 uint8_t SpiritRadioGetdBm2Reg(uint32_t lFBase, float fPowerdBm)
 {
-  uint8_t i;
+  uint8_t i=0;
   uint8_t j=0;
   float fReg;
   
@@ -1488,7 +1488,7 @@ uint8_t SpiritRadioGetdBm2Reg(uint32_t lFBase, float fPowerdBm)
 */
 float SpiritRadioGetReg2dBm(uint32_t lFBase, uint8_t cPowerReg)
 {
-  uint8_t i;
+  uint8_t i=0;
   uint8_t j=0;
   float fPower;
   
