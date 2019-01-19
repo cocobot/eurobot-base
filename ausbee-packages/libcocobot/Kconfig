@@ -177,6 +177,11 @@ config LIBCOCOBOT_COM_CAN
 	default n
 	depends on LIBCOCOBOT && LIBCOCOBOT_COM
 
+config LIBCOCOBOT_COM_RF
+	bool " + RF"
+	default n
+	depends on LIBCOCOBOT && LIBCOCOBOT_COM && SPIRIT1
+
 config LIBCOCOBOT_LOADER
 	bool "+ Loader"
 	default n

@@ -19,6 +19,7 @@
 #include "dsdl/uavcan/protocol/RestartNode.h"
 #include "dsdl/uavcan/protocol/NodeStatus.h"
 #include <include/generated/git.h>
+#include <cocobot/rf.h>
 
 static CanardInstance _canard;
 static uint8_t _canard_memory_pool[CONFIG_LIBCOCOBOT_COM_MEMORY_POOL_SIZE];
@@ -241,10 +242,8 @@ int16_t cocobot_com_usart_receive(CanardCANFrame* const frame)
     int16_t byte = mcual_usart_recv_no_wait(PLATFORM_USART_USER);
     if(byte < 0)
     {
-    platform_led_toggle(1 << 1);
-      return -1;
+      return 0;
     }
-    platform_led_toggle(1 << 0);
 
     unsigned int i;
     uint8_t * ptr = (uint8_t *)&uframe;
@@ -288,36 +287,66 @@ uint64_t cocobot_com_process_event(void)
   //Transmit Tx queue
   for (const CanardCANFrame* txf = NULL; (txf = canardPeekTxQueue(&_canard)) != NULL;)
   {
-#ifdef CONFIG_LIBCOCOBOT_COM_USART
-    cocobot_com_usart_transmit(txf);
-    canardPopTxQueue(&_canard);
-#endif
+    int16_t tx_res;
 
-#ifdef CONFIG_LIBCOCOBOT_COM_CAN
-    const int16_t tx_res = canardSTM32Transmit(txf);
+#ifdef CONFIG_LIBCOCOBOT_COM_USART
+    tx_res = cocobot_com_usart_transmit(txf);
     if (tx_res < 0)
     {
       // Failure - drop the frame
       canardPopTxQueue(&_canard);
       _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
+      break;
     }
-    else if (tx_res > 0)
-    {
-      // Success - just drop the frame
-      canardPopTxQueue(&_canard);
-    }
-    else
+    else if(tx_res == 0)
     {
       // Timeout - try again later
       break;
     }
 #endif
+
+#ifdef CONFIG_LIBCOCOBOT_COM_RF
+    tx_res = cocobot_com_rf_transmit(txf, _timestamp_us);
+    if (tx_res < 0)
+    {
+      // Failure - drop the frame
+      canardPopTxQueue(&_canard);
+      _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
+      break;
+    }
+    else if(tx_res == 0)
+    {
+      // Timeout - try again later
+      break;
+    }
+#endif
+
+
+#ifdef CONFIG_LIBCOCOBOT_COM_CAN
+    tx_res = canardSTM32Transmit(txf);
+    if (tx_res < 0)
+    {
+      // Failure - drop the frame
+      canardPopTxQueue(&_canard);
+      _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
+      break;
+    }
+    else if(tx_res == 0)
+    {
+      // Timeout - try again later
+      break;
+    }
+#endif
+    // Success - just drop the frame
+    canardPopTxQueue(&_canard);
   }
+
+  CanardCANFrame rx_frame;
+  int16_t rx_res;
 
 #ifdef CONFIG_LIBCOCOBOT_COM_CAN
   //Receiving
-  CanardCANFrame rx_frame;
-  const int16_t rx_res = canardSTM32Receive(&rx_frame);
+  rx_res = canardSTM32Receive(&rx_frame);
   if (rx_res < 0)
   {
     // Failure - report
@@ -332,8 +361,7 @@ uint64_t cocobot_com_process_event(void)
 
 #ifdef CONFIG_LIBCOCOBOT_COM_USART
   //Receiving
-  CanardCANFrame rx_frame;
-  const int16_t rx_res = cocobot_com_usart_receive(&rx_frame);
+  rx_res = cocobot_com_usart_receive(&rx_frame);
   if (rx_res < 0)
   {
     // Failure - report
@@ -346,6 +374,20 @@ uint64_t cocobot_com_process_event(void)
   }
 #endif
 
+#ifdef CONFIG_LIBCOCOBOT_COM_RF
+  //Receiving
+  rx_res = cocobot_com_rf_receive(&rx_frame, _timestamp_us);
+  if (rx_res < 0)
+  {
+    // Failure - report
+    _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
+  }
+  else if (rx_res > 0)
+  {
+    // Success - process the frame
+    canardHandleRxFrame(&_canard, &rx_frame, _timestamp_us);
+  }
+#endif
 
   if (_timestamp_us >= _next_1hz_service_at)
   {
@@ -390,12 +432,14 @@ void cocobot_com_init(void)
   mcual_usart_init(PLATFORM_USART_USER, 115200);
 #endif
 
+#ifdef CONFIG_LIBCOCOBOT_COM_RF
+  cocobot_com_rf_init();
+#endif
+
 #ifdef CONFIG_OS_USE_FREERTOS
   //create mutex
   _mutex = xSemaphoreCreateMutex();
 #endif
-
-
 
 #pragma message "TODO: read id from flash or eeprom"
 	canardSetLocalNodeID(&_canard, 127);

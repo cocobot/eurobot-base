@@ -43,8 +43,10 @@ void platform_init(void)
   
   //init gpio
   mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN0 | MCUAL_GPIO_PIN1 | MCUAL_GPIO_PIN2 | MCUAL_GPIO_PIN3 | MCUAL_GPIO_PIN4 | MCUAL_GPIO_PIN6 | MCUAL_GPIO_PIN7, MCUAL_GPIO_INPUT);
-  mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN4 | MCUAL_GPIO_PIN6 | MCUAL_GPIO_PIN7 | MCUAL_GPIO_PIN9, MCUAL_GPIO_INPUT);
+  mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN4 | MCUAL_GPIO_PIN6 | MCUAL_GPIO_PIN7, MCUAL_GPIO_INPUT);
   mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN14 | MCUAL_GPIO_PIN15, MCUAL_GPIO_INPUT);
+  mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN9, MCUAL_GPIO_OUTPUT);
+  mcual_gpio_clear(MCUAL_GPIOC, MCUAL_GPIO_PIN9);
 
   //init uart dbg pins
   mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN9, MCUAL_GPIO_OUTPUT);
@@ -80,8 +82,7 @@ void platform_init(void)
 
 #ifdef CONFIG_OS_USE_FREERTOS
 #ifdef CONFIG_MCUAL_SPI
-  platform_spi_select(PLATFORM_SPI_CS_UNSELECT);
-  mcual_spi_master_init(MCUAL_SPI3, MCUAL_SPI_MODE_3, 400000);
+  mcual_spi_master_init(MCUAL_SPI3, MCUAL_SPI_MODE_0, 10000000);
 #endif
 #endif
 
@@ -356,12 +357,18 @@ void platform_gpio_set_direction(uint32_t gpio, mcual_gpio_direction_t direction
 
 void platform_gpio_set(uint32_t gpio)
 {
-  (void)gpio; 
+  if(gpio & PLATFORM_GPIO_SDN)
+  {
+    mcual_gpio_set(MCUAL_GPIOC, MCUAL_GPIO_PIN9);
+  }
 }
 
 void platform_gpio_clear(uint32_t gpio)
 {
-  (void)gpio; 
+  if(gpio & PLATFORM_GPIO_SDN)
+  {
+    mcual_gpio_clear(MCUAL_GPIOC, MCUAL_GPIO_PIN9);
+  }
 }
 
 void platform_gpio_toggle(uint32_t gpio)
@@ -395,6 +402,7 @@ void platform_spi_select(uint8_t select)
       break;
 
     default:
+      vTaskDelay(100);
       xSemaphoreGive(mutex_spi);
       break;
   }

@@ -5,6 +5,9 @@
 #include <stm32f4xx.h>
 #include <string.h>
 
+#include <FreeRTOS.h>
+#include <task.h>
+
 static SPI_TypeDef * mcual_spi_get_register(mcual_spi_id_t spi_id)
 {
   switch(spi_id)
@@ -107,6 +110,10 @@ uint8_t mcual_spi_master_transfert(mcual_spi_id_t spi_id, uint8_t byte)
 
   reg->DR = byte;
   while(!(reg->SR & SPI_SR_RXNE));
+  while(!(reg->SR & SPI_SR_TXE));
+  while(reg->SR & SPI_SR_BSY);
+
+  vTaskDelay(2);
   return reg->DR;
 }
 #endif
