@@ -11,31 +11,32 @@
 #include "SPIRIT_Radio.h"
 #include "SPIRIT_Management.h"
 
-#define XTAL_OFFSET_PPM             0
-#define BASE_FREQUENCY              868.0e6
-#define CHANNEL_SPACE               20e3
-#define FREQ_DEVIATION              20e3
-#define CHANNEL_NUMBER              0
-#define BANDWIDTH                   100.0e3
-#define MODULATION_SELECT           FSK
-#define DATARATE                    3800
-#define PREAMBLE_LENGTH             PKT_PREAMBLE_LENGTH_04BYTES
-#define SYNC_LENGTH                 PKT_SYNC_LENGTH_4BYTES
-#define SYNC_WORD                   0x88888888
-#define LENGTH_TYPE                 PKT_LENGTH_VAR
-#define LENGTH_WIDTH                8
-#define CRC_MODE                    PKT_CRC_MODE_8BITS
-#define CONTROL_LENGTH              PKT_CONTROL_LENGTH_0BYTES
-#define EN_ADDRESS                  S_DISABLE
-#define EN_FEC                      S_DISABLE
-#define EN_WHITENING                S_ENABLE
-#define EN_FILT_MY_ADDRESS          S_DISABLE
-#define MY_ADDRESS                  0xC2
-#define EN_FILT_MULTICAST_ADDRESS   S_DISABLE
-#define MULTICAST_ADDRESS           0xC2
-#define EN_FILT_BROADCAST_ADDRESS   S_DISABLE
-#define BROADCAST_ADDRESS           0xC2
-#define POWER_DBM                   10
+#define POWER_DBM                   11.6
+#define CHANNEL_SPACE               100e3
+#define FREQ_DEVIATION              127e3
+#define BANDWIDTH                   540.0e3
+#define MODULATION_SELECT           GFSK_BT1
+#define DATARATE                    250000
+
+#define XTAL_OFFSET_PPM                 0
+#define BASE_FREQUENCY                  868.0e6
+#define CHANNEL_NUMBER                  0
+#define PREAMBLE_LENGTH                 PKT_PREAMBLE_LENGTH_04BYTES
+#define SYNC_LENGTH                     PKT_SYNC_LENGTH_4BYTES
+#define SYNC_WORD                       0x88888888
+#define LENGTH_TYPE                     PKT_LENGTH_VAR
+#define LENGTH_WIDTH                    8
+#define CRC_MODE                        PKT_CRC_MODE_8BITS
+#define CONTROL_LENGTH                  PKT_CONTROL_LENGTH_0BYTES
+#define EN_ADDRESS                      S_DISABLE
+#define EN_FEC                          S_DISABLE
+#define EN_WHITENING                    S_ENABLE
+#define EN_FILT_MY_ADDRESS              S_DISABLE
+#define MY_ADDRESS                      0xC2
+#define EN_FILT_MULTICAST_ADDRESS       S_DISABLE
+#define MULTICAST_ADDRESS               0xC2
+#define EN_FILT_BROADCAST_ADDRESS       S_DISABLE
+#define BROADCAST_ADDRESS               0xC2
 #define PERSISTENT_MODE_EN              S_DISABLE
 #define CS_PERIOD                       TBIT_TIME_64
 #define CS_TIMEOUT                      TCCA_TIME_3
@@ -49,8 +50,8 @@ typedef enum {
   LED_INIT_FAILURE,
   LED_INIT_DONE,
   LED_TX_ACTIVITY,
-  LED_TX_ERROR,
   LED_RX_ACTIVITY,
+  LED_TX_BUSY,
 } rf_led_state;
 
 static uint8_t _init;
@@ -98,7 +99,7 @@ CsmaInit _csma_init={
 
 static uint64_t _next_tx_activity_clear_us;
 static uint64_t _next_rx_activity_clear_us;
-static uint32_t _tx_in_progress;
+static volatile uint32_t _tx_in_progress;
 static SemaphoreHandle_t _irq_sem;
 static QueueHandle_t _tx_queue;
 static QueueHandle_t _rx_queue;
@@ -150,39 +151,43 @@ static void cocobot_com_rf_set_led_state(rf_led_state state, int arg)
 
         case 1:
           set_green = 1 << 8;
-          set_red = 1 << 8;
+          clear_red = 1 << 8;
           break;
 
         case 2:
           set_green = 1 << 8;
-          clear_red = 1 << 8;
-          break;
-      }
-      break;
-
-    case LED_TX_ERROR:
-      switch(arg)
-      {
-        case 0:
-          clear_green = 1 << 7;
-          clear_red = 1 << 7;
+          set_red = 1 << 8;
           break;
 
-        case 1:
-          clear_green = 1 << 7;
-          set_red = 1 << 7;
+        case 3:
+          clear_green = 1 << 8;
+          set_red = 1 << 8;
           break;
+
       }
       break;
 
     case LED_RX_ACTIVITY:
       if(arg)
       {
-         set_green = 1 << 6;
+         set_green = 1 << 7;
       }
       else
       {
-         clear_green = 1 << 6;
+         clear_green = 1 << 7;
+      }
+      break;
+
+    case LED_TX_BUSY:
+      if(arg)
+      {
+         set_red = 1 << 9;
+         set_green = 1 << 9;
+      }
+      else
+      {
+        clear_red = 1 << 9;
+        set_green = 1 << 9;
       }
       break;
   }
@@ -219,21 +224,29 @@ static void cocobot_com_rf_irq_task(void * unused)
     SpiritIrqs xIrqStatus;
     SpiritIrqGetStatus(&xIrqStatus);
 
-    if(xIrqStatus.IRQ_RX_DATA_DISC)
+    if(xIrqStatus.IRQ_TX_DATA_SENT)
     {
-      platform_led_set(PLATFORM_LED_RED_0);
-      SpiritCmdStrobeRx();
+      uint8_t buf[sizeof(CanardCANFrame)];
+      if(xQueueReceive(_tx_queue, buf, 0) == pdFALSE)
+      {
+        SpiritCmdStrobeSabort();
+        _tx_in_progress = 0;
+        cocobot_com_rf_set_led_state(LED_TX_BUSY, 0);
+      }
+      else
+      {
+        SpiritSpiWriteLinearFifo(sizeof(CanardCANFrame), (uint8_t *)buf);
+        SpiritCmdStrobeTx();
+        continue;
+      }
     }
 
-    /* Check the SPIRIT RX_DATA_READY IRQ flag */
     if(xIrqStatus.IRQ_RX_DATA_READY)
     {
-      platform_led_set(PLATFORM_LED_RED_1);
       uint8_t buf[96];
 
       int cRxData = SpiritLinearFifoReadNumElementsRxFifo();
       SpiritSpiReadLinearFifo(cRxData, buf);
-      SpiritCmdStrobeRx();
 
       for(int i = 0; i < cRxData; i += sizeof(CanardCANFrame))
       {
@@ -241,21 +254,14 @@ static void cocobot_com_rf_irq_task(void * unused)
       }
     }
 
-    if(xIrqStatus.IRQ_TX_DATA_SENT)
+    if(!_tx_in_progress)
     {
-      uint8_t buf[sizeof(CanardCANFrame)];
-      if(xQueuePeek(_tx_queue, buf, 0) == pdFALSE)
+      SpiritCmdStrobeRx();
+    }
+    else
+    {
+      if(g_xStatus.MC_STATE != MC_STATE_TX)
       {
-        SpiritCmdStrobeSabort();
-        SpiritCmdStrobeRx();
-        _tx_in_progress = 0;
-      }
-      else
-      {
-        xQueueReceive(_tx_queue, buf, portMAX_DELAY);
-        SpiritCmdStrobeSabort();
-        SpiritCmdStrobeFlushTxFifo();
-        SpiritSpiWriteLinearFifo(sizeof(CanardCANFrame), (uint8_t *)buf);
         SpiritCmdStrobeTx();
       }
     }
@@ -409,35 +415,39 @@ int16_t cocobot_com_rf_transmit(const CanardCANFrame* const frame, uint64_t time
   {
     cocobot_com_rf_run_init();
   }
-  return 2;
-
-  if(_next_tx_activity_clear_us == 0)
-  {
-    cocobot_com_rf_set_led_state(LED_TX_ACTIVITY, 1);
-    _next_tx_activity_clear_us = timestamp_us + 5000;
-  }
 
   if(!_tx_in_progress)
   {
+    if(_next_tx_activity_clear_us == 0)
+    {
+      cocobot_com_rf_set_led_state(LED_TX_ACTIVITY, 1);
+      _next_tx_activity_clear_us = timestamp_us + 5000;
+    }
+
     _tx_in_progress = 1;
+    cocobot_com_rf_set_led_state(LED_TX_BUSY, 1);
     SpiritCmdStrobeSabort();
     SpiritCmdStrobeFlushTxFifo();
     SpiritSpiWriteLinearFifo(sizeof(CanardCANFrame), (uint8_t *)frame);
     SpiritCmdStrobeTx();
-    cocobot_com_rf_set_led_state(LED_TX_ERROR, 0);
     return sizeof(CanardCANFrame);
   }
   else
   {
     if(xQueueSend(_tx_queue, frame, 0) == pdTRUE)
     {
-      cocobot_com_rf_set_led_state(LED_TX_ERROR, 0);
+      if(_next_tx_activity_clear_us == 0)
+      {
+        cocobot_com_rf_set_led_state(LED_TX_ACTIVITY, 2);
+        _next_tx_activity_clear_us = timestamp_us + 5000;
+      }
       return sizeof(CanardCANFrame);
     }
     else
     {
-      cocobot_com_rf_set_led_state(LED_TX_ERROR, 1);
-      return 0;
+      cocobot_com_rf_set_led_state(LED_TX_ACTIVITY, 3);
+      _next_tx_activity_clear_us = timestamp_us + 1000000;
+      return sizeof(CanardCANFrame);
     }
   }
 }
@@ -476,7 +486,6 @@ StatusBytes RadioSpiReadRegisters(uint8_t cRegAddress, uint8_t cNbBytes, uint8_t
   uint8_t aHeader[2] = {0};
   uint8_t dummy = 0xFF;
 
-  vTaskDelay(100);
   /* Built the aHeader bytes */
   aHeader[0] = READ_HEADER;
   aHeader[1] = cRegAddress;
@@ -518,8 +527,6 @@ StatusBytes RadioSpiCommandStrobes(uint8_t cCommandCode)
   uint16_t tmpstatus = 0x0000;
 
   StatusBytes *pStatus = (StatusBytes *)&tmpstatus;
-
-  vTaskDelay(100);
 
   /* Built the aHeader bytes */
   aHeader[0] = COMMAND_HEADER;

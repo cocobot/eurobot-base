@@ -402,7 +402,6 @@ void platform_spi_select(uint8_t select)
       break;
 
     default:
-      vTaskDelay(100);
       xSemaphoreGive(mutex_spi);
       break;
   }

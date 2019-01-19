@@ -398,6 +398,7 @@ uint64_t cocobot_com_process_event(void)
 
     //clean up every seconds 
     canardCleanupStaleTransfers(&_canard, _timestamp_us);
+    platform_led_toggle(PLATFORM_LED_GREEN_4);
 
     //send node info
     uavcan_protocol_NodeStatus ns;
@@ -445,7 +446,7 @@ void cocobot_com_init(void)
 #endif
 
 #pragma message "TODO: read id from flash or eeprom"
-	canardSetLocalNodeID(&_canard, 43);
+	canardSetLocalNodeID(&_canard, 42);
 
   _last_timer_ticks = 0;
   _timestamp_us = 0;

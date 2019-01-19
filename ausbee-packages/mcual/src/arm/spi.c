@@ -113,7 +113,6 @@ uint8_t mcual_spi_master_transfert(mcual_spi_id_t spi_id, uint8_t byte)
   while(!(reg->SR & SPI_SR_TXE));
   while(reg->SR & SPI_SR_BSY);
 
-  vTaskDelay(2);
   return reg->DR;
 }
 #endif
