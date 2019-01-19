@@ -7,6 +7,7 @@
 #include <FreeRTOS.h>
 #include <semphr.h>
 #include <task.h>
+#include <queue.h>
 #include "SPIRIT_Radio.h"
 #include "SPIRIT_Management.h"
 
@@ -48,6 +49,7 @@ typedef enum {
   LED_INIT_FAILURE,
   LED_INIT_DONE,
   LED_TX_ACTIVITY,
+  LED_TX_ERROR,
   LED_RX_ACTIVITY,
 } rf_led_state;
 
@@ -96,7 +98,10 @@ CsmaInit _csma_init={
 
 static uint64_t _next_tx_activity_clear_us;
 static uint64_t _next_rx_activity_clear_us;
+static uint32_t _tx_in_progress;
 static SemaphoreHandle_t _irq_sem;
+static QueueHandle_t _tx_queue;
+static QueueHandle_t _rx_queue;
 
 void send(char * str)
 {
@@ -155,14 +160,29 @@ static void cocobot_com_rf_set_led_state(rf_led_state state, int arg)
       }
       break;
 
+    case LED_TX_ERROR:
+      switch(arg)
+      {
+        case 0:
+          clear_green = 1 << 7;
+          clear_red = 1 << 7;
+          break;
+
+        case 1:
+          clear_green = 1 << 7;
+          set_red = 1 << 7;
+          break;
+      }
+      break;
+
     case LED_RX_ACTIVITY:
       if(arg)
       {
-         set_green = 1 << 7;
+         set_green = 1 << 6;
       }
       else
       {
-         clear_green = 1 << 7;
+         clear_green = 1 << 6;
       }
       break;
   }
@@ -178,11 +198,11 @@ void cocobot_com_rf_init(void)
   _init = 0;
   _next_tx_activity_clear_us = 0;
   _next_rx_activity_clear_us = 0;
+  _tx_in_progress = 0;
 }
 
 void cocobot_com_rf_irq(void)
 {
-  platform_led_toggle( 3 << 5);
   BaseType_t xHigherPriorityTaskWoken;
   xHigherPriorityTaskWoken = pdFALSE;
   xSemaphoreGiveFromISR( _irq_sem, &xHigherPriorityTaskWoken );
@@ -195,28 +215,58 @@ static void cocobot_com_rf_irq_task(void * unused)
 
   for( ;; )
   {
-    platform_led_toggle( 3 << 3);
     xSemaphoreTake( _irq_sem, portMAX_DELAY );
     SpiritIrqs xIrqStatus;
     SpiritIrqGetStatus(&xIrqStatus);
 
     if(xIrqStatus.IRQ_RX_DATA_DISC)
     {
+      platform_led_set(PLATFORM_LED_RED_0);
       SpiritCmdStrobeRx();
     }
 
     /* Check the SPIRIT RX_DATA_READY IRQ flag */
     if(xIrqStatus.IRQ_RX_DATA_READY)
     {
-      cocobot_com_rf_set_led_state(LED_TX_ACTIVITY, 1);
+      platform_led_set(PLATFORM_LED_RED_1);
+      uint8_t buf[96];
+
+      int cRxData = SpiritLinearFifoReadNumElementsRxFifo();
+      SpiritSpiReadLinearFifo(cRxData, buf);
+      SpiritCmdStrobeRx();
+
+      for(int i = 0; i < cRxData; i += sizeof(CanardCANFrame))
+      {
+        xQueueSend(_rx_queue, buf + i, portMAX_DELAY);
+      }
     }
-    cocobot_com_rf_set_led_state(LED_RX_ACTIVITY, 1);
+
+    if(xIrqStatus.IRQ_TX_DATA_SENT)
+    {
+      uint8_t buf[sizeof(CanardCANFrame)];
+      if(xQueuePeek(_tx_queue, buf, 0) == pdFALSE)
+      {
+        SpiritCmdStrobeSabort();
+        SpiritCmdStrobeRx();
+        _tx_in_progress = 0;
+      }
+      else
+      {
+        xQueueReceive(_tx_queue, buf, portMAX_DELAY);
+        SpiritCmdStrobeSabort();
+        SpiritCmdStrobeFlushTxFifo();
+        SpiritSpiWriteLinearFifo(sizeof(CanardCANFrame), (uint8_t *)buf);
+        SpiritCmdStrobeTx();
+      }
+    }
   }
 }
 
 void cocobot_com_rf_run_init(void)
 {
   _init = 1;
+  _tx_queue = xQueueCreate(32, sizeof(CanardCANFrame));
+  _rx_queue = xQueueCreate(32, sizeof(CanardCANFrame));
 
   //reset SPI
   cocobot_com_rf_set_led_state(LED_INIT_SUCCESS, 0);
@@ -249,7 +299,7 @@ void cocobot_com_rf_run_init(void)
   };
   SpiritGpioInit(&xGpioIRQ);
   _irq_sem = xSemaphoreCreateBinary();
-  mcual_gpio_set_interrupt(MCUAL_GPIOD, MCUAL_GPIO_PIN14, MCUAL_GPIO_RISING_EDGE, cocobot_com_rf_irq);
+  mcual_gpio_set_interrupt(MCUAL_GPIOD, MCUAL_GPIO_PIN14, MCUAL_GPIO_FALLING_EDGE, cocobot_com_rf_irq);
   xTaskCreate( cocobot_com_rf_irq_task, "rf irq", 512, NULL, 9, NULL );
 
   if(SpiritRadioInit(&_radio_init) != 0)
@@ -263,6 +313,7 @@ void cocobot_com_rf_run_init(void)
   SpiritIrqDeInit(&xIrqStatus);
   SpiritIrq(RX_DATA_DISC,S_ENABLE);
   SpiritIrq(RX_DATA_READY,S_ENABLE);
+  SpiritIrq(TX_DATA_SENT, S_ENABLE);
 
   /* Spirit Radio set power */
   SpiritRadioSetPALeveldBm(7,POWER_DBM);
@@ -274,10 +325,6 @@ void cocobot_com_rf_run_init(void)
   SpiritPktBasicAddressesInit(&_address_init);
   cocobot_com_rf_set_led_state(LED_INIT_SUCCESS, 7);
 
- // SpiritIrqDeInit(&xIrqStatus);
- // SpiritIrq(RX_DATA_DISC,S_ENABLE);
- // SpiritIrq(RX_DATA_READY,S_ENABLE);
-
   SpiritPktBasicSetPayloadLength(sizeof(CanardCANFrame));
   SpiritPktBasicSetDestinationAddress(BROADCAST_ADDRESS);
   cocobot_com_rf_set_led_state(LED_INIT_SUCCESS, 8);
@@ -288,59 +335,42 @@ void cocobot_com_rf_run_init(void)
   //SpiritQiSetRssiThresholddBm(RSSI_THR);
   cocobot_com_rf_set_led_state(LED_INIT_SUCCESS, 9);
 
-  SpiritQiSetSqiThreshold(SQI_TH_0);
-  SpiritQiSqiCheck(S_ENABLE);
-  //cocobot_com_rf_set_led_state(LED_INIT_SUCCESS, 10);
+  //SpiritQiSetSqiThreshold(SQI_TH_0);
+  //SpiritQiSqiCheck(S_ENABLE);
+  cocobot_com_rf_set_led_state(LED_INIT_SUCCESS, 10);
 
   SpiritTimerSetRxTimeoutMs(2500.0);
   SpiritTimerSetRxTimeoutStopCondition(SQI_ABOVE_THRESHOLD);
   cocobot_com_rf_set_led_state(LED_INIT_SUCCESS, 11);
 
 
-  /*
-  SGpioInit xGpio2={
-    SPIRIT_GPIO_2,
-    SPIRIT_GPIO_MODE_DIGITAL_OUTPUT_LP,
-    SPIRIT_GPIO_DIG_OUT_RSSI_THRESHOLD,
-  };
-  SpiritGpioInit(&xGpio2);
-  SGpioInit xGpio1={
-    SPIRIT_GPIO_1,
-    SPIRIT_GPIO_MODE_DIGITAL_OUTPUT_LP,
-SPIRIT_GPIO_DIG_OUT_MCU_CLOCK                         
-  };
-  SpiritGpioInit(&xGpio1);
-  
   SpiritCalibrationVco(S_ENABLE);
   SpiritCmdStrobeLockTx();
+  cocobot_com_rf_set_led_state(LED_INIT_SUCCESS, 12);
   
   while(g_xStatus.MC_STATE != MC_STATE_LOCK){
       SpiritRefreshStatus();
   }
+  cocobot_com_rf_set_led_state(LED_INIT_SUCCESS, 13);
   
 
   uint8_t calData = SpiritCalibrationGetVcoCalDataTx();
   SpiritCalibrationSetVcoCalDataTx(calData);
+  cocobot_com_rf_set_led_state(LED_INIT_SUCCESS, 14);
   
   SpiritCmdStrobeReady();
   SpiritCalibrationVco(S_DISABLE);
-
-  cocobot_com_rf_set_led_state(LED_INIT_SUCCESS, 12);
+  cocobot_com_rf_set_led_state(LED_INIT_SUCCESS, 15);
 
 
   SpiritIrqClearStatus();
   SpiritCmdStrobeRx();
-*/
-  SpiritIrqClearStatus();
-   SpiritCmdStrobeRx();
-
 
   cocobot_com_rf_set_led_state(LED_INIT_DONE, 0);
 }
 
 int16_t cocobot_com_rf_receive(CanardCANFrame* const frame, uint64_t timestamp_us)
 {
-  int16_t ret = 0;
   if(!_init)
   {
     cocobot_com_rf_run_init();
@@ -354,59 +384,22 @@ int16_t cocobot_com_rf_receive(CanardCANFrame* const frame, uint64_t timestamp_u
   if(timestamp_us > _next_rx_activity_clear_us)
   {
     _next_rx_activity_clear_us = 0;
-  //  cocobot_com_rf_set_led_state(LED_RX_ACTIVITY, 0);
+    cocobot_com_rf_set_led_state(LED_RX_ACTIVITY, 0);
   }
 
-  SpiritRefreshStatus();
-  char buf[25];
-  snprintf(buf, sizeof(buf),"STA= %x\r\n", g_xStatus.MC_STATE);
-  send(buf);
-  if(g_xStatus.MC_STATE == MC_STATE_READY)
+  if(xQueueReceive(_rx_queue, frame, 0) == pdFALSE)
   {
-    SpiritCmdStrobeRx();
+    return 0;
   }
-
- 
-
-  (void)frame;
-  return 0;
-  SpiritIrqs xIrqStatus;
-  SpiritIrqGetStatus(&xIrqStatus);
-
-
-  if(xIrqStatus.IRQ_RX_DATA_DISC)
+  else
   {
-    SpiritCmdStrobeRx();
-  }
-
-  if(xIrqStatus.IRQ_RX_DATA_READY)
-  {
-    uint8_t cRxData = SpiritLinearFifoReadNumElementsRxFifo();
-  snprintf(buf, sizeof(buf),"GET= %d\r\n", cRxData);
-
-     cocobot_com_rf_set_led_state(LED_RX_ACTIVITY, 1);
-      if(_next_rx_activity_clear_us == 0)
-      {
-        _next_rx_activity_clear_us = timestamp_us + 100000;
-      }
-
-    if(cRxData >= sizeof(CanardCANFrame))
+    if(_next_rx_activity_clear_us == 0)
     {
-      SpiritSpiReadLinearFifo(sizeof(CanardCANFrame), (uint8_t *)frame);
-      ret = sizeof(CanardCANFrame);
       cocobot_com_rf_set_led_state(LED_RX_ACTIVITY, 1);
-      if(_next_rx_activity_clear_us == 0)
-      {
-        _next_rx_activity_clear_us = timestamp_us + 100000;
-      }
-
+      _next_rx_activity_clear_us = timestamp_us + 5000;
     }
-    send(buf);
-    SpiritCmdStrobeFlushRxFifo();
-    SpiritCmdStrobeRx();
+    return sizeof(CanardCANFrame);
   }
-
-  return ret;
 }
 
 int16_t cocobot_com_rf_transmit(const CanardCANFrame* const frame, uint64_t timestamp_us)
@@ -416,35 +409,37 @@ int16_t cocobot_com_rf_transmit(const CanardCANFrame* const frame, uint64_t time
   {
     cocobot_com_rf_run_init();
   }
+  return 2;
 
-  cocobot_com_rf_set_led_state(LED_RX_ACTIVITY, 0);
-  return 42;
-
-  cocobot_com_rf_set_led_state(LED_TX_ACTIVITY, 1);
   if(_next_tx_activity_clear_us == 0)
   {
-    _next_tx_activity_clear_us = timestamp_us + 25000;
+    cocobot_com_rf_set_led_state(LED_TX_ACTIVITY, 1);
+    _next_tx_activity_clear_us = timestamp_us + 5000;
   }
 
-  SpiritCmdStrobeSabort();
-  SpiritCmdStrobeFlushTxFifo();
-  SpiritSpiWriteLinearFifo(sizeof(CanardCANFrame), (uint8_t *)frame);
-  SpiritCmdStrobeTx();
-
-  while(1)
+  if(!_tx_in_progress)
   {
-    SpiritIrqs xIrqStatus;
-    SpiritIrqGetStatus(&xIrqStatus);
-    if(xIrqStatus.IRQ_TX_DATA_SENT)
+    _tx_in_progress = 1;
+    SpiritCmdStrobeSabort();
+    SpiritCmdStrobeFlushTxFifo();
+    SpiritSpiWriteLinearFifo(sizeof(CanardCANFrame), (uint8_t *)frame);
+    SpiritCmdStrobeTx();
+    cocobot_com_rf_set_led_state(LED_TX_ERROR, 0);
+    return sizeof(CanardCANFrame);
+  }
+  else
+  {
+    if(xQueueSend(_tx_queue, frame, 0) == pdTRUE)
     {
-      cocobot_com_rf_set_led_state(LED_TX_ACTIVITY, 2);
-      break;
+      cocobot_com_rf_set_led_state(LED_TX_ERROR, 0);
+      return sizeof(CanardCANFrame);
+    }
+    else
+    {
+      cocobot_com_rf_set_led_state(LED_TX_ERROR, 1);
+      return 0;
     }
   }
-
-  //SpiritCmdStrobeSabort();
-  //SpiritCmdStrobeRx();
-  return sizeof(CanardCANFrame);
 }
 
 

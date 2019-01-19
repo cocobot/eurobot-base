@@ -40,7 +40,7 @@ impl StateManager {
         thread::spawn(move || {
             loop {
                 let mut istate = state.lock().unwrap();
-                let mut st = istate.get_state_mut();
+                let st = istate.get_state_mut();
 
                 for (id, node) in st.nodes.iter_mut() {
                     if node.info_needed() {

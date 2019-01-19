@@ -5,6 +5,7 @@
 #include <cocobot.h>
 #include <mcual.h>
 #include <platform.h>
+#include <stdio.h>
 #ifdef CONFIG_OS_USE_FREERTOS
 # include <FreeRTOS.h>
 # include <task.h>
@@ -26,7 +27,7 @@ static uint8_t _canard_memory_pool[CONFIG_LIBCOCOBOT_COM_MEMORY_POOL_SIZE];
 static uint8_t _internal_buffer[UAVCAN_PROTOCOL_GETNODEINFO_RESPONSE_MAX_SIZE];
 static uint8_t _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_OK;
 static uint8_t _mode = UAVCAN_PROTOCOL_NODESTATUS_MODE_INITIALIZATION;
-static uint16_t _last_timer_ticks;
+static uint32_t _last_timer_ticks;
 static uint64_t _timestamp_us;
 static uint64_t _next_1hz_service_at;
 #ifdef CONFIG_OS_USE_FREERTOS
@@ -279,10 +280,11 @@ int16_t cocobot_com_usart_receive(CanardCANFrame* const frame)
 
 uint64_t cocobot_com_process_event(void)
 {
-  uint16_t ticks = mcual_timer_get_value(CONFIG_LIBCOCOBOT_COM_TIMER);
-  uint16_t delta = ticks - _last_timer_ticks;
+  uint32_t ticks = mcual_timer_get_value(CONFIG_LIBCOCOBOT_COM_TIMER);
+  uint32_t delta = ticks - _last_timer_ticks;
   _last_timer_ticks = ticks;
-  _timestamp_us += delta;
+  
+  _timestamp_us += ((uint64_t)delta);
 
   //Transmit Tx queue
   for (const CanardCANFrame* txf = NULL; (txf = canardPeekTxQueue(&_canard)) != NULL;)
@@ -386,6 +388,7 @@ uint64_t cocobot_com_process_event(void)
   {
     // Success - process the frame
     canardHandleRxFrame(&_canard, &rx_frame, _timestamp_us);
+    cocobot_com_usart_transmit(&rx_frame);
   }
 #endif
 
@@ -442,7 +445,7 @@ void cocobot_com_init(void)
 #endif
 
 #pragma message "TODO: read id from flash or eeprom"
-	canardSetLocalNodeID(&_canard, 127);
+	canardSetLocalNodeID(&_canard, 43);
 
   _last_timer_ticks = 0;
   _timestamp_us = 0;

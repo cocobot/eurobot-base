@@ -4,17 +4,12 @@ version = "0.1.0"
 authors = ["Damien Espitallier <damien.espitallier@gmail.com>"]
 
 [dependencies]
-tokio = "0.1.10"
-bytes = "0.4.10"
-futures = "0.1.24"
 colored = "1.6.1"
 glib = "0.6.0"
 cairo-rs = "0.5.0"
 config = "0.9.1"
 lazy_static = "1.1.0"
-time = "0.1.40"
-serialport = "3.1.0"
-uavcan = "0.1.0-preview0"
+state_manager = { path = "../state_manager" }
 
 [dependencies.gtk]
 version = "0.5.0"

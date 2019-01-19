@@ -2,8 +2,8 @@ extern crate gtk;
 extern crate glib;
 extern crate cairo;
 extern crate config;
-extern crate time;
 extern crate colored;
+extern crate state_manager;
 
 use std::cell::RefCell;
 use std::sync::mpsc::Receiver;
@@ -11,10 +11,8 @@ use std::f64::consts::PI;
 use std::collections::HashMap;
 use ui::gtk::prelude::*;
 use ui::config::{Config, Value};
-use ui::time::PreciseTime;
 use ui::colored::*;
-
-use robot::RobotData;
+use state_manager::state::StateManagerInstance;
 
 macro_rules! update_elm {
     ($a: expr, $b: expr) => {
@@ -192,7 +190,7 @@ impl UICache {
 
 struct UI {
     //chans
-    rx_rdata: Option<Receiver<RobotData>>,
+    state: Option<StateManagerInstance>,
 
     //pr info
     pr_info_x: Option<gtk::Label>,
@@ -203,8 +201,7 @@ struct UI {
     pr_info_battery: Option<gtk::Label>,
     field: Option<gtk::DrawingArea>,
 
-    //data
-    pr: Option<RobotData>,
+    pr: Option<u8>,
 
     //cache
     cache: UICache,
@@ -213,7 +210,7 @@ struct UI {
 impl UI {
      fn new() -> UI {
           UI {
-              rx_rdata: None,
+              state: None,
               pr_info_x: None,
               pr_info_y: None,
               pr_info_a: None,
@@ -228,14 +225,8 @@ impl UI {
 }
 
 pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibit {
-    let start = PreciseTime::now();
-    let mut inter1 = PreciseTime::now();
-    let mut inter2 = PreciseTime::now();
-    let mut inter3 = PreciseTime::now();
-    let mut inter4 = PreciseTime::now();
     UII.with(|ui| {
         let mut ui = ui.borrow_mut();
-        inter1 = PreciseTime::now();
 
         ui.cache.load();
 
@@ -343,8 +334,6 @@ pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibi
                 ctx.restore();
 
                 //draw pathfinder
-                inter2 = PreciseTime::now();
-                inter3 = PreciseTime::now();
                 if ui.cache.pathfinder_pr_surface.is_none() || ui.cache.pathfinder_pr_idx != pr.pathfinder_idx {
                     let cpathfinder_pr_surface = cairo::ImageSurface::create(cairo::Format::ARgb32, width as i32, height as i32).unwrap();
                     let ctx = cairo::Context::new(&cpathfinder_pr_surface);
@@ -408,54 +397,46 @@ pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibi
             }
         }
 
-        inter4 = PreciseTime::now();
     });
 
-    let end = PreciseTime::now();
-    //println!("draw_field exec time:   {} ms", start.to(end) * 1000);
-    //println!("draw_field exec inter1: {} ms", start.to(inter1) * 1000);
-    //println!("draw_field exec inter2: {} ms", inter1.to(inter2) * 1000);
-    //println!("draw_field exec inter3: {} ms", inter2.to(inter3) * 1000);
-    //println!("draw_field exec inter4: {} ms", inter3.to(inter4) * 1000);
-    //println!("draw_field exec inter3: {} ms", inter3.to(end) * 1000);
     gtk::Inhibit(false)
 }
 
-pub fn update() {
-    let do_update = ||-> glib::Continue {
-        UII.with(|ui| {
-            let mut ui = ui.borrow_mut();
+//pub fn update() {
+//    let do_update = ||-> glib::Continue {
+//        UII.with(|ui| {
+//            let mut ui = ui.borrow_mut();
+//
+//            let mut pr = None;
+//
+//            loop {
+//                match ui.rx_rdata.as_mut().unwrap().try_recv() {
+//                    Ok(data) => {
+//                        pr = Some(data);
+//                    },
+//                    _ => break,
+//                }
+//            }
+//
+//            if pr.is_some() {
+//                ui.pr = pr.clone();
+//                let pr = pr.unwrap();
+//                update_elm!(ui.pr_info_x, |x: &mut gtk::Label| {x.set_text(&format!("x : {:.0} mm", pr.x_mm))});
+//                update_elm!(ui.pr_info_y, |x: &mut gtk::Label| {x.set_text(&format!("y : {:.0} mm", pr.y_mm))});
+//                update_elm!(ui.pr_info_a, |x: &mut gtk::Label| {x.set_text(&format!("a : {:.0} °", pr.a_deg))});
+//                update_elm!(ui.pr_info_score, |x: &mut gtk::Label| {x.set_text(&format!("score : {}", pr.score))});
+//                update_elm!(ui.pr_info_elapsed_time, |x: &mut gtk::Label| {x.set_text(&format!("temps : {} s", pr.elapsed_time_s))});
+//                update_elm!(ui.pr_info_battery, |x: &mut gtk::Label| {x.set_text(&format!("batterie : {} mV", pr.battery_mv))});
+//            }
+//
+//            update_elm!(ui.field, |x: &mut gtk::DrawingArea| {x.queue_draw()});
+//        });
+//        glib::Continue(false)
+//    };
+//    glib::idle_add(do_update);
+//}
 
-            let mut pr = None;
-
-            loop {
-                match ui.rx_rdata.as_mut().unwrap().try_recv() {
-                    Ok(data) => {
-                        pr = Some(data);
-                    },
-                    _ => break,
-                }
-            }
-
-            if pr.is_some() {
-                ui.pr = pr.clone();
-                let pr = pr.unwrap();
-                update_elm!(ui.pr_info_x, |x: &mut gtk::Label| {x.set_text(&format!("x : {:.0} mm", pr.x_mm))});
-                update_elm!(ui.pr_info_y, |x: &mut gtk::Label| {x.set_text(&format!("y : {:.0} mm", pr.y_mm))});
-                update_elm!(ui.pr_info_a, |x: &mut gtk::Label| {x.set_text(&format!("a : {:.0} °", pr.a_deg))});
-                update_elm!(ui.pr_info_score, |x: &mut gtk::Label| {x.set_text(&format!("score : {}", pr.score))});
-                update_elm!(ui.pr_info_elapsed_time, |x: &mut gtk::Label| {x.set_text(&format!("temps : {} s", pr.elapsed_time_s))});
-                update_elm!(ui.pr_info_battery, |x: &mut gtk::Label| {x.set_text(&format!("batterie : {} mV", pr.battery_mv))});
-            }
-
-            update_elm!(ui.field, |x: &mut gtk::DrawingArea| {x.queue_draw()});
-        });
-        glib::Continue(false)
-    };
-    glib::idle_add(do_update);
-}
-
-pub fn init(rx_rdata: Receiver<RobotData>) {
+pub fn init(state: StateManagerInstance) {
     if gtk::init().is_err() {
         println!("Failed to initialize GTK.");
         return;
@@ -473,7 +454,7 @@ pub fn init(rx_rdata: Receiver<RobotData>) {
     UII.with(|ui| {
         let mut ui = ui.borrow_mut();
 
-        ui.rx_rdata = Some(rx_rdata);
+        ui.rx_rdata = Some(state);
         ui.pr_info_x = builder.get_object("pr_info_x");
         ui.pr_info_y = builder.get_object("pr_info_y");
         ui.pr_info_a = builder.get_object("pr_info_a");

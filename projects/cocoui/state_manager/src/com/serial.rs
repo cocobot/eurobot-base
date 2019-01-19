@@ -85,7 +85,7 @@ impl FrameDecoder {
                 for i in 0..14 {
                     computed_crc = crc16_update(computed_crc, self.buffer[i]);
                 }
-                if(computed_crc != crc) {
+                if computed_crc != crc {
                     self.buffer.remove(0);
                 }
                 else {
@@ -218,9 +218,6 @@ impl SerialManager {
     }
 }
 
-fn option_string(opt_str: &Option<String>) -> &str {
-    opt_str.as_ref().map_or("None", String::as_str)
-}
 fn find_serial_port(com: &mut ComInstance, opened_serial_port: &mut Arc<Mutex<Vec<Box<SerialManager>>>>) {
     if let Ok(ports) = serialport::available_ports() {
         for p in ports {
