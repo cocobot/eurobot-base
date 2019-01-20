@@ -64,7 +64,7 @@ impl NodeInfo {
             id,
             uptime_sec: None,
             health: None,
-            mode: None,
+            mode: Some(NodeInfoMode::Offline),
             last_stamp: SystemTime::now(),
             last_node_info: SystemTime::UNIX_EPOCH,
             soft_version: None,
@@ -84,6 +84,14 @@ impl NodeInfo {
 
     pub fn info_needed(&self) -> bool {
         self.last_node_info.elapsed().unwrap() > Duration::from_secs(10)
+    }
+
+    pub fn check_offline(&mut self) {
+        if self.last_stamp.elapsed().unwrap() > Duration::from_secs(3) && self.uptime_sec.is_some() {
+            self.uptime_sec = None;
+            self.health = None;
+            self.mode = Some(NodeInfoMode::Offline);
+        }
     }
 }
 

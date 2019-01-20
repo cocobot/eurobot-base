@@ -21,9 +21,6 @@ impl Msg {
                 let (pkt, _) = GetNodeInfoRequest::encode(GetNodeInfoRequest {});
                 node.request_or_respond(*node_id, GetNodeInfoRequest::SIGNATURE, GetNodeInfoRequest::ID as u8, &mut transfer_id, canars::TRANSFER_PRIORITY_LOWEST, RequestResponse::Request, &pkt[..]); 
             },
-            _ => { 
-                println!("UKN pkt: {:?}", &self);
-            },
         };
     }
 }

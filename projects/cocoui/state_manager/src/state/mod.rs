@@ -1,4 +1,4 @@
-mod stype;
+pub mod stype;
 
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -10,8 +10,8 @@ use std::collections::HashMap;
 use com::msg::Msg;
 
 #[derive(Debug, Clone)]
-struct State {
-    nodes: HashMap<u8, stype::NodeInfo>,
+pub struct State {
+    pub nodes: HashMap<u8, stype::NodeInfo>,
 }
 
 impl State {
@@ -48,6 +48,7 @@ impl StateManager {
                         com.message(Msg::GetNodeInfo {node_id: *id});
                         node.stamp_node_info();
                     }
+                    node.check_offline();
                 }
                 drop(st);
                 drop(istate);
@@ -57,7 +58,7 @@ impl StateManager {
         });
     }
 
-    fn get_state(&self) -> State {
+    pub fn get_state(&self) -> State {
         self.state.clone()
     }
 

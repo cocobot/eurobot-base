@@ -1,0 +1,9 @@
+[package]
+name = "config_manager"
+version = "0.1.0"
+authors = ["Damien Espitallier <damien.espitallier@gmail.com>"]
+
+[dependencies]
+toml = "0.4.10"
+serde = "1.0.85"
+serde_derive = "1.0.85"
