@@ -1,6 +1,7 @@
 #include <include/generated/autoconf.h>
 #ifdef CONFIG_LIBCOCOBOT_ASSERV
 
+#include <mcual.h>
 #include <cocobot.h>
 #include <cocobot/encoders.h>
 #include <platform.h>
@@ -45,6 +46,7 @@ static void cocobot_encoders_update(int id)
 
 void cocobot_encoders_get_motor_position(int32_t motor_position[2])
 {
+#if defined(CONFIG_ENCODER_SPI) 
   cocobot_encoders_update(0);
   cocobot_encoders_update(1);
 #ifdef COCOBOT_INVERT_ENCODERS
@@ -53,6 +55,10 @@ void cocobot_encoders_get_motor_position(int32_t motor_position[2])
 #else
   motor_position[0] = _enc_value[0];
   motor_position[1] = _enc_value[1];
+#endif
+#elif defined(CONFIG_ENCODER_QUAD)
+  motor_position[0] = mcual_timer_get_value(MCUAL_TIMER2);
+  motor_position[1] = mcual_timer_get_value(MCUAL_TIMER5);
 #endif
 }
 #endif
