@@ -22,6 +22,13 @@
 #include <include/generated/git.h>
 #include <cocobot/rf.h>
 
+typedef enum 
+{
+  COCOBOT_COM_SOURCE_CAN,
+  COCOBOT_COM_SOURCE_USART,
+  COCOBOT_COM_SOURCE_RF,
+} cocobot_com_source_t;
+
 static CanardInstance _canard;
 static uint8_t _canard_memory_pool[CONFIG_LIBCOCOBOT_COM_MEMORY_POOL_SIZE];
 static uint8_t _internal_buffer[UAVCAN_PROTOCOL_GETNODEINFO_RESPONSE_MAX_SIZE];
@@ -278,6 +285,39 @@ int16_t cocobot_com_usart_receive(CanardCANFrame* const frame)
 }
 #endif
 
+void cocobot_com_retransmit(const CanardCANFrame * rx_frame, cocobot_com_source_t source)
+{
+  switch(source)
+  {
+    case COCOBOT_COM_SOURCE_CAN:
+#ifdef CONFIG_LIBCOCOBOT_COM_USART
+      cocobot_com_usart_transmit(rx_frame);
+#endif
+#ifdef CONFIG_LIBCOCOBOT_COM_RF
+      cocobot_com_rf_transmit(rx_frame, _timestamp_us);
+#endif
+    break;
+
+    case COCOBOT_COM_SOURCE_RF:
+#ifdef CONFIG_LIBCOCOBOT_COM_USART
+      cocobot_com_usart_transmit(rx_frame);
+#endif
+#ifdef CONFIG_LIBCOCOBOT_COM_CAN
+      canardSTM32Transmit(rx_frame);
+#endif
+    break;
+
+    case COCOBOT_COM_SOURCE_USART:
+#ifdef CONFIG_LIBCOCOBOT_COM_CAN
+      canardSTM32Transmit(rx_frame);
+#endif
+#ifdef CONFIG_LIBCOCOBOT_COM_RF
+      cocobot_com_rf_transmit(rx_frame, _timestamp_us);
+#endif
+    break;
+  }
+}
+
 uint64_t cocobot_com_process_event(void)
 {
   uint32_t ticks = mcual_timer_get_value(CONFIG_LIBCOCOBOT_COM_TIMER);
@@ -357,6 +397,7 @@ uint64_t cocobot_com_process_event(void)
   else if (rx_res > 0)
   {
     // Success - process the frame
+    cocobot_com_retransmit(&rx_frame, COCOBOT_COM_SOURCE_CAN);
     canardHandleRxFrame(&_canard, &rx_frame, _timestamp_us);
   }
 #endif
@@ -372,6 +413,7 @@ uint64_t cocobot_com_process_event(void)
   else if (rx_res > 0)
   {
     // Success - process the frame
+    cocobot_com_retransmit(&rx_frame, COCOBOT_COM_SOURCE_USART);
     canardHandleRxFrame(&_canard, &rx_frame, _timestamp_us);
   }
 #endif
@@ -387,8 +429,8 @@ uint64_t cocobot_com_process_event(void)
   else if (rx_res > 0)
   {
     // Success - process the frame
+    cocobot_com_retransmit(&rx_frame, COCOBOT_COM_SOURCE_RF);
     canardHandleRxFrame(&_canard, &rx_frame, _timestamp_us);
-    cocobot_com_usart_transmit(&rx_frame);
   }
 #endif
 
@@ -398,7 +440,6 @@ uint64_t cocobot_com_process_event(void)
 
     //clean up every seconds 
     canardCleanupStaleTransfers(&_canard, _timestamp_us);
-    platform_led_toggle(PLATFORM_LED_GREEN_4);
 
     //send node info
     uavcan_protocol_NodeStatus ns;
@@ -446,7 +487,7 @@ void cocobot_com_init(void)
 #endif
 
 #pragma message "TODO: read id from flash or eeprom"
-	canardSetLocalNodeID(&_canard, 42);
+	canardSetLocalNodeID(&_canard, 43);
 
   _last_timer_ticks = 0;
   _timestamp_us = 0;
