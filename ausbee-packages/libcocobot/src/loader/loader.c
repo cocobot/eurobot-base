@@ -9,6 +9,7 @@
 # include <malloc_wrapper.h>
 #endif
 #include <mcual.h>
+#include <platform.h>
 #include "../com/dsdl/uavcan/protocol/GetNodeInfo.h"
 #include "../com/dsdl/uavcan/protocol/file/BeginFirmwareUpdate.h"
 #include "../com/dsdl/uavcan/protocol/file/Read.h"
@@ -239,6 +240,7 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
 
 void cocobot_loader_init(void)
 {
+  mcual_usart_send(PLATFORM_USART_DEBUG, 'A');
   //init static memory
   _mode = LOADER_MODE_IDLE;
   _request_id = 0;
@@ -254,6 +256,7 @@ void cocobot_loader_init(void)
 #else
   for(;;)
   {
+  mcual_usart_send(PLATFORM_USART_DEBUG, '9');
     _timestamp_us = cocobot_com_process_event();
 
     if(_mode != LOADER_MODE_IDLE)
