@@ -52,6 +52,22 @@ void platform_init(void)
   //init gpio
   mcual_gpio_init(MCUAL_GPIOE, MCUAL_GPIO_PIN8, MCUAL_GPIO_INPUT);
   mcual_gpio_init(MCUAL_GPIOB, MCUAL_GPIO_PIN8, MCUAL_GPIO_OUTPUT);
+  
+  //init encoders
+  //enc rigth
+  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN0, MCUAL_GPIO_OUTPUT);
+  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN1, MCUAL_GPIO_OUTPUT);
+  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN0, 1);
+  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN1, 1);
+
+  //enc left
+  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN15, MCUAL_GPIO_OUTPUT);
+  mcual_gpio_init(MCUAL_GPIOB, MCUAL_GPIO_PIN3, MCUAL_GPIO_OUTPUT);
+  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN15, 2);
+  mcual_gpio_set_function(MCUAL_GPIOB, MCUAL_GPIO_PIN3, 2);
+
+  mcual_timer_init_encoder(MCUAL_TIMER2); 
+  mcual_timer_init_encoder(MCUAL_TIMER5); 
 
   //init uart dbg pins
   mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN9, MCUAL_GPIO_OUTPUT);

@@ -139,6 +139,15 @@ config LIBCOCOBOT_POSITION_TICK_PER_METER
   depends on LIBCOCOBOT && LIBCOCOBOT_POSITION
   default 1000
 
+choice
+  prompt " + Encoder Type"
+	depends on LIBCOCOBOT && LIBCOCOBOT_POSITION
+  config ENCODER_SPI
+      bool "spiEncoders"
+  config ENCODER_QUAD
+      bool "quadEncoder"
+endchoice
+
 ###
 config LIBCOCOBOT_ACTION_SCHEDULER
 	bool "+ Action scheduler"
