@@ -68,6 +68,14 @@ void platform_init(void)
 #endif
 #endif
 
+#ifdef CONFIG_PLATFORM_COM_2019_CAN
+  //init can pins
+  mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN1, MCUAL_GPIO_OUTPUT);
+  mcual_gpio_init(MCUAL_GPIOD, MCUAL_GPIO_PIN0, MCUAL_GPIO_INPUT);
+  mcual_gpio_set_function(MCUAL_GPIOD, MCUAL_GPIO_PIN0, 9);
+  mcual_gpio_set_function(MCUAL_GPIOD, MCUAL_GPIO_PIN1, 9);
+#endif
+
 
   //init spi
   mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN8, MCUAL_GPIO_OUTPUT);

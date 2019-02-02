@@ -2,3 +2,7 @@ config PLATFORM_COM_2019_USB
   bool " + com 2019 USB"
   default n
   depends on PLATFORM_COM_2019
+config PLATFORM_COM_2019_CAN
+  bool " + com 2019 CAN"
+  default n
+  depends on PLATFORM_COM_2019

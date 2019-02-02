@@ -1,0 +1,4 @@
+#ifndef COCOBOT_CONFIG_H
+#define COCOBOT_CONFIG_H
+
+#endif//COCOBOT_CONFIG_H
