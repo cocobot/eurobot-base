@@ -9,6 +9,8 @@ glib = "0.6.0"
 cairo-rs = "0.5.0"
 config = "0.9.1"
 lazy_static = "1.1.0"
+log = "0.4.6"
+pretty_env_logger = "0.3.0"
 state_manager = { path = "../state_manager" }
 config_manager = { path = "../config_manager" }
 

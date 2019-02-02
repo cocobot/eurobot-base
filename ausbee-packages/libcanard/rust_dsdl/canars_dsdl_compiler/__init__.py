@@ -113,6 +113,7 @@ def die(text):
 def run_parser(source_dirs, search_dirs):
     try:
         types = dsdl.parse_namespaces(source_dirs, search_dirs)
+        print(types)
     except dsdl.DsdlException as ex:
         logger.info('Parser failure', exc_info=True)
         die(ex)
@@ -160,8 +161,6 @@ def run_generator(types, dest_dir, header_only):
             logger.info('Generating type %s', t.full_name)
             insert(root, t.full_name.split("."), generate_one_type(code_template_expander, t))
             i += 1
-            if i == 7:
-                 break
         t = Object()
         t.data = fill_code(root)
         code = generate(global_template_expander, t)
@@ -199,6 +198,10 @@ def get_max_size(bits, unsigned):
     else:
         return (2 ** (bits-1)) -1
 
+def camel(name):
+    import re
+    return ''.join(x.capitalize() or '_' for x in name.split('_'))
+
 def strip_name(name):
     return name.split('.')[-1]
 
@@ -208,14 +211,29 @@ def type_to_rust_type(t):
             t.CAST_MODE_SATURATED: True,
             t.CAST_MODE_TRUNCATED: False,
         }[t.cast_mode]
+        cast_mode = {
+            t.CAST_MODE_SATURATED: 'Saturate',
+            t.CAST_MODE_TRUNCATED: 'Truncate',
+        }[t.cast_mode]
         if t.kind == t.KIND_FLOAT:
-            print("ERR1");
-            pass
+            float_type = {
+                16: 'f16',
+                32: 'f32',
+                64: 'f64',
+            }[t.bitlen]
+            return {
+                    'rust_type':'%s' % (float_type),
+                    'rust_type_comment':'float%d %s' % (t.bitlen, cast_mode, ),
+                    'bitlen':t.bitlen,
+                    'max_size':get_max_size(t.bitlen, False),
+                    'saturate':False,
+                    }
+
         else:
             rust_type = {
                 t.KIND_BOOLEAN: 'bool',
                 t.KIND_UNSIGNED_INT: 'u',
-                t.KIND_SIGNED_INT: 's',
+                t.KIND_SIGNED_INT: 'i',
             }[t.kind]
             signedness = {
                 t.KIND_BOOLEAN: 'false',
@@ -227,7 +245,7 @@ def type_to_rust_type(t):
                         'rust_type':'bool',
                         'rust_type_comment':'bit len %d' % (t.bitlen, ),
                         'bitlen':t.bitlen,
-                        'max_size':get_max_size(t.bitlen, False),
+                        'max_size':get_max_size(t.bitlen, True),
                         'signedness':signedness,
                         'saturate':saturate,
                        }
@@ -251,7 +269,6 @@ def type_to_rust_type(t):
             t.MODE_STATIC: 'Static Array',
             t.MODE_DYNAMIC: 'Dynamic Array',
         }[t.mode]
-        print(values)
         return {
                 'rust_type':'%s' % (values['rust_type']),
                 'dynamic_array': t.mode == t.MODE_DYNAMIC,
@@ -266,7 +283,13 @@ def type_to_rust_type(t):
         return {
                 'rust_type': '::' + t.full_name.replace('.','::'),
                 'rust_type_comment':'',
+                'bitlen':t.get_max_bitlen(),
                 }
+    elif t.category == t.CATEGORY_VOID:
+        return {
+                'bitlen':t.get_max_bitlen(),
+                'rust_type_comment':'void%d' % t.bitlen,
+               }
     else:
         print("ERR3");
         raise DsdlCompilerException('Unknown type category: %s' % t.category)
@@ -415,6 +438,7 @@ def generate_one_type(template_expander, t):
             if a.void:
                 assert not a.name
                 a.name = ''
+            a.camel_name = camel(a.name)
         return has_array
 
     def has_float16(attributes):
@@ -470,7 +494,6 @@ def generate_one_type(template_expander, t):
     ######    t.KIND_MESSAGE: '::uavcan::DataTypeKindMessage',
     ######    t.KIND_SERVICE: '::uavcan::DataTypeKindService',
     ######}[t.kind]
-    print(vars(t))
 
     # Generation
     text = template_expander(t=t)  # t for Type

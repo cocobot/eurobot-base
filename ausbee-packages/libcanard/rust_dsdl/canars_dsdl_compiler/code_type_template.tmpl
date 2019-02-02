@@ -1,10 +1,32 @@
 
-<!--(macro generate_struct)--> #! type_name, dtid, signature, fields
-#[derive(Debug)]
-pub struct ${type_name} {
-  <!--(macro expand_attr_types)--> #! group_name, attrs
+<!--(macro generate_struct)--> #! type_name, dtid, signature, fields, union
+
+#[derive(Debug, Clone)]
+  %if union
+pub enum ${type_name} {
+    <!--(macro expand_attr_types)--> #! group_name, attrs
   // ${group_name}
-    % for a in attrs:
+      % for a in attrs:
+        %if a.type_category == t.CATEGORY_ARRAY
+            %if a.dynamic_array == True
+    ${'%s(Vec<%s>), // %s' % (a.camel_name, a.rust_type, a.rust_type_comment, )}
+            %else
+    ${'%s([%s; %d]), // %s' % (a.camel_name, a.rust_type, a.max_array_elements, a.rust_type_comment, )}
+            %endif
+        %elif a.type_category == t.CATEGORY_VOID:
+    // ${a.rust_type_comment}
+        %else
+    ${'%s(%s), // %s' % (a.camel_name, a.rust_type, a.rust_type_comment, )}
+        %endif
+      % endfor
+    <!--(end)-->
+${expand_attr_types(group_name='FieldTypes', attrs=fields)}
+}
+  %else
+pub struct ${type_name} {
+    <!--(macro expand_attr_types)--> #! group_name, attrs
+  // ${group_name}
+      % for a in attrs:
         %if a.type_category == t.CATEGORY_ARRAY
             %if a.dynamic_array == True
     pub ${'%s: Vec<%s>, // %s' % (a.name, a.rust_type, a.rust_type_comment, )}
@@ -16,10 +38,11 @@ pub struct ${type_name} {
         %else
     pub ${'%s: %s, // %s' % (a.name, a.rust_type, a.rust_type_comment, )}
         %endif
-    % endfor
-  <!--(end)-->
+      % endfor
+    <!--(end)-->
 ${expand_attr_types(group_name='FieldTypes', attrs=fields)}
 }
+  %endif
 
 impl ${type_name} {
   %if dtid != None:
@@ -27,7 +50,7 @@ impl ${type_name} {
   %endif
   pub const SIGNATURE: u64 = ${'0x%08X' % signature};
   % for a in constants:
-  pub const ${'%s: %s = %s;' % (a.name, a.rust_type, a.init_expression)}
+  pub const ${'%s: %s = %s as %s;' % (a.name, a.rust_type, a.init_expression, a.rust_type)}
   % endfor
 
 
@@ -49,30 +72,114 @@ impl ${type_name} {
     (vec, size)
   }
 
-  fn encode_internal(instance: ${type_name}, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: ${type_name}, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
   let mut offset = offset;
+
+    %if union:
+    // Union Tag ${union} bits
+    canars::encode_scalar_u8(&mut buffer, offset, ${union}, match(instance) {
+      % for idx,last,a in enum_last_value(fields):
+     ${type_name}::${a.camel_name}(_) => ${idx},
+      % endfor
+    }); // ${union} bits
+    offset += ${union};
+    $!setvar("union_index", "0")!$
+    %endif
+
+  %if union
+  match(instance) {
+  %endif
   %for f in fields:
+    %if union
+    ${type_name}::${f.camel_name}(data) => {
+    %else
+      %if f.type_category != t.CATEGORY_VOID:
+    let data = instance.${f.name};
+      %endif
+    %endif
+
     %if f.type_category == t.CATEGORY_ARRAY
-    unimplemented!(); //E1
+            %if f.dynamic_array == True
+
+    // Dynamic Array (${f.name})
+                %if f.last_item
+                    %if f.bitlen < 8
+    ${f.array_max_size_bit_len}
+    //  - Add array length, last item, but bitlen < 8.
+    canars::encode_scalar_u${f.array_max_size_bit_len_expanded}(&mut buffer, offset, ${f.array_max_size_bit_len}, data.len());
+    offset += ${f.array_max_size_bit_len};
+                    %else
+    if root_item == 0 {
+        // - Add array length
+      canars::encode_scalar_u${f.array_max_size_bit_len_expanded}(&mut buffer, offset, ${f.array_max_size_bit_len}, data.len() as u${f.array_max_size_bit_len_expanded});
+      offset += ${f.array_max_size_bit_len};
+    }
+                    %endif
+                %else
+    // - Add array length
+    canars::encode_scalar_u${f.array_max_size_bit_len_expanded}(&mut buffer, offset, ${f.array_max_size_bit_len}, data.len() as u${f.array_max_size_bit_len_expanded});
+    offset += ${f.array_max_size_bit_len};
+                %endif
+
+    // - Add array items
+    for c in &data {
+                %if f.rust_type_category == t.CATEGORY_COMPOUND:
+      let (b, off) = ${f.rust_type}::encode_internal(c.clone(), buffer, offset, 0);
+      offset = off;
+      buffer = b;
+                %else
+        canars::encode_scalar_u${f.bitlen}(&mut buffer, offset, ${f.bitlen}, *c);
+        offset += ${f.bitlen};
+                %endif
+    }
+            %else
+    // Static array (${f.name})
+    for c in &data {
+        canars::encode_scalar_u${f.bitlen}(&mut buffer, offset, ${f.bitlen}, *c);
+        offset += ${f.bitlen};
+    }
+            %endif
+
     %elif f.type_category == t.CATEGORY_VOID:
     unimplemented!(); //E2
     %elif f.type_category == t.CATEGORY_COMPOUND:
-    unimplemented!(); //E3
+    let (b, off) = ${f.rust_type}::encode_internal(data, buffer, offset, 0);
+    offset = off;
+    buffer = b;
+    %elif f.rust_type == 'bool':
+      %if f.saturate
+        %if f.signedness == 'true'
+    let vint_${f.name} = ::saturate(data, ${f.max_size});
+        %else
+    let vint_${f.name} = ::saturate_unsigned(data, true);
+        %endif
+      %else
+    let vint_${f.name} = data;
+      %endif
+    canars::encode_scalar_${f.rust_type}(&mut buffer, offset, ${f.bitlen}, vint_${f.name}); // ${f.max_size}
+    offset += ${f.bitlen};
     %else
       %if f.saturate
         %if f.signedness == 'true'
-    let ${f.name} = ::saturate(instance.${f.name}, ${f.max_size});
+    let vint_${f.name} = ::saturate(data, ${f.max_size});
         %else
-    let ${f.name} = ::saturate_unsigned(instance.${f.name}, ${f.max_size});
+    let vint_${f.name} = ::saturate_unsigned(data, ${f.max_size});
         %endif
       %else
-    let ${f.name} = instance.${f.name};
+    let vint_${f.name} = data;
       %endif
-    canars::encode_scalar_${f.rust_type}(&mut buffer, offset, ${f.bitlen}, ${f.name}); // ${f.max_size}
+    canars::encode_scalar_${f.rust_type}(&mut buffer, offset, ${f.bitlen}, vint_${f.name}); // ${f.max_size}
     offset += ${f.bitlen};
-
+    %endif
+    %if union
+    },
     %endif
   %endfor
+  %if union
+  }
+  %endif
     (buffer, offset)
   }
 
@@ -92,41 +199,57 @@ impl ${type_name} {
     r
   }
 
-  fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<${type_name}> {
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<${type_name}> {
     let mut offset = offset;
+
+    %if union:
+    // Get Union Tag
+    let tag = xfer.decode_scalar_u8(offset, ${union});
+    %endif
+
+    %if union
+    let ret = match tag.unwrap() {
+    $!setvar("union_index", "0")!$
+    %endif
     % for f in fields:
+      %if union
+      ${union_index} => {
+      $!setvar("union_index", "union_index + 1")!$
+      %endif
       %if f.type_category == t.CATEGORY_ARRAY
         %if f.dynamic_array == True
-    let ${'%s' % ((f.name + '_len'))};
+    let ${'vint_%s' % ((f.name + '_len'))};
           %if f.last_item
             %if f.bitlen > 7
     //  - Last item in struct & Root item & (Array Size > 8 bit), tail array optimization
     if xfer.get_payload_len() > 0 && tao {
       //  - Calculate Array length from MSG length
-      ${'%s' % ((f.name + '_len'))} = ((xfer.get_payload_len() as usize * 8) - *offset) / ${f.bitlen}; // ${f.bitlen} bit array item size
+      ${'vint_%s' % ((f.name + '_len'))} = ((xfer.get_payload_len() as usize * 8) - *offset) / ${f.bitlen}; // ${f.bitlen} bit array item size
     }
     else {
       // - Array length ${f.array_max_size_bit_len} bits
-      ${'%s' % ((f.name + '_len'))} = match xfer.decode_scalar_u${f.array_max_size_bit_len_expanded}(offset, ${f.array_max_size_bit_len}) {
+      ${'vint_%s' % ((f.name + '_len'))} = match xfer.decode_scalar_u${f.array_max_size_bit_len_expanded}(offset, ${f.array_max_size_bit_len}) {
        Some(s) => s as usize,
        None => return None,
       };
     }
             %else
-    ${'%s' % ((f.name + '_len'))} = match xfer.decode_scalar_u${f.array_max_size_bit_len}(offset, ${f.array_max_size_bit_len}) {
+    ${'vint_%s' % ((f.name + '_len'))} = match xfer.decode_scalar_u${f.array_max_size_bit_len}(offset, ${f.array_max_size_bit_len}) {
      Some(s) => s,
      None => return None,
     };
             %endif
           %else
     //  - Array length, not last item ${f.array_max_size_bit_len} bits
-    ${'%s' % ((f.name + '_len'))} = match xfer.decode_scalar_u${f.array_max_size_bit_len}(offset, ${f.array_max_size_bit_len}) {
+    ${'vint_%s' % ((f.name + '_len'))} = match xfer.decode_scalar_u${f.array_max_size_bit_len_expanded}(offset, ${f.array_max_size_bit_len}) {
      Some(s) => s,
      None => return None,
     };
           %endif
-    let mut ${f.name} = Vec::new();
-    for _c in 0..${'%s' % ((f.name + '_len'))} {
+    let mut vint_${f.name} = Vec::new();
+    for _c in 0..${'vint_%s' % ((f.name + '_len'))} {
           %if f.rust_type_category == t.CATEGORY_COMPOUND:
             unimplemented!(); //1
           %else
@@ -134,15 +257,15 @@ impl ${type_name} {
         Some(s) => s,
         None => return None,
       };
-      ${f.name}.push(data);
+      vint_${f.name}.push(data);
           %endif
     }
     //  - Get Array
         %else
     // Static array (${f.name})
-    let mut ${f.name} = [0 as ${f.rust_type}; ${f.max_array_elements}];
+    let mut vint_${f.name} = [0 as ${f.rust_type}; ${f.max_array_elements}];
     for c in 0..${f.max_array_elements} {
-      ${f.name}[c] = match xfer.decode_scalar_${f.rust_type}(offset, ${f.bitlen}) {
+      vint_${f.name}[c] = match xfer.decode_scalar_${f.rust_type}(offset, ${f.bitlen}) {
        Some(s) => s,
        None => return None,
       };
@@ -153,26 +276,38 @@ impl ${type_name} {
         unimplemented!(); //3
       %elif f.type_category == t.CATEGORY_COMPOUND:
         %if f.last_item
-    let ${f.name} = match ${f.rust_type}::decode_internal(xfer, offset, tao) {
+    let vint_${f.name} = match ${f.rust_type}::decode_internal(xfer, offset, tao) {
         %else
-    let ${f.name} = match ${f.rust_type}::decode_internal(xfer, offset, false) {
+    let vint_${f.name} = match ${f.rust_type}::decode_internal(xfer, offset, false) {
         %endif
       Some(s) => s,
       None => return None,
     };
       %else
-    let ${f.name} = match xfer.decode_scalar_${f.rust_type}(offset, ${f.bitlen}) {
+    let vint_${f.name} = match xfer.decode_scalar_${f.rust_type}(offset, ${f.bitlen}) {
      Some(s) => s,
      None => return None,
     };
       %endif
+      %if union
+        Some(${type_name}::${f.camel_name}(vint_${f.name}))
+        },
+      %endif
     % endfor
 
+    %if union
+      _ => None,
+    };
+    ret
+    %else
     Some(${type_name} {
-    % for f in fields:
-      ${f.name},
-    % endfor
+      % for f in fields:
+        %if f.type_category != t.CATEGORY_VOID:
+      ${f.name}: vint_${f.name},
+        %endif
+      % endfor
     })
+    %endif
   }
 
 }
@@ -182,10 +317,10 @@ impl ${type_name} {
 
 
 % if t.kind == t.KIND_SERVICE:
-${generate_struct(type_name=t.struct_name+'Request', dtid=t.default_dtid, signature=t.get_data_type_signature(),fields=t.request_fields, constants=t.request_constants)}
-${generate_struct(type_name=t.struct_name+'Response', dtid=t.default_dtid, signature=t.get_data_type_signature(),fields=t.response_fields, constants=t.response_constants)}
+${generate_struct(type_name=t.struct_name+'Request', dtid=t.default_dtid, signature=t.get_data_type_signature(),fields=t.request_fields, constants=t.request_constants, union=t.request_union)}
+${generate_struct(type_name=t.struct_name+'Response', dtid=t.default_dtid, signature=t.get_data_type_signature(),fields=t.response_fields, constants=t.response_constants, union=t.response_union)}
 % else:
-${generate_struct(type_name=t.struct_name, dtid=t.default_dtid, signature=t.get_data_type_signature(),fields=t.fields, constants=t.constants)}
+${generate_struct(type_name=t.struct_name, dtid=t.default_dtid, signature=t.get_data_type_signature(),fields=t.fields, constants=t.constants, union=t.union)}
 % endif
 
 

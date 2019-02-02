@@ -19,6 +19,7 @@
 #include "dsdl/uavcan/protocol/GetNodeInfo.h"
 #include "dsdl/uavcan/protocol/RestartNode.h"
 #include "dsdl/uavcan/protocol/NodeStatus.h"
+#include "dsdl/uavcan/protocol/param/GetSet.h"
 #include <include/generated/git.h>
 #include <cocobot/rf.h>
 
@@ -29,6 +30,7 @@ typedef enum
   COCOBOT_COM_SOURCE_RF,
 } cocobot_com_source_t;
 
+static uint32_t const volatile _canard_id __attribute__((section (".text"))) = 0xFFFFFFFF;
 static CanardInstance _canard;
 static uint8_t _canard_memory_pool[CONFIG_LIBCOCOBOT_COM_MEMORY_POOL_SIZE];
 static uint8_t _internal_buffer[UAVCAN_PROTOCOL_GETNODEINFO_RESPONSE_MAX_SIZE];
@@ -52,6 +54,22 @@ typedef struct __attribute__((__packed__))
   uint16_t crc;
 } cocobot_com_usart_frame_t;
 #endif
+
+#include <stdarg.h>
+char buf[128];
+void uprintf(char * fmt, ...)
+{
+   va_list ap;
+  va_start(ap, fmt);
+  vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+  
+  uint8_t * ptr = (uint8_t *)buf;
+  while(*ptr) {
+    mcual_usart_send(PLATFORM_USART_DEBUG, *ptr);
+    ptr += 1;
+  }
+}
 
 static void cocobot_com_fill_status(uavcan_protocol_NodeStatus * ns)
 {
@@ -110,10 +128,11 @@ static void cocobot_com_on_transfer_received(CanardInstance* ins,
 
     uavcan_protocol_RestartNodeRequest reqrnr; 
     uint8_t * pdynbuf = &_internal_buffer[0];
-    if(uavcan_protocol_RestartNodeRequest_decode(transfer, 0, &reqrnr, &pdynbuf) >= 0)
+    if(uavcan_protocol_RestartNodeRequest_decode(transfer, transfer->payload_len, &reqrnr, &pdynbuf) >= 0)
     {
       if(reqrnr.magic_number == UAVCAN_PROTOCOL_RESTARTNODE_REQUEST_MAGIC_NUMBER)
       {
+
         ok = 1;
       }
     }
@@ -138,6 +157,48 @@ static void cocobot_com_on_transfer_received(CanardInstance* ins,
       mcual_bootloader();
     }
 
+    return;
+  }
+
+  if ((transfer->transfer_type == CanardTransferTypeRequest) &&
+      (transfer->data_type_id == UAVCAN_PROTOCOL_PARAM_GETSET_ID))
+  {
+    uavcan_protocol_param_GetSetRequest reqgsr; 
+    uavcan_protocol_param_GetSetResponse gsr; 
+
+    //set default response
+    gsr.value.union_tag = UAVCAN_PROTOCOL_PARAM_VALUE_EMPTY; 
+    gsr.default_value.union_tag = UAVCAN_PROTOCOL_PARAM_VALUE_EMPTY; 
+    gsr.max_value.union_tag = UAVCAN_PROTOCOL_PARAM_VALUE_EMPTY; 
+    gsr.min_value.union_tag = UAVCAN_PROTOCOL_PARAM_VALUE_EMPTY; 
+    gsr.name.len = 0;
+
+    uint8_t * pdynbuf = &_internal_buffer[0];
+    if(uavcan_protocol_param_GetSetRequest_decode(transfer, transfer->payload_len, &reqgsr, &pdynbuf) >= 0)
+    {
+      if(strcmp((char *)reqgsr.name.data, "ID") == 0)
+      {
+        mcual_loader_flash_byte((uint32_t)&_canard_id, reqgsr.value.integer_value);
+        gsr.value.union_tag = UAVCAN_PROTOCOL_PARAM_VALUE_INTEGER_VALUE;
+        gsr.value.integer_value = reqgsr.value.integer_value;
+        gsr.name.len = reqgsr.name.len;
+        gsr.name.data = reqgsr.name.data;
+      }
+    }
+    canardReleaseRxTransferPayload(ins, transfer);
+
+
+    const uint32_t size = uavcan_protocol_param_GetSetResponse_encode(&gsr, &_internal_buffer[0]);
+
+    cocobot_com_request_or_respond(transfer->source_node_id,
+                                   UAVCAN_PROTOCOL_PARAM_GETSET_SIGNATURE,
+                                   UAVCAN_PROTOCOL_PARAM_GETSET_ID,
+                                   &transfer->transfer_id,
+                                   transfer->priority,
+                                   CanardResponse,
+                                   &_internal_buffer[0],
+                                   (uint16_t)size);
+    
     return;
   }
 
@@ -171,6 +232,14 @@ static bool cocobot_com_should_accept_transfert(const CanardInstance* ins,
       (data_type_id == UAVCAN_PROTOCOL_RESTARTNODE_ID))
   {
     *out_data_type_signature = UAVCAN_PROTOCOL_RESTARTNODE_SIGNATURE;
+    return true;
+  }
+
+  //Accept GetSet
+  if ((transfer_type == CanardTransferTypeRequest) &&
+      (data_type_id == UAVCAN_PROTOCOL_PARAM_GETSET_ID))
+  {
+    *out_data_type_signature = UAVCAN_PROTOCOL_PARAM_GETSET_SIGNATURE;
     return true;
   }
 
@@ -277,8 +346,8 @@ int16_t cocobot_com_usart_receive(CanardCANFrame* const frame)
         for(i = 0; i < 8; i += 1)
         {
           frame->data[i] = uframe.data[i];
-          return 1;
         }
+        return 1;
       }
     }
   }
@@ -486,8 +555,8 @@ void cocobot_com_init(void)
   _mutex = xSemaphoreCreateMutex();
 #endif
 
-#pragma message "TODO: read id from flash or eeprom"
-	canardSetLocalNodeID(&_canard, 43);
+  volatile uint32_t * ptr = (uint32_t *)&_canard_id;
+	canardSetLocalNodeID(&_canard, *ptr & 0x7F);
 
   _last_timer_ticks = 0;
   _timestamp_us = 0;

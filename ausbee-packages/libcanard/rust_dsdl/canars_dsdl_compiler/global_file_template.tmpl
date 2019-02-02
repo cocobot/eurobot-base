@@ -13,9 +13,13 @@ fn saturate<T>(data: T, max: usize) ->T {
   data
 }
 
-fn saturate_unsigned<T>(data: T, max: usize) -> T {
-  unimplemented!();
-  data
+fn saturate_unsigned<T: std::cmp::PartialOrd>(data: T, max: T) -> T {
+  if data > max {
+    max
+  }
+  else {
+    data
+  }
 }
 
 ${t.data}

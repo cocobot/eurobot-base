@@ -6,7 +6,10 @@ authors = ["Damien Espitallier <damien.espitallier@gmail.com>"]
 [dependencies]
 canars = { path = "../canars" }
 dsdl = { path = "../dsdl" }
+config_manager = { path = "../config_manager" }
 serialport = "3.1.0"
+log = "0.4.6"
+hex-slice = "0.1.4"
 
 [dependencies.uavcan]
 version = "0.1.0-preview0" 

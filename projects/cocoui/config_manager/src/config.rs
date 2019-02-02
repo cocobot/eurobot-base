@@ -1,23 +1,19 @@
-
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::fs;
-
-#[derive(Debug, Deserialize)]
-pub struct ComConfig {
-    pub node_id: u8,
-}
+use defs;
 
 pub type ConfigManagerInstance = Arc<Mutex<ConfigManager>>;
 
 pub struct ConfigManager {
-    pub com: ComConfig,
+    pub com: defs::com::Config,
+    pub eurobot: defs::eurobot::Config,
 }
 
 impl ConfigManager {
     pub fn new() -> ConfigManagerInstance {
         let cm = Arc::new(Mutex::new(ConfigManager {
-            com: toml::from_str(&fs::read_to_string("config/com.toml").unwrap()).unwrap(),
+            com: defs::com::Config::new("com"),
+            eurobot: defs::eurobot::Config::new("eurobot"),
         }));
         cm
     }

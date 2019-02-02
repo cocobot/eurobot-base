@@ -68,4 +68,26 @@ void mcual_loader_flash_pgm(uint32_t offset, uint8_t * data, uint32_t size)
   FLASH->CR = 0;
 }
 
+__attribute__ ((__section__(".data")))
+void mcual_loader_flash_byte(uint32_t offset, uint8_t data)
+{
+  FLASH->CR |= FLASH_CR_LOCK;
+  FLASH->KEYR = 0x45670123;
+  FLASH->KEYR = 0xCDEF89AB;
+
+  //prepare flash
+  FLASH->CR = FLASH_CR_PG | FLASH_CR_PSIZE_1;
+  while(FLASH->SR & FLASH_SR_BSY);
+
+  //write data
+  uint32_t * ptr = (uint32_t *)offset;
+  *ptr = data;
+  while(FLASH->SR & FLASH_SR_BSY);
+
+  //clean up register
+  FLASH->CR = 0;
+  FLASH->CR |= FLASH_CR_LOCK;
+  FLASH->KEYR = 0;
+}
+
 #endif

@@ -5,7 +5,7 @@ int main(void)
 {
   platform_init();
 
-  cocobot_can_init();
+  cocobot_com_init();
   cocobot_loader_init();
 
   return 0;

@@ -137,8 +137,6 @@ impl BoardsWindow {
     }
 
     fn update(&mut self) -> bool {
-        println!("Update board list");
-
         match self.window {
             Some(_) => {
                 let pre_state = self.state.as_ref().unwrap();

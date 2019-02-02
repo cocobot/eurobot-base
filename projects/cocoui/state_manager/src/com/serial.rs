@@ -164,7 +164,10 @@ impl SerialManager {
     }
 
     pub fn send(&mut self, buffer: Vec<u8>) {
-        self.serial.write(&buffer);
+        match self.serial.write(&buffer) {
+             Ok(_) => {},
+             Err(e) => {error!("{}", e);},
+        }
     }
 
     fn start(&self) {
@@ -195,13 +198,13 @@ impl SerialManager {
                                         None => {},
                                     };
                                 },
-                                Err(e) => eprintln!("{:?}", e),
+                                Err(e) => error!("{:?}", e),
                             }
                         }
                     }
                     Err(ref e) if e.kind() == io::ErrorKind::TimedOut => (),
                     Err(ref e) if e.kind() == io::ErrorKind::BrokenPipe => {
-                        println!("Close {}", serial.name().unwrap());
+                        debug!("Close {}", serial.name().unwrap());
                         match opened_serial_port.lock() {
                              Ok(mut list) => {
                                  list.iter().position(|x| x.name() == serial.name().unwrap()).map(|e| list.remove(e));
@@ -211,7 +214,7 @@ impl SerialManager {
                              Err(_) => {},
                         }
                     },
-                    Err(e) => eprintln!("{:?}", e),
+                    Err(e) => error!("{:?}", e),
                 }
             }
         });
@@ -239,12 +242,12 @@ fn find_serial_port(com: &mut ComInstance, opened_serial_port: &mut Arc<Mutex<Ve
 
                     match serialport::open_with_settings(&p.port_name, &settings) {
                         Ok(port) => {
-                            println!("Open {}", &p.port_name);
+                            debug!("Open {}", &p.port_name);
                             let port = SerialManager::new(com.clone(), port, opened_serial_port.clone());
                             list.push(Box::new(port));
                         },
                         Err(e) => {
-                            eprintln!(
+                            error!(
                                 "Failed to open \"{}\". Error: {}",
                                 p.port_name,
                                 e
@@ -270,7 +273,6 @@ fn write_thread(com: ComInstance, opened_serial_port: Arc<Mutex<Vec<Box<SerialMa
             let mut instance = node.lock().unwrap();
             
             while let Some(frame) = instance.pop_tx_queue() {
-                println!("SERIAL WRITE: {:?}", frame);
                 match opened_serial_port.lock() {
                     Ok(mut list) => { 
                         for port in list.iter_mut() {
@@ -278,7 +280,7 @@ fn write_thread(com: ComInstance, opened_serial_port: Arc<Mutex<Vec<Box<SerialMa
                         }
                     },
                     Err(e) => {
-                        eprintln!("Error: {}", e);
+                        error!("Error: {}", e);
                     },
                 }
             }

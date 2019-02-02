@@ -53,6 +53,7 @@ pub struct NodeInfo {
     pub git: Option<u32>,
     pub hard_version: Option<String>,
     pub name: Option<String>,
+    pub uid: Option<String>,
 
     last_stamp : SystemTime,
     last_node_info : SystemTime,
@@ -71,6 +72,7 @@ impl NodeInfo {
             git: None,
             hard_version: None,
             name: None,
+            uid: None,
         }
     }
 
@@ -88,10 +90,38 @@ impl NodeInfo {
 
     pub fn check_offline(&mut self) {
         if self.last_stamp.elapsed().unwrap() > Duration::from_secs(3) && self.uptime_sec.is_some() {
-            self.uptime_sec = None;
-            self.health = None;
-            self.mode = Some(NodeInfoMode::Offline);
+            self.set_offline();
         }
+    }
+
+    pub fn set_offline(&mut self) {
+        self.uptime_sec = None;
+        self.health = None;
+        self.mode = Some(NodeInfoMode::Offline);
+    }
+
+    pub fn check_id(&mut self, auto_assign_id: bool) -> bool {
+        if self.id == 127 {
+            if auto_assign_id {
+                true
+            }
+            else {
+                warn!("Found board with id 127 but com.asign_id is false");
+                false
+            }
+        }
+        else {
+            false
+        }
+    }
+
+    pub fn can_assign_id(&self) -> bool {
+        if let Some(uptime) = self.uptime_sec {
+            if uptime > 5 && self.uid.is_some() {
+                return true
+            }
+        }
+        false
     }
 }
 

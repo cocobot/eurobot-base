@@ -131,6 +131,18 @@ impl<'a> RxTransfer<'a> {
         Some(r)
     }
 
+    pub fn decode_scalar_i16(&self, offset: &mut usize, size: u8) -> Option<i16> {
+        unimplemented!();
+    }
+
+    pub fn decode_scalar_i32(&self, offset: &mut usize, size: u8) -> Option<i32> {
+        unimplemented!();
+    }
+
+    pub fn decode_scalar_i64(&self, offset: &mut usize, size: u8) -> Option<i64> {
+        unimplemented!();
+    }
+
     pub fn decode_scalar_u64(&self, offset: &mut usize, size: u8) -> Option<u64> {
         let mut r = 0;
         let mut i = 0;
@@ -156,6 +168,10 @@ impl<'a> RxTransfer<'a> {
         unimplemented!();
     }
 
+    pub fn decode_scalar_f32(&self, offset: &mut usize, size: u8) -> Option<f32> {
+        unimplemented!();
+    }
+
     pub fn get_payload_len(&self) -> u8 {
          self.payload_len
     }
@@ -166,19 +182,65 @@ impl<'a> RxTransfer<'a> {
 }
 
 pub fn encode_scalar_u8(buffer: &mut Vec<u8>, offset: usize, size: usize, value: u8) {
-    unimplemented!();
+    for i in 0..size {
+        let idx = (i + offset) / 8; 
+        while buffer.len() <= idx {
+             buffer.push(0);
+        }
+        buffer[idx] |= value & (1 << i);
+    }
 }
 
 pub fn encode_scalar_u16(buffer: &mut Vec<u8>, offset: usize, size: usize, value: u16) {
-    unimplemented!();
+    let mut size = size;
+    let mut value = value;
+    while size > 0 {
+        let mut to_write = size;
+        if to_write > 8 {
+             to_write = 8;
+        }
+        encode_scalar_u8(buffer, offset, to_write, (value & 0xFF) as u8);
+        size -= to_write;
+        value >>= to_write;
+    }
 }
 
 pub fn encode_scalar_u32(buffer: &mut Vec<u8>, offset: usize, size: usize, value: u32) {
     unimplemented!();
 }
 
-pub fn encode_scalar_u64(buffer: &mut Vec<u8>, offset: usize, size: usize, value: u64) {
+pub fn encode_scalar_f32(buffer: &mut Vec<u8>, offset: usize, size: usize, value: f32) {
     unimplemented!();
+}
+
+pub fn encode_scalar_i16(buffer: &mut Vec<u8>, offset: usize, size: usize, value: i16) {
+    unimplemented!();
+}
+
+pub fn encode_scalar_i32(buffer: &mut Vec<u8>, offset: usize, size: usize, value: i32) {
+    unimplemented!();
+}
+
+pub fn encode_scalar_i64(buffer: &mut Vec<u8>, offset: usize, size: usize, value: i64) {
+    encode_scalar_u64(buffer, offset, size, value as u64);
+}
+
+
+
+pub fn encode_scalar_u64(buffer: &mut Vec<u8>, offset: usize, size: usize, value: u64) {
+    let mut size = size;
+    let mut value = value;
+    let mut offset = offset;
+    while size > 0 {
+        let mut to_write = size;
+        if to_write > 8 {
+             to_write = 8;
+        }
+        encode_scalar_u8(buffer, offset, to_write, (value & 0xFF) as u8);
+        offset += to_write;
+        size -= to_write;
+        value >>= to_write;
+    }
 }
 
 pub fn encode_scalar_bool(buffer: &mut Vec<u8>, offset: usize, size: usize, value: bool) {
@@ -292,7 +354,7 @@ impl CANFrame {
 
 impl Ord for CANFrame {
     fn cmp(&self, other: &CANFrame) -> Ordering {
-        self.id.cmp(&other.get_id()).reverse()
+        self.id.cmp(&other.get_id())
     }
 }
 
@@ -801,63 +863,54 @@ impl<T: Node<U>, U> Instance<T, U> {
 
     fn enqueue_tx_frames(&mut self, can_id: u32, transfer_id: &mut u8, crc: u16, payload: &[u8]) {
 
-    if payload.len() < CANFrame::CAN_FRAME_MAX_DATA_LEN {                      // Single frame transfer
-        let id = can_id | CAN_FRAME_EFF;
-        let data_len = (payload.len() + 1) as u8;
-        let mut data = [0; CANFrame::CAN_FRAME_MAX_DATA_LEN];
-        for i in 0..payload.len() {
-            data[i] = payload[i];
+        if payload.len() < CANFrame::CAN_FRAME_MAX_DATA_LEN {                      // Single frame transfer
+            let id = can_id | CAN_FRAME_EFF;
+            let data_len = (payload.len() + 1) as u8;
+            let mut data = [0; CANFrame::CAN_FRAME_MAX_DATA_LEN];
+            for i in 0..payload.len() {
+                data[i] = payload[i];
+            }
+            data[payload.len()] = 0xC0 | (*transfer_id & 31);
+
+            let frame = CANFrame::new(id, data, data_len);
+            self.queue.push(frame);
         }
-        data[payload.len()] = 0xC0 | (*transfer_id & 31);
+        else {                                                                  // Multi frame transfer
+            let mut data_index = 0;
+            let mut toggle = 0;
+            let mut sot_eot = 0x80;
 
-        let frame = CANFrame::new(id, data, data_len);
-        self.queue.push(frame);
-    }
-    else {                                                                  // Multi frame transfer
-        unimplemented!();
-    //    uint16_t data_index = 0;
-    //    uint8_t toggle = 0;
-    //    uint8_t sot_eot = 0x80;
+            while payload.len() - data_index != 0 {
+                let mut data = [0; CANFrame::CAN_FRAME_MAX_DATA_LEN];
 
-    //    CanardTxQueueItem* queue_item = NULL;
+                let mut i = 0;
+                if data_index == 0 {
+                    // add crc
+                    data[0] = (crc) as u8;
+                    data[1] = (crc >> 8) as u8;
+                    i = 2;
+                }
+                else {
+                    i = 0;
+                }
 
-    //    while (payload_len - data_index != 0)
-    //    {
-    //        queue_item = createTxItem(&ins->allocator);
-    //        if (queue_item == NULL)
-    //        {
-    //            return -CANARD_ERROR_OUT_OF_MEMORY;          // TODO: Purge all frames enqueued so far
-    //        }
+                while (i < (CANFrame::CAN_FRAME_MAX_DATA_LEN - 1) && data_index < payload.len()) {
+                    data[i] = payload[data_index];
+                    i += 1;
+                    data_index += 1;
+                }
+                // tail byte
+                if data_index == payload.len() {
+                    sot_eot = 0x40;
+                }
 
-    //        uint8_t i = 0;
-    //        if (data_index == 0)
-    //        {
-    //            // add crc
-    //            queue_item->frame.data[0] = (uint8_t) (crc);
-    //            queue_item->frame.data[1] = (uint8_t) (crc >> 8U);
-    //            i = 2;
-    //        }
-    //        else
-    //        {
-    //            i = 0;
-    //        }
+                data[i] = sot_eot | (toggle << 5) | (*transfer_id & 31);
+                let frame = CANFrame::new(can_id | CAN_FRAME_EFF, data, (i + 1) as u8);
+                self.queue.push(frame);
 
-    //        for (; i < (CANARD_CAN_FRAME_MAX_DATA_LEN - 1) && data_index < payload_len; i++, data_index++)
-    //        {
-    //            queue_item->frame.data[i] = payload[data_index];
-    //        }
-    //        // tail byte
-    //        sot_eot = (data_index == payload_len) ? (uint8_t)0x40 : sot_eot;
-
-    //        queue_item->frame.data[i] = (uint8_t)(sot_eot | ((uint32_t)toggle << 5U) | ((uint32_t)*transfer_id & 31U));
-    //        queue_item->frame.id = can_id | CANARD_CAN_FRAME_EFF;
-    //        queue_item->frame.data_len = (uint8_t)(i + 1);
-    //        pushTxQueue(ins, queue_item);
-
-    //        result++;
-    //        toggle ^= 1;
-    //        sot_eot = 0;
-    //    }
-    }
+                toggle ^= 1;
+                sot_eot = 0;
+            }
+        }
     }
 }
