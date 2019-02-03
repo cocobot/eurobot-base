@@ -434,9 +434,7 @@ uint64_t cocobot_com_process_event(void)
 
 
 #ifdef CONFIG_LIBCOCOBOT_COM_CAN
-    uprintf("PRE TRANS CAN\r\n");
     tx_res = canardSTM32Transmit(txf);
-    uprintf("POST TRANS CAN\r\n");
     if (tx_res < 0)
     {
       // Failure - drop the frame
@@ -459,9 +457,7 @@ uint64_t cocobot_com_process_event(void)
 
 #ifdef CONFIG_LIBCOCOBOT_COM_CAN
   //Receiving
-  uprintf("PRE RECV CAN\r\n");
   rx_res = canardSTM32Receive(&rx_frame);
-  uprintf("POST RECV CAN\r\n");
   if (rx_res < 0)
   {
     // Failure - report
@@ -536,24 +532,11 @@ uint64_t cocobot_com_process_event(void)
 
 void cocobot_com_init(void)
 {
-  mcual_usart_send(PLATFORM_USART_DEBUG, '1');
   // |°< coin coin !
   canardInit(&_canard, _canard_memory_pool, sizeof(_canard_memory_pool), cocobot_com_on_transfer_received, cocobot_com_should_accept_transfert, NULL);
-  mcual_usart_send(PLATFORM_USART_DEBUG, '2');
-
-#ifdef CONFIG_LIBCOCOBOT_COM_CAN
-  mcual_usart_send(PLATFORM_USART_DEBUG, '3');
-	CanardSTM32CANTimings canbus_timings;
-	canardSTM32ComputeCANTimings(mcual_clock_get_frequency_Hz(MCUAL_CLOCK_PERIPHERAL_1), 500000, &canbus_timings);
-
-	canardSTM32Init(&canbus_timings, CanardSTM32IfaceModeNormal);
-  mcual_usart_send(PLATFORM_USART_DEBUG, '4');
-#endif
 
 #ifdef CONFIG_LIBCOCOBOT_COM_USART
-  mcual_usart_send(PLATFORM_USART_DEBUG, '5');
   mcual_usart_init(PLATFORM_USART_USER, 115200);
-  mcual_usart_send(PLATFORM_USART_DEBUG, '6');
 #endif
 
 #ifdef CONFIG_LIBCOCOBOT_COM_RF
@@ -571,14 +554,21 @@ void cocobot_com_init(void)
   _last_timer_ticks = 0;
   _timestamp_us = 0;
   _next_1hz_service_at = 0;
-  mcual_usart_send(PLATFORM_USART_DEBUG, '7');
   mcual_timer_init(CONFIG_LIBCOCOBOT_COM_TIMER, -1000000);
-  mcual_usart_send(PLATFORM_USART_DEBUG, '8');
 }
 
 #ifdef CONFIG_OS_USE_FREERTOS
 static void cocobot_com_thread(void * arg)
 {
+
+#ifdef CONFIG_LIBCOCOBOT_COM_CAN
+  RCC->APB1ENR |= RCC_APB1ENR_CAN1EN;
+	CanardSTM32CANTimings canbus_timings;
+	canardSTM32ComputeCANTimings(mcual_clock_get_frequency_Hz(MCUAL_CLOCK_PERIPHERAL_1), 500000, &canbus_timings);
+
+	canardSTM32Init(&canbus_timings, CanardSTM32IfaceModeNormal);
+#endif
+
   (void)arg;
   for(;;)
   {

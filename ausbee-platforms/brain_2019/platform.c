@@ -30,18 +30,6 @@ void platform_init(void)
 #endif
 #endif
   
-  //init uart dbg pins
-  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN9, MCUAL_GPIO_OUTPUT);
-  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN10, MCUAL_GPIO_INPUT);
-#ifdef CONFIG_MCUAL_USART
-  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN9, 7);
-  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN10, 7);
-  mcual_usart_init(PLATFORM_USART_DEBUG, 115200);
-  mcual_usart_send(PLATFORM_USART_DEBUG, 'Z');
-#endif
-  mcual_usart_send(PLATFORM_USART_DEBUG, 'Y');
-
-
   //init clock
   mcual_clock_init(MCUAL_CLOCK_SOURCE_INTERNAL, PLATFORM_MAIN_CLOCK_KHZ); 
   
@@ -68,7 +56,6 @@ void platform_init(void)
 
   mcual_timer_init_encoder(MCUAL_TIMER2); 
   mcual_timer_init_encoder(MCUAL_TIMER5); 
-
   //init uart dbg pins
   mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN9, MCUAL_GPIO_OUTPUT);
   mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN10, MCUAL_GPIO_INPUT);
@@ -76,10 +63,8 @@ void platform_init(void)
   mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN9, 7);
   mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN10, 7);
   mcual_usart_init(PLATFORM_USART_DEBUG, 115200);
-  mcual_usart_send(PLATFORM_USART_DEBUG, 'Z');
 #endif
-  mcual_usart_send(PLATFORM_USART_DEBUG, 'Y');
-
+  
   //init adc
   mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN0, MCUAL_GPIO_INPUT);
 #ifdef CONFIG_MCUAL_ADC
@@ -120,7 +105,6 @@ void platform_init(void)
   mcual_gpio_set_output_type(MCUAL_GPIOB, MCUAL_GPIO_PIN7, MCUAL_GPIO_OPEN_DRAIN);
   mcual_i2c_master_init(MCUAL_I2C1, 100000);
 #endif
-  mcual_usart_send(PLATFORM_USART_DEBUG, 'W');
 }
 
 void platform_led_toggle(uint8_t led)
