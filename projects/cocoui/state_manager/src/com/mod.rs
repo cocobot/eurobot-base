@@ -28,6 +28,7 @@ impl ComHandler {
 
 impl Node<ComInstance> for ComHandler {
     fn should_accept_transfer(&self, _com: &ComInstance, data_type_signature: &mut u64, data_type_id: u16, _transfer_type : TransferType, _source_node_id: u8) -> bool {
+        debug!("xfer: {}", _source_node_id);
         if dsdl::uavcan::protocol::NodeStatus::check_id(data_type_id) {
             dsdl::uavcan::protocol::NodeStatus::set_signature(data_type_signature);
             true

@@ -174,6 +174,7 @@ static void cocobot_com_on_transfer_received(CanardInstance* ins,
     gsr.name.len = 0;
 
     uint8_t * pdynbuf = &_internal_buffer[0];
+    uint8_t reboot = 0;
     if(uavcan_protocol_param_GetSetRequest_decode(transfer, transfer->payload_len, &reqgsr, &pdynbuf) >= 0)
     {
       if(strcmp((char *)reqgsr.name.data, "ID") == 0)
@@ -183,6 +184,7 @@ static void cocobot_com_on_transfer_received(CanardInstance* ins,
         gsr.value.integer_value = reqgsr.value.integer_value;
         gsr.name.len = reqgsr.name.len;
         gsr.name.data = reqgsr.name.data;
+        reboot = 1;
       }
     }
     canardReleaseRxTransferPayload(ins, transfer);
@@ -199,6 +201,10 @@ static void cocobot_com_on_transfer_received(CanardInstance* ins,
                                    &_internal_buffer[0],
                                    (uint16_t)size);
     
+    if(reboot)
+    {
+      mcual_bootloader();
+    }
     return;
   }
 
@@ -390,7 +396,11 @@ void cocobot_com_retransmit(const CanardCANFrame * rx_frame, cocobot_com_source_
 uint64_t cocobot_com_process_event(void)
 {
   uint32_t ticks = mcual_timer_get_value(CONFIG_LIBCOCOBOT_COM_TIMER);
+#if CONFIG_LIBCOCOBOT_COM_TIMER == 1
+  uint16_t delta = ticks - _last_timer_ticks;
+#else
   uint32_t delta = ticks - _last_timer_ticks;
+#endif
   _last_timer_ticks = ticks;
   
   _timestamp_us += ((uint64_t)delta);
@@ -546,6 +556,16 @@ void cocobot_com_init(void)
 #ifdef CONFIG_OS_USE_FREERTOS
   //create mutex
   _mutex = xSemaphoreCreateMutex();
+#endif
+
+#ifndef CONFIG_OS_USE_FREERTOS
+#ifdef CONFIG_LIBCOCOBOT_COM_CAN
+  RCC->APB1ENR |= RCC_APB1ENR_CAN1EN;
+	CanardSTM32CANTimings canbus_timings;
+	canardSTM32ComputeCANTimings(mcual_clock_get_frequency_Hz(MCUAL_CLOCK_PERIPHERAL_1), 500000, &canbus_timings);
+
+	canardSTM32Init(&canbus_timings, CanardSTM32IfaceModeNormal);
+#endif
 #endif
 
   volatile uint32_t * ptr = (uint32_t *)&_canard_id;

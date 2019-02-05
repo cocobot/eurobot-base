@@ -57,6 +57,7 @@ pub struct NodeInfo {
 
     last_stamp : SystemTime,
     last_node_info : SystemTime,
+    assigned : bool,
 }
 
 impl NodeInfo {
@@ -73,6 +74,7 @@ impl NodeInfo {
             hard_version: None,
             name: None,
             uid: None,
+            assigned: false,
         }
     }
 
@@ -117,11 +119,25 @@ impl NodeInfo {
 
     pub fn can_assign_id(&self) -> bool {
         if let Some(uptime) = self.uptime_sec {
-            if uptime > 5 && self.uid.is_some() {
+            if uptime > 5 && self.uid.is_some() & !self.assigned {
                 return true
             }
         }
         false
     }
+
+    pub fn set_assigned(&mut self) {
+         self.assigned = true;
+    }
+
+    pub fn need_restart(&self) -> bool {
+        if let Some(uptime) = self.uptime_sec {
+            if uptime > 10 && self.uid.is_some() && self.id == 127 {
+                return true
+            }
+        }
+        false
+    }
+
 }
 

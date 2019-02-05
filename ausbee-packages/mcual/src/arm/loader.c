@@ -71,6 +71,7 @@ void mcual_loader_flash_pgm(uint32_t offset, uint8_t * data, uint32_t size)
 __attribute__ ((__section__(".data")))
 void mcual_loader_flash_byte(uint32_t offset, uint8_t data)
 {
+  __disable_irq();
   FLASH->CR |= FLASH_CR_LOCK;
   FLASH->KEYR = 0x45670123;
   FLASH->KEYR = 0xCDEF89AB;
@@ -86,8 +87,7 @@ void mcual_loader_flash_byte(uint32_t offset, uint8_t data)
 
   //clean up register
   FLASH->CR = 0;
-  FLASH->CR |= FLASH_CR_LOCK;
-  FLASH->KEYR = 0;
+  __enable_irq();
 }
 
 #endif

@@ -84,8 +84,7 @@ impl StateManager {
                                  found = true;
                                  let mut com = com.lock().unwrap();
                                  com.message(Msg::Set {node_id: n.id, name: "ID".to_string(), value: QValue::I64(b.id as i64)});
-                                 com.message(Msg::Restart {node_id: n.id});
-                                 n.set_offline();
+                                 n.set_assigned();
                                  info!("Set new board id to {}", b.id);
                                  break;
                             }
@@ -93,6 +92,12 @@ impl StateManager {
                         if !found {
                             warn!("No board definition for {}", n.uid.as_ref().unwrap());
                         }
+                    }
+                   if n.need_restart() {
+                       let mut com = com.lock().unwrap();
+                       //com.message(Msg::Restart {node_id: n.id});
+                       //n.set_offline();
+                       info!("Resert board {}", n.id);
                     }
                 }
 
@@ -131,6 +136,5 @@ impl StateManager {
         node.hard_version = Some(format!("{}.{}", info.hardware_version.major, info.hardware_version.minor));
         node.uid = Some(format!("{:02X}", info.hardware_version.unique_id.as_hex()));
         node.name = Some(std::str::from_utf8(&info.name).unwrap().to_string());
-        debug!("{:?}", info);
     }
 }
