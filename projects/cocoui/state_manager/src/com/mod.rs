@@ -90,7 +90,7 @@ impl Com {
     }
 }
 
-pub fn init(node_id: u8, state_manager: StateManagerInstance) {
+pub fn init(node_id: u8, state_manager: StateManagerInstance, simulation: bool) {
     let com = Arc::new(Mutex::new(Com::new(state_manager)));
     let mut node = Instance::init(ComHandler::new(), com.clone());
     node.set_local_node_id(node_id);
@@ -102,5 +102,7 @@ pub fn init(node_id: u8, state_manager: StateManagerInstance) {
     StateManager::start(mcom.get_state_manager_mut().clone(), com_cpy);
     drop(mcom);
 
-    serial::init(com.clone());
+    if !simulation {
+        serial::init(com.clone());
+    }
 }

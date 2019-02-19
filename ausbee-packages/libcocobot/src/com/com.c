@@ -225,6 +225,8 @@ static bool cocobot_com_should_accept_transfert(const CanardInstance* ins,
                                                 uint8_t source_node_id)
 {
   (void)ins;
+  (void)source_node_id;
+
   //Accept node info
   if ((transfer_type == CanardTransferTypeRequest) &&
       (data_type_id == UAVCAN_PROTOCOL_GETNODEINFO_ID))
@@ -444,7 +446,21 @@ uint64_t cocobot_com_process_event(void)
 
 
 #ifdef CONFIG_LIBCOCOBOT_COM_CAN
+#ifdef AUSBEE_SIM
+    printf("[CAN]%04X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\n",
+           txf->id & 0xFFFF,
+           txf->data_len,
+           txf->data[0],
+           txf->data[1],
+           txf->data[2],
+           txf->data[3],
+           txf->data[4],
+           txf->data[5],
+           txf->data[6],
+           txf->data[7]);
+#else
     tx_res = canardSTM32Transmit(txf);
+#endif
     if (tx_res < 0)
     {
       // Failure - drop the frame
@@ -467,7 +483,11 @@ uint64_t cocobot_com_process_event(void)
 
 #ifdef CONFIG_LIBCOCOBOT_COM_CAN
   //Receiving
+#ifdef AUSBEE_SIM
+  rx_res = 0;
+#else
   rx_res = canardSTM32Receive(&rx_frame);
+#endif
   if (rx_res < 0)
   {
     // Failure - report
@@ -515,6 +535,7 @@ uint64_t cocobot_com_process_event(void)
 
   if (_timestamp_us >= _next_1hz_service_at)
   {
+    platform_led_toggle(1);
     _next_1hz_service_at = _timestamp_us + 1000000;
 
     //clean up every seconds 
@@ -582,17 +603,22 @@ static void cocobot_com_thread(void * arg)
 {
 
 #ifdef CONFIG_LIBCOCOBOT_COM_CAN
+#ifndef AUSBEE_SIM
   RCC->APB1ENR |= RCC_APB1ENR_CAN1EN;
 	CanardSTM32CANTimings canbus_timings;
 	canardSTM32ComputeCANTimings(mcual_clock_get_frequency_Hz(MCUAL_CLOCK_PERIPHERAL_1), 500000, &canbus_timings);
 
 	canardSTM32Init(&canbus_timings, CanardSTM32IfaceModeNormal);
 #endif
+#endif
 
   (void)arg;
   for(;;)
   {
     cocobot_com_process_event();
+#ifdef AUSBEE_SIM
+    vTaskDelay(20 / portTICK_PERIOD_MS);
+#endif
   }
 }
 
@@ -674,6 +700,7 @@ void cocobot_com_release_rx_transfer_payload(CanardRxTransfer* transfer)
 }
 
 //canard stm32 compat
+#ifndef AUSBEE_SIM
 int usleep(useconds_t usec)
 {
 #ifdef CONFIG_OS_USE_FREERTOS
@@ -685,5 +712,6 @@ int usleep(useconds_t usec)
 
   return 0;
 }
+#endif
 
 #endif

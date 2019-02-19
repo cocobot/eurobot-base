@@ -320,6 +320,7 @@ int cocobot_position_handle_console(char * command)
 }
 */
 
+#if 0
 void cocobot_position_handle_async_com(void)
 {
   cocobot_com_send(COCOBOT_COM_POSITION_DEBUG_PID,
@@ -329,6 +330,7 @@ void cocobot_position_handle_async_com(void)
                    (double)cocobot_position_get_angle()
                   );
 }
+#endif
 
 void cocobot_position_set_x(float x)
 {

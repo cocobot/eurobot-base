@@ -1,4 +1,21 @@
 #include <mcual.h>
+
+
+void mcual_arch_init(void)
+{
+  printf("[RUN]\n");
+}
+
+void mcual_get_unique_id(uint8_t buffer[12])
+{
+  (void)buffer;
+}
+
+void mcual_bootloader(void)
+{
+}
+
+#if 0
 #include <errno.h>
 #include <sys/time.h>
 #include <pthread.h>
@@ -271,3 +288,4 @@ void mcual_bootloader(void)
   //restart
   execv(_argv[0], _argv);
 }
+#endif

@@ -117,7 +117,7 @@ void cocobot_pathfinder_add_to_list(cocobot_list_s *list, cocobot_node_s *node)
         }
         else
         {
-            cocobot_com_printf("ADD: Cost is too big : cost :%f", (double)node->cost);
+            //cocobot_com_printf("ADD: Cost is too big : cost :%f", (double)node->cost);
             //TBD
             //Cost is too big, not added in list --> not supposed to happen, take a list size big enough
         }
@@ -157,7 +157,7 @@ int cocobot_pathfinder_remove_from_list(cocobot_list_s *list, cocobot_node_s *no
 void cocobot_pathfinder_set_target_node(cocobot_node_s *target_node)
 {
     memcpy(&g_target_node, target_node, sizeof(cocobot_node_s));
-    cocobot_com_printf("TARGET_NODE: x=%d, y=%d, nodeType = %x", g_target_node.x, g_target_node.y, g_target_node.nodeType);
+    //cocobot_com_printf("TARGET_NODE: x=%d, y=%d, nodeType = %x", g_target_node.x, g_target_node.y, g_target_node.nodeType);
 }
 
 void cocobot_pathfinder_save_real_target_node(int16_t x, int16_t y)
@@ -169,13 +169,13 @@ void cocobot_pathfinder_save_real_target_node(int16_t x, int16_t y)
 void cocobot_pathfinder_set_start_node(cocobot_node_s *start_node)
 {
     memcpy(&g_start_node, start_node, sizeof(cocobot_node_s));
-    cocobot_com_printf("PATHFINDER_STARTING_NODE x=%d, y=%d", g_start_node.x, g_start_node.y);
+    //cocobot_com_printf("PATHFINDER_STARTING_NODE x=%d, y=%d", g_start_node.x, g_start_node.y);
 }
 
 void cocobot_pathfinder_set_real_start_node(cocobot_node_s *start_node)
 {
     memcpy(&g_real_start_node, start_node, sizeof(cocobot_node_s));
-    cocobot_com_printf("REAL_STARTING_NODE x=%d, y=%d", g_real_start_node.x, g_real_start_node.y);
+    //cocobot_com_printf("REAL_STARTING_NODE x=%d, y=%d", g_real_start_node.x, g_real_start_node.y);
 }
 
 void cocobot_pathfinder_get_path(cocobot_node_s *final_node, cocobot_node_s table[][TABLE_WIDTH/GRID_SIZE], cocobot_trajectory_s* trajectory)
@@ -226,7 +226,7 @@ void cocobot_pathfinder_set_trajectory(cocobot_trajectory_final_s * resultTraj)
         final_point.y = g_start_node.y;
         point = cocobot_pathfinder_get_real_coordinate(final_point);
         cocobot_trajectory_goto_xy(point.x, point.y, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-        cocobot_com_printf("LINEAR_PATH first point: x=%d (x=%d), y=%d (y=%d)", point.x, final_point.x, point.y, final_point.y);
+        //cocobot_com_printf("LINEAR_PATH first point: x=%d (x=%d), y=%d (y=%d)", point.x, final_point.x, point.y, final_point.y);
     }
             
 
@@ -237,12 +237,12 @@ void cocobot_pathfinder_set_trajectory(cocobot_trajectory_final_s * resultTraj)
         {
             point = cocobot_pathfinder_get_real_coordinate(resultTraj->trajectory[i]);
             cocobot_trajectory_goto_xy(point.x, point.y, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-            cocobot_com_printf("LINEAR_PATH: x=%d (x=%d), y=%d (y=%d)", point.x, resultTraj->trajectory[i].x, point.y, resultTraj->trajectory[i].y);
+            //cocobot_com_printf("LINEAR_PATH: x=%d (x=%d), y=%d (y=%d)", point.x, resultTraj->trajectory[i].x, point.y, resultTraj->trajectory[i].y);
         }
     }
     //Last point
     cocobot_trajectory_goto_xy(g_real_target_point.x, g_real_target_point.y, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-    cocobot_com_printf("LINEAR_PATH: x=%d, y=%d", g_real_target_point.x, g_real_target_point.y);
+    //cocobot_com_printf("LINEAR_PATH: x=%d, y=%d", g_real_target_point.x, g_real_target_point.y);
 
 }
 

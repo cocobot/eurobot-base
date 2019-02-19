@@ -1,5 +1,5 @@
 #include <include/generated/autoconf.h>
-#ifdef CONFIG_LIBCOCOBOT_ASSERV
+#ifdef CONFIG_LIBCOCOBOT_LCD
 
 #include <FreeRTOS.h>
 #include <task.h>

@@ -100,6 +100,7 @@ impl NodeInfo {
         self.uptime_sec = None;
         self.health = None;
         self.mode = Some(NodeInfoMode::Offline);
+        self.assigned = false;
     }
 
     pub fn check_id(&mut self, auto_assign_id: bool) -> bool {
@@ -119,7 +120,7 @@ impl NodeInfo {
 
     pub fn can_assign_id(&self) -> bool {
         if let Some(uptime) = self.uptime_sec {
-            if uptime > 5 && self.uid.is_some() & !self.assigned {
+            if uptime > 5 && self.uid.is_some() && !self.assigned {
                 return true
             }
         }
@@ -129,15 +130,5 @@ impl NodeInfo {
     pub fn set_assigned(&mut self) {
          self.assigned = true;
     }
-
-    pub fn need_restart(&self) -> bool {
-        if let Some(uptime) = self.uptime_sec {
-            if uptime > 10 && self.uid.is_some() && self.id == 127 {
-                return true
-            }
-        }
-        false
-    }
-
 }
 

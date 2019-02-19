@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <mcual.h>
 #include <FreeRTOS.h>
 #include <task.h>
@@ -136,7 +137,7 @@ void mcual_usart_init(mcual_usart_id_t usart_id, uint32_t baudrate)
 
 void mcual_usart_send(mcual_usart_id_t usart_id, uint8_t byte)
 {
-  mcual_arch_sim_handle_uart_peripheral_write(usart_id, byte);
+  printf("[USART]%d:%X\n", usart_id, byte);
 }
 
 void mcual_usart_recv_from_network(mcual_usart_id_t usart_id, uint8_t byte)

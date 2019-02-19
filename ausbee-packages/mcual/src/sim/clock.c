@@ -10,7 +10,7 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
   _freq_Hz = target_freq_kHz;
 
   //create thread for simulated peripherals
-  mcual_arch_sim_init_peripherals();
+  mcual_arch_init();
 }
 
 uint32_t mcual_clock_get_frequency_Hz(mcual_clock_id_t clock_id)

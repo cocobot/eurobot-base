@@ -59,6 +59,7 @@ macro_rules! config {
 pub struct Board {
     pub id: u8,
     pub uid: String,
+    pub path: Option<String>,
 }
 
 config!(com {

@@ -27,7 +27,7 @@ static void cocobot_pathfinder_set_other_robot()
 uint16_t cocobot_pathfinder_execute(int16_t starting_point_x, int16_t starting_point_y, int16_t target_point_x, int16_t target_point_y, cocobot_pathfinder_mode_e mode)
 {
     uint16_t time = 0xffff;
-    cocobot_com_printf("PATHFINDER: Start point:(%d, %d) Target Point:(%d, %d)", starting_point_x, starting_point_y, target_point_x, target_point_y);
+    //cocobot_com_printf("PATHFINDER: Start point:(%d, %d) Target Point:(%d, %d)", starting_point_x, starting_point_y, target_point_x, target_point_y);
 
     //Reset table and init the open list
     cocobot_pathfinder_reset_table(g_table);
@@ -48,7 +48,7 @@ uint16_t cocobot_pathfinder_execute(int16_t starting_point_x, int16_t starting_p
         //Set start and target point even if unreachable
         g_table[(starting_point_x + (TABLE_LENGTH / 2)) / GRID_SIZE][((TABLE_WIDTH / 2) - starting_point_y)/GRID_SIZE].nodeType |= START_POINT; 
         target_node->nodeType |= TARGET_POINT;
-        cocobot_com_printf("PATHFINDER: Target not reachable");
+        //cocobot_com_printf("PATHFINDER: Target not reachable");
         g_table_updated = 1;
         return DESTINATION_NOT_AVAILABLE;
     }
@@ -95,7 +95,7 @@ uint16_t cocobot_pathfinder_execute(int16_t starting_point_x, int16_t starting_p
         }
         else
         {
-            cocobot_com_printf("PATHFINDER: No solution");
+            //cocobot_com_printf("PATHFINDER: No solution");
             g_table_updated = 1;
             return NO_ROUTE_TO_TARGET;
         }
@@ -117,7 +117,7 @@ uint16_t cocobot_pathfinder_execute(int16_t starting_point_x, int16_t starting_p
     }
 
     time = cocobot_pathfinder_get_time(&g_resultTraj);
-    cocobot_com_printf("Trajectory duration: %dms", time);
+    //cocobot_com_printf("Trajectory duration: %dms", time);
     g_table_updated = 1;
     return time;
 }
@@ -157,6 +157,7 @@ void cocobot_pathfinder_init(cocobot_pathfinder_table_init_s * initTable)
     g_table_updated = 1;
 }
 
+#if 0
 void cocobot_pathfinder_handle_async_com(void)
 {
     if(g_table_updated)
@@ -175,4 +176,5 @@ void cocobot_pathfinder_handle_async_com(void)
                 );
     }
 }
+#endif
 #endif

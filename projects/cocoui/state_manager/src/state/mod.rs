@@ -93,12 +93,6 @@ impl StateManager {
                             warn!("No board definition for {}", n.uid.as_ref().unwrap());
                         }
                     }
-                   if n.need_restart() {
-                       let mut com = com.lock().unwrap();
-                       //com.message(Msg::Restart {node_id: n.id});
-                       //n.set_offline();
-                       info!("Resert board {}", n.id);
-                    }
                 }
 
                 drop(st);

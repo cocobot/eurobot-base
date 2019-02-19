@@ -10,7 +10,8 @@
 #define PLATFORM_LED0                 (1 << 0)
 
 #define PLATFORM_GPIO_STARTER         (1 << 0)
-#define PLATFORM_GPIO_EEPROM_WP       (1 << 0)
+#define PLATFORM_GPIO_COLOR           (1 << 1)
+#define PLATFORM_GPIO_EEPROM_WP       (1 << 2)
 
 #define PLATFORM_USART_DEBUG          MCUAL_USART1
 

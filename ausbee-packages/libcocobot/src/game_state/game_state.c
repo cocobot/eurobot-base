@@ -39,6 +39,7 @@ void cocobot_game_state_display_score(void)
     score /= 10;
   }
 
+#if 0
   for (j = 0; j < SCORE_DIGIT; j++)
   { 
     for (i = 0; i < 8; i++)
@@ -47,6 +48,7 @@ void cocobot_game_state_display_score(void)
     }
   }
   cocobot_shifters_update();
+#endif
 }
 
 void cocobot_game_state_add_points_to_score(int _toAdd)
@@ -63,7 +65,7 @@ void cocobot_game_state_set_score(int score)
 {
    _score = score;
 }
-
+#if 0
 void cocobot_game_state_handle_async_com(void)
 {
   TickType_t now = xTaskGetTickCount();
@@ -80,6 +82,7 @@ void cocobot_game_state_handle_async_com(void)
                     );
   }
 }
+#endif
 
 static void cocobot_game_state_match_ended_event(TimerHandle_t xTimer)
 {
