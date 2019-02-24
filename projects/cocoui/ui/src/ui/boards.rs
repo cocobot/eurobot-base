@@ -67,9 +67,12 @@ impl BoardsWindow {
                 let treeview = gtk::TreeView::new_with_model(&model);
                 treeview.set_hexpand(true);
                 treeview.set_vexpand(true);
+                treeview.set_search_column(-1);
                 window.add(&treeview);
 
                 window.show_all();
+
+                super::create_shortcuts(window.clone());
 
                 window.connect_delete_event(|_, _| {
                     BOARDS.with(|boards| {

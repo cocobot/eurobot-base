@@ -14,6 +14,7 @@
 #include "../com/dsdl/uavcan/protocol/file/BeginFirmwareUpdate.h"
 #include "../com/dsdl/uavcan/protocol/file/Read.h"
 
+
 typedef enum {
   LOADER_MODE_IDLE,
   LOADER_MODE_PRELOADING,
@@ -23,8 +24,6 @@ typedef enum {
 static loader_mode_t _mode;
 static uint8_t _request_id;
 static uint8_t  _src_node_id;
-static uint8_t * _path;
-static uint8_t _path_len;
 static uint64_t _offset;
 static uint8_t _read_transfer_id;
 static uint64_t _timestamp_us;
@@ -35,8 +34,8 @@ static void cocobot_loader_read(void)
   //fill the struct
   uavcan_protocol_file_ReadRequest rr;
   rr.offset = _offset;
-  rr.path.path.len = _path_len;
-  rr.path.path.data = _path;
+  rr.path.path.len = 0;
+  rr.path.path.data = NULL;
 
   //request flash memory if we have enough RAM
   void * buf = pvPortMalloc(UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_RESPONSE_MAX_SIZE); 
@@ -89,7 +88,6 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
       (transfer->data_type_id == UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_ID))
   {
     uavcan_protocol_file_BeginFirmwareUpdateResponse bfu; 
-    uavcan_protocol_file_BeginFirmwareUpdateRequest reqbfu; 
     void * dynbuf = NULL;
 
     bfu.optional_error_message.len = 0;
@@ -97,29 +95,8 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
 
     if(_mode == LOADER_MODE_IDLE)
     {
-      //Bootloader is idle. Try to get all informations
       _mode = LOADER_MODE_PRELOADING;
-      
-      //intialize response with an error by default
-      bfu.error = UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_RESPONSE_ERROR_UNKNOWN;
-
-      //get all informations
-      dynbuf = pvPortMalloc(UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_REQUEST_MAX_SIZE);
-      if(dynbuf != NULL)
-      {
-        uint8_t * pdynbuf = dynbuf;
-        if(uavcan_protocol_file_BeginFirmwareUpdateRequest_decode(transfer, 0, &reqbfu, &pdynbuf) >= 0)
-        {
-          //success, we have enough memory !
-          bfu.error = UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_RESPONSE_ERROR_OK;
-        }
-      }
-      
-      if(bfu.error != UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_RESPONSE_ERROR_OK)
-      {
-        //we didn't reach the success block. Cancel bootloading
-        _mode = LOADER_MODE_IDLE;
-      }
+      bfu.error = UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_RESPONSE_ERROR_OK;
     }
     else
     {
@@ -132,7 +109,8 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
 
     //send response if we have enough free memory 
     void * buf = pvPortMalloc(UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_RESPONSE_MAX_SIZE); 
-    if(buf != NULL) {
+    if(buf != NULL) 
+    {
       const uint32_t size = uavcan_protocol_file_BeginFirmwareUpdateResponse_encode(&bfu, buf);
       cocobot_com_request_or_respond(transfer->source_node_id,
                                      UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_SIGNATURE,
@@ -148,25 +126,12 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
 
     if(_mode == LOADER_MODE_PRELOADING)
     {
-      int i;
-
       //We are ready ! Time to announce it to everybody
       _mode = LOADER_MODE_LOADING;
       _last_activity_us = _timestamp_us;
       cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_SOFTWARE_UPDATE);
-      _path = pvPortMalloc(reqbfu.image_file_remote_path.path.len + 1);
       _offset = 0;
-      for(i = 0; i < reqbfu.image_file_remote_path.path.len; i += 1)
-      {
-        _path[i] = reqbfu.image_file_remote_path.path.data[i];
-      }
-      _path_len = reqbfu.image_file_remote_path.path.len;
-      _path[i] = 0;
-      _src_node_id = reqbfu.source_node_id;
-      if(_src_node_id == 0)
-      {
-        _src_node_id = transfer->source_node_id;
-      }
+      _src_node_id = transfer->source_node_id;
 
       mcual_loader_erase_pgm();
  
@@ -243,7 +208,6 @@ void cocobot_loader_init(void)
   //init static memory
   _mode = LOADER_MODE_IDLE;
   _request_id = 0;
-  _path = NULL;
   _offset = 0;
   _src_node_id = 0;
   _last_activity_us = 0;
@@ -271,7 +235,7 @@ void cocobot_loader_init(void)
       //2s and no request -> start pgm
       if(_timestamp_us > 2000000)
       {
-        mcual_loader_boot();
+   //     mcual_loader_boot();
       }
     }
   }

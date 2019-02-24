@@ -451,6 +451,7 @@ void mcual_usart_send(mcual_usart_id_t usart_id, uint8_t byte)
   int done = 0;
   while(!done)
   {
+
     done = 0;
     int32_t next_write = tx_buffer_write[usart_id] + 1;
 
@@ -459,21 +460,22 @@ void mcual_usart_send(mcual_usart_id_t usart_id, uint8_t byte)
       next_write = 0;
     }
 
-    __disable_irq();
     if(next_write != tx_buffer_read[usart_id])
     {
+      __disable_irq();
       volatile uint8_t * buffer = tx_buffer[usart_id];
       buffer[tx_buffer_write[usart_id]] = byte;
       tx_buffer_write[usart_id] = next_write;
       done = 1;
+      __enable_irq();
     }
     else
     {
       reg->CR1 |= USART_CR1_TXEIE;
     }
-    __enable_irq();
   }
 #endif
+
   reg->CR1 |= USART_CR1_TXEIE;
 }
 

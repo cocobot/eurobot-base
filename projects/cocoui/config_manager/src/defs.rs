@@ -5,7 +5,7 @@ macro_rules! config {
     => {
         pub mod $dest_name {
             use std::fs;
-            #[derive(Deserialize)]
+            #[derive(Deserialize, Debug)]
             struct Optional {
                 pub $( $attr_name : Option<$attr_type> ),*
             }
@@ -47,7 +47,7 @@ macro_rules! config {
                         None => Optional::empty(),
                     };
                     Config {
-                        $( $attr_name: global.$attr_name.unwrap_or(user.$attr_name.unwrap_or($attr_default)),)*
+                        $( $attr_name: user.$attr_name.unwrap_or(global.$attr_name.unwrap_or($attr_default)),)*
                     }
                 }
             }

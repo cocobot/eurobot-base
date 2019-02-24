@@ -31,6 +31,7 @@ pub type StateManagerInstance = Arc<Mutex<StateManager>>;
 pub struct StateManager {
     state: State,
     config: ConfigManagerInstance,
+    com: Option<super::com::ComInstance>,
 }
 
 impl StateManager {
@@ -38,13 +39,20 @@ impl StateManager {
         let sm = Arc::new(Mutex::new(StateManager {
             state: State::new(),
             config,
+            com: None,
         }));
         sm
+    }
+    
+    fn set_com_instance(&mut self, com: super::com::ComInstance)
+    {
+        self.com = Some(com);
     }
 
     pub fn start(state: StateManagerInstance, com: super::com::ComInstance) {
         thread::spawn(move || {
-            let istate = state.lock().unwrap();
+            let mut istate = state.lock().unwrap();
+            istate.set_com_instance(com.clone());
             let cnf = istate.config.clone();
             drop(istate);
             let auto_assign_id = cnf.lock().unwrap().com.auto_assign_id;
@@ -59,6 +67,7 @@ impl StateManager {
                 for (id, node) in st.nodes.iter_mut() {
                     if node.info_needed() {
                         let mut com = com.lock().unwrap();
+                        warn!("REQ nodeinfo: {}", *id);
                         com.message(Msg::GetNodeInfo {node_id: *id});
                         node.stamp_node_info();
                     }
@@ -120,6 +129,7 @@ impl StateManager {
     }
 
     pub fn set_node_info(&mut self, node_id: u8, info: dsdl::uavcan::protocol::GetNodeInfoResponse) {
+        error!("{:?}", info);
         let node = self.state.nodes.entry(node_id).or_insert(stype::NodeInfo::new(node_id));
         node.stamp();
         node.uptime_sec = Some(info.status.uptime_sec);
@@ -130,5 +140,49 @@ impl StateManager {
         node.hard_version = Some(format!("{}.{}", info.hardware_version.major, info.hardware_version.minor));
         node.uid = Some(format!("{:02X}", info.hardware_version.unique_id.as_hex()));
         node.name = Some(std::str::from_utf8(&info.name).unwrap().to_string());
+    }
+
+    pub fn command(&self, cmd: &str) {
+        let split : Vec<&str> = cmd.split(' ').collect();
+        debug!("plsit: {:?}", split);
+        if split.len() > 0 {
+            match split[0] {
+                "pgm" => {
+                    if split.len() > 1 {
+                        let id = split[1].to_string().parse::<u8>();
+                        match id  {
+                            Ok(id) => {
+                                self.com.as_ref().unwrap().lock().unwrap().message(Msg::Program {node_id: id});
+                            }
+                            _ => {
+                                warn!("bad pgm format '{}'", cmd); 
+                            }
+                        }
+                    }
+                    else {
+                        warn!("bad pgm format '{}'", cmd); 
+                    }
+                }
+                "restart" => {
+                    if split.len() > 1 {
+                        let id = split[1].to_string().parse::<u8>();
+                        match id {
+                            Ok(id) => {
+                                self.com.as_ref().unwrap().lock().unwrap().message(Msg::Restart {node_id: id});
+                            }
+                            _ => {
+                                warn!("bad pgm format '{}'", cmd); 
+                            }
+                        }
+                    }
+                    else {
+                        warn!("bad pgm format '{}'", cmd); 
+                    }
+                }
+                _ => { 
+                    warn!("bad command '{}'", cmd); 
+                }
+            }
+        }
     }
 }

@@ -256,6 +256,7 @@ uint8_t SpiritRadioInit(SRadioInit* pxSRadioInitStruct)
   s_assert_param(IS_FREQUENCY_BAND((pxSRadioInitStruct->lFrequencyBase + ((xtalOffsetFactor*s_lXtalFrequency)/FBASE_DIVIDER) + pxSRadioInitStruct->nChannelSpace * pxSRadioInitStruct->cChannelNumber)));  
   
   /* Calculates the datarate mantissa and exponent */
+  drM = 0;
   SpiritRadioSearchDatarateME(pxSRadioInitStruct->lDatarate, &drM, &drE);
   digRadioRegArray[0] = (uint8_t)(drM);
   digRadioRegArray[1] = (uint8_t)(0x00 | pxSRadioInitStruct->xModulationSelect |drE);

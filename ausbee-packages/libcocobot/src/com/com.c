@@ -23,20 +23,27 @@
 #include <include/generated/git.h>
 #include <cocobot/rf.h>
 
+#undef DEBUG_FRAME
+
+#define SOURCE_ID_FROM_ID(x)                        ((uint8_t) (((x) >> 0U)  & 0x7FU))
+#define DEST_ID_FROM_ID(x)                          ((uint8_t) (((x) >> 8U)  & 0x7FU))
+
 typedef enum 
 {
+  COCOBOT_COM_SOURCE_LIBCANARD,
   COCOBOT_COM_SOURCE_CAN,
   COCOBOT_COM_SOURCE_USART,
   COCOBOT_COM_SOURCE_RF,
 } cocobot_com_source_t;
 
-static uint32_t const volatile _canard_id __attribute__((section (".text"))) = 0xFFFFFFFF;
+static uint32_t const _canard_id  = 0xFFFFFFFF;
 static CanardInstance _canard;
 static uint8_t _canard_memory_pool[CONFIG_LIBCOCOBOT_COM_MEMORY_POOL_SIZE];
 static uint8_t _internal_buffer[UAVCAN_PROTOCOL_GETNODEINFO_RESPONSE_MAX_SIZE];
 static uint8_t _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_OK;
 static uint8_t _mode = UAVCAN_PROTOCOL_NODESTATUS_MODE_INITIALIZATION;
 static uint32_t _last_timer_ticks;
+static uint32_t _can_error;
 static uint64_t _timestamp_us;
 static uint64_t _next_1hz_service_at;
 #ifdef CONFIG_OS_USE_FREERTOS
@@ -55,6 +62,7 @@ typedef struct __attribute__((__packed__))
 } cocobot_com_usart_frame_t;
 #endif
 
+#ifdef DEBUG_FRAME
 #include <stdarg.h>
 char buf[128];
 void uprintf(char * fmt, ...)
@@ -70,6 +78,7 @@ void uprintf(char * fmt, ...)
     ptr += 1;
   }
 }
+#endif
 
 static void cocobot_com_fill_status(uavcan_protocol_NodeStatus * ns)
 {
@@ -364,35 +373,43 @@ int16_t cocobot_com_usart_receive(CanardCANFrame* const frame)
 
 void cocobot_com_retransmit(const CanardCANFrame * rx_frame, cocobot_com_source_t source)
 {
-  switch(source)
-  {
-    case COCOBOT_COM_SOURCE_CAN:
-#ifdef CONFIG_LIBCOCOBOT_COM_USART
-      cocobot_com_usart_transmit(rx_frame);
+#ifdef DEBUG_FRAME
+ uprintf("[TRANSMIT] %lu/%d(%d) -- %d->%d -- %d %d %d %d %d %d %d %d\r\n",
+           rx_frame->id,
+           rx_frame->data_len,
+           source,
+           SOURCE_ID_FROM_ID(rx_frame->id),
+           DEST_ID_FROM_ID(rx_frame->id),
+           rx_frame->data[0],
+           rx_frame->data[1],
+           rx_frame->data[2],
+           rx_frame->data[3],
+           rx_frame->data[4],
+           rx_frame->data[5],
+           rx_frame->data[6],
+           rx_frame->data[7]);
 #endif
-#ifdef CONFIG_LIBCOCOBOT_COM_RF
-      cocobot_com_rf_transmit(rx_frame, _timestamp_us);
-#endif
-    break;
 
-    case COCOBOT_COM_SOURCE_RF:
-#ifdef CONFIG_LIBCOCOBOT_COM_USART
-      cocobot_com_usart_transmit(rx_frame);
-#endif
 #ifdef CONFIG_LIBCOCOBOT_COM_CAN
-      canardSTM32Transmit(rx_frame);
+ if(source != COCOBOT_COM_SOURCE_CAN)
+ {
+   canardSTM32Transmit(rx_frame);
+ }
 #endif
-    break;
 
-    case COCOBOT_COM_SOURCE_USART:
-#ifdef CONFIG_LIBCOCOBOT_COM_CAN
-      canardSTM32Transmit(rx_frame);
+#ifdef CONFIG_LIBCOCOBOT_COM_USART
+ if(source != COCOBOT_COM_SOURCE_USART)
+ {
+   cocobot_com_usart_transmit(rx_frame);
+ }
 #endif
+
 #ifdef CONFIG_LIBCOCOBOT_COM_RF
-      cocobot_com_rf_transmit(rx_frame, _timestamp_us);
+ if(source != COCOBOT_COM_SOURCE_RF)
+ {
+   cocobot_com_rf_transmit(rx_frame, _timestamp_us);
+ }
 #endif
-    break;
-  }
 }
 
 uint64_t cocobot_com_process_event(void)
@@ -410,71 +427,7 @@ uint64_t cocobot_com_process_event(void)
   //Transmit Tx queue
   for (const CanardCANFrame* txf = NULL; (txf = canardPeekTxQueue(&_canard)) != NULL;)
   {
-    int16_t tx_res;
-
-#ifdef CONFIG_LIBCOCOBOT_COM_USART
-    tx_res = cocobot_com_usart_transmit(txf);
-    if (tx_res < 0)
-    {
-      // Failure - drop the frame
-      canardPopTxQueue(&_canard);
-      _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
-      break;
-    }
-    else if(tx_res == 0)
-    {
-      // Timeout - try again later
-      break;
-    }
-#endif
-
-#ifdef CONFIG_LIBCOCOBOT_COM_RF
-    tx_res = cocobot_com_rf_transmit(txf, _timestamp_us);
-    if (tx_res < 0)
-    {
-      // Failure - drop the frame
-      canardPopTxQueue(&_canard);
-      _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
-      break;
-    }
-    else if(tx_res == 0)
-    {
-      // Timeout - try again later
-      break;
-    }
-#endif
-
-
-#ifdef CONFIG_LIBCOCOBOT_COM_CAN
-#ifdef AUSBEE_SIM
-    printf("[CAN]%04X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\n",
-           txf->id & 0xFFFF,
-           txf->data_len,
-           txf->data[0],
-           txf->data[1],
-           txf->data[2],
-           txf->data[3],
-           txf->data[4],
-           txf->data[5],
-           txf->data[6],
-           txf->data[7]);
-#else
-    tx_res = canardSTM32Transmit(txf);
-#endif
-    if (tx_res < 0)
-    {
-      // Failure - drop the frame
-      canardPopTxQueue(&_canard);
-      _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
-      break;
-    }
-    else if(tx_res == 0)
-    {
-      // Timeout - try again later
-      break;
-    }
-#endif
-    // Success - just drop the frame
+    cocobot_com_retransmit(txf, COCOBOT_COM_SOURCE_LIBCANARD);
     canardPopTxQueue(&_canard);
   }
 
@@ -482,54 +435,56 @@ uint64_t cocobot_com_process_event(void)
   int16_t rx_res;
 
 #ifdef CONFIG_LIBCOCOBOT_COM_CAN
-  //Receiving
-#ifdef AUSBEE_SIM
-  rx_res = 0;
-#else
-  rx_res = canardSTM32Receive(&rx_frame);
-#endif
-  if (rx_res < 0)
+  rx_res = 1;
+  while(rx_res > 0)
   {
-    // Failure - report
-    _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
-  }
-  else if (rx_res > 0)
-  {
-    // Success - process the frame
-    cocobot_com_retransmit(&rx_frame, COCOBOT_COM_SOURCE_CAN);
-    canardHandleRxFrame(&_canard, &rx_frame, _timestamp_us);
+    rx_res = canardSTM32Receive(&rx_frame);
+    if (rx_res < 0)
+    {
+      // Failure - report
+      _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
+    }
+    else if (rx_res > 0)
+    {
+      cocobot_com_retransmit(&rx_frame, COCOBOT_COM_SOURCE_CAN);
+      canardHandleRxFrame(&_canard, &rx_frame, _timestamp_us);
+    }
   }
 #endif
 
 #ifdef CONFIG_LIBCOCOBOT_COM_USART
-  //Receiving
-  rx_res = cocobot_com_usart_receive(&rx_frame);
-  if (rx_res < 0)
+  rx_res = 1;
+  while(rx_res > 0)
   {
-    // Failure - report
-    _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
-  }
-  else if (rx_res > 0)
-  {
-    // Success - process the frame
-    cocobot_com_retransmit(&rx_frame, COCOBOT_COM_SOURCE_USART);
-    canardHandleRxFrame(&_canard, &rx_frame, _timestamp_us);
+    rx_res = cocobot_com_usart_receive(&rx_frame);
+    if (rx_res < 0)
+    {
+      // Failure - report
+      _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
+    }
+    else if (rx_res > 0)
+    {
+      cocobot_com_retransmit(&rx_frame, COCOBOT_COM_SOURCE_USART);
+      canardHandleRxFrame(&_canard, &rx_frame, _timestamp_us);
+    }
   }
 #endif
 
 #ifdef CONFIG_LIBCOCOBOT_COM_RF
-  //Receiving
-  rx_res = cocobot_com_rf_receive(&rx_frame, _timestamp_us);
-  if (rx_res < 0)
+  rx_res = 1;
+  while(rx_res > 0)
   {
-    // Failure - report
-    _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
-  }
-  else if (rx_res > 0)
-  {
-    // Success - process the frame
-    cocobot_com_retransmit(&rx_frame, COCOBOT_COM_SOURCE_RF);
-    canardHandleRxFrame(&_canard, &rx_frame, _timestamp_us);
+    rx_res = cocobot_com_rf_receive(&rx_frame, _timestamp_us);
+    if (rx_res < 0)
+    {
+      // Failure - report
+      _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
+    }
+    else if (rx_res > 0)
+    {
+      cocobot_com_retransmit(&rx_frame, COCOBOT_COM_SOURCE_RF);
+      canardHandleRxFrame(&_canard, &rx_frame, _timestamp_us);
+    }
   }
 #endif
 
@@ -583,7 +538,7 @@ void cocobot_com_init(void)
 #ifdef CONFIG_LIBCOCOBOT_COM_CAN
   RCC->APB1ENR |= RCC_APB1ENR_CAN1EN;
 	CanardSTM32CANTimings canbus_timings;
-	canardSTM32ComputeCANTimings(mcual_clock_get_frequency_Hz(MCUAL_CLOCK_PERIPHERAL_1), 500000, &canbus_timings);
+	canardSTM32ComputeCANTimings(mcual_clock_get_frequency_Hz(MCUAL_CLOCK_PERIPHERAL_1), 10000, &canbus_timings);
 
 	canardSTM32Init(&canbus_timings, CanardSTM32IfaceModeNormal);
 #endif
@@ -595,6 +550,7 @@ void cocobot_com_init(void)
   _last_timer_ticks = 0;
   _timestamp_us = 0;
   _next_1hz_service_at = 0;
+  _can_error = 0;
   mcual_timer_init(CONFIG_LIBCOCOBOT_COM_TIMER, -1000000);
 }
 
@@ -606,7 +562,7 @@ static void cocobot_com_thread(void * arg)
 #ifndef AUSBEE_SIM
   RCC->APB1ENR |= RCC_APB1ENR_CAN1EN;
 	CanardSTM32CANTimings canbus_timings;
-	canardSTM32ComputeCANTimings(mcual_clock_get_frequency_Hz(MCUAL_CLOCK_PERIPHERAL_1), 500000, &canbus_timings);
+	canardSTM32ComputeCANTimings(mcual_clock_get_frequency_Hz(MCUAL_CLOCK_PERIPHERAL_1), 10000, &canbus_timings);
 
 	canardSTM32Init(&canbus_timings, CanardSTM32IfaceModeNormal);
 #endif

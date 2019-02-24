@@ -6,6 +6,9 @@ pub mod msg;
 
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::{thread, time};
+use std::time::SystemTime;
+use std::time::UNIX_EPOCH;
 
 use com::canars::Instance;
 use com::canars::TransferType;
@@ -27,17 +30,18 @@ impl ComHandler {
 }
 
 impl Node<ComInstance> for ComHandler {
-    fn should_accept_transfer(&self, _com: &ComInstance, data_type_signature: &mut u64, data_type_id: u16, _transfer_type : TransferType, _source_node_id: u8) -> bool {
-        debug!("xfer: {}", _source_node_id);
+    fn should_accept_transfer(&self, _com: &ComInstance, data_type_signature: &mut u64, data_type_id: u16, _transfer_type : TransferType, source_node_id: u8) -> bool {
         if dsdl::uavcan::protocol::NodeStatus::check_id(data_type_id) {
             dsdl::uavcan::protocol::NodeStatus::set_signature(data_type_signature);
             true
         }
         else  if dsdl::uavcan::protocol::GetNodeInfoResponse::check_id(data_type_id) {
             dsdl::uavcan::protocol::GetNodeInfoResponse::set_signature(data_type_signature);
+            warn!("RECV nodeinfo: {}", source_node_id);
             true
         }
         else {
+            debug!("xfer refused: {}", source_node_id);
             false
         }
     }
@@ -52,6 +56,7 @@ impl Node<ComInstance> for ComHandler {
         }
         else if dsdl::uavcan::protocol::GetNodeInfoResponse::check_id(xfer.get_data_type_id()) {
             let node_info = dsdl::uavcan::protocol::GetNodeInfoResponse::decode(xfer).unwrap();
+            warn!("RECV2 nodeinfo: {}", xfer.get_source_node_id());
             state_manager.set_node_info(xfer.get_source_node_id(), node_info);
         }
     }
@@ -105,4 +110,25 @@ pub fn init(node_id: u8, state_manager: StateManagerInstance, simulation: bool) 
     if !simulation {
         serial::init(com.clone());
     }
+
+    thread::spawn(move || {
+        let com = com.clone();
+        loop {
+            let timestamp =  SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
+            let timestamp = timestamp.as_secs() * 1_000 +
+                timestamp.subsec_nanos() as u64 / 1_000_000;
+
+            let mut com_locked = com.as_ref().lock().unwrap();
+            match com_locked.get_node() {
+                Some(n) => {
+                    let mut node = n.lock().unwrap();
+                    node.cleanup_stale_transfers(timestamp);
+                },
+                _ => {}
+            }
+            drop(com_locked);
+
+            thread::sleep(time::Duration::from_millis(1000));
+        }
+    });
 }

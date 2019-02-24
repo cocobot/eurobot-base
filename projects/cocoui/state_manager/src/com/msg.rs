@@ -30,6 +30,7 @@ pub enum Msg {
     GetNodeInfo {node_id: u8}, 
     Set {node_id: u8, name: String, value: QValue},
     Restart {node_id: u8}, 
+    Program {node_id: u8},
 }
 
 impl Msg {
@@ -63,6 +64,17 @@ impl Msg {
                     magic_number: RestartNodeRequest::MAGIC_NUMBER,
                 });
                 node.request_or_respond(*node_id, RestartNodeRequest::SIGNATURE, RestartNodeRequest::ID as u8, &mut transfer_id, canars::TRANSFER_PRIORITY_LOWEST, RequestResponse::Request, &pkt[..]); 
+            },
+            Msg::Program {node_id} => {
+                use com::dsdl::uavcan::protocol::file::BeginFirmwareUpdateRequest;
+                use com::dsdl::uavcan::protocol::file::Path;
+                let (pkt, _) = BeginFirmwareUpdateRequest::encode(BeginFirmwareUpdateRequest {
+                    source_node_id: node.get_local_node_id(),
+                    image_file_remote_path: Path {
+                        path: "hex".to_string().into_bytes(),
+                    },
+                });
+                node.request_or_respond(*node_id, BeginFirmwareUpdateRequest::SIGNATURE, BeginFirmwareUpdateRequest::ID as u8, &mut transfer_id, canars::TRANSFER_PRIORITY_LOWEST, RequestResponse::Request, &pkt[..]); 
             },
         };
     }

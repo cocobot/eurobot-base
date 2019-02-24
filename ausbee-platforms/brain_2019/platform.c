@@ -105,6 +105,7 @@ void platform_init(void)
   mcual_gpio_set_output_type(MCUAL_GPIOB, MCUAL_GPIO_PIN7, MCUAL_GPIO_OPEN_DRAIN);
   mcual_i2c_master_init(MCUAL_I2C1, 100000);
 #endif
+
 }
 
 void platform_led_toggle(uint8_t led)

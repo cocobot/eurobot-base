@@ -13,6 +13,7 @@ int main(void)
   cocobot_com_run();
 
   vTaskStartScheduler();
+  vTaskSwitchContext();
 
   return 0;
 }

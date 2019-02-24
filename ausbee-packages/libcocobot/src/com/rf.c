@@ -230,6 +230,7 @@ static void cocobot_com_rf_irq_task(void * unused)
       if(xQueueReceive(_tx_queue, buf, 0) == pdFALSE)
       {
         SpiritCmdStrobeSabort();
+        SpiritCsma(S_DISABLE);
         _tx_in_progress = 0;
         cocobot_com_rf_set_led_state(LED_TX_BUSY, 0);
       }
@@ -336,13 +337,13 @@ void cocobot_com_rf_run_init(void)
   cocobot_com_rf_set_led_state(LED_INIT_SUCCESS, 8);
 
   ///* Spirit CSMA config */
-  //SpiritCsmaInit(&_csma_init);
-  //SpiritCsma(S_ENABLE);
-  //SpiritQiSetRssiThresholddBm(RSSI_THR);
+  SpiritCsmaInit(&_csma_init);
+  SpiritCsma(S_ENABLE);
+  SpiritQiSetRssiThresholddBm(RSSI_THR);
   cocobot_com_rf_set_led_state(LED_INIT_SUCCESS, 9);
 
-  //SpiritQiSetSqiThreshold(SQI_TH_0);
-  //SpiritQiSqiCheck(S_ENABLE);
+  SpiritQiSetSqiThreshold(SQI_TH_0);
+  SpiritQiSqiCheck(S_ENABLE);
   cocobot_com_rf_set_led_state(LED_INIT_SUCCESS, 10);
 
   SpiritTimerSetRxTimeoutMs(2500.0);
@@ -426,6 +427,7 @@ int16_t cocobot_com_rf_transmit(const CanardCANFrame* const frame, uint64_t time
 
     _tx_in_progress = 1;
     cocobot_com_rf_set_led_state(LED_TX_BUSY, 1);
+    SpiritCsma(S_ENABLE);
     SpiritCmdStrobeSabort();
     SpiritCmdStrobeFlushTxFifo();
     SpiritSpiWriteLinearFifo(sizeof(CanardCANFrame), (uint8_t *)frame);

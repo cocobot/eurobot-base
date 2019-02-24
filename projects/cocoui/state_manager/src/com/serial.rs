@@ -69,6 +69,7 @@ impl FrameDecoder {
     pub fn decode(&mut self) -> Option<Frame> {
         while self.buffer.len() >= 16 {
             if self.buffer[0] != 'C' as u8 {
+                error!("RM {:?}", &self.buffer);
                 self.buffer.remove(0);
             }
             else {
@@ -95,7 +96,7 @@ impl FrameDecoder {
                         self.buffer[5],
                         crc,
                         );
-                    self.buffer.drain(0..12);
+                    self.buffer.drain(0..16);
                     return Some(f);
                 }
             }

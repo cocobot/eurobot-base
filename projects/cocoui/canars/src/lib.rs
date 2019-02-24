@@ -1,5 +1,8 @@
 #![feature(nll)]
 
+#[macro_use]
+extern crate log;
+
 use std::cell::RefCell;
 use std::cell::RefMut;
 use std::mem::swap;
@@ -505,11 +508,12 @@ impl<T: Node<U>, U> Instance<T, U> {
         {
             self.node_id = node_id;
         } else {
+            error!("Bad node id: {:?}", self.node_id);
             assert!(false);
         }
     }
 
-     fn get_local_node_id(&self) -> u8 {
+    pub fn get_local_node_id(&self) -> u8 {
         self.node_id
     }
 
@@ -604,9 +608,31 @@ impl<T: Node<U>, U> Instance<T, U> {
         crc_val
     }
 
+     pub fn cleanup_stale_transfers(&mut self, timestamp_usec: u64) {
+         let mut i = 0;
+         loop {
+             if i >= self.rx_states.len() {
+                 break;
+             }
+
+             let mut state = self.rx_states[i].borrow_mut();
+             if timestamp_usec - state.get_timestamp_usec() > TRANSFER_TIMEOUT_USEC {
+                 state.release_state_payload();
+                 drop(state);
+                 self.rx_states.remove(i);
+                 info!("DROP {:?}", i);
+             }
+             else {
+                  i += 1;
+             }
+         }
+
+     }
+
     pub fn handle_rx_frame(&mut self, frame: CANFrame, timestamp_usec: u64) {
         let transfer_type = frame.extract_transfer_type();
 
+        debug!("DBG: {} -> {:?}", CANFrame::source_id_from_id(frame.get_id()), frame);
         let destination_node_id = match transfer_type {
             TransferType::Broadcast => BROADCAST_NODE_ID,
             _ => CANFrame::dest_id_from_id(frame.get_id()),
@@ -619,14 +645,14 @@ impl<T: Node<U>, U> Instance<T, U> {
             || (frame.get_id() & CAN_FRAME_ERR) != 0
             || (frame.get_data_len() < 1)
         {
-            println!("Unsuported frame");
+            warn!("Unsuported frame");
             return; // Unsupported frame, not UAVCAN - ignore
         }
 
         if transfer_type != TransferType::Broadcast
             && destination_node_id != self.get_local_node_id()
         {
-            println!("DEST MISMATCH {}/{}", destination_node_id, self.get_local_node_id());
+            warn!("DEST MISMATCH {}/{}", destination_node_id, self.get_local_node_id());
             return; // Address mismatch
         }
 
@@ -640,7 +666,12 @@ impl<T: Node<U>, U> Instance<T, U> {
             destination_node_id,
         );
 
+        if (frame.get_data_len() - 1) as usize > frame.get_data().len()  {
+            error!("Frame data len = {}", frame.get_data_len());
+            return; //Very bad packet !
+        }
         let tail_byte = frame.get_data()[(frame.get_data_len() - 1) as usize];
+        info!("TAIL: {:?}", tail_byte);
 
         let mut rx_state;
 
@@ -672,18 +703,19 @@ impl<T: Node<U>, U> Instance<T, U> {
                         ));
                     }
                     _ => {
+                        warn!("NO state");
                         return;
                     }
                 }
             } else {
-                println!("Nobody wants: {}", data_type_id); 
+                info!("Nobody wants: {}", data_type_id); 
                 return; // The application doesn't want this transfer
             }
         } else {
             rx_state = self.find(transfer_descriptor);
 
             if rx_state.is_none() {
-                println!("CONTINUE TX :(");
+                warn!("CONTINUE TX :(");
                 return;
             }
         }
@@ -711,6 +743,7 @@ impl<T: Node<U>, U> Instance<T, U> {
             if !Instance::<T, U>::is_start_of_transfer(tail_byte) {
                 // missed the first frame
                 rx_state.transfer_id_incr();
+                warn!("Missed the first frame");
                 return;
             }
         }
@@ -739,10 +772,12 @@ impl<T: Node<U>, U> Instance<T, U> {
         }
 
         if Instance::<T, U>::toggle_bit(tail_byte) != rx_state.get_next_toggle() {
+            error!("Wrong toggle");
             return; // wrong toggle
         }
 
         if Instance::<T, U>::transfer_id_from_tail_byte(tail_byte) != rx_state.get_transfer_id() {
+            warn!("unexepected tid");
             return; // unexpected tid
         }
 
@@ -751,6 +786,7 @@ impl<T: Node<U>, U> Instance<T, U> {
         // Beginning of multi frame transfer
         {
             if frame.get_data_len() <= 3 {
+                warn!("Not enough data");
                 return; // Not enough data
             }
 

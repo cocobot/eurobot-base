@@ -1,11 +1,10 @@
-node_id = 120
+# should be overrided in com.user.toml
+node_id = 0
+
 auto_assign_id = true
 
-[[boards]]
-name="Houston"
-id=110
-uid="[2A 00 2F 00 18 51 35 33 34 39 30 32 00 00 00 00]"
 
+#ID 10->3=29 main robot
 [[boards]]
 name="Pcom"
 id=10
@@ -16,3 +15,23 @@ name="Pbrain"
 id=11
 uid="[2C 00 24 00 18 51 35 33 34 39 30 32 00 00 00 00]"
 path="../../pouet"
+
+
+
+#ID 30->49 secondary robot
+
+
+#ID 50->59 beacons, funny action
+
+
+#ID 60->69 usb com boards
+[[boards]]
+name="Houston"
+id=110
+uid="[2A 00 2F 00 18 51 35 33 34 39 30 32 00 00 00 00]"
+
+#ID 70->79 CocoUI
+[[boards]]
+name="Damien"
+id=70
+uid=""
