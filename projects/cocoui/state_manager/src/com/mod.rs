@@ -35,8 +35,16 @@ impl Node<ComInstance> for ComHandler {
             dsdl::uavcan::protocol::NodeStatus::set_signature(data_type_signature);
             true
         }
-        else  if dsdl::uavcan::protocol::GetNodeInfoResponse::check_id(data_type_id) {
+        else if dsdl::uavcan::protocol::GetNodeInfoResponse::check_id(data_type_id) {
             dsdl::uavcan::protocol::GetNodeInfoResponse::set_signature(data_type_signature);
+            true
+        }
+        else if dsdl::uavcan::protocol::file::BeginFirmwareUpdateResponse::check_id(data_type_id) {
+            dsdl::uavcan::protocol::file::BeginFirmwareUpdateResponse::set_signature(data_type_signature);
+            true
+        }
+        else if dsdl::uavcan::protocol::file::ReadRequest::check_id(data_type_id) {
+            dsdl::uavcan::protocol::file::ReadRequest::set_signature(data_type_signature);
             true
         }
         else {
@@ -56,6 +64,17 @@ impl Node<ComInstance> for ComHandler {
         else if dsdl::uavcan::protocol::GetNodeInfoResponse::check_id(xfer.get_data_type_id()) {
             let node_info = dsdl::uavcan::protocol::GetNodeInfoResponse::decode(xfer).unwrap();
             state_manager.set_node_info(xfer.get_source_node_id(), node_info);
+        }
+        else if dsdl::uavcan::protocol::file::BeginFirmwareUpdateResponse::check_id(xfer.get_data_type_id()) {
+            let update = dsdl::uavcan::protocol::file::BeginFirmwareUpdateResponse::decode(xfer).unwrap();
+            info!("FIRMWARE UPDATE: {:?}", update);
+        }
+        else if dsdl::uavcan::protocol::file::ReadRequest::check_id(xfer.get_data_type_id()) {
+            let read = dsdl::uavcan::protocol::file::ReadRequest::decode(xfer).unwrap();
+            info!("FIRMWARE UPDATE: {:?}", read);
+        }
+        else {
+            error!("Xfer accepted but not implemented: {:?}", xfer.get_data_type_id());
         }
     }
 }

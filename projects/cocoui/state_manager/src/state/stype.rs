@@ -53,6 +53,7 @@ pub struct NodeInfo {
     pub git: Option<u32>,
     pub hard_version: Option<String>,
     pub name: Option<String>,
+    pub ui_name: Option<String>,
     pub uid: Option<String>,
 
     last_stamp : SystemTime,
@@ -73,6 +74,7 @@ impl NodeInfo {
             git: None,
             hard_version: None,
             name: None,
+            ui_name: None,
             uid: None,
             assigned: false,
         }

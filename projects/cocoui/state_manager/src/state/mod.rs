@@ -65,6 +65,14 @@ impl StateManager {
                 let mut ass_id_mult = false;
 
                 for (id, node) in st.nodes.iter_mut() {
+                    if node.ui_name.is_none() {
+                        for b in boards {
+                            if *id == b.id  {
+                                node.ui_name = Some(b.name.to_string())
+                            }
+                        }
+                    }
+
                     if node.info_needed() {
                         let mut com = com.lock().unwrap();
                         com.message(Msg::GetNodeInfo {node_id: *id});
@@ -79,6 +87,7 @@ impl StateManager {
                             ass_id = Some(node);
                         }
                     }
+
                 }
                 
                 if ass_id_mult {
@@ -137,7 +146,10 @@ impl StateManager {
         node.git = Some(info.software_version.vcs_commit);
         node.hard_version = Some(format!("{}.{}", info.hardware_version.major, info.hardware_version.minor));
         node.uid = Some(format!("{:02X}", info.hardware_version.unique_id.as_hex()));
-        node.name = Some(std::str::from_utf8(&info.name).unwrap().to_string());
+
+        if let Ok(name) = std::str::from_utf8(&info.name) {
+            node.name = Some(name.to_string());
+        }
     }
 
     pub fn command(&self, cmd: &str) {

@@ -111,7 +111,7 @@ impl BoardsWindow {
 
         let iter = self.lines.get(&id).unwrap();
 
-        let name = node.name.unwrap_or("".to_string());
+        let name = format!("{} ({})", node.ui_name.unwrap_or("?".to_string()), node.name.unwrap_or("".to_string()));
         let mode = format!("{:?}", node.mode.unwrap_or(NodeInfoMode::Offline));
         let statut = match node.health {
             Some(h) => {
