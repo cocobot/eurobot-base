@@ -1,5 +1,5 @@
-use std::thread;
-use std::time;
+//use std::thread;
+//use std::time;
 use std::process::{Command, Stdio};
 
 use config_manager::config::ConfigManagerInstance;
@@ -10,7 +10,7 @@ pub fn init(config: ConfigManagerInstance) {
         match &b.path {
             Some(p) => {
                 warn!("Not impl {:?}", p);
-                let mut child_shell = Command::new(p)
+                let _child_shell = Command::new(p)
                     .stdin(Stdio::piped())
                     .stdout(Stdio::piped())
                     .stderr(Stdio::piped())

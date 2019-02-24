@@ -69,7 +69,7 @@ impl FrameDecoder {
     pub fn decode(&mut self) -> Option<Frame> {
         while self.buffer.len() >= 16 {
             if self.buffer[0] != 'C' as u8 {
-                error!("RM {:?}", &self.buffer);
+                debug!("Link out of sync: {:?}", &self.buffer);
                 self.buffer.remove(0);
             }
             else {

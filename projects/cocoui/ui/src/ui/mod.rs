@@ -54,6 +54,16 @@ pub fn create_shortcuts(window: gtk::Window) {
                     state.command("restart 11");
                 });
             }
+            gdk::enums::key::D => {
+                debug!("KEY D");
+                UII.with(|ui| {
+                    let ui = ui.borrow();
+
+                    let state = ui.state.as_ref().unwrap().lock().unwrap();
+                    state.command("restart 127");
+                });
+            }
+
             _ => {},
         };
 

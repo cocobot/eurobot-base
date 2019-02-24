@@ -67,7 +67,6 @@ impl StateManager {
                 for (id, node) in st.nodes.iter_mut() {
                     if node.info_needed() {
                         let mut com = com.lock().unwrap();
-                        warn!("REQ nodeinfo: {}", *id);
                         com.message(Msg::GetNodeInfo {node_id: *id});
                         node.stamp_node_info();
                     }
@@ -129,7 +128,6 @@ impl StateManager {
     }
 
     pub fn set_node_info(&mut self, node_id: u8, info: dsdl::uavcan::protocol::GetNodeInfoResponse) {
-        error!("{:?}", info);
         let node = self.state.nodes.entry(node_id).or_insert(stype::NodeInfo::new(node_id));
         node.stamp();
         node.uptime_sec = Some(info.status.uptime_sec);

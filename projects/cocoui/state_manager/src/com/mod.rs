@@ -37,7 +37,6 @@ impl Node<ComInstance> for ComHandler {
         }
         else  if dsdl::uavcan::protocol::GetNodeInfoResponse::check_id(data_type_id) {
             dsdl::uavcan::protocol::GetNodeInfoResponse::set_signature(data_type_signature);
-            warn!("RECV nodeinfo: {}", source_node_id);
             true
         }
         else {
@@ -56,7 +55,6 @@ impl Node<ComInstance> for ComHandler {
         }
         else if dsdl::uavcan::protocol::GetNodeInfoResponse::check_id(xfer.get_data_type_id()) {
             let node_info = dsdl::uavcan::protocol::GetNodeInfoResponse::decode(xfer).unwrap();
-            warn!("RECV2 nodeinfo: {}", xfer.get_source_node_id());
             state_manager.set_node_info(xfer.get_source_node_id(), node_info);
         }
     }

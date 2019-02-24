@@ -134,15 +134,15 @@ impl<'a> RxTransfer<'a> {
         Some(r)
     }
 
-    pub fn decode_scalar_i16(&self, offset: &mut usize, size: u8) -> Option<i16> {
+    pub fn decode_scalar_i16(&self, _offset: &mut usize, _size: u8) -> Option<i16> {
         unimplemented!();
     }
 
-    pub fn decode_scalar_i32(&self, offset: &mut usize, size: u8) -> Option<i32> {
+    pub fn decode_scalar_i32(&self, _offset: &mut usize, _size: u8) -> Option<i32> {
         unimplemented!();
     }
 
-    pub fn decode_scalar_i64(&self, offset: &mut usize, size: u8) -> Option<i64> {
+    pub fn decode_scalar_i64(&self, _offset: &mut usize, _size: u8) -> Option<i64> {
         unimplemented!();
     }
 
@@ -167,11 +167,11 @@ impl<'a> RxTransfer<'a> {
 
     }
 
-    pub fn decode_scalar_bool(&self, offset: &mut usize, size: u8) -> Option<bool> {
+    pub fn decode_scalar_bool(&self, _offset: &mut usize, _size: u8) -> Option<bool> {
         unimplemented!();
     }
 
-    pub fn decode_scalar_f32(&self, offset: &mut usize, size: u8) -> Option<f32> {
+    pub fn decode_scalar_f32(&self, _offset: &mut usize, _size: u8) -> Option<f32> {
         unimplemented!();
     }
 
@@ -208,19 +208,19 @@ pub fn encode_scalar_u16(buffer: &mut Vec<u8>, offset: usize, size: usize, value
     }
 }
 
-pub fn encode_scalar_u32(buffer: &mut Vec<u8>, offset: usize, size: usize, value: u32) {
+pub fn encode_scalar_u32(_buffer: &mut Vec<u8>, _offset: usize, _size: usize, _value: u32) {
     unimplemented!();
 }
 
-pub fn encode_scalar_f32(buffer: &mut Vec<u8>, offset: usize, size: usize, value: f32) {
+pub fn encode_scalar_f32(_buffer: &mut Vec<u8>, _offset: usize, _size: usize, _value: f32) {
     unimplemented!();
 }
 
-pub fn encode_scalar_i16(buffer: &mut Vec<u8>, offset: usize, size: usize, value: i16) {
+pub fn encode_scalar_i16(_buffer: &mut Vec<u8>, _offset: usize, _size: usize, _value: i16) {
     unimplemented!();
 }
 
-pub fn encode_scalar_i32(buffer: &mut Vec<u8>, offset: usize, size: usize, value: i32) {
+pub fn encode_scalar_i32(_buffer: &mut Vec<u8>, _offset: usize, _size: usize, _value: i32) {
     unimplemented!();
 }
 
@@ -246,7 +246,7 @@ pub fn encode_scalar_u64(buffer: &mut Vec<u8>, offset: usize, size: usize, value
     }
 }
 
-pub fn encode_scalar_bool(buffer: &mut Vec<u8>, offset: usize, size: usize, value: bool) {
+pub fn encode_scalar_bool(_buffer: &mut Vec<u8>, _offset: usize, _size: usize, _value: bool) {
     unimplemented!();
 }
 
@@ -461,10 +461,6 @@ impl RxState {
      fn get_payload_crc(&mut self) -> u16 {
         self.payload_crc
     }
-
-     fn get_buffer(&self) -> &Vec<u8> {
-        &self.buffer
-    } 
 }
 
 pub struct Instance<T: Node<U>, U> {
@@ -491,14 +487,6 @@ impl<T: Node<U>, U> Instance<T, U> {
 
     pub fn pop_tx_queue(&mut self) -> Option<CANFrame> {
         self.queue.pop()
-    }
-
-     fn get_user_reference(&self) -> &U {
-        &self.user_reference
-    }
-
-     fn get_user_reference_as_mut(&mut self) -> &mut U {
-        &mut self.user_reference
     }
 
      pub fn set_local_node_id(&mut self, node_id: u8) {
@@ -632,7 +620,6 @@ impl<T: Node<U>, U> Instance<T, U> {
     pub fn handle_rx_frame(&mut self, frame: CANFrame, timestamp_usec: u64) {
         let transfer_type = frame.extract_transfer_type();
 
-        debug!("DBG: {} -> {:?}", CANFrame::source_id_from_id(frame.get_id()), frame);
         let destination_node_id = match transfer_type {
             TransferType::Broadcast => BROADCAST_NODE_ID,
             _ => CANFrame::dest_id_from_id(frame.get_id()),
@@ -671,7 +658,6 @@ impl<T: Node<U>, U> Instance<T, U> {
             return; //Very bad packet !
         }
         let tail_byte = frame.get_data()[(frame.get_data_len() - 1) as usize];
-        info!("TAIL: {:?}", tail_byte);
 
         let mut rx_state;
 
@@ -919,7 +905,7 @@ impl<T: Node<U>, U> Instance<T, U> {
             while payload.len() - data_index != 0 {
                 let mut data = [0; CANFrame::CAN_FRAME_MAX_DATA_LEN];
 
-                let mut i = 0;
+                let mut i;
                 if data_index == 0 {
                     // add crc
                     data[0] = (crc) as u8;
@@ -930,7 +916,7 @@ impl<T: Node<U>, U> Instance<T, U> {
                     i = 0;
                 }
 
-                while (i < (CANFrame::CAN_FRAME_MAX_DATA_LEN - 1) && data_index < payload.len()) {
+                while i < (CANFrame::CAN_FRAME_MAX_DATA_LEN - 1) && data_index < payload.len() {
                     data[i] = payload[data_index];
                     i += 1;
                     data_index += 1;
