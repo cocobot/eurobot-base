@@ -31,6 +31,7 @@ pub enum Msg {
     Set {node_id: u8, name: String, value: QValue},
     Restart {node_id: u8}, 
     Program {node_id: u8},
+    ReadResponse {node_id: u8, error: bool, data: Vec<u8>},
 }
 
 impl Msg {
@@ -76,6 +77,22 @@ impl Msg {
                 });
                 node.request_or_respond(*node_id, BeginFirmwareUpdateRequest::SIGNATURE, BeginFirmwareUpdateRequest::ID as u8, &mut transfer_id, canars::TRANSFER_PRIORITY_LOWEST, RequestResponse::Request, &pkt[..]); 
             },
+            Msg::ReadResponse {node_id, error, data} => {
+                use com::dsdl::uavcan::protocol::file::ReadResponse;
+                use com::dsdl::uavcan::protocol::file::Error;
+
+                let (pkt, _) = ReadResponse::encode(ReadResponse {
+                    error: Error { 
+                        value: match error {
+                            true => Error::IO_ERROR,
+                            false => Error::OK,
+                        },
+                    },
+                    data: data.clone(),
+                });
+                node.request_or_respond(*node_id, ReadResponse::SIGNATURE, ReadResponse::ID as u8, &mut transfer_id, canars::TRANSFER_PRIORITY_LOWEST, RequestResponse::Response, &pkt[..]); 
+
+            }
         };
     }
 }

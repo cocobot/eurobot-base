@@ -7,6 +7,12 @@ use std::thread;
 use std::time;
 use std::collections::HashMap;
 
+use std::fs::File;
+use std::io::BufReader;
+use std::io::SeekFrom;
+use std::io::Seek;
+use std::io::Read;
+
 use com::msg::Msg;
 use com::msg::QValue;
 use config_manager::config::ConfigManagerInstance;
@@ -56,64 +62,68 @@ impl StateManager {
             let cnf = istate.config.clone();
             drop(istate);
             let auto_assign_id = cnf.lock().unwrap().com.auto_assign_id;
-            let boards = &cnf.lock().unwrap().com.boards;
             loop {
-                let mut istate = state.lock().unwrap();
-                let st = istate.get_state_mut();
+                {
+                    let boards = &cnf.lock().unwrap().com.boards;
+                    let mut istate = state.lock().unwrap();
+                    let st = istate.get_state_mut();
 
-                let mut ass_id = None;
-                let mut ass_id_mult = false;
+                    let mut ass_id = None;
+                    let mut ass_id_mult = false;
 
-                for (id, node) in st.nodes.iter_mut() {
-                    if node.ui_name.is_none() {
-                        for b in boards {
-                            if *id == b.id  {
-                                node.ui_name = Some(b.name.to_string())
+                    for (id, node) in st.nodes.iter_mut() {
+                        if node.ui_name.is_none() {
+                            for b in boards {
+                                if *id == b.id  {
+                                    node.ui_name = Some(b.name.to_string());
+                                    break;
+                                }
+                            }
+                        }
+
+                        if node.info_needed() {
+                            let mut com = com.lock().unwrap();
+                            com.message(Msg::GetNodeInfo {node_id: *id});
+                            node.stamp_node_info();
+                        }
+                        node.check_offline();
+                        if node.check_id(auto_assign_id) {
+                            if ass_id.is_some() {
+                                ass_id_mult = false;
+                            }
+                            else {
+                                ass_id = Some(node);
+                            }
+                        }
+
+                    }
+
+                    if ass_id_mult {
+                        error!("Multiple board found with id 127");
+                    }
+                    else if let Some(n) = ass_id {
+                        if n.can_assign_id() {
+                            let mut found = false;
+                            for b in boards {
+                                if &b.uid == n.uid.as_ref().unwrap()  {
+                                    found = true;
+                                    let mut com = com.lock().unwrap();
+                                    com.message(Msg::Set {node_id: n.id, name: "ID".to_string(), value: QValue::I64(b.id as i64)});
+                                    n.set_assigned();
+                                    info!("Set new board id to {}", b.id);
+                                    break;
+                                }
+                            }
+                            if !found {
+                                warn!("No board definition for {}", n.uid.as_ref().unwrap());
                             }
                         }
                     }
 
-                    if node.info_needed() {
-                        let mut com = com.lock().unwrap();
-                        com.message(Msg::GetNodeInfo {node_id: *id});
-                        node.stamp_node_info();
-                    }
-                    node.check_offline();
-                    if node.check_id(auto_assign_id) {
-                        if ass_id.is_some() {
-                            ass_id_mult = false;
-                        }
-                        else {
-                            ass_id = Some(node);
-                        }
-                    }
-
+                    drop(st);
+                    drop(istate);
+                    drop(boards);
                 }
-                
-                if ass_id_mult {
-                     error!("Multiple board found with id 127");
-                }
-                else if let Some(n) = ass_id {
-                    if n.can_assign_id() {
-                        let mut found = false;
-                        for b in boards {
-                            if &b.uid == n.uid.as_ref().unwrap()  {
-                                 found = true;
-                                 let mut com = com.lock().unwrap();
-                                 com.message(Msg::Set {node_id: n.id, name: "ID".to_string(), value: QValue::I64(b.id as i64)});
-                                 n.set_assigned();
-                                 info!("Set new board id to {}", b.id);
-                                 break;
-                            }
-                        }
-                        if !found {
-                            warn!("No board definition for {}", n.uid.as_ref().unwrap());
-                        }
-                    }
-                }
-
-                drop(st);
-                drop(istate);
 
                 thread::sleep(time::Duration::from_millis(100));
             }
@@ -192,6 +202,48 @@ impl StateManager {
                 _ => { 
                     warn!("bad command '{}'", cmd); 
                 }
+            }
+        }
+    }
+
+    fn send_read_data(&self, node_id: u8, path: &str, offset: u64) -> std::io::Result<()> {
+        let f= File::open(path)?;
+        let mut reader = BufReader::new(f);
+        reader.seek(SeekFrom::Start(offset))?;
+
+        let mut buffer = [0; 256];
+        let count =  reader.read(&mut buffer)?;
+        self.com.as_ref().unwrap().lock().unwrap().message(Msg::ReadResponse {
+            node_id,
+            error: false,
+            data: buffer[0..count].to_vec(),
+        });
+
+        Ok(())
+    }
+
+    pub fn request_read(&mut self, node_id: u8, read: dsdl::uavcan::protocol::file::ReadRequest) {
+        info!("FIRMWARE UPDATE: {} -> {:?}", node_id, read);
+        let boards = &self.config.lock().unwrap().com.boards;
+        for b in boards {
+            debug!("{} {}", node_id, b.id);
+            if node_id == b.id  {
+                match &b.path {
+                    Some(path) => {
+                        warn!("Board {:?}  -> {:?}", node_id, path);
+                        if self.send_read_data(node_id, path, read.offset).is_err() {
+                            self.com.as_ref().unwrap().lock().unwrap().message(Msg::ReadResponse {
+                                node_id,
+                                error: true,
+                                data: Vec::new(),
+                            });
+                        }
+                    },
+                    None => {
+                        error!("Board {:?} has no loadable firmware", node_id);
+                    }
+                };
+                break;
             }
         }
     }

@@ -71,7 +71,7 @@ impl Node<ComInstance> for ComHandler {
         }
         else if dsdl::uavcan::protocol::file::ReadRequest::check_id(xfer.get_data_type_id()) {
             let read = dsdl::uavcan::protocol::file::ReadRequest::decode(xfer).unwrap();
-            info!("FIRMWARE UPDATE: {:?}", read);
+            state_manager.request_read(xfer.get_source_node_id(), read);
         }
         else {
             error!("Xfer accepted but not implemented: {:?}", xfer.get_data_type_id());

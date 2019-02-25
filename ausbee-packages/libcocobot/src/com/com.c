@@ -394,6 +394,7 @@ void cocobot_com_retransmit(const CanardCANFrame * rx_frame, cocobot_com_source_
  if(source != COCOBOT_COM_SOURCE_CAN)
  {
    canardSTM32Transmit(rx_frame);
+   usleep(10000);
  }
 #endif
 
@@ -544,8 +545,10 @@ void cocobot_com_init(void)
 #endif
 #endif
 
-  volatile uint32_t * ptr = (uint32_t *)&_canard_id;
-	canardSetLocalNodeID(&_canard, *ptr & 0x7F);
+  //volatile uint32_t * ptr = (uint32_t *)&_canard_id;
+	//canardSetLocalNodeID(&_canard, *ptr & 0x7F);
+  //DEBUG
+	canardSetLocalNodeID(&_canard, 11);
 
   _last_timer_ticks = 0;
   _timestamp_us = 0;

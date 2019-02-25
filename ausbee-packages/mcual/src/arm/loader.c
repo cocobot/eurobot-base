@@ -25,7 +25,8 @@ void mcual_loader_erase_pgm(void)
   int i;
 
   //unlock flash
-  FLASH->CR = 0;
+  __disable_irq();
+  FLASH->CR |= FLASH_CR_LOCK;
   FLASH->KEYR = 0x45670123;
   FLASH->KEYR = 0xCDEF89AB;
 
@@ -38,6 +39,7 @@ void mcual_loader_erase_pgm(void)
     while(FLASH->SR & FLASH_SR_BSY);
   }
   FLASH->CR = 0;
+  __enable_irq();
 }
 
 
