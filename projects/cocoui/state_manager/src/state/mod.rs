@@ -13,6 +13,8 @@ use std::io::SeekFrom;
 use std::io::Seek;
 use std::io::Read;
 
+use std::sync::mpsc::Sender;
+
 use com::msg::Msg;
 use com::msg::QValue;
 use config_manager::config::ConfigManagerInstance;
@@ -38,14 +40,17 @@ pub struct StateManager {
     state: State,
     config: ConfigManagerInstance,
     com: Option<super::com::ComInstance>,
+    tx: Option<Sender<Msg>>,
 }
 
 impl StateManager {
     pub fn new(config: ConfigManagerInstance) -> StateManagerInstance {
+
         let sm = Arc::new(Mutex::new(StateManager {
             state: State::new(),
             config,
             com: None,
+            tx: None,
         }));
         sm
     }
@@ -53,6 +58,15 @@ impl StateManager {
     fn set_com_instance(&mut self, com: super::com::ComInstance)
     {
         self.com = Some(com);
+        let com = self.com.as_ref().unwrap();
+        let com = com.lock().unwrap();
+        self.tx = Some(com.get_tx());
+    }
+
+    fn send(&self, msg : Msg) {
+        if let Some(tx) = &self.tx {
+            tx.send(msg).unwrap();
+        }
     }
 
     pub fn start(state: StateManagerInstance, com: super::com::ComInstance) {
@@ -232,7 +246,7 @@ impl StateManager {
                     Some(path) => {
                         warn!("Board {:?}  -> {:?}", node_id, path);
                         if self.send_read_data(node_id, path, read.offset).is_err() {
-                            self.com.as_ref().unwrap().lock().unwrap().message(Msg::ReadResponse {
+                            self.send(Msg::ReadResponse {
                                 node_id,
                                 error: true,
                                 data: Vec::new(),

@@ -216,8 +216,8 @@ pub fn encode_scalar_f32(_buffer: &mut Vec<u8>, _offset: usize, _size: usize, _v
     unimplemented!();
 }
 
-pub fn encode_scalar_i16(_buffer: &mut Vec<u8>, _offset: usize, _size: usize, _value: i16) {
-    unimplemented!();
+pub fn encode_scalar_i16(buffer: &mut Vec<u8>, offset: usize, size: usize, value: i16) {
+    encode_scalar_u16(buffer, offset, size, value as u16);
 }
 
 pub fn encode_scalar_i32(_buffer: &mut Vec<u8>, _offset: usize, _size: usize, _value: i32) {

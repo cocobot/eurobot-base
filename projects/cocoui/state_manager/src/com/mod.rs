@@ -6,9 +6,12 @@ pub mod msg;
 
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::{thread, time};
+use std::thread;
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
+use std::sync::mpsc::{Sender, Receiver};
+use std::sync::mpsc;
+use std::time::Duration;
 
 use com::canars::Instance;
 use com::canars::TransferType;
@@ -82,14 +85,20 @@ impl Node<ComInstance> for ComHandler {
 pub struct Com {
     node: Option<Arc<Mutex<Instance<ComHandler, ComInstance>>>>,
     state_manager: StateManagerInstance,
+    tx: Sender<msg::Msg>,
 }
 
 impl Com {
-    fn new(state_manager: StateManagerInstance) -> Com {
+    fn new(state_manager: StateManagerInstance, tx: Sender<msg::Msg>) -> Com {
          Com {
              node: None,
              state_manager,
+             tx,
          }
+    }
+
+    pub fn get_tx(&self) -> Sender<msg::Msg> {
+         self.tx.clone()
     }
 
     fn set_node(&mut self, node: Instance<ComHandler, ComInstance>) {
@@ -108,12 +117,17 @@ impl Com {
     }
 
     pub fn message(&mut self, msg: msg::Msg) {
-        msg.send(self);
+        if let Err(e) = self.tx.send(msg) {
+            warn!("Tx send error: {:?}", e.to_string());
+        }
     }
 }
 
 pub fn init(node_id: u8, state_manager: StateManagerInstance, simulation: bool) {
-    let com = Arc::new(Mutex::new(Com::new(state_manager)));
+    //create channel for sending Msg only in one thread
+    let (tx, rx): (Sender<msg::Msg>, Receiver<msg::Msg>) = mpsc::channel();
+
+    let com = Arc::new(Mutex::new(Com::new(state_manager, tx)));
     let mut node = Instance::init(ComHandler::new(), com.clone());
     node.set_local_node_id(node_id);
 
@@ -129,23 +143,41 @@ pub fn init(node_id: u8, state_manager: StateManagerInstance, simulation: bool) 
     }
 
     thread::spawn(move || {
-        let com = com.clone();
-        loop {
+        fn get_timestamp() -> u64 {
             let timestamp =  SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
             let timestamp = timestamp.as_secs() * 1_000 +
                 timestamp.subsec_nanos() as u64 / 1_000_000;
+            timestamp
+        }
 
-            let mut com_locked = com.as_ref().lock().unwrap();
-            match com_locked.get_node() {
-                Some(n) => {
-                    let mut node = n.lock().unwrap();
-                    node.cleanup_stale_transfers(timestamp);
-                },
-                _ => {}
+        let com = com.clone();
+        let mut next_clean_up = get_timestamp();
+        loop {
+            let timestamp = get_timestamp();
+
+            let delta = if next_clean_up > timestamp {
+                next_clean_up - timestamp
             }
-            drop(com_locked);
+            else {
+                0
+            };
+            if let Ok(msg) = rx.recv_timeout(Duration::from_millis(delta)) {
+                let mut com = com.as_ref().lock().unwrap();
+                msg.send(&mut com);
+            }
 
-            thread::sleep(time::Duration::from_millis(1000));
+            if timestamp > next_clean_up {
+                next_clean_up = get_timestamp() + 1_000;
+
+                let mut com_locked = com.as_ref().lock().unwrap();
+                match com_locked.get_node() {
+                    Some(n) => {
+                        let mut node = n.lock().unwrap();
+                        node.cleanup_stale_transfers(timestamp);
+                    },
+                    _ => {}
+                }
+            }
         }
     });
 }
