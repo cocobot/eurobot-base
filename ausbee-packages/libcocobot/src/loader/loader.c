@@ -130,6 +130,7 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
       _mode = LOADER_MODE_LOADING;
       _last_activity_us = _timestamp_us;
       cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_SOFTWARE_UPDATE);
+      cocobot_com_flush();
       _offset = 0;
       _src_node_id = transfer->source_node_id;
 

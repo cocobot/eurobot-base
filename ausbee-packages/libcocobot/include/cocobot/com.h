@@ -6,6 +6,7 @@
 void cocobot_com_init(void);
 void cocobot_com_run(void);
 uint64_t cocobot_com_process_event(void);
+void cocobot_com_flush(void);
 void cocobot_com_set_mode(uint8_t mode);
 int16_t cocobot_com_request_or_respond(uint8_t destination_node_id,
                                        uint64_t data_type_signature,

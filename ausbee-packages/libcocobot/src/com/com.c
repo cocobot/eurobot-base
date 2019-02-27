@@ -413,6 +413,21 @@ void cocobot_com_retransmit(const CanardCANFrame * rx_frame, cocobot_com_source_
 #endif
 }
 
+static void cocobot_com_transmit_tx_queue(void)
+{
+  for (const CanardCANFrame* txf = NULL; (txf = canardPeekTxQueue(&_canard)) != NULL;)
+  {
+    cocobot_com_retransmit(txf, COCOBOT_COM_SOURCE_LIBCANARD);
+    canardPopTxQueue(&_canard);
+  }
+}
+
+void cocobot_com_flush(void)
+{
+  cocobot_com_transmit_tx_queue();
+  //TODO: FLUSH CAN
+}
+
 uint64_t cocobot_com_process_event(void)
 {
   uint32_t ticks = mcual_timer_get_value(CONFIG_LIBCOCOBOT_COM_TIMER);
@@ -426,11 +441,7 @@ uint64_t cocobot_com_process_event(void)
   _timestamp_us += ((uint64_t)delta);
 
   //Transmit Tx queue
-  for (const CanardCANFrame* txf = NULL; (txf = canardPeekTxQueue(&_canard)) != NULL;)
-  {
-    cocobot_com_retransmit(txf, COCOBOT_COM_SOURCE_LIBCANARD);
-    canardPopTxQueue(&_canard);
-  }
+  cocobot_com_transmit_tx_queue();
 
   CanardCANFrame rx_frame;
   int16_t rx_res;
