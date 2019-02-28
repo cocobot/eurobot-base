@@ -65,6 +65,7 @@ impl StateManager {
 
     fn send(&self, msg : Msg) {
         if let Some(tx) = &self.tx {
+            debug!("-> {:?}", msg);
             tx.send(msg).unwrap();
         }
     }
@@ -227,7 +228,7 @@ impl StateManager {
 
         let mut buffer = [0; 256];
         let count =  reader.read(&mut buffer)?;
-        self.com.as_ref().unwrap().lock().unwrap().message(Msg::ReadResponse {
+        self.send(Msg::ReadResponse {
             node_id,
             error: false,
             data: buffer[0..count].to_vec(),

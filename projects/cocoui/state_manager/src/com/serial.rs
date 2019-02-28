@@ -165,9 +165,13 @@ impl SerialManager {
     }
 
     pub fn send(&mut self, buffer: Vec<u8>) {
-        match self.serial.write(&buffer) {
+        match self.serial.write_all(&buffer) {
              Ok(_) => {},
-             Err(e) => {error!("{}", e);},
+             Err(e) => {error!("write_all: {:?}", e);},
+        };
+        match self.serial.flush() {
+             Ok(_) => {},
+             Err(e) => {error!("flush: {:?}", e);},
         }
     }
 
@@ -199,7 +203,7 @@ impl SerialManager {
                                         None => {},
                                     };
                                 },
-                                Err(e) => error!("{:?}", e),
+                                Err(e) => error!("Com lock: {:?}", e),
                             }
                         }
                     }
@@ -215,7 +219,7 @@ impl SerialManager {
                              Err(_) => {},
                         }
                     },
-                    Err(e) => error!("{:?}", e),
+                    Err(e) => error!("Serial read: {:?}", e),
                 }
             }
         });

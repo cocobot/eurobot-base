@@ -13,11 +13,8 @@
 #endif
 
 #ifndef CANARD_INTERNAL_SATURATE_UNSIGNED
-#define CANARD_INTERNAL_SATURATE_UNSIGNED(x, max) ( ((x) > max) ? max : (x) );
+#define CANARD_INTERNAL_SATURATE_UNSIGNED(x, max) ( ((x) >= max) ? max : (x) );
 #endif
-
-#define CANARD_INTERNAL_ENABLE_TAO  ((uint8_t) 1)
-#define CANARD_INTERNAL_DISABLE_TAO ((uint8_t) 0)
 
 #if defined(__GNUC__)
 # define CANARD_MAYBE_UNUSED(x) x __attribute__((unused))
@@ -42,7 +39,7 @@ uint32_t uavcan_protocol_file_GetDirectoryEntryInfoRequest_encode_internal(uavca
     offset += 32;
 
     // Compound
-    offset = uavcan_protocol_file_Path_encode_internal((void*)&source->directory_path, msg_buf, offset, 0);
+    offset = uavcan_protocol_file_Path_encode_internal(&source->directory_path, msg_buf, offset, 0);
 
     return offset;
 }
@@ -71,7 +68,6 @@ uint32_t uavcan_protocol_file_GetDirectoryEntryInfoRequest_encode(uavcan_protoco
   *                     uavcan_protocol_file_GetDirectoryEntryInfoRequest dyn memory will point to dyn_arr_buf memory.
   *                     NULL will ignore dynamic arrays decoding.
   * @param offset: Call with 0, bit offset to msg storage
-  * @param tao: is tail array optimization used
   * @retval offset or ERROR value if < 0
   */
 int32_t uavcan_protocol_file_GetDirectoryEntryInfoRequest_decode_internal(
@@ -79,12 +75,11 @@ int32_t uavcan_protocol_file_GetDirectoryEntryInfoRequest_decode_internal(
   uint16_t CANARD_MAYBE_UNUSED(payload_len),
   uavcan_protocol_file_GetDirectoryEntryInfoRequest* dest,
   uint8_t** CANARD_MAYBE_UNUSED(dyn_arr_buf),
-  int32_t offset,
-  uint8_t CANARD_MAYBE_UNUSED(tao))
+  int32_t offset)
 {
     int32_t ret = 0;
 
-    ret = canardDecodeScalar(transfer, offset, 32, false, (void*)&dest->entry_index);
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 32, false, (void*)&dest->entry_index);
     if (ret != 32)
     {
         goto uavcan_protocol_file_GetDirectoryEntryInfoRequest_error_exit;
@@ -92,7 +87,7 @@ int32_t uavcan_protocol_file_GetDirectoryEntryInfoRequest_decode_internal(
     offset += 32;
 
     // Compound
-    offset = uavcan_protocol_file_Path_decode_internal(transfer, 0, (void*)&dest->directory_path, dyn_arr_buf, offset, tao);
+    offset = uavcan_protocol_file_Path_decode_internal(transfer, payload_len, &dest->directory_path, dyn_arr_buf, offset);
     if (offset < 0)
     {
         ret = offset;
@@ -129,33 +124,13 @@ int32_t uavcan_protocol_file_GetDirectoryEntryInfoRequest_decode(const CanardRxT
     const int32_t offset = 0;
     int32_t ret = 0;
 
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    uint8_t tao = CANARD_INTERNAL_DISABLE_TAO;
-
-    while (1)
+    // Clear the destination struct
+    for (uint32_t c = 0; c < sizeof(uavcan_protocol_file_GetDirectoryEntryInfoRequest); c++)
     {
-        // Clear the destination struct
-        for (uint32_t c = 0; c < sizeof(uavcan_protocol_file_GetDirectoryEntryInfoRequest); c++)
-        {
-            ((uint8_t*)dest)[c] = 0x00;
-        }
-
-        ret = uavcan_protocol_file_GetDirectoryEntryInfoRequest_decode_internal(transfer, payload_len, dest, dyn_arr_buf, offset, tao);
-
-        if (ret >= 0)
-        {
-            break;
-        }
-
-        if (tao == CANARD_INTERNAL_ENABLE_TAO)
-        {
-            break;
-        }
-        tao = CANARD_INTERNAL_ENABLE_TAO;
+        ((uint8_t*)dest)[c] = 0x00;
     }
+
+    ret = uavcan_protocol_file_GetDirectoryEntryInfoRequest_decode_internal(transfer, payload_len, dest, dyn_arr_buf, offset);
 
     return ret;
 }
@@ -174,13 +149,13 @@ uint32_t uavcan_protocol_file_GetDirectoryEntryInfoResponse_encode_internal(uavc
   uint8_t CANARD_MAYBE_UNUSED(root_item))
 {
     // Compound
-    offset = uavcan_protocol_file_Error_encode_internal((void*)&source->error, msg_buf, offset, 0);
+    offset = uavcan_protocol_file_Error_encode_internal(&source->error, msg_buf, offset, 0);
 
     // Compound
-    offset = uavcan_protocol_file_EntryType_encode_internal((void*)&source->entry_type, msg_buf, offset, 0);
+    offset = uavcan_protocol_file_EntryType_encode_internal(&source->entry_type, msg_buf, offset, 0);
 
     // Compound
-    offset = uavcan_protocol_file_Path_encode_internal((void*)&source->entry_full_path, msg_buf, offset, 0);
+    offset = uavcan_protocol_file_Path_encode_internal(&source->entry_full_path, msg_buf, offset, 0);
 
     return offset;
 }
@@ -209,7 +184,6 @@ uint32_t uavcan_protocol_file_GetDirectoryEntryInfoResponse_encode(uavcan_protoc
   *                     uavcan_protocol_file_GetDirectoryEntryInfoResponse dyn memory will point to dyn_arr_buf memory.
   *                     NULL will ignore dynamic arrays decoding.
   * @param offset: Call with 0, bit offset to msg storage
-  * @param tao: is tail array optimization used
   * @retval offset or ERROR value if < 0
   */
 int32_t uavcan_protocol_file_GetDirectoryEntryInfoResponse_decode_internal(
@@ -217,13 +191,12 @@ int32_t uavcan_protocol_file_GetDirectoryEntryInfoResponse_decode_internal(
   uint16_t CANARD_MAYBE_UNUSED(payload_len),
   uavcan_protocol_file_GetDirectoryEntryInfoResponse* dest,
   uint8_t** CANARD_MAYBE_UNUSED(dyn_arr_buf),
-  int32_t offset,
-  uint8_t CANARD_MAYBE_UNUSED(tao))
+  int32_t offset)
 {
     int32_t ret = 0;
 
     // Compound
-    offset = uavcan_protocol_file_Error_decode_internal(transfer, 0, (void*)&dest->error, dyn_arr_buf, offset, tao);
+    offset = uavcan_protocol_file_Error_decode_internal(transfer, payload_len, &dest->error, dyn_arr_buf, offset);
     if (offset < 0)
     {
         ret = offset;
@@ -231,7 +204,7 @@ int32_t uavcan_protocol_file_GetDirectoryEntryInfoResponse_decode_internal(
     }
 
     // Compound
-    offset = uavcan_protocol_file_EntryType_decode_internal(transfer, 0, (void*)&dest->entry_type, dyn_arr_buf, offset, tao);
+    offset = uavcan_protocol_file_EntryType_decode_internal(transfer, payload_len, &dest->entry_type, dyn_arr_buf, offset);
     if (offset < 0)
     {
         ret = offset;
@@ -239,7 +212,7 @@ int32_t uavcan_protocol_file_GetDirectoryEntryInfoResponse_decode_internal(
     }
 
     // Compound
-    offset = uavcan_protocol_file_Path_decode_internal(transfer, 0, (void*)&dest->entry_full_path, dyn_arr_buf, offset, tao);
+    offset = uavcan_protocol_file_Path_decode_internal(transfer, payload_len, &dest->entry_full_path, dyn_arr_buf, offset);
     if (offset < 0)
     {
         ret = offset;
@@ -276,33 +249,13 @@ int32_t uavcan_protocol_file_GetDirectoryEntryInfoResponse_decode(const CanardRx
     const int32_t offset = 0;
     int32_t ret = 0;
 
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    uint8_t tao = CANARD_INTERNAL_DISABLE_TAO;
-
-    while (1)
+    // Clear the destination struct
+    for (uint32_t c = 0; c < sizeof(uavcan_protocol_file_GetDirectoryEntryInfoResponse); c++)
     {
-        // Clear the destination struct
-        for (uint32_t c = 0; c < sizeof(uavcan_protocol_file_GetDirectoryEntryInfoResponse); c++)
-        {
-            ((uint8_t*)dest)[c] = 0x00;
-        }
-
-        ret = uavcan_protocol_file_GetDirectoryEntryInfoResponse_decode_internal(transfer, payload_len, dest, dyn_arr_buf, offset, tao);
-
-        if (ret >= 0)
-        {
-            break;
-        }
-
-        if (tao == CANARD_INTERNAL_ENABLE_TAO)
-        {
-            break;
-        }
-        tao = CANARD_INTERNAL_ENABLE_TAO;
+        ((uint8_t*)dest)[c] = 0x00;
     }
+
+    ret = uavcan_protocol_file_GetDirectoryEntryInfoResponse_decode_internal(transfer, payload_len, dest, dyn_arr_buf, offset);
 
     return ret;
 }

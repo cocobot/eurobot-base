@@ -20,14 +20,15 @@ static cocobot_game_state_color_t _color;
 static void * _userdata[USER_DATA_SIZE];
 static uint8_t _starter_removed;
 static TickType_t _start_time = 0;
-static TickType_t _last_update_time = 0;
+//static TickType_t _last_update_time = 0;
 static int _score = 0;
 
-static unsigned char _seven_seg[10] = {
-  0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7C,0x07,0x7F,0x67};
+//static unsigned char _seven_seg[10] = {
+//  0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7C,0x07,0x7F,0x67};
 
 void cocobot_game_state_display_score(void)
 {
+#if 0
   int i;
   int j;
   unsigned char digit[SCORE_DIGIT];
@@ -39,7 +40,6 @@ void cocobot_game_state_display_score(void)
     score /= 10;
   }
 
-#if 0
   for (j = 0; j < SCORE_DIGIT; j++)
   { 
     for (i = 0; i < 8; i++)

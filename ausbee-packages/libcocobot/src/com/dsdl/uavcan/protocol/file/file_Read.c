@@ -13,11 +13,8 @@
 #endif
 
 #ifndef CANARD_INTERNAL_SATURATE_UNSIGNED
-#define CANARD_INTERNAL_SATURATE_UNSIGNED(x, max) ( ((x) > max) ? max : (x) );
+#define CANARD_INTERNAL_SATURATE_UNSIGNED(x, max) ( ((x) >= max) ? max : (x) );
 #endif
-
-#define CANARD_INTERNAL_ENABLE_TAO  ((uint8_t) 1)
-#define CANARD_INTERNAL_DISABLE_TAO ((uint8_t) 0)
 
 #if defined(__GNUC__)
 # define CANARD_MAYBE_UNUSED(x) x __attribute__((unused))
@@ -43,7 +40,7 @@ uint32_t uavcan_protocol_file_ReadRequest_encode_internal(uavcan_protocol_file_R
     offset += 40;
 
     // Compound
-    offset = uavcan_protocol_file_Path_encode_internal((void*)&source->path, msg_buf, offset, 0);
+    offset = uavcan_protocol_file_Path_encode_internal(&source->path, msg_buf, offset, 0);
 
     return offset;
 }
@@ -72,7 +69,6 @@ uint32_t uavcan_protocol_file_ReadRequest_encode(uavcan_protocol_file_ReadReques
   *                     uavcan_protocol_file_ReadRequest dyn memory will point to dyn_arr_buf memory.
   *                     NULL will ignore dynamic arrays decoding.
   * @param offset: Call with 0, bit offset to msg storage
-  * @param tao: is tail array optimization used
   * @retval offset or ERROR value if < 0
   */
 int32_t uavcan_protocol_file_ReadRequest_decode_internal(
@@ -80,12 +76,11 @@ int32_t uavcan_protocol_file_ReadRequest_decode_internal(
   uint16_t CANARD_MAYBE_UNUSED(payload_len),
   uavcan_protocol_file_ReadRequest* dest,
   uint8_t** CANARD_MAYBE_UNUSED(dyn_arr_buf),
-  int32_t offset,
-  uint8_t CANARD_MAYBE_UNUSED(tao))
+  int32_t offset)
 {
     int32_t ret = 0;
 
-    ret = canardDecodeScalar(transfer, offset, 40, false, (void*)&dest->offset);
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 40, false, (void*)&dest->offset);
     if (ret != 40)
     {
         goto uavcan_protocol_file_ReadRequest_error_exit;
@@ -93,7 +88,7 @@ int32_t uavcan_protocol_file_ReadRequest_decode_internal(
     offset += 40;
 
     // Compound
-    offset = uavcan_protocol_file_Path_decode_internal(transfer, 0, (void*)&dest->path, dyn_arr_buf, offset, tao);
+    offset = uavcan_protocol_file_Path_decode_internal(transfer, payload_len, &dest->path, dyn_arr_buf, offset);
     if (offset < 0)
     {
         ret = offset;
@@ -130,33 +125,13 @@ int32_t uavcan_protocol_file_ReadRequest_decode(const CanardRxTransfer* transfer
     const int32_t offset = 0;
     int32_t ret = 0;
 
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    uint8_t tao = CANARD_INTERNAL_DISABLE_TAO;
-
-    while (1)
+    // Clear the destination struct
+    for (uint32_t c = 0; c < sizeof(uavcan_protocol_file_ReadRequest); c++)
     {
-        // Clear the destination struct
-        for (uint32_t c = 0; c < sizeof(uavcan_protocol_file_ReadRequest); c++)
-        {
-            ((uint8_t*)dest)[c] = 0x00;
-        }
-
-        ret = uavcan_protocol_file_ReadRequest_decode_internal(transfer, payload_len, dest, dyn_arr_buf, offset, tao);
-
-        if (ret >= 0)
-        {
-            break;
-        }
-
-        if (tao == CANARD_INTERNAL_ENABLE_TAO)
-        {
-            break;
-        }
-        tao = CANARD_INTERNAL_ENABLE_TAO;
+        ((uint8_t*)dest)[c] = 0x00;
     }
+
+    ret = uavcan_protocol_file_ReadRequest_decode_internal(transfer, payload_len, dest, dyn_arr_buf, offset);
 
     return ret;
 }
@@ -177,7 +152,7 @@ uint32_t uavcan_protocol_file_ReadResponse_encode_internal(uavcan_protocol_file_
     uint32_t c = 0;
 
     // Compound
-    offset = uavcan_protocol_file_Error_encode_internal((void*)&source->error, msg_buf, offset, 0);
+    offset = uavcan_protocol_file_Error_encode_internal(&source->error, msg_buf, offset, 0);
 
     // Dynamic Array (data)
     if (! root_item)
@@ -224,7 +199,6 @@ uint32_t uavcan_protocol_file_ReadResponse_encode(uavcan_protocol_file_ReadRespo
   *                     uavcan_protocol_file_ReadResponse dyn memory will point to dyn_arr_buf memory.
   *                     NULL will ignore dynamic arrays decoding.
   * @param offset: Call with 0, bit offset to msg storage
-  * @param tao: is tail array optimization used
   * @retval offset or ERROR value if < 0
   */
 int32_t uavcan_protocol_file_ReadResponse_decode_internal(
@@ -232,14 +206,13 @@ int32_t uavcan_protocol_file_ReadResponse_decode_internal(
   uint16_t CANARD_MAYBE_UNUSED(payload_len),
   uavcan_protocol_file_ReadResponse* dest,
   uint8_t** CANARD_MAYBE_UNUSED(dyn_arr_buf),
-  int32_t offset,
-  uint8_t CANARD_MAYBE_UNUSED(tao))
+  int32_t offset)
 {
     int32_t ret = 0;
     uint32_t c = 0;
 
     // Compound
-    offset = uavcan_protocol_file_Error_decode_internal(transfer, 0, (void*)&dest->error, dyn_arr_buf, offset, tao);
+    offset = uavcan_protocol_file_Error_decode_internal(transfer, payload_len, &dest->error, dyn_arr_buf, offset);
     if (offset < 0)
     {
         ret = offset;
@@ -248,7 +221,7 @@ int32_t uavcan_protocol_file_ReadResponse_decode_internal(
 
     // Dynamic Array (data)
     //  - Last item in struct & Root item & (Array Size > 8 bit), tail array optimization
-    if (payload_len && tao == CANARD_INTERNAL_ENABLE_TAO)
+    if (payload_len)
     {
         //  - Calculate Array length from MSG length
         dest->data.len = ((payload_len * 8) - offset ) / 8; // 8 bit array item size
@@ -257,7 +230,7 @@ int32_t uavcan_protocol_file_ReadResponse_decode_internal(
     {
         // - Array length 9 bits
         ret = canardDecodeScalar(transfer,
-                                 offset,
+                                 (uint32_t)offset,
                                  9,
                                  false,
                                  (void*)&dest->data.len); // 255
@@ -279,7 +252,7 @@ int32_t uavcan_protocol_file_ReadResponse_decode_internal(
         if (dyn_arr_buf)
         {
             ret = canardDecodeScalar(transfer,
-                                     offset,
+                                     (uint32_t)offset,
                                      8,
                                      false,
                                      (void*)*dyn_arr_buf); // 255
@@ -322,33 +295,13 @@ int32_t uavcan_protocol_file_ReadResponse_decode(const CanardRxTransfer* transfe
     const int32_t offset = 0;
     int32_t ret = 0;
 
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    uint8_t tao = CANARD_INTERNAL_DISABLE_TAO;
-
-    while (1)
+    // Clear the destination struct
+    for (uint32_t c = 0; c < sizeof(uavcan_protocol_file_ReadResponse); c++)
     {
-        // Clear the destination struct
-        for (uint32_t c = 0; c < sizeof(uavcan_protocol_file_ReadResponse); c++)
-        {
-            ((uint8_t*)dest)[c] = 0x00;
-        }
-
-        ret = uavcan_protocol_file_ReadResponse_decode_internal(transfer, payload_len, dest, dyn_arr_buf, offset, tao);
-
-        if (ret >= 0)
-        {
-            break;
-        }
-
-        if (tao == CANARD_INTERNAL_ENABLE_TAO)
-        {
-            break;
-        }
-        tao = CANARD_INTERNAL_ENABLE_TAO;
+        ((uint8_t*)dest)[c] = 0x00;
     }
+
+    ret = uavcan_protocol_file_ReadResponse_decode_internal(transfer, payload_len, dest, dyn_arr_buf, offset);
 
     return ret;
 }

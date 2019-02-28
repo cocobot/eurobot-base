@@ -13,11 +13,8 @@
 #endif
 
 #ifndef CANARD_INTERNAL_SATURATE_UNSIGNED
-#define CANARD_INTERNAL_SATURATE_UNSIGNED(x, max) ( ((x) > max) ? max : (x) );
+#define CANARD_INTERNAL_SATURATE_UNSIGNED(x, max) ( ((x) >= max) ? max : (x) );
 #endif
-
-#define CANARD_INTERNAL_ENABLE_TAO  ((uint8_t) 1)
-#define CANARD_INTERNAL_DISABLE_TAO ((uint8_t) 0)
 
 #if defined(__GNUC__)
 # define CANARD_MAYBE_UNUSED(x) x __attribute__((unused))
@@ -80,7 +77,6 @@ uint32_t uavcan_protocol_SoftwareVersion_encode(uavcan_protocol_SoftwareVersion*
   *                     uavcan_protocol_SoftwareVersion dyn memory will point to dyn_arr_buf memory.
   *                     NULL will ignore dynamic arrays decoding.
   * @param offset: Call with 0, bit offset to msg storage
-  * @param tao: is tail array optimization used
   * @retval offset or ERROR value if < 0
   */
 int32_t uavcan_protocol_SoftwareVersion_decode_internal(
@@ -88,40 +84,39 @@ int32_t uavcan_protocol_SoftwareVersion_decode_internal(
   uint16_t CANARD_MAYBE_UNUSED(payload_len),
   uavcan_protocol_SoftwareVersion* dest,
   uint8_t** CANARD_MAYBE_UNUSED(dyn_arr_buf),
-  int32_t offset,
-  uint8_t CANARD_MAYBE_UNUSED(tao))
+  int32_t offset)
 {
     int32_t ret = 0;
 
-    ret = canardDecodeScalar(transfer, offset, 8, false, (void*)&dest->major);
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 8, false, (void*)&dest->major);
     if (ret != 8)
     {
         goto uavcan_protocol_SoftwareVersion_error_exit;
     }
     offset += 8;
 
-    ret = canardDecodeScalar(transfer, offset, 8, false, (void*)&dest->minor);
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 8, false, (void*)&dest->minor);
     if (ret != 8)
     {
         goto uavcan_protocol_SoftwareVersion_error_exit;
     }
     offset += 8;
 
-    ret = canardDecodeScalar(transfer, offset, 8, false, (void*)&dest->optional_field_flags);
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 8, false, (void*)&dest->optional_field_flags);
     if (ret != 8)
     {
         goto uavcan_protocol_SoftwareVersion_error_exit;
     }
     offset += 8;
 
-    ret = canardDecodeScalar(transfer, offset, 32, false, (void*)&dest->vcs_commit);
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 32, false, (void*)&dest->vcs_commit);
     if (ret != 32)
     {
         goto uavcan_protocol_SoftwareVersion_error_exit;
     }
     offset += 32;
 
-    ret = canardDecodeScalar(transfer, offset, 64, false, (void*)&dest->image_crc);
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 64, false, (void*)&dest->image_crc);
     if (ret != 64)
     {
         goto uavcan_protocol_SoftwareVersion_error_exit;
@@ -158,33 +153,13 @@ int32_t uavcan_protocol_SoftwareVersion_decode(const CanardRxTransfer* transfer,
     const int32_t offset = 0;
     int32_t ret = 0;
 
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    uint8_t tao = CANARD_INTERNAL_DISABLE_TAO;
-
-    while (1)
+    // Clear the destination struct
+    for (uint32_t c = 0; c < sizeof(uavcan_protocol_SoftwareVersion); c++)
     {
-        // Clear the destination struct
-        for (uint32_t c = 0; c < sizeof(uavcan_protocol_SoftwareVersion); c++)
-        {
-            ((uint8_t*)dest)[c] = 0x00;
-        }
-
-        ret = uavcan_protocol_SoftwareVersion_decode_internal(transfer, payload_len, dest, dyn_arr_buf, offset, tao);
-
-        if (ret >= 0)
-        {
-            break;
-        }
-
-        if (tao == CANARD_INTERNAL_ENABLE_TAO)
-        {
-            break;
-        }
-        tao = CANARD_INTERNAL_ENABLE_TAO;
+        ((uint8_t*)dest)[c] = 0x00;
     }
+
+    ret = uavcan_protocol_SoftwareVersion_decode_internal(transfer, payload_len, dest, dyn_arr_buf, offset);
 
     return ret;
 }

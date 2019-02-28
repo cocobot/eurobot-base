@@ -13,11 +13,8 @@
 #endif
 
 #ifndef CANARD_INTERNAL_SATURATE_UNSIGNED
-#define CANARD_INTERNAL_SATURATE_UNSIGNED(x, max) ( ((x) > max) ? max : (x) );
+#define CANARD_INTERNAL_SATURATE_UNSIGNED(x, max) ( ((x) >= max) ? max : (x) );
 #endif
-
-#define CANARD_INTERNAL_ENABLE_TAO  ((uint8_t) 1)
-#define CANARD_INTERNAL_DISABLE_TAO ((uint8_t) 0)
 
 #if defined(__GNUC__)
 # define CANARD_MAYBE_UNUSED(x) x __attribute__((unused))
@@ -42,8 +39,7 @@ int32_t uavcan_protocol_param_Empty_decode_internal(const CanardRxTransfer* CANA
   uint16_t CANARD_MAYBE_UNUSED(payload_len),
   uavcan_protocol_param_Empty* CANARD_MAYBE_UNUSED(dest),
   uint8_t** CANARD_MAYBE_UNUSED(dyn_arr_buf),
-  int32_t offset,
-  uint8_t CANARD_MAYBE_UNUSED(tao))
+  int32_t offset)
 {
     return offset;
 }
