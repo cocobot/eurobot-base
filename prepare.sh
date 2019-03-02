@@ -10,3 +10,6 @@ git clone git@github.com:cocobot/ausbee.git
 cd ausbee
 git checkout dev_host_build
 cd ..
+
+#pulling all submodules
+git pull && git submodule sync --recursive && git submodule update --init --recursive
