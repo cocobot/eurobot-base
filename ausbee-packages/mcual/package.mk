@@ -17,6 +17,7 @@ MCUAL_TARGET_LOCAL_SRC_FILES=src/$(MCUAL_ARCH)/clock.c \
 														 src/$(MCUAL_ARCH)/usart.c \
 														 src/$(MCUAL_ARCH)/timer.c \
 														 src/$(MCUAL_ARCH)/spi.c \
+														 src/$(MCUAL_ARCH)/can.c \
 														 src/$(MCUAL_ARCH)/i2c.c \
 														 src/$(MCUAL_ARCH)/loader.c \
 														 src/$(MCUAL_ARCH)/arch.c
