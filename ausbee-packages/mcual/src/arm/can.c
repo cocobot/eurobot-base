@@ -24,6 +24,46 @@ volatile int32_t rx_index_read;
 volatile int32_t rx_index_write;
 #endif
 
+static bool isFramePriorityHigher(uint32_t a, uint32_t b)
+{
+    const uint32_t clean_a = a & CANARD_CAN_EXT_ID_MASK;
+    const uint32_t clean_b = b & CANARD_CAN_EXT_ID_MASK;
+
+    /*
+     * STD vs EXT - if 11 most significant bits are the same, EXT loses.
+     */
+    const bool ext_a = (a & CANARD_CAN_FRAME_EFF) != 0;
+    const bool ext_b = (b & CANARD_CAN_FRAME_EFF) != 0;
+    if (ext_a != ext_b)
+    {
+        const uint32_t arb11_a = ext_a ? (clean_a >> 18U) : clean_a;
+        const uint32_t arb11_b = ext_b ? (clean_b >> 18U) : clean_b;
+        if (arb11_a != arb11_b)
+        {
+            return arb11_a < arb11_b;
+        }
+        else
+        {
+            return ext_b;
+        }
+    }
+
+    /*
+     * RTR vs Data frame - if frame identifiers and frame types are the same, RTR loses.
+     */
+    const bool rtr_a = (a & CANARD_CAN_FRAME_RTR) != 0;
+    const bool rtr_b = (b & CANARD_CAN_FRAME_RTR) != 0;
+    if ((clean_a == clean_b) && (rtr_a != rtr_b))
+    {
+        return rtr_b;
+    }
+
+    /*
+     * Plain ID arbitration - greater value loses.
+     */
+    return clean_a < clean_b;
+}
+
 static bool waitMSRINAKBitStateChange(volatile const CAN_TypeDef * const bxcan, const bool target_state)
 {
     /**
@@ -51,6 +91,56 @@ static bool waitMSRINAKBitStateChange(volatile const CAN_TypeDef * const bxcan, 
     return false;
 }
 
+/// Converts libcanard ID value into the bxCAN TX ID register format.
+static uint32_t convertFrameIDCanardToRegister(const uint32_t id)
+{
+    uint32_t out = 0;
+
+    if (id & CANARD_CAN_FRAME_EFF)
+    {
+        out = ((id & CANARD_CAN_EXT_ID_MASK) << 3U) | CAN_TI0R_IDE;
+    }
+    else
+    {
+        out = ((id & CANARD_CAN_STD_ID_MASK) << 21U);
+    }
+
+    if (id & CANARD_CAN_FRAME_RTR)
+    {
+        out |= CAN_TI0R_RTR;
+    }
+
+    return out;
+}
+
+/// Converts bxCAN TX/RX (sic! both RX/TX are supported) ID register value into the libcanard ID format.
+static uint32_t convertFrameIDRegisterToCanard(const uint32_t id)
+{
+//Error with the macro
+/*
+#if (CAN_TI0R_RTR != CAN_RI0R_RTR) ||\
+    (CAN_TI0R_IDE != CAN_RI0R_IDE)
+# error "RIR bits do not match TIR bits, TIR --> libcanard conversion is not possible"
+#endif
+*/
+    uint32_t out = 0;
+
+    if ((id & CAN_RI0R_IDE) == 0)
+    {
+        out = (CANARD_CAN_STD_ID_MASK & (id >> 21U));
+    }
+    else
+    {
+        out = (CANARD_CAN_EXT_ID_MASK & (id >> 3U)) | CANARD_CAN_FRAME_EFF;
+    }
+
+    if ((id & CAN_RI0R_RTR) != 0)
+    {
+        out |= CANARD_CAN_FRAME_RTR;
+    }
+
+    return out;
+}
 
 int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode iface)
 {
@@ -188,8 +278,9 @@ int16_t mcual_can_transmit(const CanardCANFrame* const frame)
         //}
     }
 #endif
-
-    //Todo enable tx isr
+    
+    //Enable TX interrupt
+    CAN1->IER |= CAN_IER_TMEIE;
     return 1;
 }
 
@@ -240,4 +331,130 @@ int16_t mcual_can_recv_no_wait(CanardCANFrame* const out_frame)
 #endif
 }
 
+static void mcual_can_add_in_mailbox(uint8_t tx_mailbox, volatile CanardCANFrame * frame)
+{
+    volatile CAN_TxMailBox_TypeDef* const mb = &CAN1->sTxMailBox[tx_mailbox];
+
+    mb->TDTR = frame->data_len;                         // DLC equals data length except in CAN FD
+
+    mb->TDHR = (((uint32_t)frame->data[7]) << 24U) |
+               (((uint32_t)frame->data[6]) << 16U) |
+               (((uint32_t)frame->data[5]) <<  8U) |
+               (((uint32_t)frame->data[4]) <<  0U);
+    mb->TDLR = (((uint32_t)frame->data[3]) << 24U) |
+               (((uint32_t)frame->data[2]) << 16U) |
+               (((uint32_t)frame->data[1]) <<  8U) |
+               (((uint32_t)frame->data[0]) <<  0U);
+
+    mb->TIR = convertFrameIDCanardToRegister(frame->id) | CAN_TI0R_TXRQ;    // Go.
+
+    tx_index_read += 1;
+    if(tx_index_read >= CONFIG_MCUAL_CAN_TX_SIZE)
+        tx_index_read = 0;
+}
+
+void CAN1_TX_IRQHandler(void)
+{
+    static const uint32_t AllTME = CAN_TSR_TME0 | CAN_TSR_TME1 | CAN_TSR_TME2;
+    static bool is_empty = false;
+    volatile CanardCANFrame * frame = &can_tx_buffer[tx_index_read];
+    bool tme[3];
+
+    if ((CAN1->TSR & AllTME) != AllTME) // At least one TX mailbox is used, detailed check is needed
+    {
+        tme[0] = ((CAN1->TSR & CAN_TSR_TME0) != 0);
+        tme[1] = ((CAN1->TSR & CAN_TSR_TME1) != 0);
+        tme[2] = ((CAN1->TSR & CAN_TSR_TME2) != 0);
+    }
+    else
+        is_empty = true;
+
+    if(CAN1->TSR & CAN_TSR_TME0)
+    {
+        //All mailboxes are empty, add directly in mailbox 0
+        if(is_empty)
+            mcual_can_add_in_mailbox(0, frame);
+        else
+        {
+            for(int i = 1; i < 3; i++)
+            {
+                //if empty
+                if(!tme[i])
+                {
+                    if (!isFramePriorityHigher(frame->id, convertFrameIDRegisterToCanard(CAN1->sTxMailBox[i].TIR)))
+                    {
+                        // There's a mailbox whose priority is higher or equal the priority of the new frame.
+                        return;                            // Priority inversion would occur! Reject transmission.
+                    }
+                }
+            } 
+            mcual_can_add_in_mailbox(0, frame);
+        }
+    }
+    else if(CAN1->TSR & CAN_TSR_TME1)
+    {
+        //All mailboxes are empty, add directly in mailbox 0
+        if(is_empty)
+            mcual_can_add_in_mailbox(1, frame);
+        else
+        {
+            for(int i = 0; i < 3; i++)
+            {
+                if(i != 1)
+                {
+                    //if empty
+                    if(!tme[i])
+                    {
+                        if (!isFramePriorityHigher(frame->id, convertFrameIDRegisterToCanard(CAN1->sTxMailBox[i].TIR)))
+                        {
+                            // There's a mailbox whose priority is higher or equal the priority of the new frame.
+                            return;                            // Priority inversion would occur! Reject transmission.
+                        }
+                    }
+                }
+            } 
+            mcual_can_add_in_mailbox(1, frame);
+        }
+    }
+    else if(CAN1->TSR & CAN_TSR_TME2)
+    {
+        //All mailboxes are empty, add directly in mailbox 0
+        if(is_empty)
+            mcual_can_add_in_mailbox(2, frame);
+        else
+        {
+            for(int i = 0; i < 2; i++)
+            {
+                //if empty
+                if(!tme[i])
+                {
+                    if (!isFramePriorityHigher(frame->id, convertFrameIDRegisterToCanard(CAN1->sTxMailBox[i].TIR)))
+                    {
+                        // There's a mailbox whose priority is higher or equal the priority of the new frame.
+                        return;                            // Priority inversion would occur! Reject transmission.
+                    }
+                }
+            } 
+            mcual_can_add_in_mailbox(1, frame);
+        }
+    }
+
+    if(tx_index_read == tx_index_write)
+        CAN1->IER &= ~CAN_IER_TMEIE;
+}
+
+void CAN1_RX0_IRQHandler(void)
+{
+    ;
+}
+
+void CAN1_RX1_IRQHandler(void)
+{
+    ;
+}
+
+void CAN1_SCE_IRQHandler(void)
+{
+    ;
+}
 #endif
