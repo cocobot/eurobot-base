@@ -443,14 +443,51 @@ void CAN1_TX_IRQHandler(void)
         CAN1->IER &= ~CAN_IER_TMEIE;
 }
 
+static void mcual_can_rcev_frame(volatile CAN_FIFOMailBox_TypeDef* const mb)
+{
+    can_rx_buffer[rx_index_write].id = convertFrameIDRegisterToCanard(mb->RIR);
+
+    can_rx_buffer[rx_index_write].data_len = (uint8_t)(mb->RDTR & CAN_RDT0R_DLC);
+
+    // Caching to regular (non volatile) memory for faster reads
+    const uint32_t rdlr = mb->RDLR;
+    const uint32_t rdhr = mb->RDHR;
+
+    can_rx_buffer[rx_index_write].data[0] = (uint8_t)(0xFFU & (rdlr >>  0U));
+    can_rx_buffer[rx_index_write].data[1] = (uint8_t)(0xFFU & (rdlr >>  8U));
+    can_rx_buffer[rx_index_write].data[2] = (uint8_t)(0xFFU & (rdlr >> 16U));
+    can_rx_buffer[rx_index_write].data[3] = (uint8_t)(0xFFU & (rdlr >> 24U));
+    can_rx_buffer[rx_index_write].data[4] = (uint8_t)(0xFFU & (rdhr >>  0U));
+    can_rx_buffer[rx_index_write].data[5] = (uint8_t)(0xFFU & (rdhr >>  8U));
+    can_rx_buffer[rx_index_write].data[6] = (uint8_t)(0xFFU & (rdhr >> 16U));
+    can_rx_buffer[rx_index_write].data[7] = (uint8_t)(0xFFU & (rdhr >> 24U));
+
+    //Manage index
+    rx_index_write += 1;
+    if(rx_index_write >= CONFIG_MCUAL_CAN_RX_SIZE)
+        rx_index_write = 0;
+}
+
 void CAN1_RX0_IRQHandler(void)
 {
-    ;
+    //Manage error?
+
+    volatile CAN_FIFOMailBox_TypeDef* const mb = &CAN1->sFIFOMailBox[0];
+
+    mcual_can_rcev_frame(mb);
+
+    // Release FIFO entry we just read
+    CAN1->RF0R = CAN_RF0R_RFOM0 | CAN_RF0R_FOVR0 | CAN_RF0R_FULL0;
 }
 
 void CAN1_RX1_IRQHandler(void)
 {
-    ;
+    volatile CAN_FIFOMailBox_TypeDef* const mb = &CAN1->sFIFOMailBox[1];
+
+    mcual_can_rcev_frame(mb);
+
+    // Release FIFO entry we just read
+    CAN1->RF1R = CAN_RF1R_RFOM1 | CAN_RF1R_FOVR1 | CAN_RF1R_FULL1;
 }
 
 void CAN1_SCE_IRQHandler(void)
