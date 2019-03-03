@@ -245,7 +245,18 @@ int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode if
 
     CAN1->FMR &= ~CAN_FMR_FINIT;              // Leave initialization mode
 
-    //Todo : Missing: isr handling, stats, mode automaticTxAbortOnError
+    //Enable isr here
+    NVIC_SetPriority(CAN1_TX_IRQn, 5);
+    NVIC_SetPriority(CAN1_RX0_IRQn, 5);
+    NVIC_SetPriority(CAN1_RX1_IRQn, 5);
+    NVIC_EnableIRQ(CAN1_TX_IRQn);
+    NVIC_EnableIRQ(CAN1_RX0_IRQn);
+    NVIC_EnableIRQ(CAN1_RX1_IRQn);
+
+    //Enable Rx Fifo pending message isr
+    CAN1->IER |= CAN_IER_FMPIE1 | CAN_IER_FMPIE0;
+
+    //Todo : Missing: stats, mode automaticTxAbortOnError
 
     return 0;
 }
