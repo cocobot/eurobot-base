@@ -6,6 +6,9 @@
 
 #define MCUAL_CAN_NUM_ACCEPTANCE_FILTERS                            14U
 #define MCUAL_CAN_ERROR_UNSUPPORTED_BIT_RATE                        1000
+#define MCUAL_CAN_ERROR_MSR_INAK_NOT_SET                            1001
+#define MCUAL_CAN_ERROR_MSR_INAK_NOT_CLEARED                        1002
+#define MCUAL_CAN_ERROR_UNSUPPORTED_FRAME_FORMAT                    1003
 
 
 /**
@@ -49,7 +52,7 @@ typedef enum
  * @brief Initialize can1 (including clock and interrupt handling)
  *
  */
-void mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode iface);
+int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode iface);
 
 /**
  * @brief Set a new frame to be send in the tx buffer
