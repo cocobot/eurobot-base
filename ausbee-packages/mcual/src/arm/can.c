@@ -13,8 +13,8 @@
 
 
 #ifdef CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
-QueueHandle_t tx_queue;
-QueueHandle_t rx_queue;
+QueueHandle_t can_tx_queue;
+QueueHandle_t can_rx_queue;
 #else
 volatile CanardCANFrame can_tx_buffer[CONFIG_MCUAL_CAN_TX_SIZE];
 volatile int32_t tx_index_read;
@@ -164,8 +164,8 @@ int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode if
     }
 
 #ifdef CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
-    tx_queues = xQueueCreate(CONFIG_MCUAL_CAN_TX_SIZE, sizeof(CanardCANFrame));
-    rx_queues = xQueueCreate(CONFIG_MCUAL_CAN_RX_SIZE, sizeof(CanardCANFrame));
+    can_tx_queue = xQueueCreate(CONFIG_MCUAL_CAN_TX_SIZE, sizeof(CanardCANFrame));
+    can_rx_queue = xQueueCreate(CONFIG_MCUAL_CAN_RX_SIZE, sizeof(CanardCANFrame));
 #else
     tx_index_read = 0;
     tx_index_write = 0;
@@ -262,11 +262,10 @@ int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode if
 }
 
 
-
 int16_t mcual_can_transmit(const CanardCANFrame* const frame)
 {
 #ifdef CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
-    xQueueSend(tx_queues, frame, portMAX_DELAY);
+    xQueueSend(can_tx_queue, frame, portMAX_DELAY);
 #else
     uint8_t done = 0;
     while(!done)
@@ -303,7 +302,7 @@ void mcual_can_wait_tx_ended()
 int16_t mcual_can_recv(CanardCANFrame* const out_frame)
 {
 #ifdef CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
-    xQueueReceive(rx_queues, out_frame, portMAX_DELAY);
+    xQueueReceive(can_rx_queue, out_frame, portMAX_DELAY);
 #else
     int16_t r = 0;
     while(!r)
@@ -318,8 +317,7 @@ int16_t mcual_can_recv(CanardCANFrame* const out_frame)
 int16_t mcual_can_recv_no_wait(CanardCANFrame* const out_frame)
 {
 #ifdef CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
-    uint8_t byte;
-    if(xQueueReceive(rx_queues, out_frame, 0) == pdFALSE)
+    if(xQueueReceive(can_rx_queue, out_frame, 0) == pdFALSE)
     {
         return 0;
     }
@@ -359,16 +357,37 @@ static void mcual_can_add_in_mailbox(uint8_t tx_mailbox, volatile CanardCANFrame
 
     mb->TIR = convertFrameIDCanardToRegister(frame->id) | CAN_TI0R_TXRQ;    // Go.
 
+#if !defined(CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES)
     tx_index_read += 1;
     if(tx_index_read >= CONFIG_MCUAL_CAN_TX_SIZE)
         tx_index_read = 0;
+
+    //if there is nothing left to send
+    if(tx_index_read == tx_index_write)
+        CAN1->IER &= ~CAN_IER_TMEIE;
+#endif
 }
 
 void CAN1_TX_IRQHandler(void)
 {
     static const uint32_t AllTME = CAN_TSR_TME0 | CAN_TSR_TME1 | CAN_TSR_TME2;
     static bool is_empty = false;
-    volatile CanardCANFrame * frame = &can_tx_buffer[tx_index_read];
+    volatile CanardCANFrame * frame = NULL; 
+#if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
+    BaseType_t xTaskWokenByReceive = pdFALSE;
+    if(xQueueReceiveFromISR(can_tx_queue, (void*)frame, &xTaskWokenByReceive))
+    {
+        if( xTaskWokenByReceive != pdFALSE )
+            taskYIELD ();
+    }
+    else
+    {
+        CAN1->IER &= ~CAN_IER_TMEIE;
+        return;
+    }
+#else
+    frame = &can_tx_buffer[tx_index_read];
+#endif
     bool tme[3];
 
     if ((CAN1->TSR & AllTME) != AllTME) // At least one TX mailbox is used, detailed check is needed
@@ -395,7 +414,15 @@ void CAN1_TX_IRQHandler(void)
                     if (!isFramePriorityHigher(frame->id, convertFrameIDRegisterToCanard(CAN1->sTxMailBox[i].TIR)))
                     {
                         // There's a mailbox whose priority is higher or equal the priority of the new frame.
-                        return;                            // Priority inversion would occur! Reject transmission.
+                        // Priority inversion would occur! Reject transmission.
+#if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
+                        //The message is not send, it needs to be moved back into the queue
+                        xTaskWokenByReceive = false;
+                        xQueueSendToFrontFromISR(can_tx_queue, (void*) frame, &xTaskWokenByReceive);
+                        if( xTaskWokenByReceive != pdFALSE )
+                            taskYIELD ();
+#endif
+                        return; 
                     }
                 }
             } 
@@ -419,6 +446,13 @@ void CAN1_TX_IRQHandler(void)
                         if (!isFramePriorityHigher(frame->id, convertFrameIDRegisterToCanard(CAN1->sTxMailBox[i].TIR)))
                         {
                             // There's a mailbox whose priority is higher or equal the priority of the new frame.
+#if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
+                        //The message is not send, it needs to be moved back into the queue
+                        xTaskWokenByReceive = false;
+                        xQueueSendToFrontFromISR(can_tx_queue, (void*) frame, &xTaskWokenByReceive);
+                        if( xTaskWokenByReceive != pdFALSE )
+                            taskYIELD ();
+#endif
                             return;                            // Priority inversion would occur! Reject transmission.
                         }
                     }
@@ -442,6 +476,13 @@ void CAN1_TX_IRQHandler(void)
                     if (!isFramePriorityHigher(frame->id, convertFrameIDRegisterToCanard(CAN1->sTxMailBox[i].TIR)))
                     {
                         // There's a mailbox whose priority is higher or equal the priority of the new frame.
+#if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
+                        //The message is not send, it needs to be moved back into the queue
+                        xTaskWokenByReceive = false;
+                        xQueueSendToFrontFromISR(can_tx_queue, (void*) frame, &xTaskWokenByReceive);
+                        if( xTaskWokenByReceive != pdFALSE )
+                            taskYIELD ();
+#endif
                         return;                            // Priority inversion would occur! Reject transmission.
                     }
                 }
@@ -449,34 +490,38 @@ void CAN1_TX_IRQHandler(void)
             mcual_can_add_in_mailbox(1, frame);
         }
     }
-
-    if(tx_index_read == tx_index_write)
-        CAN1->IER &= ~CAN_IER_TMEIE;
 }
 
 static void mcual_can_rcev_frame(volatile CAN_FIFOMailBox_TypeDef* const mb)
 {
-    can_rx_buffer[rx_index_write].id = convertFrameIDRegisterToCanard(mb->RIR);
+    CanardCANFrame frame;
 
-    can_rx_buffer[rx_index_write].data_len = (uint8_t)(mb->RDTR & CAN_RDT0R_DLC);
+    frame.id = convertFrameIDRegisterToCanard(mb->RIR);
+    frame.data_len = (uint8_t)(mb->RDTR & CAN_RDT0R_DLC);
 
     // Caching to regular (non volatile) memory for faster reads
     const uint32_t rdlr = mb->RDLR;
     const uint32_t rdhr = mb->RDHR;
 
-    can_rx_buffer[rx_index_write].data[0] = (uint8_t)(0xFFU & (rdlr >>  0U));
-    can_rx_buffer[rx_index_write].data[1] = (uint8_t)(0xFFU & (rdlr >>  8U));
-    can_rx_buffer[rx_index_write].data[2] = (uint8_t)(0xFFU & (rdlr >> 16U));
-    can_rx_buffer[rx_index_write].data[3] = (uint8_t)(0xFFU & (rdlr >> 24U));
-    can_rx_buffer[rx_index_write].data[4] = (uint8_t)(0xFFU & (rdhr >>  0U));
-    can_rx_buffer[rx_index_write].data[5] = (uint8_t)(0xFFU & (rdhr >>  8U));
-    can_rx_buffer[rx_index_write].data[6] = (uint8_t)(0xFFU & (rdhr >> 16U));
-    can_rx_buffer[rx_index_write].data[7] = (uint8_t)(0xFFU & (rdhr >> 24U));
+    frame.data[0] = (uint8_t)(0xFFU & (rdlr >>  0U));
+    frame.data[1] = (uint8_t)(0xFFU & (rdlr >>  8U));
+    frame.data[2] = (uint8_t)(0xFFU & (rdlr >> 16U));
+    frame.data[3] = (uint8_t)(0xFFU & (rdlr >> 24U));
+    frame.data[4] = (uint8_t)(0xFFU & (rdhr >>  0U));
+    frame.data[5] = (uint8_t)(0xFFU & (rdhr >>  8U));
+    frame.data[6] = (uint8_t)(0xFFU & (rdhr >> 16U));
+    frame.data[7] = (uint8_t)(0xFFU & (rdhr >> 24U));
 
+#if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    xQueueSendToBackFromISR(can_rx_queue, &frame, &xHigherPriorityTaskWoken);
+#else
+    can_rx_buffer[rx_index_write] = frame;
     //Manage index
     rx_index_write += 1;
     if(rx_index_write >= CONFIG_MCUAL_CAN_RX_SIZE)
         rx_index_write = 0;
+#endif
 }
 
 void CAN1_RX0_IRQHandler(void)
