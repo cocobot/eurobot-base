@@ -296,7 +296,14 @@ int16_t mcual_can_transmit(const CanardCANFrame* const frame)
 
 void mcual_can_wait_tx_ended()
 {
-    ;
+    //while the interrupt is enable, the buffer is not empty
+    while(CAN1->IER & CAN_IER_TMEIE)
+        ;
+#ifdef CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
+#else
+//    while(tx_index_read != tx_index_write)
+//        ;
+#endif
 }
 
 int16_t mcual_can_recv(CanardCANFrame* const out_frame)
