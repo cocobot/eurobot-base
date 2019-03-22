@@ -374,26 +374,26 @@ int16_t cocobot_com_usart_receive(CanardCANFrame* const frame)
 void cocobot_com_retransmit(const CanardCANFrame * rx_frame, cocobot_com_source_t source)
 {
 #ifdef DEBUG_FRAME
- uprintf("[TRANSMIT] %lu/%d(%d) -- %d->%d -- %d %d %d %d %d %d %d %d\r\n",
-           rx_frame->id,
-           rx_frame->data_len,
-           source,
-           SOURCE_ID_FROM_ID(rx_frame->id),
-           DEST_ID_FROM_ID(rx_frame->id),
-           rx_frame->data[0],
-           rx_frame->data[1],
-           rx_frame->data[2],
-           rx_frame->data[3],
-           rx_frame->data[4],
-           rx_frame->data[5],
-           rx_frame->data[6],
-           rx_frame->data[7]);
+ //uprintf("[TRANSMIT] %lu/%d(%d) -- %d->%d -- %d %d %d %d %d %d %d %d\r\n",
+ //          rx_frame->id,
+ //          rx_frame->data_len,
+ //          source,
+ //          SOURCE_ID_FROM_ID(rx_frame->id),
+ //          DEST_ID_FROM_ID(rx_frame->id),
+ //          rx_frame->data[0],
+ //          rx_frame->data[1],
+ //          rx_frame->data[2],
+ //          rx_frame->data[3],
+ //          rx_frame->data[4],
+ //          rx_frame->data[5],
+ //          rx_frame->data[6],
+ //          rx_frame->data[7]);
 #endif
 
 #ifdef CONFIG_LIBCOCOBOT_COM_CAN
  if(source != COCOBOT_COM_SOURCE_CAN)
  {
-   canardSTM32Transmit(rx_frame);
+    mcual_can_transmit(rx_frame);
    usleep(10000);
  }
 #endif
@@ -450,7 +450,7 @@ uint64_t cocobot_com_process_event(void)
   rx_res = 1;
   while(rx_res > 0)
   {
-    rx_res = canardSTM32Receive(&rx_frame);
+    rx_res = mcual_can_recv_no_wait(&rx_frame);
     if (rx_res < 0)
     {
       // Failure - report
@@ -548,11 +548,11 @@ void cocobot_com_init(void)
 
 #ifndef CONFIG_OS_USE_FREERTOS
 #ifdef CONFIG_LIBCOCOBOT_COM_CAN
-  RCC->APB1ENR |= RCC_APB1ENR_CAN1EN;
-	CanardSTM32CANTimings canbus_timings;
-	canardSTM32ComputeCANTimings(mcual_clock_get_frequency_Hz(MCUAL_CLOCK_PERIPHERAL_1), 10000, &canbus_timings);
+  //RCC->APB1ENR |= RCC_APB1ENR_CAN1EN;
+	mcual_can_timings canbus_timings;
+	mcual_can_compute_timings(mcual_clock_get_frequency_Hz(MCUAL_CLOCK_PERIPHERAL_1), 10000, &canbus_timings);
 
-	canardSTM32Init(&canbus_timings, CanardSTM32IfaceModeNormal);
+	mcual_can_init(&canbus_timings, mcualCanIfaceModeNormal);
 #endif
 #endif
 
@@ -574,11 +574,11 @@ static void cocobot_com_thread(void * arg)
 
 #ifdef CONFIG_LIBCOCOBOT_COM_CAN
 #ifndef AUSBEE_SIM
-  RCC->APB1ENR |= RCC_APB1ENR_CAN1EN;
-	CanardSTM32CANTimings canbus_timings;
-	canardSTM32ComputeCANTimings(mcual_clock_get_frequency_Hz(MCUAL_CLOCK_PERIPHERAL_1), 10000, &canbus_timings);
+  //RCC->APB1ENR |= RCC_APB1ENR_CAN1EN;
+	mcual_can_timings canbus_timings;
+	mcual_can_compute_timings(mcual_clock_get_frequency_Hz(MCUAL_CLOCK_PERIPHERAL_1), 10000, &canbus_timings);
 
-	canardSTM32Init(&canbus_timings, CanardSTM32IfaceModeNormal);
+	mcual_can_init(&canbus_timings, mcualCanIfaceModeNormal);
 #endif
 #endif
 
