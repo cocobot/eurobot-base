@@ -245,18 +245,22 @@ int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode if
 
     CAN1->FMR &= ~CAN_FMR_FINIT;              // Leave initialization mode
 
+    //Enable Rx Fifo pending message isr
+    CAN1->IER |= CAN_IER_FMPIE1 | CAN_IER_FMPIE0;
+
     //Enable isr here
-    NVIC_SetPriority(CAN1_TX_IRQn, 5);
-    NVIC_SetPriority(CAN1_RX0_IRQn, 5);
-    NVIC_SetPriority(CAN1_RX1_IRQn, 5);
+    NVIC_SetPriority(CAN1_TX_IRQn, 10);
+    NVIC_SetPriority(CAN1_RX0_IRQn, 11);
+    NVIC_SetPriority(CAN1_RX1_IRQn, 12);
     NVIC_EnableIRQ(CAN1_TX_IRQn);
     NVIC_EnableIRQ(CAN1_RX0_IRQn);
     NVIC_EnableIRQ(CAN1_RX1_IRQn);
 
-    //Enable Rx Fifo pending message isr
-    CAN1->IER |= CAN_IER_FMPIE1 | CAN_IER_FMPIE0;
-
     //Todo : Missing: stats, mode automaticTxAbortOnError
+
+    //Need to prime the pump for TX isr
+    //Bad hack?
+    CAN1->sTxMailBox[2].TIR = CAN_TI0R_TXRQ;
 
     return 0;
 }
@@ -288,7 +292,6 @@ int16_t mcual_can_transmit(const CanardCANFrame* const frame)
         //}
     }
 #endif
-    
     //Enable TX interrupt
     CAN1->IER |= CAN_IER_TMEIE;
     return 1;
@@ -296,13 +299,14 @@ int16_t mcual_can_transmit(const CanardCANFrame* const frame)
 
 void mcual_can_wait_tx_ended()
 {
+#ifdef CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
+    //need to do better than that
+    while(CAN1->IER & CAN_IER_TMEIE)
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+#else
     //while the interrupt is enable, the buffer is not empty
     while(CAN1->IER & CAN_IER_TMEIE)
         ;
-#ifdef CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
-#else
-//    while(tx_index_read != tx_index_write)
-//        ;
 #endif
 }
 
@@ -438,7 +442,7 @@ void CAN1_TX_IRQHandler(void)
     }
     else if(CAN1->TSR & CAN_TSR_TME1)
     {
-        //All mailboxes are empty, add directly in mailbox 0
+        //All mailboxes are empty, add directly in mailbox 1
         if(is_empty)
             mcual_can_add_in_mailbox(1, frame);
         else
@@ -470,7 +474,7 @@ void CAN1_TX_IRQHandler(void)
     }
     else if(CAN1->TSR & CAN_TSR_TME2)
     {
-        //All mailboxes are empty, add directly in mailbox 0
+        //All mailboxes are empty, add directly in mailbox 2
         if(is_empty)
             mcual_can_add_in_mailbox(2, frame);
         else
@@ -494,7 +498,7 @@ void CAN1_TX_IRQHandler(void)
                     }
                 }
             } 
-            mcual_can_add_in_mailbox(1, frame);
+            mcual_can_add_in_mailbox(2, frame);
         }
     }
 }
@@ -506,7 +510,7 @@ static void mcual_can_rcev_frame(volatile CAN_FIFOMailBox_TypeDef* const mb)
     frame.id = convertFrameIDRegisterToCanard(mb->RIR);
     frame.data_len = (uint8_t)(mb->RDTR & CAN_RDT0R_DLC);
 
-    // Caching to regular (non volatile) memory for faster reads
+    // Catching to regular (non volatile) memory for faster reads
     const uint32_t rdlr = mb->RDLR;
     const uint32_t rdhr = mb->RDHR;
 
