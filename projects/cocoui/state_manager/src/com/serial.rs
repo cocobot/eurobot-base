@@ -278,6 +278,7 @@ fn write_thread(com: ComInstance, opened_serial_port: Arc<Mutex<Vec<Box<SerialMa
             let mut instance = node.lock().unwrap();
             
             while let Some(frame) = instance.pop_tx_queue() {
+                debug!("TX {:?}", frame);
                 match opened_serial_port.lock() {
                     Ok(mut list) => { 
                         for port in list.iter_mut() {

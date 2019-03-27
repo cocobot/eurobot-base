@@ -30,6 +30,7 @@ MCUAL_SIM_LOCAL_SRC_FILES=src/sim/clock.c \
 													src/sim/spi.c \
 													src/sim/i2c.c \
 													src/sim/loader.c \
+													src/sim/can.c \
 													src/sim/arch.c
 
 

@@ -6,7 +6,7 @@ extern crate log;
 use std::cell::RefCell;
 use std::cell::RefMut;
 use std::mem::swap;
-use std::collections::BinaryHeap;
+use std::collections::VecDeque;
 use std::cmp::Ordering;
 
  const BROADCAST_NODE_ID: u8 = 0;
@@ -468,7 +468,7 @@ pub struct Instance<T: Node<U>, U> {
     handler: T,
     user_reference: U,
     rx_states: Vec<RefCell<RxState>>,
-    queue: BinaryHeap<CANFrame>,
+    queue: VecDeque<CANFrame>,
 }
 
 impl<T: Node<U>, U> Instance<T, U> {
@@ -481,12 +481,12 @@ impl<T: Node<U>, U> Instance<T, U> {
             handler,
             user_reference,
             rx_states: Vec::new(),
-            queue: BinaryHeap::new(),
+            queue: VecDeque::new(),
         }
     }
 
     pub fn pop_tx_queue(&mut self) -> Option<CANFrame> {
-        self.queue.pop()
+        self.queue.pop_front()
     }
 
      pub fn set_local_node_id(&mut self, node_id: u8) {
@@ -618,6 +618,8 @@ impl<T: Node<U>, U> Instance<T, U> {
      }
 
     pub fn handle_rx_frame(&mut self, frame: CANFrame, timestamp_usec: u64) {
+
+        debug!("RX {:?}", frame);
         let transfer_type = frame.extract_transfer_type();
 
         let destination_node_id = match transfer_type {
@@ -652,6 +654,7 @@ impl<T: Node<U>, U> Instance<T, U> {
             source_node_id,
             destination_node_id,
         );
+        debug!(" -> SOURCE {:?}", source_node_id);
 
         if (frame.get_data_len() - 1) as usize > frame.get_data().len()  {
             error!("Frame data len = {}", frame.get_data_len());
@@ -895,7 +898,7 @@ impl<T: Node<U>, U> Instance<T, U> {
             data[payload.len()] = 0xC0 | (*transfer_id & 31);
 
             let frame = CANFrame::new(id, data, data_len);
-            self.queue.push(frame);
+            self.queue.push_back(frame);
         }
         else {                                                                  // Multi frame transfer
             let mut data_index = 0;
@@ -928,7 +931,8 @@ impl<T: Node<U>, U> Instance<T, U> {
 
                 data[i] = sot_eot | (toggle << 5) | (*transfer_id & 31);
                 let frame = CANFrame::new(can_id | CAN_FRAME_EFF, data, (i + 1) as u8);
-                self.queue.push(frame);
+                debug!("TXQ {:?}", frame);
+                self.queue.push_back(frame);
 
                 toggle ^= 1;
                 sot_eot = 0;

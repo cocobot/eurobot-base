@@ -61,6 +61,7 @@ pub struct Board {
     pub uid: String,
     pub name: String,
     pub path: Option<String>,
+    pub simu: Option<String>,
 }
 
 config!(com {
