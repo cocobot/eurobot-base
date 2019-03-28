@@ -22,8 +22,8 @@ impl Simulation {
     fn new(config: ConfigManagerInstance, com: ComInstance) -> Simulation {
          Simulation {
              config: config.clone(),
-             com,
-             physics: Physics::new(config),
+             com: com.clone(),
+             physics: Physics::new(config, com.clone()),
          }
     } 
 

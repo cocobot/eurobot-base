@@ -220,5 +220,9 @@ static inline int16_t mcual_can_compute_timings(const uint32_t peripheral_clock_
     return 0;
 }
 
+#ifdef AUSBEE_SIM
+void mcual_can_recv_new_frame(CanardCANFrame * frame);
+#endif //AUSBEE_SIM
+
 
 #endif

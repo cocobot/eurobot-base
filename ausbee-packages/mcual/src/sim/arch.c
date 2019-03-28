@@ -63,6 +63,22 @@ void mcual_arch_parse_cmd(char * cmd)
       mcual_timer_set_value(atoi(module_id), cnt);
     }
   }
+  else if(strcmp(module, "CAN") == 0)
+  {
+    CanardCANFrame frame;
+    char * ptr = data;
+    frame.id = strtoul(ptr, &ptr, 16); ptr += 1;
+    frame.data_len = strtoul(ptr, &ptr, 16); ptr += 1;
+    frame.data[0] = strtoul(ptr, &ptr, 16); ptr += 1;
+    frame.data[1] = strtoul(ptr, &ptr, 16); ptr += 1;
+    frame.data[2] = strtoul(ptr, &ptr, 16); ptr += 1;
+    frame.data[3] = strtoul(ptr, &ptr, 16); ptr += 1;
+    frame.data[4] = strtoul(ptr, &ptr, 16); ptr += 1;
+    frame.data[5] = strtoul(ptr, &ptr, 16); ptr += 1;
+    frame.data[6] = strtoul(ptr, &ptr, 16); ptr += 1;
+    frame.data[7] = strtoul(ptr, &ptr, 16); ptr += 1;
+    mcual_can_recv_new_frame(&frame);
+  }
 }
 
 void mcual_arch_parse_buffer(void)

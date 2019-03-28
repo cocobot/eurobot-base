@@ -185,7 +185,10 @@ impl Brain {
     pub fn send(&mut self, module: &str, id: usize, data: String) {
         match self.stdin.as_mut() {
             Some(stdin) => {
-                stdin.write_all(format!(">{}:{}/{}\n", module, id, data).as_bytes());
+                match stdin.write_all(format!(">{}:{}/{}\n", module, id, data).as_bytes()) {
+                    Ok(_) => {},
+                    Err(e) => {error!("write_all: {:?}", e);},
+                }
             }
             _ => {}
         }
@@ -201,6 +204,21 @@ impl Brain {
                 self.send("TIMER", i, format!("CNT={}", self.timers[i].get_count()));
             }
         }
+    }
+
+    pub fn can_tx(&mut self, frame: &CANFrame) {
+        self.send("CAN", 1, format!("{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}", 
+                                    frame.get_id(),
+                                    frame.get_data_len(),
+                                    frame.get_data()[0],
+                                    frame.get_data()[1],
+                                    frame.get_data()[2],
+                                    frame.get_data()[3],
+                                    frame.get_data()[4],
+                                    frame.get_data()[5],
+                                    frame.get_data()[6],
+                                    frame.get_data()[7]
+                                   ));
     }
 }
 

@@ -188,7 +188,9 @@ static void cocobot_com_on_transfer_received(CanardInstance* ins,
     {
       if(strcmp((char *)reqgsr.name.data, "ID") == 0)
       {
+#ifndef AUSBEE_SIM
         mcual_loader_flash_byte((uint32_t)&_canard_id, reqgsr.value.integer_value);
+#endif
         gsr.value.union_tag = UAVCAN_PROTOCOL_PARAM_VALUE_INTEGER_VALUE;
         gsr.value.integer_value = reqgsr.value.integer_value;
         gsr.name.len = reqgsr.name.len;
@@ -571,15 +573,14 @@ void cocobot_com_init(void)
 #ifdef CONFIG_OS_USE_FREERTOS
 static void cocobot_com_thread(void * arg)
 {
-
 #ifdef CONFIG_LIBCOCOBOT_COM_CAN
-#ifndef AUSBEE_SIM
   //RCC->APB1ENR |= RCC_APB1ENR_CAN1EN;
 	mcual_can_timings canbus_timings;
+#ifndef AUSBEE_SIM
 	mcual_can_compute_timings(mcual_clock_get_frequency_Hz(MCUAL_CLOCK_PERIPHERAL_1), 10000, &canbus_timings);
+#endif
 
 	mcual_can_init(&canbus_timings, mcualCanIfaceModeNormal);
-#endif
 #endif
 
   (void)arg;
