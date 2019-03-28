@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 
 //Init mutex
@@ -32,7 +33,36 @@ void mcual_arch_request(char * mod, int id, char * fmt, ...)
 
 void mcual_arch_parse_cmd(char * cmd)
 {
-  mcual_arch_request("ARCH", 0, "bad request=%s", cmd);
+  char * module = &cmd[1];
+  char * module_id = &cmd[1];
+  char * data = &cmd[1];
+  int i;
+
+  const int len = strlen(cmd);
+  for(i = 0; i < len; i += 1)
+  {
+    if(cmd[i] == ':')
+    {
+      cmd[i] = 0;
+      module_id = &cmd[i + 1];
+    }
+    if(cmd[i] == '/') 
+    {
+      cmd[i] = 0;
+      data = &cmd[i + 1];
+      break;
+    }
+  }
+
+  //parse tokens
+  if(strcmp(module, "TIMER") == 0)
+  {
+    if(strncmp(data, "CNT=", strlen("CNT=")) == 0)
+    {
+      uint32_t cnt = strtoul(data + strlen("CNT="), NULL, 10);
+      mcual_timer_set_value(atoi(module_id), cnt);
+    }
+  }
 }
 
 void mcual_arch_parse_buffer(void)

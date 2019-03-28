@@ -15,12 +15,12 @@ pub fn init(config: ConfigManagerInstance) -> state::StateManagerInstance {
 
     let conf = config.lock().unwrap();
     let simulation = conf.simulation;
-    com::init(conf.com.node_id, state_manager.clone(), conf.simulation);
+    let com = com::init(conf.com.node_id, state_manager.clone(), conf.simulation);
     drop(conf);
     
 
     if simulation {
-        simu::init(config.clone());
+        simu::init(config.clone(), com.clone());
     }
 
     state_manager

@@ -23,7 +23,7 @@ use super::state::StateManagerInstance;
 
 pub type ComInstance = Arc<Mutex<Com>>;
 
-struct ComHandler {
+pub struct ComHandler {
 }
 
 impl ComHandler {
@@ -105,7 +105,7 @@ impl Com {
         self.node = Some(Arc::new(Mutex::new(node)));
     }
 
-    fn get_node(&mut self) -> Option<Arc<Mutex<Instance<ComHandler, ComInstance>>>> {
+    pub fn get_node(&mut self) -> Option<Arc<Mutex<Instance<ComHandler, ComInstance>>>> {
         match self.node {
             Some(ref mut s) => Some(s.clone()),
             None => None,
@@ -123,7 +123,7 @@ impl Com {
     }
 }
 
-pub fn init(node_id: u8, state_manager: StateManagerInstance, simulation: bool) {
+pub fn init(node_id: u8, state_manager: StateManagerInstance, simulation: bool) -> ComInstance {
     //create channel for sending Msg only in one thread
     let (tx, rx): (Sender<msg::Msg>, Receiver<msg::Msg>) = mpsc::channel();
 
@@ -135,7 +135,7 @@ pub fn init(node_id: u8, state_manager: StateManagerInstance, simulation: bool) 
     let com_cpy = com.clone();
     let mut mcom = com.lock().unwrap();
     mcom.set_node(node);
-    StateManager::start(mcom.get_state_manager_mut().clone(), com_cpy);
+    StateManager::start(mcom.get_state_manager_mut().clone(), com_cpy.clone());
     drop(mcom);
 
     if !simulation {
@@ -180,4 +180,6 @@ pub fn init(node_id: u8, state_manager: StateManagerInstance, simulation: bool) 
             }
         }
     });
+
+    com_cpy
 }

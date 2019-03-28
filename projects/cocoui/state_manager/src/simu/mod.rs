@@ -4,9 +4,9 @@ mod brain;
 use std::sync::Arc;
 use std::sync::Mutex;
 use self::brain::Brain;
-use self::brain::BrainInstance;
 use self::physics::Physics;
 use self::physics::PhysicsInstance;
+use com::ComInstance;
 
 use config_manager::config::ConfigManagerInstance;
 
@@ -14,13 +14,15 @@ pub type SimulationInstance = Arc<Mutex<Simulation>>;
 
 pub struct Simulation {
     config: ConfigManagerInstance,
+    com: ComInstance,
     physics: PhysicsInstance,
 }
 
 impl Simulation {
-    fn new(config: ConfigManagerInstance) -> Simulation {
+    fn new(config: ConfigManagerInstance, com: ComInstance) -> Simulation {
          Simulation {
              config: config.clone(),
+             com,
              physics: Physics::new(config),
          }
     } 
@@ -30,7 +32,7 @@ impl Simulation {
         for b in boards {
             match &b.simu {
                 Some(p) => {
-                    let brain = Brain::new(p.to_owned());
+                    let brain = Brain::new(self.com.clone(), p.to_owned());
                     Brain::start(brain.clone());
                     self.physics.lock().unwrap().add_brain(brain);
                 },
@@ -40,7 +42,7 @@ impl Simulation {
     }
 }
 
-pub fn init(config: ConfigManagerInstance) {
-    let simu = Simulation::new(config);
+pub fn init(config: ConfigManagerInstance, com: ComInstance) {
+    let simu = Simulation::new(config, com);
     simu.start();
 }

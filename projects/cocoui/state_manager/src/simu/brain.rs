@@ -1,10 +1,16 @@
+extern crate canars;
+
 use std::process::{Command, Stdio};
 use std::io::{BufRead, BufReader};
-use std::io::Read;
 use std::io::Write;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::process::ChildStdin;
+use std::time::SystemTime;
+use std::time::UNIX_EPOCH;
+
+use self::canars::CANFrame;
+use com::ComInstance;
 
 #[derive(Copy, Clone)]
 pub struct Timer {
@@ -39,6 +45,7 @@ impl Timer {
 pub type BrainInstance = Arc<Mutex<Brain>>;
 
 pub struct Brain {
+    com: ComInstance,
     path: String,
     timers: [Timer; Brain::TIMER_COUNT],
     stdin: Option<ChildStdin>,
@@ -47,8 +54,9 @@ pub struct Brain {
 impl Brain {
     const TIMER_COUNT: usize = 5;
 
-    pub fn new(path: String) -> BrainInstance {
+    pub fn new(com: ComInstance, path: String) -> BrainInstance {
          let brain = Brain {
+             com,
              path,
              timers: [Timer::new(); Brain::TIMER_COUNT],
              stdin: None,
@@ -77,6 +85,12 @@ impl Brain {
             let split = line[1..].trim().split("/");
             let tokens: Vec<&str> = split.collect();
             let module: Vec<&str> = tokens.get(0).unwrap().split(":").collect();
+
+            if module.len() < 2 {
+                debug!("? {:?}", &line[1..]);
+                return;
+            }
+
             let module_name = module.get(0).unwrap(); 
             let module_id = module.get(1).unwrap().to_owned().parse::<usize>().unwrap();
 
@@ -87,7 +101,7 @@ impl Brain {
                         "RUN" => info!("Simulation started ({})", self.get_path()),
                         _ => warn!("Unexpected ARCH command: '{}'", cmd),
                     }
-                }
+                },
                 "TIMER" => {
                     let tokens: Vec<&str> = tokens.get(1).unwrap().split(":").collect();
                     let cmd = tokens.get(0).unwrap().as_ref(); 
@@ -98,7 +112,37 @@ impl Brain {
                         }
                         _ => warn!("Unexpected TIMER command: '{}'", cmd),
                     }
-                }
+                },
+                "CAN" => {
+                    let tokens: Vec<&str> = tokens.get(1).unwrap().split(":").collect();
+
+                    let mut data : [u8; CANFrame::CAN_FRAME_MAX_DATA_LEN] = [0; CANFrame::CAN_FRAME_MAX_DATA_LEN];
+                    for i in 0..8 {
+                        data[i] = u8::from_str_radix(tokens.get(i + 2).unwrap(), 16).unwrap();
+                    }
+
+                    let frame = CANFrame::new(
+                        u32::from_str_radix(tokens.get(0).unwrap(), 16).unwrap(),
+                        data,
+                        u8::from_str_radix(tokens.get(1).unwrap(), 16).unwrap(),
+                        );
+
+                    let timestamp =  SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
+                    let timestamp = timestamp.as_secs() * 1_000 +
+                        timestamp.subsec_nanos() as u64 / 1_000_000;
+
+                    match self.com.lock() {
+                        Ok(mut c) => {
+                            let mut node = c.get_node();
+                            drop(c);
+                            match node {
+                                Some(ref mut s) => s.lock().unwrap().handle_rx_frame(frame, timestamp),
+                                None => {},
+                            };
+                        },
+                        Err(e) => error!("Com lock: {:?}", e),
+                    }
+                },
 
                 _ => warn!("Unexpected command: {}", line),
             }
