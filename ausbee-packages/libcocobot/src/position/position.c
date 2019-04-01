@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_ASSERV
+
 #include <cocobot.h>
 #include <platform.h>
 #include <math.h>
@@ -317,6 +320,7 @@ int cocobot_position_handle_console(char * command)
 }
 */
 
+#if 0
 void cocobot_position_handle_async_com(void)
 {
   cocobot_com_send(COCOBOT_COM_POSITION_DEBUG_PID,
@@ -326,6 +330,7 @@ void cocobot_position_handle_async_com(void)
                    (double)cocobot_position_get_angle()
                   );
 }
+#endif
 
 void cocobot_position_set_x(float x)
 {
@@ -382,3 +387,4 @@ void cocobot_position_set_angle(float angle)
 
   cocobot_asserv_set_state(saved_state);
 }
+#endif

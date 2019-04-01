@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_OPPONENT_DETECTION
+
 #include <FreeRTOS.h>
 #include <task.h>
 #include <cocobot.h>
@@ -56,6 +59,7 @@ void cocobot_opponent_detection_task(void * arg)
   //arg is always NULL. Prevent "variable unused" warning
   (void)arg;
 
+#if 0
   while(1)
   {
     int force_wait = 1;
@@ -135,6 +139,7 @@ void cocobot_opponent_detection_task(void * arg)
     }
     
   }
+#endif
 }
 int cocobot_opponent_detection_is_in_alert(void)
 {
@@ -213,6 +218,7 @@ int cocobot_opponent_detection_get_us(int i)
     return 3000;
 }
 
+#if 0
 void cocobot_opponent_detection_send_debug(void)
 {
   cocobot_com_send(COCOBOT_COM_SEND_USIR_PID,
@@ -253,3 +259,5 @@ void cocobot_opponent_detection_handle_sync_com(uint16_t pid, uint8_t * data, ui
       break;
   }
 }
+#endif
+#endif

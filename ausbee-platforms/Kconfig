@@ -1,24 +1,3 @@
-config PLATFORM_BRAIN_2015
-  bool "Brain 2015"
-  #select device
-  select PLATFORM_ARM_CORE_CORTEX_M4
-  select USE_FPU
-  select PLATFORM_DEVICE_STM32F429_439xx
-
-config PLATFORM_BRAIN_2016
-  bool "Brain 2016"
-  #select device
-  select PLATFORM_ARM_CORE_CORTEX_M4
-  select USE_FPU
-  select PLATFORM_DEVICE_STM32F429_439xx
-
-config PLATFORM_BRAIN_2018
-  bool "Brain 2018"
-  #select device
-  select PLATFORM_ARM_CORE_CORTEX_M4
-  select USE_FPU
-  select PLATFORM_DEVICE_STM32F429_439xx
-
 config PLATFORM_BRAIN_2019
   bool "Brain 2019"
   #select device
@@ -26,28 +5,10 @@ config PLATFORM_BRAIN_2019
   select USE_FPU
   select PLATFORM_DEVICE_STM32F429_439xx
 
-config PLATFORM_NUCLEO_401
-  bool "Nucleo 401"
+config PLATFORM_COM_2019
+  bool "Com 2019"
   #select device
   select PLATFORM_ARM_CORE_CORTEX_M4
   select USE_FPU
   select PLATFORM_DEVICE_STM32F429_439xx
-
-config PLATFORM_DISCOVERY_F4
-  bool "Discovery f4"
-  #select device
-  select PLATFORM_ARM_CORE_CORTEX_M4
-  select USE_FPU
-  select PLATFORM_DEVICE_STM32F429_439xx
-
-config PLATFORM_PRISM_V1
-  bool "Prism v1"
-  #select device
-  select PLATFORM_AVR_CORE
-  select PLATFORM_DEVICE_ATXMEGA128A1
-
-config PLATFORM_STEP_2015
-  bool "Step 2015"
-  #select device
-  select PLATFORM_XMEGA_CORE
-  select PLATFORM_DEVICE_ATXMEGA16A4
+  select test

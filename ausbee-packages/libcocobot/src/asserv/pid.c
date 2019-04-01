@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_ASSERV
+
 #include <math.h>
 #include "cocobot/asserv_pid.h"
 
@@ -147,4 +150,4 @@ float cocobot_asserv_pid_get_d_contribution(cocobot_asserv_pid_t * pid)
 {
   return pid->d_contrib;
 }
-
+#endif

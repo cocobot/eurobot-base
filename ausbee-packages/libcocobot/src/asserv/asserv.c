@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_ASSERV
+
 #include <cocobot.h>
 #include <platform.h>
 #include "cocobot/asserv_ramp.h"
@@ -142,8 +145,6 @@ void cocobot_asserv_compute(void)
     platform_gpio_set(PLATFORM_GPIO_MOTOR_ENABLE);
 #elif defined(COCOBOT_LMD18200T)
     platform_gpio_clear(PLATFORM_GPIO_MOTOR_ENABLE);
-#else
-# error "not implemented"
 #endif
   }
   else
@@ -160,8 +161,6 @@ void cocobot_asserv_compute(void)
     platform_gpio_clear(PLATFORM_GPIO_MOTOR_ENABLE);
 #elif defined(COCOBOT_LMD18200T)
     platform_gpio_set(PLATFORM_GPIO_MOTOR_ENABLE);
-#else
-# error "not implemented"
 #endif
   }
 }
@@ -372,6 +371,7 @@ void cocobot_asserv_com_handler(uint16_t pid)
 #endif
 }
 
+#if 0
 void cocobot_asserv_handle_async_com(void)
 {
   cocobot_com_send(COCOBOT_COM_ASSERV_DIST_DEBUG_PID,
@@ -504,3 +504,5 @@ void cocobot_asserv_handle_sync_com(uint16_t pid, uint8_t * data, uint32_t len)
       break;
   }
 }
+#endif
+#endif

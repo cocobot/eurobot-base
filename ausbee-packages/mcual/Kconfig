@@ -26,6 +26,10 @@ config MCUAL_I2C
 	default n
 	depends on MCUAL && MCUAL_CLOCK
 
+config MCUAL_SPI
+	bool "+ SPI"
+	default n
+	depends on MCUAL && MCUAL_CLOCK
 
 config MCUAL_I2C_USE_FREERTOS
   bool "+ use FreeRTOS"
@@ -184,10 +188,31 @@ config MCUAL_USART_8_TX_SIZE
 comment "USART needs clock module"
 depends on MCUAL && !MCUAL_CLOCK
 
+config MCUAL_CAN
+	bool "+ CAN"
+	default n
+	depends on MCUAL && MCUAL_CLOCK
+
+
+config MCUAL_CAN_USE_FREERTOS_QUEUES
+  bool "+ use FreeRTOS queues"
+  depends on MCUAL_CAN
+  default n
+
+config MCUAL_CAN_RX_SIZE
+  int "+ CAN Rx buffer size"
+  depends on MCUAL_CAN
+  default 8
+
+config MCUAL_CAN_TX_SIZE
+  int "+ CAN Tx buffer size"
+  depends on MCUAL_CAN
+  default 8
+
+comment "CAN needs clock module"
+depends on MCUAL && !MCUAL_CLOCK
+
 config MCUAL_LOADER
 	bool "+ Loader"
 	default n
-	depends on MCUAL && MCUAL_USART
-
-comment "Loader needs USART module"
-depends on MCUAL && !MCUAL_USART
+	depends on MCUAL

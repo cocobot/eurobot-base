@@ -1,0 +1,9 @@
+[workspace]
+members = [
+    "ui",
+    "tui",
+    "state_manager",
+    "config_manager",
+    "dsdl",
+    "canars",
+]

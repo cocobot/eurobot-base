@@ -1,10 +1,13 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_PATHFINDER
+
 #include "cocobot/pathfinder_douglas_peucker.h"
 #include <cocobot.h>
 #include <math.h>
 
 void cocobot_pathfinder_douglas_peucker(cocobot_trajectory_final_s *trajectory, float threshold)
 {
-    cocobot_com_printf("DOUGLAS: Starting douglas peucker algo");
+    //cocobot_com_printf("DOUGLAS: Starting douglas peucker algo");
     uint8_t start_index = 0;
     uint8_t start_index_sav = 0;
     uint8_t target_index = trajectory->nbr_points - 1;
@@ -89,4 +92,4 @@ uint8_t cocobot_pathfinder_find_farthest_point(cocobot_trajectory_final_s *traj,
 
     return returnValue;
 }
-
+#endif

@@ -1,100 +1,197 @@
-choice
-    prompt "Pathfinder Table"
-
-config TABLE_2016
-    bool "2016"
-
-config TABLE_OTHER
-    bool "other"
-
-endchoice
-
-config LIBCOCOBOT_POSITION_TICK_PER_180DEG
-  int "+ Tick / 180deg"
-  depends on LIBCOCOBOT
-  default 1
-
-config LIBCOCOBOT_POSITION_TICK_PER_METER
-  int "+ Tick / 1m"
-  depends on LIBCOCOBOT
-  default 1000
+###
+config LIBCOCOBOT_ASSERV
+	bool "+ Asserv"
+	default n
+	depends on LIBCOCOBOT
 
 config LIBCOCOBOT_DIST_RAMP_MAX_SPEED
-  int "+ Distance ramp - maximum speed"
-  depends on LIBCOCOBOT
+  int " + Distance ramp - maximum speed"
+  depends on LIBCOCOBOT && LIBCOCOBOT_ASSERV
   default 0
 
 config LIBCOCOBOT_DIST_RAMP_MAX_ACCEL
-  int "+ Distance ramp - maximum acceleration"
-  depends on LIBCOCOBOT
+  int " + Distance ramp - maximum acceleration"
+  depends on LIBCOCOBOT && LIBCOCOBOT_ASSERV
   default 0
 
 config LIBCOCOBOT_ANGU_RAMP_MAX_SPEED
-  int "+ Angular ramp - maximum speed"
-  depends on LIBCOCOBOT
+  int " + Angular ramp - maximum speed"
+  depends on LIBCOCOBOT && LIBCOCOBOT_ASSERV
   default 0
 
 config LIBCOCOBOT_ANGU_RAMP_MAX_ACCEL
-  int "+ Angular ramp - maximum acceleration"
-  depends on LIBCOCOBOT
+  int " + Angular ramp - maximum acceleration"
+  depends on LIBCOCOBOT && LIBCOCOBOT_ASSERV
   default 0
 
 config LIBCOCOBOT_DIST_PID_KP
-  int "+ Distance PID - Kp"
-  depends on LIBCOCOBOT
+  int " + Distance PID - Kp"
+  depends on LIBCOCOBOT && LIBCOCOBOT_ASSERV
   default 0
 
 config LIBCOCOBOT_DIST_PID_KI
-  int "+ Distance PID - Ki"
-  depends on LIBCOCOBOT
+  int " + Distance PID - Ki"
+  depends on LIBCOCOBOT && LIBCOCOBOT_ASSERV
   default 0
 
 config LIBCOCOBOT_DIST_PID_KD
-  int "+ Distance PID - Kd"
-  depends on LIBCOCOBOT
+  int " + Distance PID - Kd"
+  depends on LIBCOCOBOT && LIBCOCOBOT_ASSERV
   default 0
 
 config LIBCOCOBOT_DIST_PID_MAX_INTEGRAL
-  int "+ Distance PID - max integral"
-  depends on LIBCOCOBOT
+  int " + Distance PID - max integral"
+  depends on LIBCOCOBOT && LIBCOCOBOT_ASSERV
   default 0
 
 config LIBCOCOBOT_DIST_PID_MAX_ERROR_FOR_INTEGRATION
-  int "+ Distance PID - max error for integration"
-  depends on LIBCOCOBOT
+  int " + Distance PID - max error for integration"
+  depends on LIBCOCOBOT && LIBCOCOBOT_ASSERV
   default 0
 
 config LIBCOCOBOT_ANGU_PID_KP
-  int "+ Anguar PID - Kp"
-  depends on LIBCOCOBOT
+  int " + Anguar PID - Kp"
+  depends on LIBCOCOBOT && LIBCOCOBOT_ASSERV
   default 0
 
 config LIBCOCOBOT_ANGU_PID_KI
-  int "+ Angular PID - Ki"
-  depends on LIBCOCOBOT
+  int " + Angular PID - Ki"
+  depends on LIBCOCOBOT && LIBCOCOBOT_ASSERV
   default 0
 
 config LIBCOCOBOT_ANGU_PID_KD
-  int "+ Angular PID - Kd"
-  depends on LIBCOCOBOT
+  int " + Angular PID - Kd"
+  depends on LIBCOCOBOT && LIBCOCOBOT_ASSERV
   default 0
 
 config LIBCOCOBOT_ANGU_PID_MAX_INTEGRAL
-  int "+ Angular PID - max integral"
-  depends on LIBCOCOBOT
+  int " + Angular PID - max integral"
+  depends on LIBCOCOBOT && LIBCOCOBOT_ASSERV
   default 0
 
 config LIBCOCOBOT_ANGU_PID_MAX_ERROR_FOR_INTEGRATION
-  int "+ Angular PID - max error for integration"
-  depends on LIBCOCOBOT
+  int " + Angular PID - max error for integration"
+  depends on LIBCOCOBOT && LIBCOCOBOT_ASSERV
   default 0
 
 config LIBCOCOBOT_LEFT_MOTOR_ALPHA
-  int "+ Left motor low pass filter - alpha"
-  depends on LIBCOCOBOT
+  int " + Left motor low pass filter - alpha"
+  depends on LIBCOCOBOT && LIBCOCOBOT_ASSERV
   default 1000
 
 config LIBCOCOBOT_RIGHT_MOTOR_ALPHA
-  int "+ Right motor low pass filter - alpha"
-  depends on LIBCOCOBOT
+  int " + Right motor low pass filter - alpha"
+  depends on LIBCOCOBOT && LIBCOCOBOT_ASSERV
   default 1000
+
+###
+config LIBCOCOBOT_GAME_STATE
+	bool "+ Game state"
+	default n
+	depends on LIBCOCOBOT
+
+###
+config LIBCOCOBOT_PATHFINDER
+	bool "+ Pathfinder"
+	default n
+	depends on LIBCOCOBOT
+
+choice
+  prompt " + Pathfinder Table"
+	depends on LIBCOCOBOT && LIBCOCOBOT_PATHFINDER
+  config TABLE_2016
+      bool "2016"
+  config TABLE_OTHER
+      bool "other"
+endchoice
+
+###
+config LIBCOCOBOT_SHIFTERS
+	bool "+ Shifters"
+	default n
+	depends on LIBCOCOBOT
+
+###
+config LIBCOCOBOT_LCD
+	bool "+ LCD"
+	default n
+	depends on LIBCOCOBOT
+
+###
+config LIBCOCOBOT_OPPONENT_DETECTION
+	bool "+ Opponent detection"
+	default n
+	depends on LIBCOCOBOT
+
+###
+config LIBCOCOBOT_POSITION
+	bool "+ Position"
+	default n
+	depends on LIBCOCOBOT
+
+config LIBCOCOBOT_POSITION_TICK_PER_180DEG
+  int " + Tick / 180deg"
+  depends on LIBCOCOBOT && LIBCOCOBOT_POSITION
+  default 1
+
+config LIBCOCOBOT_POSITION_TICK_PER_METER
+  int " + Tick / 1m"
+  depends on LIBCOCOBOT && LIBCOCOBOT_POSITION
+  default 1000
+
+choice
+  prompt " + Encoder Type"
+	depends on LIBCOCOBOT && LIBCOCOBOT_POSITION
+  config ENCODER_SPI
+      bool "spiEncoders"
+  config ENCODER_QUAD
+      bool "quadEncoder"
+endchoice
+
+###
+config LIBCOCOBOT_ACTION_SCHEDULER
+	bool "+ Action scheduler"
+	default n
+	depends on LIBCOCOBOT
+
+###
+config LIBCOCOBOT_TRAJECTORY
+	bool "+ Trajectory"
+	default n
+	depends on LIBCOCOBOT
+
+###
+config LIBCOCOBOT_COM
+	bool "+ COM"
+	default n
+	depends on LIBCOCOBOT
+
+config LIBCOCOBOT_COM_MEMORY_POOL_SIZE
+  int " + Memory pool size"
+  depends on LIBCOCOBOT && LIBCOCOBOT_COM
+  default 1024
+
+config LIBCOCOBOT_COM_TIMER
+  int " + Timer ID"
+  depends on LIBCOCOBOT && LIBCOCOBOT_COM
+  default 1
+
+config LIBCOCOBOT_COM_USART
+	bool " + USART"
+	default n
+	depends on LIBCOCOBOT && LIBCOCOBOT_COM
+
+config LIBCOCOBOT_COM_CAN
+	bool " + CAN"
+	default n
+	depends on LIBCOCOBOT && LIBCOCOBOT_COM
+
+config LIBCOCOBOT_COM_RF
+	bool " + RF"
+	default n
+	depends on LIBCOCOBOT && LIBCOCOBOT_COM && SPIRIT1
+
+config LIBCOCOBOT_LOADER
+	bool "+ Loader"
+	default n
+	depends on LIBCOCOBOT && LIBCOCOBOT_COM

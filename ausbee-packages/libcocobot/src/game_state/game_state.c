@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_ASSERV
+
 #include <stdlib.h>
 #include <cocobot.h>
 #include <FreeRTOS.h>
@@ -17,14 +20,15 @@ static cocobot_game_state_color_t _color;
 static void * _userdata[USER_DATA_SIZE];
 static uint8_t _starter_removed;
 static TickType_t _start_time = 0;
-static TickType_t _last_update_time = 0;
+//static TickType_t _last_update_time = 0;
 static int _score = 0;
 
-static unsigned char _seven_seg[10] = {
-  0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7C,0x07,0x7F,0x67};
+//static unsigned char _seven_seg[10] = {
+//  0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7C,0x07,0x7F,0x67};
 
 void cocobot_game_state_display_score(void)
 {
+#if 0
   int i;
   int j;
   unsigned char digit[SCORE_DIGIT];
@@ -44,6 +48,7 @@ void cocobot_game_state_display_score(void)
     }
   }
   cocobot_shifters_update();
+#endif
 }
 
 void cocobot_game_state_add_points_to_score(int _toAdd)
@@ -60,7 +65,7 @@ void cocobot_game_state_set_score(int score)
 {
    _score = score;
 }
-
+#if 0
 void cocobot_game_state_handle_async_com(void)
 {
   TickType_t now = xTaskGetTickCount();
@@ -77,6 +82,7 @@ void cocobot_game_state_handle_async_com(void)
                     );
   }
 }
+#endif
 
 static void cocobot_game_state_match_ended_event(TimerHandle_t xTimer)
 {
@@ -165,3 +171,4 @@ void * cocobot_game_state_get_userdata(unsigned int id)
 {
   return _userdata[id];
 }
+#endif

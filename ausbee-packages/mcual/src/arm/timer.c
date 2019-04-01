@@ -75,12 +75,8 @@ static mcual_clock_id_t mcual_timer_get_clock(mcual_timer_t timer)
   return 0;
 }
 
-void mcual_timer_init(mcual_timer_t timer, int32_t freq_Hz)
+static void mcual_timer_set_clock(mcual_timer_t timer)
 {
-  TIM_TypeDef * reg = mcual_timer_get_register(timer);
-
-  mcual_clock_id_t clock = mcual_timer_get_clock(timer);
-  
   //enable clock
   switch(timer)
   {
@@ -121,6 +117,17 @@ void mcual_timer_init(mcual_timer_t timer, int32_t freq_Hz)
       break;
   }
 
+
+}
+
+void mcual_timer_init(mcual_timer_t timer, int32_t freq_Hz)
+{
+  TIM_TypeDef * reg = mcual_timer_get_register(timer);
+
+  mcual_clock_id_t clock = mcual_timer_get_clock(timer);
+
+  mcual_timer_set_clock(timer);
+  
   if(freq_Hz > 0)
   {
     reg->ARR = mcual_clock_get_frequency_Hz(clock) * 2 / freq_Hz;
@@ -130,13 +137,39 @@ void mcual_timer_init(mcual_timer_t timer, int32_t freq_Hz)
   {
     reg->ARR = 0xFFFFFFFF;
     int32_t pres = -freq_Hz;
-    reg->PSC = (pres - 1);
+    reg->PSC = mcual_clock_get_frequency_Hz(clock) * 2 / pres;
+    reg->EGR = TIM_EGR_UG;
   }
   reg->CCMR1 = 0;
   reg->CCMR2 = 0;
   reg->CCER = 0;
 
   reg->CNT = 0;
+  reg->CR1 = TIM_CR1_CEN;
+}
+
+//For 32 bits timers (TIM2/TIM5)
+void mcual_timer_init_encoder(mcual_timer_t timer)
+{
+  TIM_TypeDef * reg = mcual_timer_get_register(timer);
+
+  mcual_timer_set_clock(timer);
+
+  //ARR to maximum value
+  reg->ARR = 0xFFFFFFFF;
+
+  //Timer in encoder mode 3 (both edge)
+  reg->SMCR = TIM_SMCR_SMS_0 | TIM_SMCR_SMS_1;
+
+  //Channel 1 and 2 are inputs mapped on TI1 and TI2 respectivelly
+  reg->CCMR1 = TIM_CCMR1_CC1S_0 | TIM_CCMR1_CC2S_0;
+
+  //No input filter, Polarity is not inverted
+
+  //To avoid overflow, set it to the middle
+  reg->CNT = 0x7FFFFFFF;
+
+  //Start the timer
   reg->CR1 = TIM_CR1_CEN;
 }
 

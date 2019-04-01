@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_ASSERV
+
 #include <cocobot/vrep.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -238,3 +241,4 @@ void cocobot_vrep_position_set_angle(float angle)
     exit(EXIT_FAILURE);
   }
 }
+#endif

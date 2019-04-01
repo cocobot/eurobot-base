@@ -2,6 +2,7 @@ LIBCOCOBOT_LOCAL_FILE_PATH=$(CONFIG_CUSTOM_PACKAGES_PATH)/libcocobot
 
 # Include files
 LIBCOCOBOT_LOCAL_INCLUDE_PATH=include/
+LIBCOCOBOT_LOCAL_INCLUDE_PATH+=src/com/dsdl/
 
 #find all .c files and populate LIBCOCOBOT_SRC_FILES
 $(eval $(call pkg-generic-auto-discover-local-common-srcs,LIBCOCOBOT))
@@ -13,7 +14,6 @@ LIBCOCOBOT_TEMP_SIM_FILES+=src/position/vrep.c
 LIBCOCOBOT_LOCAL_SRC_FILES:=$(filter-out $(LIBCOCOBOT_TEMP_SIM_FILES),$(LIBCOCOBOT_LOCAL_SRC_FILES))
 LIBCOCOBOT_LOCAL_SRC_FILES:=$(filter-out $(LIBCOCOBOT_TARGET_LOCAL_SRC_FILES),$(LIBCOCOBOT_LOCAL_SRC_FILES))
 LIBCOCOBOT_LOCAL_SRC_FILES:=$(filter-out src/pathfinder/pathfinder_table_2016.c,$(LIBCOCOBOT_LOCAL_SRC_FILES))
-LIBCOCOBOT_LOCAL_SRC_FILES:=$(filter-out src/pathfinder/pathfinder_table_2018.c,$(LIBCOCOBOT_LOCAL_SRC_FILES))
 
 ifeq ($(CONFIG_VREP),y)
 LIBCOCOBOT_SIM_LOCAL_SRC_FILES+=src/position/vrep.c

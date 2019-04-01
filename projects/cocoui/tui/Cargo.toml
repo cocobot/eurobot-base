@@ -1,0 +1,9 @@
+[package]
+name = "tui"
+version = "0.1.0"
+authors = ["Damien Espitallier <damien.espitallier@gmail.com>"]
+
+[dependencies]
+state_manager = { path = "../state_manager" }
+termion = "1.5.1"
+tui = "0.3.0"

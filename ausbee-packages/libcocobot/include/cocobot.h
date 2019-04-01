@@ -5,8 +5,6 @@
 #include "cocobot_config.h"
 
 #include <cocobot/position.h>
-#include <cocobot/console.h>
-#include <cocobot/com.h>
 #include <cocobot/lcd.h>
 #include <cocobot/trajectory.h>
 #include <cocobot/asserv.h>
@@ -15,5 +13,7 @@
 #include <cocobot/game_state.h>
 #include <cocobot/opponent_detection.h>
 #include <cocobot/shifters.h>
+#include <cocobot/com.h>
+#include <cocobot/loader.h>
 
 #endif// COCOBOT_H

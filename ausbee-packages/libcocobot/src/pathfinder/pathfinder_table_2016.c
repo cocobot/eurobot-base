@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_PATHFINDER
+
 #include "cocobot/pathfinder_table_utils.h"
 #include "cocobot.h"
 #include <string.h>
@@ -90,4 +93,4 @@ void cocobot_pathfinder_initialize_table(cocobot_node_s table[][TABLE_WIDTH/GRID
     cocobot_pathfinder_set_circle(table, 3000/GRID_SIZE, 2000/GRID_SIZE, 250/GRID_SIZE, OBSTACLE);
 
 }
-
+#endif

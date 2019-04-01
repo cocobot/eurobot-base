@@ -4,10 +4,14 @@
 #include <mcual.h>
 #include <stdint.h>
 
+#define PLATFORM_MAJOR                19
+#define PLATFORM_MINOR                0
+
 #define PLATFORM_LED0                 (1 << 0)
 
 #define PLATFORM_GPIO_STARTER         (1 << 0)
-#define PLATFORM_GPIO_EEPROM_WP       (1 << 0)
+#define PLATFORM_GPIO_COLOR           (1 << 1)
+#define PLATFORM_GPIO_EEPROM_WP       (1 << 2)
 
 #define PLATFORM_USART_DEBUG          MCUAL_USART1
 
@@ -17,6 +21,12 @@
 #define PLATFORM_SPI_GYRO_SELECT      1
 
 #define PLATFORM_I2C_EEPROM           MCUAL_I2C1
+
+#define PLATFORM_FLASH_SECTOR_BOOTLOADER_START  0
+#define PLATFORM_FLASH_SECTOR_BOOTLOADER_END    0
+#define PLATFORM_FLASH_SECTOR_PGM_START         1
+#define PLATFORM_FLASH_SECTOR_PGM_END           11
+#define PLATFORM_FLASH_PGM_START                0x08004000
 
 void platform_init(void);
 void platform_led_toggle(uint8_t led);

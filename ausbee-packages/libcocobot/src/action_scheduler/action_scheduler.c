@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_LIBCOCOBOT_ACTION_SCHEDULER
+
 #include <cocobot.h>
 #include <FreeRTOS.h>
 #include <task.h>
@@ -158,7 +161,7 @@ void cocobot_action_scheduler_add_action(char name[ACTION_NAME_LENGTH],
   }
   else
   {
-    cocobot_com_printf("[Warning] cocobot_action_scheduler: Action list full.\n");
+    //cocobot_com_printf("[Warning] cocobot_action_scheduler: Action list full.\n");
   }
 }
 
@@ -371,6 +374,7 @@ cocobot_action_callback_result_t cocobot_action_scheduler_execute_best_action(vo
   return cocobot_action_scheduler_execute_action(best_action);
 }
 
+#if 0
 void cocobot_action_scheduler_handle_async_com(void)
 {
   if(action_scheduler_updated)
@@ -398,6 +402,7 @@ void cocobot_action_scheduler_handle_async_com(void)
     );
   }
 }
+#endif
 
 
 /*
@@ -543,3 +548,4 @@ int cocobot_action_scheduler_handle_console(char * command)
   return 0;
 }
 */
+#endif
