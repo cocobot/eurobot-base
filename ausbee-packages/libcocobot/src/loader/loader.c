@@ -37,8 +37,10 @@ static void cocobot_loader_read(void)
   rr.path.path.len = 0;
   rr.path.path.data = NULL;
 
+  printf("READ OFFSET %llu\n", _offset);
+
   //request flash memory if we have enough RAM
-  void * buf = pvPortMalloc(UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_RESPONSE_MAX_SIZE); 
+  void * buf = pvPortMalloc(UAVCAN_PROTOCOL_FILE_READ_REQUEST_MAX_SIZE); 
   if(buf != NULL) {
     const int size = uavcan_protocol_file_ReadRequest_encode(&rr, buf);
     cocobot_com_request_or_respond(_src_node_id,
@@ -49,6 +51,7 @@ static void cocobot_loader_read(void)
                                    CanardRequest,
                                    buf,
                                    (uint16_t)size);
+    vPortFree(buf);
   }
 }
 
@@ -70,11 +73,13 @@ uint8_t cocobot_loader_should_accept_transfer(uint64_t* out_data_type_signature,
     return true;
   }
 
+  printf("TTT %d %d %d\n", transfer_type, data_type_id, _mode);
   //Accept Read file in loading mode only
-  if ((transfer_type == CanardTransferTypeRequest) &&
-      (data_type_id == UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_ID) &&
+  if ((transfer_type == CanardTransferTypeResponse) &&
+      (data_type_id == UAVCAN_PROTOCOL_FILE_READ_ID) &&
       (_mode == LOADER_MODE_LOADING))
   {
+  printf("TrZETT %d %d %d\n", transfer_type, data_type_id, _mode);
     *out_data_type_signature = UAVCAN_PROTOCOL_FILE_READ_SIGNATURE;
     return true;
   }
@@ -84,6 +89,7 @@ uint8_t cocobot_loader_should_accept_transfer(uint64_t* out_data_type_signature,
 
 uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
 {
+  printf("PLOP !\n");
   if ((transfer->transfer_type == CanardTransferTypeRequest) &&
       (transfer->data_type_id == UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_ID))
   {
@@ -149,10 +155,12 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
     return 1;
   }
 
+  printf("DBG 1\n");
   if ((transfer->transfer_type == CanardTransferTypeResponse) &&
       (transfer->data_type_id == UAVCAN_PROTOCOL_FILE_READ_ID) &&
       (_mode == LOADER_MODE_LOADING))
   {
+    printf("DBG 2\n");
     uavcan_protocol_file_ReadResponse read; 
     void * dynbuf = NULL;
 
@@ -161,7 +169,7 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
     if(dynbuf != NULL)
     {
       uint8_t * pdynbuf = dynbuf;
-      if(uavcan_protocol_file_ReadResponse_decode(transfer, 0, &read, &pdynbuf) >= 0)
+      if(uavcan_protocol_file_ReadResponse_decode(transfer, transfer->payload_len, &read, &pdynbuf) >= 0)
       {
         //release rx memory before tx
         cocobot_com_release_rx_transfer_payload(transfer);

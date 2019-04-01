@@ -1,31 +1,29 @@
-mod physics;
 mod brain;
+mod physics;
 
-use std::sync::Arc;
-use std::sync::Mutex;
 use self::brain::Brain;
 use self::physics::Physics;
 use self::physics::PhysicsInstance;
-use com::ComInstance;
+use canars::CANFrame;
+use com::Com;
+use std::sync::mpsc::Receiver;
 
 use config_manager::config::ConfigManagerInstance;
 
-pub type SimulationInstance = Arc<Mutex<Simulation>>;
-
 pub struct Simulation {
     config: ConfigManagerInstance,
-    com: ComInstance,
+    com: Com,
     physics: PhysicsInstance,
 }
 
 impl Simulation {
-    fn new(config: ConfigManagerInstance, com: ComInstance) -> Simulation {
-         Simulation {
-             config: config.clone(),
-             com: com.clone(),
-             physics: Physics::new(config, com.clone()),
-         }
-    } 
+    fn new(config: ConfigManagerInstance, com: Com, tx_can: Receiver<CANFrame>) -> Simulation {
+        Simulation {
+            config: config.clone(),
+            com,
+            physics: Physics::new(config, tx_can),
+        }
+    }
 
     fn start(&self) {
         let boards = &self.config.lock().unwrap().com.boards;
@@ -33,16 +31,16 @@ impl Simulation {
             match &b.simu {
                 Some(p) => {
                     let brain = Brain::new(self.com.clone(), p.to_owned());
-                    Brain::start(brain.clone());
+                    Brain::start(brain.clone(), self.physics.clone());
                     self.physics.lock().unwrap().add_brain(brain);
-                },
-                _ => {},
+                }
+                _ => {}
             }
         }
     }
 }
 
-pub fn init(config: ConfigManagerInstance, com: ComInstance) {
-    let simu = Simulation::new(config, com);
+pub fn init(config: ConfigManagerInstance, com: Com, tx_can: Receiver<CANFrame>) {
+    let simu = Simulation::new(config, com, tx_can);
     simu.start();
 }

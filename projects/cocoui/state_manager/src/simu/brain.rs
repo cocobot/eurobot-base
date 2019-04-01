@@ -1,16 +1,16 @@
 extern crate canars;
 
-use std::process::{Command, Stdio};
-use std::io::{BufRead, BufReader};
 use std::io::Write;
+use std::io::{BufRead, BufReader};
+use std::process::ChildStdin;
+use std::process::{Command, Stdio};
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::process::ChildStdin;
-use std::time::SystemTime;
-use std::time::UNIX_EPOCH;
 
 use self::canars::CANFrame;
-use com::ComInstance;
+use com::Com;
+use simu::physics::PhysicsInstance;
+
 
 #[derive(Copy, Clone)]
 pub struct Timer {
@@ -19,11 +19,8 @@ pub struct Timer {
 }
 
 impl Timer {
-    pub fn new() -> Timer{
-        Timer {
-            freq: 0,
-            count: 0,
-        }
+    pub fn new() -> Timer {
+        Timer { freq: 0, count: 0 }
     }
 
     pub fn init(&mut self, freq: i32) {
@@ -45,7 +42,7 @@ impl Timer {
 pub type BrainInstance = Arc<Mutex<Brain>>;
 
 pub struct Brain {
-    com: ComInstance,
+    com: Com,
     path: String,
     timers: [Timer; Brain::TIMER_COUNT],
     stdin: Option<ChildStdin>,
@@ -54,17 +51,17 @@ pub struct Brain {
 impl Brain {
     const TIMER_COUNT: usize = 5;
 
-    pub fn new(com: ComInstance, path: String) -> BrainInstance {
-         let brain = Brain {
-             com,
-             path,
-             timers: [Timer::new(); Brain::TIMER_COUNT],
-             stdin: None,
-         };
+    pub fn new(com: Com, path: String) -> BrainInstance {
+        let brain = Brain {
+            com,
+            path,
+            timers: [Timer::new(); Brain::TIMER_COUNT],
+            stdin: None,
+        };
 
-         let instance = Arc::new(Mutex::new(brain));
+        let instance = Arc::new(Mutex::new(brain));
 
-         instance
+        instance
     }
 
     fn timer_init(&mut self, module_id: usize, freq: i32) {
@@ -75,36 +72,38 @@ impl Brain {
         &self.path
     }
 
-    fn parse(&mut self, line: &str) {
+    fn parse(&mut self, line: &str) -> bool {
         let bytes = line.as_bytes();
         if bytes[0] != '>' as u8 {
             //print debug from simulator in console
             debug!("{}", line.trim());
-        }
-        else {
+        } else {
             let split = line[1..].trim().split("/");
             let tokens: Vec<&str> = split.collect();
             let module: Vec<&str> = tokens.get(0).unwrap().split(":").collect();
 
             if module.len() < 2 {
                 debug!("? {:?}", &line[1..]);
-                return;
+                return false;
             }
 
-            let module_name = module.get(0).unwrap(); 
+            let module_name = module.get(0).unwrap();
             let module_id = module.get(1).unwrap().to_owned().parse::<usize>().unwrap();
 
             match module_name.as_ref() {
                 "ARCH" => {
-                    let cmd = tokens.get(1).unwrap().as_ref(); 
+                    let cmd = tokens.get(1).unwrap().as_ref();
                     match cmd {
                         "RUN" => info!("Simulation started ({})", self.get_path()),
+                        "REBOOT" => { 
+                            return true
+                        },
                         _ => warn!("Unexpected ARCH command: '{}'", cmd),
                     }
-                },
+                }
                 "TIMER" => {
                     let tokens: Vec<&str> = tokens.get(1).unwrap().split(":").collect();
-                    let cmd = tokens.get(0).unwrap().as_ref(); 
+                    let cmd = tokens.get(0).unwrap().as_ref();
                     match cmd {
                         "INIT" => {
                             let freq = tokens.get(1).unwrap().to_owned().parse::<i32>().unwrap();
@@ -112,11 +111,12 @@ impl Brain {
                         }
                         _ => warn!("Unexpected TIMER command: '{}'", cmd),
                     }
-                },
+                }
                 "CAN" => {
                     let tokens: Vec<&str> = tokens.get(1).unwrap().split(":").collect();
 
-                    let mut data : [u8; CANFrame::CAN_FRAME_MAX_DATA_LEN] = [0; CANFrame::CAN_FRAME_MAX_DATA_LEN];
+                    let mut data: [u8; CANFrame::CAN_FRAME_MAX_DATA_LEN] =
+                        [0; CANFrame::CAN_FRAME_MAX_DATA_LEN];
                     for i in 0..8 {
                         data[i] = u8::from_str_radix(tokens.get(i + 2).unwrap(), 16).unwrap();
                     }
@@ -125,57 +125,60 @@ impl Brain {
                         u32::from_str_radix(tokens.get(0).unwrap(), 16).unwrap(),
                         data,
                         u8::from_str_radix(tokens.get(1).unwrap(), 16).unwrap(),
-                        );
+                    );
 
-                    let timestamp =  SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
-                    let timestamp = timestamp.as_secs() * 1_000 +
-                        timestamp.subsec_nanos() as u64 / 1_000_000;
-
-                    match self.com.lock() {
-                        Ok(mut c) => {
-                            let mut node = c.get_node();
-                            drop(c);
-                            match node {
-                                Some(ref mut s) => s.lock().unwrap().handle_rx_frame(frame, timestamp),
-                                None => {},
-                            };
-                        },
-                        Err(e) => error!("Com lock: {:?}", e),
-                    }
-                },
+                    self.com.handle_rx_frame(frame);
+                }
 
                 _ => warn!("Unexpected command: {}", line),
             }
         }
+
+        false
     }
 
-    pub fn start(instance: BrainInstance) {
-
+    pub fn start(instance: BrainInstance, physics: PhysicsInstance) {
         let mut locked_instance = instance.lock().unwrap();
-
         info!("Start simulation: {}", locked_instance.get_path());
         let child = Command::new(locked_instance.get_path().to_owned())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .spawn().unwrap();
-
         locked_instance.stdin = Some(child.stdin.unwrap());
         drop(locked_instance);
 
         let stdout = child.stdout.unwrap();
+        let th_instance = instance.clone();
         std::thread::spawn(move || {
             let mut reader = BufReader::new(stdout);
             loop {
                 let mut line = String::new();
                 if reader.read_line(&mut line).is_ok() {
                     if line.len() != 0 {
-                        instance.lock().unwrap().parse(&line);
-                    }
-                    else {
+                        let mut locked_instance = th_instance.lock().unwrap();
+                        let reboot_me = locked_instance.parse(&line);
+                        drop(locked_instance);
+
+                        if reboot_me {
+                            let locked_instance = th_instance.lock().unwrap();
+                            let path = locked_instance.get_path().to_owned();
+                            let com = locked_instance.com.clone();
+                            warn!("Stop simulation: {}", path);
+                            drop(locked_instance);
+                            let mut ph = physics.lock().unwrap();
+                            ph.remove_brain(th_instance);
+                            drop(ph);
+
+                            //create new instance
+                            let brain = Brain::new(com, path);
+                            Brain::start(brain.clone(), physics.clone());
+                            physics.lock().unwrap().add_brain(brain);
+                            break;
+                        }
+                    } else {
                         break;
                     }
-                }
-                else {
+                } else {
                     break;
                 }
             }
@@ -186,8 +189,10 @@ impl Brain {
         match self.stdin.as_mut() {
             Some(stdin) => {
                 match stdin.write_all(format!(">{}:{}/{}\n", module, id, data).as_bytes()) {
-                    Ok(_) => {},
-                    Err(e) => {error!("write_all: {:?}", e);},
+                    Ok(_) => {}
+                    Err(e) => {
+                        error!("write_all: {:?}", e);
+                    }
                 }
             }
             _ => {}
@@ -207,18 +212,22 @@ impl Brain {
     }
 
     pub fn can_tx(&mut self, frame: &CANFrame) {
-        self.send("CAN", 1, format!("{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}", 
-                                    frame.get_id(),
-                                    frame.get_data_len(),
-                                    frame.get_data()[0],
-                                    frame.get_data()[1],
-                                    frame.get_data()[2],
-                                    frame.get_data()[3],
-                                    frame.get_data()[4],
-                                    frame.get_data()[5],
-                                    frame.get_data()[6],
-                                    frame.get_data()[7]
-                                   ));
+        self.send(
+            "CAN",
+            1,
+            format!(
+                "{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}:{:X}",
+                frame.get_id(),
+                frame.get_data_len(),
+                frame.get_data()[0],
+                frame.get_data()[1],
+                frame.get_data()[2],
+                frame.get_data()[3],
+                frame.get_data()[4],
+                frame.get_data()[5],
+                frame.get_data()[6],
+                frame.get_data()[7]
+            ),
+        );
     }
 }
-

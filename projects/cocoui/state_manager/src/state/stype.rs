@@ -1,5 +1,5 @@
-use std::time::SystemTime;
 use std::time::Duration;
+use std::time::SystemTime;
 
 #[derive(Debug, Copy, Clone)]
 pub enum NodeInfoHealth {
@@ -10,15 +10,15 @@ pub enum NodeInfoHealth {
 }
 
 impl NodeInfoHealth {
-     pub fn from_u8(value: u8) -> Option<NodeInfoHealth> {
-         match value {
-             dsdl::uavcan::protocol::NodeStatus::HEALTH_OK => Some(NodeInfoHealth::Ok),
-             dsdl::uavcan::protocol::NodeStatus::HEALTH_WARNING => Some(NodeInfoHealth::Warning),
-             dsdl::uavcan::protocol::NodeStatus::HEALTH_ERROR => Some(NodeInfoHealth::Error),
-             dsdl::uavcan::protocol::NodeStatus::HEALTH_CRITICAL => Some(NodeInfoHealth::Critical),
-             _ => None,
-         }
-     }
+    pub fn from_u8(value: u8) -> Option<NodeInfoHealth> {
+        match value {
+            dsdl::uavcan::protocol::NodeStatus::HEALTH_OK => Some(NodeInfoHealth::Ok),
+            dsdl::uavcan::protocol::NodeStatus::HEALTH_WARNING => Some(NodeInfoHealth::Warning),
+            dsdl::uavcan::protocol::NodeStatus::HEALTH_ERROR => Some(NodeInfoHealth::Error),
+            dsdl::uavcan::protocol::NodeStatus::HEALTH_CRITICAL => Some(NodeInfoHealth::Critical),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -31,16 +31,20 @@ pub enum NodeInfoMode {
 }
 
 impl NodeInfoMode {
-     pub fn from_u8(value: u8) -> Option<NodeInfoMode> {
-         match value {
-             dsdl::uavcan::protocol::NodeStatus::MODE_OPERATIONAL => Some(NodeInfoMode::Operational),
-             dsdl::uavcan::protocol::NodeStatus::MODE_INITIALIZATION => Some(NodeInfoMode::Initialization),
-             dsdl::uavcan::protocol::NodeStatus::MODE_MAINTENANCE => Some(NodeInfoMode::Maintenance),
-             dsdl::uavcan::protocol::NodeStatus::MODE_SOFTWARE_UPDATE => Some(NodeInfoMode::SoftwareUpdate),
-             dsdl::uavcan::protocol::NodeStatus::MODE_OFFLINE => Some(NodeInfoMode::Offline),
-             _ => None,
-         }
-     }
+    pub fn from_u8(value: u8) -> Option<NodeInfoMode> {
+        match value {
+            dsdl::uavcan::protocol::NodeStatus::MODE_OPERATIONAL => Some(NodeInfoMode::Operational),
+            dsdl::uavcan::protocol::NodeStatus::MODE_INITIALIZATION => {
+                Some(NodeInfoMode::Initialization)
+            }
+            dsdl::uavcan::protocol::NodeStatus::MODE_MAINTENANCE => Some(NodeInfoMode::Maintenance),
+            dsdl::uavcan::protocol::NodeStatus::MODE_SOFTWARE_UPDATE => {
+                Some(NodeInfoMode::SoftwareUpdate)
+            }
+            dsdl::uavcan::protocol::NodeStatus::MODE_OFFLINE => Some(NodeInfoMode::Offline),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -56,9 +60,9 @@ pub struct NodeInfo {
     pub ui_name: Option<String>,
     pub uid: Option<String>,
 
-    last_stamp : SystemTime,
-    last_node_info : SystemTime,
-    assigned : bool,
+    last_stamp: SystemTime,
+    last_node_info: SystemTime,
+    assigned: bool,
 }
 
 impl NodeInfo {
@@ -93,7 +97,8 @@ impl NodeInfo {
     }
 
     pub fn check_offline(&mut self) {
-        if self.last_stamp.elapsed().unwrap() > Duration::from_secs(3) && self.uptime_sec.is_some() {
+        if self.last_stamp.elapsed().unwrap() > Duration::from_secs(3) && self.uptime_sec.is_some()
+        {
             self.set_offline();
         }
     }
@@ -109,13 +114,11 @@ impl NodeInfo {
         if self.id == 127 {
             if auto_assign_id {
                 true
-            }
-            else {
+            } else {
                 warn!("Found board with id 127 but com.asign_id is false");
                 false
             }
-        }
-        else {
+        } else {
             false
         }
     }
@@ -123,14 +126,13 @@ impl NodeInfo {
     pub fn can_assign_id(&self) -> bool {
         if let Some(uptime) = self.uptime_sec {
             if uptime > 5 && self.uid.is_some() && !self.assigned {
-                return true
+                return true;
             }
         }
         false
     }
 
     pub fn set_assigned(&mut self) {
-         self.assigned = true;
+        self.assigned = true;
     }
 }
-

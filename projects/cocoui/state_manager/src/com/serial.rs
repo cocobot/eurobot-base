@@ -1,12 +1,10 @@
 extern crate serialport;
 
-use super::ComInstance;
+use super::Com;
 
+use std::io;
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::io;
-use std::time::SystemTime;
-use std::time::UNIX_EPOCH;
 
 use std::{thread, time};
 
@@ -14,26 +12,26 @@ use self::serialport::SerialPort;
 use self::serialport::SerialPortSettings;
 use self::serialport::SerialPortType;
 
-use com::canars::CANFrame;
+use canars::CANFrame;
+use std::sync::mpsc::Receiver;
 
 #[derive(Clone, Debug)]
-struct Frame
-{
-    frame: CANFrame, 
+struct Frame {
+    frame: CANFrame,
     crc: u16,
 }
 
 impl Frame {
-     fn new(id: u32, data: [u8; CANFrame::CAN_FRAME_MAX_DATA_LEN], data_len: u8, crc: u16) -> Frame {
-         Frame {
-             frame: CANFrame::new(id, data, data_len),
-             crc,
-         }
-     }
+    fn new(id: u32, data: [u8; CANFrame::CAN_FRAME_MAX_DATA_LEN], data_len: u8, crc: u16) -> Frame {
+        Frame {
+            frame: CANFrame::new(id, data, data_len),
+            crc,
+        }
+    }
 
-     fn get_can_frame(self) -> CANFrame {
-          self.frame
-     }
+    fn get_can_frame(self) -> CANFrame {
+        self.frame
+    }
 }
 
 fn crc16_update(crc: u16, a: u8) -> u16 {
@@ -41,8 +39,7 @@ fn crc16_update(crc: u16, a: u8) -> u16 {
     for _i in 0..8 {
         if (crc & 1) != 0 {
             crc = (crc >> 1) ^ 0xA001;
-        }
-        else {
+        } else {
             crc = crc >> 1;
         }
     }
@@ -50,16 +47,13 @@ fn crc16_update(crc: u16, a: u8) -> u16 {
     crc
 }
 
-
-struct FrameDecoder{
+struct FrameDecoder {
     buffer: Vec<u8>,
 }
 
 impl FrameDecoder {
     pub fn new() -> FrameDecoder {
-        FrameDecoder {
-            buffer: Vec::new()
-        }
+        FrameDecoder { buffer: Vec::new() }
     }
 
     pub fn add_byte(&mut self, byte: u8) {
@@ -71,12 +65,11 @@ impl FrameDecoder {
             if self.buffer[0] != 'C' as u8 {
                 debug!("Link out of sync: {:?}", &self.buffer);
                 self.buffer.remove(0);
-            }
-            else {
-                let id = (self.buffer[1] as u32) + 
-                    ((self.buffer[2] as u32) << 8) +
-                    ((self.buffer[3] as u32) << 16) +
-                    ((self.buffer[4] as u32) << 24);
+            } else {
+                let id = (self.buffer[1] as u32)
+                    + ((self.buffer[2] as u32) << 8)
+                    + ((self.buffer[3] as u32) << 16)
+                    + ((self.buffer[4] as u32) << 24);
                 let mut data = [0 as u8; 8];
                 for i in 0..8 {
                     data[i] = self.buffer[6 + i];
@@ -88,14 +81,8 @@ impl FrameDecoder {
                 }
                 if computed_crc != crc {
                     self.buffer.remove(0);
-                }
-                else {
-                    let f = Frame::new(
-                        id,
-                        data,
-                        self.buffer[5],
-                        crc,
-                        );
+                } else {
+                    let f = Frame::new(id, data, self.buffer[5], crc);
                     self.buffer.drain(0..16);
                     return Some(f);
                 }
@@ -105,13 +92,11 @@ impl FrameDecoder {
     }
 }
 
-struct FrameEncoder{
-}
+struct FrameEncoder {}
 
 impl FrameEncoder {
     pub fn new() -> FrameEncoder {
-        FrameEncoder {
-        }
+        FrameEncoder {}
     }
 
     pub fn encode(&self, frame: &CANFrame) -> Vec<u8> {
@@ -122,8 +107,8 @@ impl FrameEncoder {
         let data = frame.get_data();
 
         buffer.push('C' as u8);
-        buffer.push(((id >>  0) & 0xFF) as u8);
-        buffer.push(((id >>  8) & 0xFF) as u8);
+        buffer.push(((id >> 0) & 0xFF) as u8);
+        buffer.push(((id >> 8) & 0xFF) as u8);
         buffer.push(((id >> 16) & 0xFF) as u8);
         buffer.push(((id >> 24) & 0xFF) as u8);
         buffer.push(len as u8);
@@ -145,11 +130,15 @@ struct SerialManager {
     serial: Box<dyn SerialPort>,
     name: String,
     opened_serial_port: Arc<Mutex<Vec<Box<SerialManager>>>>,
-    com: ComInstance,
+    com: Com,
 }
 
 impl SerialManager {
-    fn new(com: ComInstance, serial: Box<dyn SerialPort>, opened_serial_port : Arc<Mutex<Vec<Box<SerialManager>>>>) -> SerialManager {
+    fn new(
+        com: Com,
+        serial: Box<dyn SerialPort>,
+        opened_serial_port: Arc<Mutex<Vec<Box<SerialManager>>>>,
+    ) -> SerialManager {
         let sm = SerialManager {
             name: serial.name().unwrap(),
             serial,
@@ -166,12 +155,16 @@ impl SerialManager {
 
     pub fn send(&mut self, buffer: Vec<u8>) {
         match self.serial.write_all(&buffer) {
-             Ok(_) => {},
-             Err(e) => {error!("write_all: {:?}", e);},
+            Ok(_) => {}
+            Err(e) => {
+                error!("write_all: {:?}", e);
+            }
         };
         match self.serial.flush() {
-             Ok(_) => {},
-             Err(e) => {error!("flush: {:?}", e);},
+            Ok(_) => {}
+            Err(e) => {
+                error!("flush: {:?}", e);
+            }
         }
     }
 
@@ -190,35 +183,23 @@ impl SerialManager {
                             decoder.add_byte(*b);
                         }
                         while let Some(frame) = decoder.decode() {
-                            let timestamp =  SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
-                            let timestamp = timestamp.as_secs() * 1_000 +
-                                timestamp.subsec_nanos() as u64 / 1_000_000;
-
-                            match com.lock() {
-                                Ok(mut c) => {
-                                    let mut node = c.get_node();
-                                    drop(c);
-                                    match node {
-                                        Some(ref mut s) => s.lock().unwrap().handle_rx_frame(frame.get_can_frame(), timestamp),
-                                        None => {},
-                                    };
-                                },
-                                Err(e) => error!("Com lock: {:?}", e),
-                            }
+                            com.handle_rx_frame(frame.get_can_frame());
                         }
                     }
                     Err(ref e) if e.kind() == io::ErrorKind::TimedOut => (),
                     Err(ref e) if e.kind() == io::ErrorKind::BrokenPipe => {
                         debug!("Close {}", serial.name().unwrap());
                         match opened_serial_port.lock() {
-                             Ok(mut list) => {
-                                 list.iter().position(|x| x.name() == serial.name().unwrap()).map(|e| list.remove(e));
-                                 drop(serial);
-                                 return;
-                             }
-                             Err(_) => {},
+                            Ok(mut list) => {
+                                list.iter()
+                                    .position(|x| x.name() == serial.name().unwrap())
+                                    .map(|e| list.remove(e));
+                                drop(serial);
+                                return;
+                            }
+                            Err(_) => {}
                         }
-                    },
+                    }
                     Err(e) => error!("Serial read: {:?}", e),
                 }
             }
@@ -226,90 +207,82 @@ impl SerialManager {
     }
 }
 
-fn find_serial_port(com: &mut ComInstance, opened_serial_port: &mut Arc<Mutex<Vec<Box<SerialManager>>>>) {
+fn find_serial_port(com: Com, opened_serial_port: &mut Arc<Mutex<Vec<Box<SerialManager>>>>) {
     if let Ok(ports) = serialport::available_ports() {
         for p in ports {
             match p.port_type {
-                SerialPortType::UsbPort(ref info)  => {
+                SerialPortType::UsbPort(ref info) => {
                     if info.serial_number.is_none() {
                         continue;
                     }
                     if info.serial_number.as_ref().unwrap() != "A105TLE3" {
                         continue;
                     }
-                },
-                _ => {continue },
+                }
+                _ => continue,
             }
             match opened_serial_port.lock() {
-                Ok(mut list) => { if !list.iter().any(|x| x.name() == p.port_name) {
-                    let mut settings: SerialPortSettings = Default::default();
-                    settings.baud_rate = 115200;
+                Ok(mut list) => {
+                    if !list.iter().any(|x| x.name() == p.port_name) {
+                        let mut settings: SerialPortSettings = Default::default();
+                        settings.baud_rate = 115200;
 
-                    match serialport::open_with_settings(&p.port_name, &settings) {
-                        Ok(port) => {
-                            debug!("Open {}", &p.port_name);
-                            let port = SerialManager::new(com.clone(), port, opened_serial_port.clone());
-                            list.push(Box::new(port));
-                        },
-                        Err(e) => {
-                            error!(
-                                "Failed to open \"{}\". Error: {}",
-                                p.port_name,
-                                e
+                        match serialport::open_with_settings(&p.port_name, &settings) {
+                            Ok(port) => {
+                                debug!("Open {}", &p.port_name);
+                                let port = SerialManager::new(
+                                    com.clone(),
+                                    port,
+                                    opened_serial_port.clone(),
                                 );
-                        },
+                                list.push(Box::new(port));
+                            }
+                            Err(e) => {
+                                error!("Failed to open \"{}\". Error: {}", p.port_name, e);
+                            }
+                        }
                     }
                 }
-
-                }
-                Err(_) => {},
+                Err(_) => {}
             }
         }
     }
 }
 
-fn write_thread(com: ComInstance, opened_serial_port: Arc<Mutex<Vec<Box<SerialManager>>>>) {
-    let mut com = com.lock().unwrap();
-    let node = com.get_node().unwrap();
-    drop(com);
+fn write_thread(
+    tx_can: Receiver<CANFrame>,
+    opened_serial_port: Arc<Mutex<Vec<Box<SerialManager>>>>,
+) {
     thread::spawn(move || {
         let encoder = FrameEncoder::new();
         loop {
-            let mut instance = node.lock().unwrap();
-            
-            while let Some(frame) = instance.pop_tx_queue() {
+            if let Ok(frame) = tx_can.recv() {
                 debug!("TX {:?}", frame);
                 match opened_serial_port.lock() {
-                    Ok(mut list) => { 
+                    Ok(mut list) => {
                         for port in list.iter_mut() {
                             port.send(encoder.encode(&frame));
                         }
-                    },
+                    }
                     Err(e) => {
                         error!("Error: {}", e);
-                    },
+                    }
                 }
             }
-
-            drop(instance);
-
-            thread::sleep(time::Duration::from_millis(20));
         }
     });
 }
 
-
-pub fn init(com: ComInstance) {
+pub fn init(com: Com, tx_can: Receiver<CANFrame>) {
     thread::spawn(move || {
         let mut opened_serial_port = Arc::new(Mutex::new(Vec::new()));
-        let mut com = com;
 
-        write_thread(com.clone(), opened_serial_port.clone());
+        write_thread(tx_can, opened_serial_port.clone());
 
         //check port list every 2s
         loop {
-            find_serial_port(&mut com, &mut opened_serial_port);
-            thread::sleep( time::Duration::from_secs(2));
+            find_serial_port(com.clone(), &mut opened_serial_port);
+            thread::sleep(time::Duration::from_secs(2));
         }
     });
 }

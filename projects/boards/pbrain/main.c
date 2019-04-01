@@ -10,6 +10,7 @@ int main(void)
 
   cocobot_com_init();
   cocobot_com_run();
+  cocobot_loader_init();
  // cocobot_position_init(4);
 
   vTaskStartScheduler();
