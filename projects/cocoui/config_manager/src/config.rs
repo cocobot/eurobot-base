@@ -7,7 +7,7 @@ pub type ConfigManagerInstance = Arc<Mutex<ConfigManager>>;
 pub struct ConfigManager {
     pub simulation: bool,
     pub com: defs::com::Config,
-    pub eurobot: defs::eurobot::Config,
+    pub field: defs::field::Config,
 }
 
 impl ConfigManager {
@@ -21,7 +21,7 @@ impl ConfigManager {
         let cm = Arc::new(Mutex::new(ConfigManager {
             simulation,
             com: defs::com::Config::new("com"),
-            eurobot: defs::eurobot::Config::new("eurobot"),
+            field: defs::field::Config::new("field"),
         }));
         cm
     }

@@ -1,5 +1,6 @@
 #![feature(nll)]
 extern crate state_manager;
+extern crate config_manager;
 extern crate pretty_env_logger;
 #[macro_use]
 extern crate log;
@@ -17,7 +18,7 @@ fn main() {
     let state = state_manager::init(config.clone());
     info!("State module ready");
 
-    ui::init(state);
+    ui::init(config.clone(), state);
     info!("UI initialized");
     ui::start();
 }

@@ -18,6 +18,7 @@ macro_rules! config {
                 }
             }
 
+            #[derive(Debug)]
             pub struct Config {
                 $(pub $attr_name : $attr_type ),*
             }
@@ -70,6 +71,18 @@ config!(com {
     boards: Vec<super::Board> = vec![]
 });
 
-config!(eurobot {
-    debug: u8 = 0
+
+#[derive(Deserialize,Debug)]
+pub struct FieldBorder {
+    pub color: Vec<f64>,
+    pub rect: Vec<f64>,
+}
+
+
+config!(field {
+    min_x: f64 = 0.0,
+    min_y: f64 = 0.0,
+    max_x: f64 = 1.0,
+    max_y: f64 = 1.0,
+    borders: Vec<super::FieldBorder> = vec![]
 });
