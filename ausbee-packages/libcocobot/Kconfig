@@ -166,6 +166,11 @@ config LIBCOCOBOT_COM
 	default n
 	depends on LIBCOCOBOT
 
+config LIBCOCOBOT_COM_ID
+  int " + ID of the board"
+  depends on LIBCOCOBOT && LIBCOCOBOT_COM
+  default 10
+
 config LIBCOCOBOT_COM_MEMORY_POOL_SIZE
   int " + Memory pool size"
   depends on LIBCOCOBOT && LIBCOCOBOT_COM

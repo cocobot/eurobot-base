@@ -5,6 +5,7 @@
 #include <stm32f4xx.h>
 #include <mcual.h>
 #include <unistd.h>
+#include <platform.h>
 
 #ifdef CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
 #include <FreeRTOS.h>
@@ -85,9 +86,12 @@ static bool waitMSRINAKBitStateChange(volatile const CAN_TypeDef * const bxcan, 
         }
 
         // Sleep 1 millisecond
+#ifdef CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
+        vTaskDelay(1/portTICK_PERIOD_MS);
+#else
         usleep(1000);           // TODO: This function may be missing on some platforms
+#endif
     }
-
     return false;
 }
 
@@ -249,9 +253,9 @@ int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode if
     CAN1->IER |= CAN_IER_FMPIE1 | CAN_IER_FMPIE0;
 
     //Enable isr here
-    NVIC_SetPriority(CAN1_TX_IRQn, 10);
-    NVIC_SetPriority(CAN1_RX0_IRQn, 11);
-    NVIC_SetPriority(CAN1_RX1_IRQn, 12);
+    NVIC_SetPriority(CAN1_TX_IRQn, 7);
+    NVIC_SetPriority(CAN1_RX0_IRQn, 8);
+    NVIC_SetPriority(CAN1_RX1_IRQn, 9);
     NVIC_EnableIRQ(CAN1_TX_IRQn);
     NVIC_EnableIRQ(CAN1_RX0_IRQn);
     NVIC_EnableIRQ(CAN1_RX1_IRQn);
@@ -260,7 +264,7 @@ int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode if
 
     //Need to prime the pump for TX isr
     //Bad hack?
-    CAN1->sTxMailBox[2].TIR = CAN_TI0R_TXRQ;
+    CAN1->sTxMailBox[0].TIR = CAN_TI0R_TXRQ;
 
     return 0;
 }
@@ -383,10 +387,10 @@ void CAN1_TX_IRQHandler(void)
 {
     static const uint32_t AllTME = CAN_TSR_TME0 | CAN_TSR_TME1 | CAN_TSR_TME2;
     static bool is_empty = false;
-    volatile CanardCANFrame * frame = NULL; 
+    CanardCANFrame frame;  
 #if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
     BaseType_t xTaskWokenByReceive = pdFALSE;
-    if(xQueueReceiveFromISR(can_tx_queue, (void*)frame, &xTaskWokenByReceive))
+    if(xQueueReceiveFromISR(can_tx_queue, &frame, &xTaskWokenByReceive))
     {
         if( xTaskWokenByReceive != pdFALSE )
             taskYIELD ();
@@ -397,7 +401,7 @@ void CAN1_TX_IRQHandler(void)
         return;
     }
 #else
-    frame = &can_tx_buffer[tx_index_read];
+    frame = can_tx_buffer[tx_index_read];
 #endif
     bool tme[3];
 
@@ -414,7 +418,7 @@ void CAN1_TX_IRQHandler(void)
     {
         //All mailboxes are empty, add directly in mailbox 0
         if(is_empty)
-            mcual_can_add_in_mailbox(0, frame);
+            mcual_can_add_in_mailbox(0, &frame);
         else
         {
             for(int i = 1; i < 3; i++)
@@ -422,14 +426,14 @@ void CAN1_TX_IRQHandler(void)
                 //if empty
                 if(!tme[i])
                 {
-                    if (!isFramePriorityHigher(frame->id, convertFrameIDRegisterToCanard(CAN1->sTxMailBox[i].TIR)))
+                    if (!isFramePriorityHigher(frame.id, convertFrameIDRegisterToCanard(CAN1->sTxMailBox[i].TIR)))
                     {
                         // There's a mailbox whose priority is higher or equal the priority of the new frame.
                         // Priority inversion would occur! Reject transmission.
 #if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
                         //The message is not send, it needs to be moved back into the queue
                         xTaskWokenByReceive = false;
-                        xQueueSendToFrontFromISR(can_tx_queue, (void*) frame, &xTaskWokenByReceive);
+                        xQueueSendToFrontFromISR(can_tx_queue, &frame, &xTaskWokenByReceive);
                         if( xTaskWokenByReceive != pdFALSE )
                             taskYIELD ();
 #endif
@@ -437,14 +441,14 @@ void CAN1_TX_IRQHandler(void)
                     }
                 }
             } 
-            mcual_can_add_in_mailbox(0, frame);
+            mcual_can_add_in_mailbox(0, &frame);
         }
     }
     else if(CAN1->TSR & CAN_TSR_TME1)
     {
         //All mailboxes are empty, add directly in mailbox 1
         if(is_empty)
-            mcual_can_add_in_mailbox(1, frame);
+            mcual_can_add_in_mailbox(1, &frame);
         else
         {
             for(int i = 0; i < 3; i++)
@@ -454,13 +458,13 @@ void CAN1_TX_IRQHandler(void)
                     //if empty
                     if(!tme[i])
                     {
-                        if (!isFramePriorityHigher(frame->id, convertFrameIDRegisterToCanard(CAN1->sTxMailBox[i].TIR)))
+                        if (!isFramePriorityHigher(frame.id, convertFrameIDRegisterToCanard(CAN1->sTxMailBox[i].TIR)))
                         {
                             // There's a mailbox whose priority is higher or equal the priority of the new frame.
 #if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
                         //The message is not send, it needs to be moved back into the queue
                         xTaskWokenByReceive = false;
-                        xQueueSendToFrontFromISR(can_tx_queue, (void*) frame, &xTaskWokenByReceive);
+                        xQueueSendToFrontFromISR(can_tx_queue, &frame, &xTaskWokenByReceive);
                         if( xTaskWokenByReceive != pdFALSE )
                             taskYIELD ();
 #endif
@@ -469,14 +473,14 @@ void CAN1_TX_IRQHandler(void)
                     }
                 }
             } 
-            mcual_can_add_in_mailbox(1, frame);
+            mcual_can_add_in_mailbox(1, &frame);
         }
     }
     else if(CAN1->TSR & CAN_TSR_TME2)
     {
         //All mailboxes are empty, add directly in mailbox 2
         if(is_empty)
-            mcual_can_add_in_mailbox(2, frame);
+            mcual_can_add_in_mailbox(2, &frame);
         else
         {
             for(int i = 0; i < 2; i++)
@@ -484,13 +488,13 @@ void CAN1_TX_IRQHandler(void)
                 //if empty
                 if(!tme[i])
                 {
-                    if (!isFramePriorityHigher(frame->id, convertFrameIDRegisterToCanard(CAN1->sTxMailBox[i].TIR)))
+                    if (!isFramePriorityHigher(frame.id, convertFrameIDRegisterToCanard(CAN1->sTxMailBox[i].TIR)))
                     {
                         // There's a mailbox whose priority is higher or equal the priority of the new frame.
 #if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
                         //The message is not send, it needs to be moved back into the queue
                         xTaskWokenByReceive = false;
-                        xQueueSendToFrontFromISR(can_tx_queue, (void*) frame, &xTaskWokenByReceive);
+                        xQueueSendToFrontFromISR(can_tx_queue, &frame, &xTaskWokenByReceive);
                         if( xTaskWokenByReceive != pdFALSE )
                             taskYIELD ();
 #endif
@@ -498,7 +502,7 @@ void CAN1_TX_IRQHandler(void)
                     }
                 }
             } 
-            mcual_can_add_in_mailbox(2, frame);
+            mcual_can_add_in_mailbox(2, &frame);
         }
     }
 }

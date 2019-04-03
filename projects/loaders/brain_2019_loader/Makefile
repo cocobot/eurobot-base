@@ -1,5 +1,8 @@
 # Makefile for configuring and building an AUSBEE project
 #
+
+SHELL := /bin/bash
+
 #Set ausbee directory path. Can be relative or absolute
 AUSBEE_DIR=../../../ausbee
 
