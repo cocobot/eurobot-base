@@ -11,7 +11,7 @@ use crate::simu::physics::nphysics2d::object::RigidBodyDesc;
 use crate::simu::physics::nalgebra::geometry::Point2;
 use config_manager::config::ConfigManagerInstance;
 use super::brain::BrainInstance;
-use std::sync::mpsc::Receiver;
+use crossbeam_channel::Receiver;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::time::Duration;

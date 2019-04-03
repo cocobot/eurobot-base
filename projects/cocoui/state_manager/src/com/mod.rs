@@ -3,8 +3,8 @@ extern crate dsdl;
 pub mod msg;
 pub mod serial;
 
-use std::sync::mpsc;
-use std::sync::mpsc::{Receiver, Sender};
+use crossbeam_channel::unbounded;
+use crossbeam_channel::{Sender, Receiver};
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
@@ -160,13 +160,9 @@ pub fn init(node_id: u8, state_manager: StateManagerInstance) -> (Com, Receiver<
     let node = Arc::new(Mutex::new(node));
 
     //create channels for communication
-    let (tx_send_msg, rx_send_msg): (Sender<msg::Msg>, Receiver<msg::Msg>) = mpsc::channel();
-    let (tx_send_can_frame, rx_send_can_frame): (Sender<CANFrame>, Receiver<CANFrame>) =
-        mpsc::channel();
-    let (tx_receive_can_frame, rx_receive_can_frame): (
-        Sender<(u64, CANFrame)>,
-        Receiver<(u64, CANFrame)>,
-    ) = mpsc::channel();
+    let (tx_send_msg, rx_send_msg)  = unbounded();
+    let (tx_send_can_frame, rx_send_can_frame) = unbounded();
+    let (tx_receive_can_frame, rx_receive_can_frame) = unbounded();
 
     //Com initialisation
     let com = Com::new(tx_receive_can_frame, tx_send_can_frame, tx_send_msg);

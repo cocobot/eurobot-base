@@ -3,6 +3,7 @@ extern crate log;
 extern crate canars;
 extern crate config_manager;
 extern crate hex_slice;
+extern crate crossbeam_channel;
 
 mod com;
 mod simu;

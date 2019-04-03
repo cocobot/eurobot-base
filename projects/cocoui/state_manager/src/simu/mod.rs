@@ -6,7 +6,7 @@ use self::physics::Physics;
 use self::physics::PhysicsInstance;
 use crate::canars::CANFrame;
 use crate::com::Com;
-use std::sync::mpsc::Receiver;
+use crossbeam_channel::Receiver;
 
 use config_manager::config::ConfigManagerInstance;
 
