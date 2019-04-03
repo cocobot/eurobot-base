@@ -136,3 +136,20 @@ impl NodeInfo {
         self.assigned = true;
     }
 }
+
+#[derive(Debug, Clone, Copy)]
+pub struct RobotInfo {
+    pub x: f64,
+    pub y: f64,
+    pub a: f64,
+}
+
+impl RobotInfo {
+    pub fn new() -> RobotInfo {
+        RobotInfo {
+            x: 0.0,
+            y: 0.0,
+            a: 0.0,
+        }
+    }
+}

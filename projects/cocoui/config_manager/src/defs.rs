@@ -80,9 +80,33 @@ pub struct FieldBorder {
 
 
 config!(field {
+    background: String = String::new(),
     min_x: f64 = 0.0,
     min_y: f64 = 0.0,
     max_x: f64 = 1.0,
     max_y: f64 = 1.0,
     borders: Vec<super::FieldBorder> = vec![]
+});
+
+
+#[derive(Deserialize,Debug)]
+pub struct Robot {
+    pub shape: Vec<[f64; 2]>,
+    pub fill: Vec<f64>,
+    pub stroke: Vec<f64>,
+}
+
+impl Robot {
+    pub fn new() -> Robot {
+        Robot {
+            shape: vec![],
+            fill: vec![],
+            stroke: vec![],
+        }
+    }
+}
+
+config!(robots {
+    main: super::Robot = super::Robot::new(),
+    pmi: super::Robot = super::Robot::new()
 });

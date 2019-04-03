@@ -34,6 +34,8 @@ uint32_t mcual_timer_get_timer_tick(mcual_timer_t timer)
 
 void mcual_timer_init_encoder(mcual_timer_t timer)
 {
+  cnts[timer] = 0;
+  mcual_arch_request("TIMER", timer, "ENC");
 }
 
 void mcual_timer_set_value(mcual_timer_t timer, uint32_t cnt)

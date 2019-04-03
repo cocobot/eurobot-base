@@ -54,7 +54,10 @@ impl Node<StateManagerInstance> for ComHandler {
         } else if dsdl::uavcan::protocol::file::ReadRequest::check_id(data_type_id) {
             dsdl::uavcan::protocol::file::ReadRequest::set_signature(data_type_signature);
             true
-        } else {
+        } else if dsdl::uavcan::cocobot::Position::check_id(data_type_id) {
+            dsdl::uavcan::cocobot::Position::set_signature(data_type_signature);
+            true
+        }else {
             debug!("xfer refused: {}", source_node_id);
             false
         }
@@ -79,7 +82,15 @@ impl Node<StateManagerInstance> for ComHandler {
         } else if dsdl::uavcan::protocol::file::ReadRequest::check_id(xfer.get_data_type_id()) {
             let read = dsdl::uavcan::protocol::file::ReadRequest::decode(xfer).unwrap();
             state_manager.request_read(xfer.get_source_node_id(), read);
-        } else {
+        } else if dsdl::uavcan::cocobot::Position::check_id(xfer.get_data_type_id()) {
+            let position = dsdl::uavcan::cocobot::Position::decode(xfer).unwrap();
+
+            let state = state_manager.get_state_mut();
+            let id = if xfer.get_source_node_id() < 30 { 0 } else { 1 };
+            state.robots[id].x = position.x.into();
+            state.robots[id].y = position.y.into();
+            state.robots[id].a = position.a.into();
+        }else {
             error!(
                 "Xfer accepted but not implemented: {:?}",
                 xfer.get_data_type_id()

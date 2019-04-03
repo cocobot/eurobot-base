@@ -1,11 +1,16 @@
 extern crate gtk;
 extern crate gdk;
+extern crate gdk_pixbuf;
 
 use std::cell::RefCell;
 use state_manager::state::StateManagerInstance;
+use state_manager::state::State;
 use ui::gtk::prelude::*;
+use ui::gdk::ContextExt;
+use ui::gdk_pixbuf::Pixbuf;
 use std::collections::HashMap;
 use config_manager::config::ConfigManagerInstance;
+use std::f64::consts::PI;
 
 mod boards;
 
@@ -53,6 +58,77 @@ impl UIBorder {
     }
 }
 
+struct UIRobot {
+    pub shape: Vec<[f64; 2]>,
+    pub fill: [f64; 4],
+    pub stroke: [f64; 4],
+}
+
+impl UIRobot {
+    pub fn load(robot: &config_manager::defs::Robot) -> UIRobot {
+        let mut shape = Vec::new();
+        for (_, value) in robot.shape.iter().enumerate() {
+            shape.push(*value);
+        }
+
+        let mut fill = [1.0; 4];
+        for (i, value) in robot.fill.iter().enumerate() {
+            fill[i] = *value;
+        }
+
+        let mut stroke = [1.0; 4];
+        for (i, value) in robot.stroke.iter().enumerate() {
+            stroke[i] = *value;
+        }
+
+        UIRobot {
+            shape,
+            fill,
+            stroke
+        }
+    }
+
+    pub fn draw(&self, ctx: &cairo::Context) {
+        //create path for fill
+        let mut iter = self.shape.iter();
+        let first = iter.next().unwrap();
+        ctx.new_path();
+        ctx.move_to(first[0], first[1]);
+        iter.for_each(|x| {
+            ctx.line_to(x[0], x[1]);
+        });
+        ctx.close_path();
+
+        //fill
+        ctx.set_source_rgba(
+            self.fill[0],
+            self.fill[1],
+            self.fill[2],
+            self.fill[3],
+            );
+        ctx.fill();
+
+        //create path for stroke
+        let mut iter = self.shape.iter();
+        let first = iter.next().unwrap();
+        ctx.new_path();
+        ctx.move_to(first[0], first[1]);
+        iter.for_each(|x| {
+            ctx.line_to(x[0], x[1]);
+        });
+        ctx.close_path();
+
+        //stroke
+        ctx.set_source_rgba(
+            self.stroke[0],
+            self.stroke[1],
+            self.stroke[2],
+            self.stroke[3],
+            );
+        ctx.stroke();
+    }
+}
+
 struct UICache {
     loaded: bool,
     config: Option<ConfigManagerInstance>,
@@ -66,6 +142,7 @@ struct UICache {
     pathfinder_colors: HashMap<u32, [f64; 3]>,
     pathfinder_color_opacity: f64,
     pathfinder_grid_color: [f64; 4],
+    background_path: String,
 
     //display
     width: f64,
@@ -73,9 +150,14 @@ struct UICache {
 
     //surface
     borders_surface: Option<cairo::ImageSurface>,
+    background_surface: Option<cairo::ImageSurface>,
     pathfinder_pr_surface: Option<cairo::ImageSurface>,
     pathfinder_pr_idx: usize,
 
+    //robots
+    robots: Vec<UIRobot>,
+    //state
+    state: Option<State>,
 }
 
 impl UICache {
@@ -91,11 +173,15 @@ impl UICache {
             pathfinder_colors: HashMap::new(),
             pathfinder_color_opacity: 1.0,
             pathfinder_grid_color: [1.0; 4],
+            background_path: String::new(),
             borders_surface: None,
+            background_surface: None,
             pathfinder_pr_surface: None,
             pathfinder_pr_idx: 0,
             width: -1.0,
             height: -1.0,
+            state: None,
+            robots: Vec::new(),
         }
     }
 
@@ -109,6 +195,7 @@ impl UICache {
              self.height = height;
 
              self.borders_surface = None;
+             self.background_surface = None;
              self.pathfinder_pr_surface = None;
          }
     }
@@ -129,6 +216,9 @@ impl UICache {
             self.max_x = config.field.max_x;
             self.min_y = config.field.min_y;
             self.max_y = config.field.max_y;
+
+            //load background
+            self.background_path = config.field.background.clone();
 
             //load borders
             self.borders = Vec::new();
@@ -151,6 +241,9 @@ impl UICache {
                 });
             }
 
+            //load robots
+            self.robots.push(UIRobot::load(&config.robots.main));
+            self.robots.push(UIRobot::load(&config.robots.pmi));
 
             /*
             //load pathfinder settings
@@ -231,9 +324,33 @@ pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibi
             coef = coef_y.abs();
         }
 
+        //draw background
+    
+        if let Some(background_surface) = ui.cache.background_surface.as_ref() {
+            ctx.set_operator(cairo::Operator::Over);
+            ctx.set_source_surface(background_surface, 0.0, 0.0);
+            ctx.paint();
+        }
+        else {
+            match Pixbuf::new_from_file(ui.cache.background_path.to_owned()) {
+                Ok(image) => {
+                    let background = cairo::ImageSurface::create(cairo::Format::ARgb32, width as i32, height as i32).unwrap();
+                    let ctx = cairo::Context::new(&background);
+                    ctx.scale(coef,coef);
+                    ctx.translate(22.0, 22.0);
+                    ctx.set_source_pixbuf(&image, 0.0, 0.0);
+                    ctx.rectangle(0.0, 0.0, 3000.0, 2000.0);
+                    ctx.fill();
+
+                    ui.cache.background_surface = Some(background);
+                },
+                Err(r) => { error!("background: {:?}", r); }
+            };
+        }
+
+
         //draw borders
         if ui.cache.borders_surface.is_none() {
-            info!("T2");
             let borders = cairo::ImageSurface::create(cairo::Format::ARgb32, width as i32, height as i32).unwrap();
             let ctx = cairo::Context::new(&borders);
 
@@ -252,16 +369,22 @@ pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibi
         ctx.set_source_surface(ui.cache.borders_surface.as_ref().unwrap(), 0.0, 0.0);
         ctx.paint();
 
-        /*
-
-
-        //draw robots
-        if ui.pr.is_some() {
+        if let Some(state) = &ui.cache.state {
             ctx.save();
             //set scale
             ctx.scale(coef * coef_x.signum(),coef * coef_y.signum());
             ctx.translate(-min_x, -min_y);
 
+            //draw robots
+            for i in 0..2 {
+                let robot = state.robots[i];
+                ctx.save();
+                ctx.translate(robot.x, robot.y);
+                ctx.rotate(robot.a * PI / 180.0);
+                ui.cache.robots[i].draw(ctx);
+                ctx.restore();
+            }
+            /*
             let mut pathfinder_pr_surface = None;
             let pathfinder_idx;
 
@@ -269,50 +392,7 @@ pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibi
                 let pr = ui.pr.as_ref().unwrap();
                 pathfinder_idx = pr.pathfinder_idx;
 
-                ctx.translate(pr.x_mm, pr.y_mm);
-                ctx.rotate(pr.a_deg * PI / 180.0);
 
-                let prshape = SETTINGS.get("pr.shape").and_then(Value::into_array).unwrap();
-                let prshape: Vec<[f64; 2]> = prshape.iter().map(|x|-> [f64; 2] {
-                    let pt = x.clone().into_array().unwrap();
-                    [
-                        pt.get(0).unwrap().clone().into_float().unwrap(),
-                        pt.get(1).unwrap().clone().into_float().unwrap()
-                    ]
-                }).collect();
-
-                let mut iter = prshape.iter();
-                let first = iter.next().unwrap();
-                ctx.new_path();
-                ctx.move_to(first[0], first[1]);
-                iter.for_each(|x| {
-                    ctx.line_to(x[0], x[1]);
-                });
-                ctx.close_path();
-
-                let fill = SETTINGS.get("pr.fill").and_then(Value::into_array).unwrap();
-                let fill: Vec<f64> = fill.iter().map(|x|-> f64 {
-                    x.clone().into_float().unwrap()
-                }).collect();
-                ctx.set_source_rgb(*fill.get(0).unwrap(), *fill.get(1).unwrap(), *fill.get(2).unwrap());
-                ctx.fill();
-
-                let mut iter = prshape.iter();
-                let first = iter.next().unwrap();
-                ctx.new_path();
-                ctx.move_to(first[0], first[1]);
-                iter.for_each(|x| {
-                    ctx.line_to(x[0], x[1]);
-                });
-                ctx.close_path();
-
-                let stroke = SETTINGS.get("pr.stroke").and_then(Value::into_array).unwrap();
-                let stroke: Vec<f64> = stroke.iter().map(|x|-> f64 {
-                    x.clone().into_float().unwrap()
-                }).collect();
-                ctx.set_line_width(1.0 / coef);
-                ctx.set_source_rgb(*stroke.get(0).unwrap(), *stroke.get(1).unwrap(), *stroke.get(2).unwrap());
-                ctx.stroke();
 
                 ctx.restore();
 
@@ -380,8 +460,9 @@ pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibi
                 ui.cache.pathfinder_pr_idx = pathfinder_idx;
                 ui.cache.pathfinder_pr_surface = pathfinder_pr_surface;
             }
+            */
+                ctx.restore();
         }
-    */
     });
 
     gtk::Inhibit(false)
@@ -392,6 +473,15 @@ fn update() {
         UII.with(|ui| {
             let mut ui = ui.borrow_mut();
 
+            //update state
+            let mut state_cpy = None;
+            if let Some(state) = ui.state.as_ref() {
+                let state = state.lock().unwrap();
+                state_cpy = Some(state.get_state());
+            }
+            ui.cache.state = state_cpy;
+
+            //update field canvas
             update_elm!(ui.field, |x: &mut gtk::DrawingArea| {x.queue_draw()});
         });
         gtk::Continue(true)

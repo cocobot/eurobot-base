@@ -23,12 +23,14 @@ use hex_slice::AsHex;
 #[derive(Debug, Clone)]
 pub struct State {
     pub nodes: HashMap<u8, stype::NodeInfo>,
+    pub robots: [stype::RobotInfo; 2],
 }
 
 impl State {
     fn new() -> State {
         State {
             nodes: HashMap::new(),
+            robots: [stype::RobotInfo::new(); 2],
         }
     }
 }
@@ -138,7 +140,7 @@ impl StateManager {
         self.state.clone()
     }
 
-    fn get_state_mut(&mut self) -> &mut State {
+    pub fn get_state_mut(&mut self) -> &mut State {
         &mut self.state
     }
 

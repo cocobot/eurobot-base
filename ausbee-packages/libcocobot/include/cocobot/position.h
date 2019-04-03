@@ -1,6 +1,8 @@
 #ifndef COCOBOT_POSITION_H
 #define COCOBOT_POSITION_H
 
+#include <stdint.h>
+
 /* Initialization of the position module. Need to be called before any other action 
  * Argument:
  *  - task_priority: FreeRTOS task priority for position thread
@@ -88,5 +90,6 @@ void cocobot_position_set_y(float y);
  */
 void cocobot_position_set_angle(float angle);
 
+void cocobot_position_com_async(uint64_t timestamp);
 
 #endif// COCOBOT_POSITION_H

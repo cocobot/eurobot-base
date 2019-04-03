@@ -158,8 +158,13 @@ impl<'a> RxTransfer<'a> {
         unimplemented!();
     }
 
-    pub fn decode_scalar_f32(&self, _offset: &mut usize, _size: u8) -> Option<f32> {
-        unimplemented!();
+    pub fn decode_scalar_f32(&self, offset: &mut usize, size: u8) -> Option<f32> {
+        if let Some(f_u32) = self.decode_scalar_u32(offset, size) {
+            Some(f32::from_bits(f_u32))
+        }
+        else {
+            None
+        }
     }
 
     pub fn get_payload_len(&self) -> u8 {
@@ -590,7 +595,6 @@ impl<T: Node<U>, U> Instance<T, U> {
     }
 
     pub fn handle_rx_frame(&mut self, frame: CANFrame, timestamp_usec: u64) {
-        debug!("RX {:?}", frame);
         let transfer_type = frame.extract_transfer_type();
 
         let destination_node_id = match transfer_type {
@@ -628,7 +632,7 @@ impl<T: Node<U>, U> Instance<T, U> {
             source_node_id,
             destination_node_id,
         );
-        debug!(" -> SOURCE {:?}", source_node_id);
+        //debug!(" -> SOURCE {:?}", source_node_id);
 
         if (frame.get_data_len() - 1) as usize > frame.get_data().len() {
             error!("Frame data len = {}", frame.get_data_len());

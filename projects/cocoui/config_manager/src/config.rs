@@ -8,6 +8,7 @@ pub struct ConfigManager {
     pub simulation: bool,
     pub com: defs::com::Config,
     pub field: defs::field::Config,
+    pub robots: defs::robots::Config,
 }
 
 impl ConfigManager {
@@ -22,6 +23,7 @@ impl ConfigManager {
             simulation,
             com: defs::com::Config::new("com"),
             field: defs::field::Config::new("field"),
+            robots: defs::robots::Config::new("robots"),
         }));
         cm
     }
