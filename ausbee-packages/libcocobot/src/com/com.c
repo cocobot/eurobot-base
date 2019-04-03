@@ -561,7 +561,7 @@ void cocobot_com_init(void)
   //volatile uint32_t * ptr = (uint32_t *)&_canard_id;
 	//canardSetLocalNodeID(&_canard, *ptr & 0x7F);
   //DEBUG
-	canardSetLocalNodeID(&_canard, 11);
+	canardSetLocalNodeID(&_canard, CONFIG_LIBCOCOBOT_COM_ID);
 
   _last_timer_ticks = 0;
   _timestamp_us = 0;
