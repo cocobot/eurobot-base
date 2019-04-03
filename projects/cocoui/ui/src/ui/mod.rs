@@ -3,13 +3,13 @@ extern crate gdk;
 extern crate gdk_pixbuf;
 
 use std::cell::RefCell;
-use state_manager::state::StateManagerInstance;
-use state_manager::state::State;
-use ui::gtk::prelude::*;
-use ui::gdk::ContextExt;
-use ui::gdk_pixbuf::Pixbuf;
+use crate::state_manager::state::StateManagerInstance;
+use crate::state_manager::state::State;
+use crate::ui::gtk::prelude::*;
+use crate::ui::gdk::ContextExt;
+use crate::ui::gdk_pixbuf::Pixbuf;
 use std::collections::HashMap;
-use config_manager::config::ConfigManagerInstance;
+use crate::config_manager::config::ConfigManagerInstance;
 use std::f64::consts::PI;
 
 mod boards;

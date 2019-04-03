@@ -4,8 +4,8 @@ mod physics;
 use self::brain::Brain;
 use self::physics::Physics;
 use self::physics::PhysicsInstance;
-use canars::CANFrame;
-use com::Com;
+use crate::canars::CANFrame;
+use crate::com::Com;
 use std::sync::mpsc::Receiver;
 
 use config_manager::config::ConfigManagerInstance;

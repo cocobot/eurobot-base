@@ -1,4 +1,4 @@
-use ui::gtk::prelude::*;
+use crate::ui::gtk::prelude::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
 

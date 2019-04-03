@@ -1,4 +1,3 @@
-#![feature(nll)]
 extern crate state_manager;
 extern crate config_manager;
 extern crate pretty_env_logger;

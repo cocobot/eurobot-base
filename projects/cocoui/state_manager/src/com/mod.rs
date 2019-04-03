@@ -18,8 +18,8 @@ use canars::Instance;
 use canars::Node;
 use canars::RxTransfer;
 use canars::TransferType;
-use com::msg::Msg;
-use state::StateManagerInstance;
+use msg::Msg;
+use crate::state::StateManagerInstance;
 
 pub struct ComHandler {}
 

@@ -1,5 +1,3 @@
-#![feature(nll)]
-
 #[macro_use]
 extern crate log;
 
@@ -241,8 +239,8 @@ pub fn encode_scalar_bool(_buffer: &mut Vec<u8>, _offset: usize, _size: usize, _
 }
 
 pub trait Node<U> {
-    fn on_transfer_reception(&self, &mut U, &RxTransfer);
-    fn should_accept_transfer(&self, &U, &mut u64, u16, TransferType, u8) -> bool;
+    fn on_transfer_reception(&self, _: &mut U, _: &RxTransfer);
+    fn should_accept_transfer(&self, _: &U, _: &mut u64, _: u16, _: TransferType, _: u8) -> bool;
 }
 
 #[derive(PartialEq, Copy, Clone)]

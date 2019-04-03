@@ -8,8 +8,8 @@ use std::sync::Arc;
 use std::sync::Mutex;
 
 use self::canars::CANFrame;
-use com::Com;
-use simu::physics::PhysicsInstance;
+use crate::com::Com;
+use crate::simu::physics::PhysicsInstance;
 
 
 #[derive(Copy, Clone)]

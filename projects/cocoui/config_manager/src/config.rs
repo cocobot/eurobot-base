@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use std::sync::Mutex;
-use defs;
+use super::defs;
 
 pub type ConfigManagerInstance = Arc<Mutex<ConfigManager>>;
 

@@ -1,10 +1,16 @@
 extern crate canars;
 extern crate nphysics2d;
+extern crate ncollide2d;
+extern crate nalgebra;
 
-use self::canars::CANFrame;
-use self::nphysics2d::world::World;
+use crate::simu::physics::canars::CANFrame;
+use crate::simu::physics::nphysics2d::world::World;
+use crate::simu::physics::ncollide2d::shape::{ShapeHandle, ConvexPolygon};
+use crate::simu::physics::nphysics2d::object::ColliderDesc;
+use crate::simu::physics::nphysics2d::object::RigidBodyDesc;
+use crate::simu::physics::nalgebra::geometry::Point2;
 use config_manager::config::ConfigManagerInstance;
-use simu::brain::BrainInstance;
+use super::brain::BrainInstance;
 use std::sync::mpsc::Receiver;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -13,8 +19,9 @@ use std::{thread, time};
 
 pub type PhysicsInstance = Arc<Mutex<Physics>>;
 
+
 pub struct Physics {
-    _config: ConfigManagerInstance,
+    config: ConfigManagerInstance,
     tx_can: Receiver<CANFrame>,
     brains: Vec<BrainInstance>,
 }
@@ -22,7 +29,7 @@ pub struct Physics {
 impl Physics {
     pub fn new(config: ConfigManagerInstance, tx_can: Receiver<CANFrame>) -> PhysicsInstance {
         let phys = Physics {
-            _config: config,
+            config: config,
             tx_can,
             brains: Vec::new(),
         };
@@ -39,6 +46,33 @@ impl Physics {
             let mut world: World<f32> = World::new();
             let delay = time::Duration::from_millis(1000 / 60);
 
+            let locked_instance = instance.lock().unwrap();
+            let config = locked_instance.config.lock().unwrap();
+
+            //create robots body
+            let rdata  = [&config.robots.main, &config.robots.pmi];
+            let mut robots = Vec::new();
+            for (i, robot) in rdata.iter().enumerate() {
+                let mut points = Vec::new();
+                for pt in robot.shape.iter() {
+                    points.push(Point2::new(pt[0] as f32, pt[1] as f32));
+                }
+                let shape = ConvexPolygon::try_from_points(points.iter().as_slice()).expect("Convex hull computation failed.");
+                let collider = ColliderDesc::new(ShapeHandle::new(shape)).density(1.0);
+
+                //create robot rigid body
+                let body_center = RigidBodyDesc::new()
+                    .gravity_enabled(false)
+                    .collider(&collider)
+                    .name(format!("r{}", i))
+                    .build(&mut world);
+
+                robots.push(body_center.handle());
+            }
+
+            drop(config);
+            drop(locked_instance);
+
             loop {
                 let locked_instance = instance.lock().unwrap();
                 for b in locked_instance.brains.iter() {
@@ -47,6 +81,11 @@ impl Physics {
                 drop(locked_instance);
 
                 world.step();
+
+                //update robots position
+                for r in robots.iter() {
+                    debug!("Robot: {:?}", world.rigid_body(*r).unwrap().position());
+                }
 
                 let mut waiting_tx = Vec::new();
                 let locked_instance = instance.lock().unwrap();

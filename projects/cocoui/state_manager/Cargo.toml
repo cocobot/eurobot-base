@@ -2,6 +2,7 @@
 name = "state_manager"
 version = "0.1.0"
 authors = ["Damien Espitallier <damien.espitallier@gmail.com>"]
+edition = "2018"
 
 [dependencies]
 canars = { path = "../canars" }
@@ -10,4 +11,6 @@ config_manager = { path = "../config_manager" }
 serialport = "3.1.0"
 log = "0.4.6"
 hex-slice = "0.1.4"
-nphysics2d = "0.10.3"
+nphysics2d = "0.11.1"
+ncollide2d = "0.19.0"
+nalgebra = "0.18.0"

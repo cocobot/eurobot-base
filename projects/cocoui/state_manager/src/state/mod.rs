@@ -13,12 +13,12 @@ use std::io::Read;
 use std::io::Seek;
 use std::io::SeekFrom;
 
-use com::msg::Msg;
-use com::msg::QValue;
-use com::Com;
-use config_manager::config::ConfigManagerInstance;
+use crate::com::msg::Msg;
+use crate::com::msg::QValue;
+use crate::com::Com;
+use crate::config_manager::config::ConfigManagerInstance;
 
-use hex_slice::AsHex;
+use crate::hex_slice::AsHex;
 
 #[derive(Debug, Clone)]
 pub struct State {
