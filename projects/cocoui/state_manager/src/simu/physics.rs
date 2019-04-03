@@ -46,8 +46,13 @@ impl Physics {
             let mut world: World<f32> = World::new();
             let delay = time::Duration::from_millis(1000 / 60);
 
+            println!("Z1");
             let locked_instance = instance.lock().unwrap();
-            let config = locked_instance.config.lock().unwrap();
+            let config = locked_instance.config.clone();
+            drop(locked_instance);
+            println!("Z2");
+            let config = config.lock().unwrap();
+            println!("Z3");
 
             //create robots body
             let rdata  = [&config.robots.main, &config.robots.pmi];
@@ -69,9 +74,10 @@ impl Physics {
 
                 robots.push(body_center.handle());
             }
+            println!("Z5");
 
             drop(config);
-            drop(locked_instance);
+            println!("Z7");
 
             loop {
                 let locked_instance = instance.lock().unwrap();
