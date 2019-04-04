@@ -15,11 +15,12 @@ use crate::simu::physics::PhysicsInstance;
 pub struct Timer {
     freq: i32,
     count: u32,
+    pub adder: i32,
 }
 
 impl Timer {
     pub fn new() -> Timer {
-        Timer { freq: 0, count: 0 }
+        Timer { freq: 0, count: 0, adder: 0 }
     }
 
     pub fn init(&mut self, freq: i32) {
@@ -31,6 +32,17 @@ impl Timer {
             //counter only
             self.count += step_time * ((-self.freq) as u32) / 1000;
         }
+        if(self.adder > 0)
+        {
+            let (cnt, _) = self.count.overflowing_add(self.adder as u32);
+            self.count = cnt;
+        }
+        else
+        {
+            let (cnt, _) = self.count.overflowing_sub((-self.adder) as u32);
+            self.count = cnt;
+        }
+        self.adder = 0;
     }
 
     pub fn get_count(&self) -> u32 {
@@ -43,16 +55,19 @@ pub type BrainInstance = Arc<Mutex<Brain>>;
 pub struct Brain {
     com: Com,
     path: String,
-    timers: [Timer; Brain::TIMER_COUNT],
+    pub timers: [Timer; Brain::TIMER_COUNT],
     stdin: Option<ChildStdin>,
 
     pub force_x: Option<f64>,
     pub force_y: Option<f64>,
     pub force_a: Option<f64>,
+    pub tick_per_180deg: f32,
+    pub tick_per_meter: f32,
+    pub simu_position: Option<(f32, f32, f32)>,
 }
 
 impl Brain {
-    const TIMER_COUNT: usize = 5;
+    const TIMER_COUNT: usize = 10;
 
     pub fn new(com: Com, path: String) -> BrainInstance {
         let brain = Brain {
@@ -63,6 +78,9 @@ impl Brain {
             force_x: None,
             force_y: None,
             force_a: None,
+            tick_per_180deg: 1e18,
+            tick_per_meter: 1e18,
+            simu_position: None,
         };
 
         let instance = Arc::new(Mutex::new(brain));
@@ -131,6 +149,12 @@ impl Brain {
                         "A" => {
                             let a = tokens.get(1).unwrap().to_owned().parse::<f64>().unwrap();
                             self.force_a = Some(a);
+                        },
+                        "INIT" => {
+                            let d = tokens.get(1).unwrap().to_owned().parse::<f32>().unwrap();
+                            let a = tokens.get(1).unwrap().to_owned().parse::<f32>().unwrap();
+                            self.tick_per_meter = d;
+                            self.tick_per_180deg = a;
                         },
                         _ => warn!("Unexpected POS command: '{}'", cmd),
                     }

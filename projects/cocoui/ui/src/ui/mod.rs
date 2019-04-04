@@ -85,7 +85,7 @@ impl UIRobot {
 
     pub fn draw(&self, ctx: &cairo::Context, simulation: bool) {
 
-        let opacity_factor = if simulation { 1.0 } else { 1.0 };
+        let opacity_factor = if simulation { 0.3 } else { 1.0 };
 
         //create path for fill
         let mut iter = self.shape.iter();

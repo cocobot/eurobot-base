@@ -109,31 +109,49 @@ impl Physics {
                 let locked_instance = instance.lock().unwrap();
                 for (i, b) in locked_instance.brains.iter().enumerate() {
                     let mut b = b.lock().unwrap();
+                    let body = world.rigid_body_mut(*robots.get(i).unwrap()).unwrap();
+
+                    let pos = body.position().translation.vector;
+                    if let Some((x, y, a)) = b.simu_position {
+                        let distance = ((pos.x - x) * (pos.x - x) + (pos.y - y) * (pos.y - y)).sqrt();
+                        let angle = body.position().rotation.scaled_axis()[0] - a;
+
+                        let distance = distance * b.tick_per_meter / 1000.0;
+                        let angle = angle * b.tick_per_180deg / std::f32::consts::PI;
+
+                        b.timers[2].adder += (distance / 2.0).floor() as i32;
+                        b.timers[5].adder += (distance / 2.0).floor() as i32;
+
+                        b.timers[2].adder += (angle / 2.0).floor() as i32;
+                        b.timers[5].adder -= (angle / 2.0).floor() as i32;
+                        warn!("DEP: {} = {} {}", i, distance, angle);
+                    }
 
                     b.step(1000 / 60);
 
+                    b.simu_position = Some((pos.x, pos.y, body.position().rotation.scaled_axis()[0]));
                     if let Some(x) = b.force_x {
-                        let body = world.rigid_body_mut(*robots.get(i).unwrap()).unwrap();
                         let mut pos = body.position().clone();
                         pos.translation.vector.x = x as f32;
                         body.set_position(pos);
                         b.force_x = None;
+                        b.simu_position = None;
                     }
 
                     if let Some(y) = b.force_y {
-                        let body = world.rigid_body_mut(*robots.get(i).unwrap()).unwrap();
                         let mut pos = body.position().clone();
                         pos.translation.vector.y = y as f32;
                         body.set_position(pos);
                         b.force_y = None;
+                        b.simu_position = None;
                     }
 
                     if let Some(a) = b.force_a {
-                        let body = world.rigid_body_mut(*robots.get(i).unwrap()).unwrap();
                         let mut pos = body.position().clone();
                         //pos.translation.vector.x = x as f32;
                         //body.set_position(pos);
                         b.force_a = None;
+                        b.simu_position = None;
                     }
 
                 }
@@ -143,7 +161,12 @@ impl Physics {
                 for (i, robot) in robots.iter().enumerate() {
                     let body = world.rigid_body_mut(*robot).unwrap();
                     body.set_linear_velocity(body.position().rotation.transform_vector(&Vector2::x()) * 200.0);
-                    body.set_angular_velocity(-0.1);
+                    if(i == 1) {
+                        body.set_angular_velocity(-0.1);
+                    }
+                    else {
+                        body.set_angular_velocity(0.0);
+                    }
                 }
 
                 world.step();
