@@ -142,6 +142,11 @@ pub struct RobotInfo {
     pub x: f64,
     pub y: f64,
     pub a: f64,
+
+    pub simu: bool,
+    pub simu_x: f64,
+    pub simu_y: f64,
+    pub simu_a: f64,
 }
 
 impl RobotInfo {
@@ -150,6 +155,11 @@ impl RobotInfo {
             x: 0.0,
             y: 0.0,
             a: 0.0,
+
+            simu: false,
+            simu_x: 0.0,
+            simu_y: 0.0,
+            simu_a: 0.0,
         }
     }
 }

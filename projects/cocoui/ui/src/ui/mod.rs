@@ -1,15 +1,15 @@
-extern crate gtk;
 extern crate gdk;
 extern crate gdk_pixbuf;
+extern crate gtk;
 
-use std::cell::RefCell;
-use crate::state_manager::state::StateManagerInstance;
+use crate::config_manager::config::ConfigManagerInstance;
 use crate::state_manager::state::State;
-use crate::ui::gtk::prelude::*;
+use crate::state_manager::state::StateManagerInstance;
 use crate::ui::gdk::ContextExt;
 use crate::ui::gdk_pixbuf::Pixbuf;
+use crate::ui::gtk::prelude::*;
+use std::cell::RefCell;
 use std::collections::HashMap;
-use crate::config_manager::config::ConfigManagerInstance;
 use std::f64::consts::PI;
 
 mod boards;
@@ -34,18 +34,13 @@ struct UIBorder {
 
 impl UIBorder {
     pub fn draw(&self, ctx: &cairo::Context) {
-        ctx.set_source_rgba(
-            self.color[0],
-            self.color[1],
-            self.color[2],
-            self.color[3],
-            );
+        ctx.set_source_rgba(self.color[0], self.color[1], self.color[2], self.color[3]);
         ctx.rectangle(
             self.rectangle[0],
             self.rectangle[1],
             self.rectangle[2],
             self.rectangle[3],
-            );
+        );
         ctx.fill();
         ctx.set_source_rgb(0.0, 0.0, 0.0);
         ctx.rectangle(
@@ -53,7 +48,7 @@ impl UIBorder {
             self.rectangle[1],
             self.rectangle[2],
             self.rectangle[3],
-            );
+        );
         ctx.stroke();
     }
 }
@@ -84,11 +79,14 @@ impl UIRobot {
         UIRobot {
             shape,
             fill,
-            stroke
+            stroke,
         }
     }
 
-    pub fn draw(&self, ctx: &cairo::Context) {
+    pub fn draw(&self, ctx: &cairo::Context, simulation: bool) {
+
+        let opacity_factor = if simulation { 1.0 } else { 1.0 };
+
         //create path for fill
         let mut iter = self.shape.iter();
         let first = iter.next().unwrap();
@@ -100,12 +98,7 @@ impl UIRobot {
         ctx.close_path();
 
         //fill
-        ctx.set_source_rgba(
-            self.fill[0],
-            self.fill[1],
-            self.fill[2],
-            self.fill[3],
-            );
+        ctx.set_source_rgba(self.fill[0], self.fill[1], self.fill[2], self.fill[3] * opacity_factor);
         ctx.fill();
 
         //create path for stroke
@@ -123,8 +116,8 @@ impl UIRobot {
             self.stroke[0],
             self.stroke[1],
             self.stroke[2],
-            self.stroke[3],
-            );
+            self.stroke[3] * opacity_factor,
+        );
         ctx.stroke();
     }
 }
@@ -190,14 +183,14 @@ impl UICache {
     }
 
     pub fn invalidate_surface(&mut self, width: f64, height: f64) {
-         if (width != self.width) || (height != self.height) {
-             self.width = width;
-             self.height = height;
+        if (width != self.width) || (height != self.height) {
+            self.width = width;
+            self.height = height;
 
-             self.borders_surface = None;
-             self.background_surface = None;
-             self.pathfinder_pr_surface = None;
-         }
+            self.borders_surface = None;
+            self.background_surface = None;
+            self.pathfinder_pr_surface = None;
+        }
     }
 
     pub fn load(&mut self) {
@@ -325,37 +318,44 @@ pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibi
         }
 
         //draw background
-    
+
         if let Some(background_surface) = ui.cache.background_surface.as_ref() {
             ctx.set_operator(cairo::Operator::Over);
             ctx.set_source_surface(background_surface, 0.0, 0.0);
             ctx.paint();
-        }
-        else {
+        } else {
             match Pixbuf::new_from_file(ui.cache.background_path.to_owned()) {
                 Ok(image) => {
-                    let background = cairo::ImageSurface::create(cairo::Format::ARgb32, width as i32, height as i32).unwrap();
+                    let background = cairo::ImageSurface::create(
+                        cairo::Format::ARgb32,
+                        width as i32,
+                        height as i32,
+                    )
+                    .unwrap();
                     let ctx = cairo::Context::new(&background);
-                    ctx.scale(coef,coef);
+                    ctx.scale(coef, coef);
                     ctx.translate(22.0, 22.0);
                     ctx.set_source_pixbuf(&image, 0.0, 0.0);
                     ctx.rectangle(0.0, 0.0, 3000.0, 2000.0);
                     ctx.fill();
 
                     ui.cache.background_surface = Some(background);
-                },
-                Err(r) => { error!("background: {:?}", r); }
+                }
+                Err(r) => {
+                    error!("background: {:?}", r);
+                }
             };
         }
 
-
         //draw borders
         if ui.cache.borders_surface.is_none() {
-            let borders = cairo::ImageSurface::create(cairo::Format::ARgb32, width as i32, height as i32).unwrap();
+            let borders =
+                cairo::ImageSurface::create(cairo::Format::ARgb32, width as i32, height as i32)
+                    .unwrap();
             let ctx = cairo::Context::new(&borders);
 
             //set scale
-            ctx.scale(coef * coef_x.signum(),coef * coef_y.signum());
+            ctx.scale(coef * coef_x.signum(), coef * coef_y.signum());
             ctx.translate(-min_x, -min_y);
 
             ctx.set_line_width(1.0 / coef);
@@ -372,7 +372,7 @@ pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibi
         if let Some(state) = &ui.cache.state {
             ctx.save();
             //set scale
-            ctx.scale(coef * coef_x.signum(),coef * coef_y.signum());
+            ctx.scale(coef * coef_x.signum(), coef * coef_y.signum());
             ctx.translate(-min_x, -min_y);
 
             //draw robots
@@ -381,9 +381,20 @@ pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibi
                 ctx.save();
                 ctx.translate(robot.x, robot.y);
                 ctx.rotate(robot.a * PI / 180.0);
-                ui.cache.robots[i].draw(ctx);
+                ui.cache.robots[i].draw(ctx, false);
                 ctx.restore();
             }
+            
+            //draw robots
+            for i in 0..2 {
+                let robot = state.robots[i];
+                ctx.save();
+                ctx.translate(robot.simu_x, robot.simu_y);
+                ctx.rotate(robot.simu_a * PI / 180.0);
+                ui.cache.robots[i].draw(ctx, true);
+                ctx.restore();
+            }
+
             /*
             let mut pathfinder_pr_surface = None;
             let pathfinder_idx;
@@ -461,7 +472,7 @@ pub fn draw_field(field: &gtk::DrawingArea, ctx: &cairo::Context) -> gtk::Inhibi
                 ui.cache.pathfinder_pr_surface = pathfinder_pr_surface;
             }
             */
-                ctx.restore();
+            ctx.restore();
         }
     });
 
@@ -482,7 +493,7 @@ fn update() {
             ui.cache.state = state_cpy;
 
             //update field canvas
-            update_elm!(ui.field, |x: &mut gtk::DrawingArea| {x.queue_draw()});
+            update_elm!(ui.field, |x: &mut gtk::DrawingArea| x.queue_draw());
         });
         gtk::Continue(true)
     });
@@ -499,7 +510,7 @@ pub fn create_shortcuts(window: gtk::Window) {
                     let state = ui.state.as_ref().unwrap().lock().unwrap();
                     state.command("pgm 11");
                 });
-            },
+            }
             gdk::enums::key::R => {
                 debug!("KEY R");
                 UII.with(|ui| {
@@ -519,7 +530,7 @@ pub fn create_shortcuts(window: gtk::Window) {
                 });
             }
 
-            _ => {},
+            _ => {}
         };
 
         Inhibit(false)
@@ -537,19 +548,19 @@ pub fn init(config: ConfigManagerInstance, state: StateManagerInstance) {
     let glade_src = include_str!("glade/ui.glade");
     let builder = gtk::Builder::new_from_string(glade_src);
     let window: gtk::Window = builder.get_object("mainWindow").unwrap();
-    
+
     //init UI struct
     UII.with(|ui| {
         let mut ui = ui.borrow_mut();
-        
+
         ui.cache.set_config(config);
 
         ui.field = builder.get_object("field");
         ui.state = Some(state.clone());
 
-        update_elm!(ui.field, |x: &mut gtk::DrawingArea| {x.connect_draw(draw_field)});
+        update_elm!(ui.field, |x: &mut gtk::DrawingArea| x
+            .connect_draw(draw_field));
     });
-    
 
     create_shortcuts(window.clone());
 
@@ -564,7 +575,7 @@ pub fn init(config: ConfigManagerInstance, state: StateManagerInstance) {
 
     window.show_all();
     update();
-    boards::show();
+    //boards::show();
 }
 
 pub fn start() {

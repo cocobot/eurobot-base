@@ -11,7 +11,6 @@ use self::canars::CANFrame;
 use crate::com::Com;
 use crate::simu::physics::PhysicsInstance;
 
-
 #[derive(Copy, Clone)]
 pub struct Timer {
     freq: i32,
@@ -46,6 +45,10 @@ pub struct Brain {
     path: String,
     timers: [Timer; Brain::TIMER_COUNT],
     stdin: Option<ChildStdin>,
+
+    pub force_x: Option<f64>,
+    pub force_y: Option<f64>,
+    pub force_a: Option<f64>,
 }
 
 impl Brain {
@@ -57,6 +60,9 @@ impl Brain {
             path,
             timers: [Timer::new(); Brain::TIMER_COUNT],
             stdin: None,
+            force_x: None,
+            force_y: None,
+            force_a: None,
         };
 
         let instance = Arc::new(Mutex::new(brain));
@@ -95,9 +101,7 @@ impl Brain {
                     let cmd = tokens.get(1).unwrap().as_ref();
                     match cmd {
                         "RUN" => info!("Simulation started ({})", self.get_path()),
-                        "REBOOT" => { 
-                            return true
-                        },
+                        "REBOOT" => return true,
                         _ => warn!("Unexpected ARCH command: '{}'", cmd),
                     }
                 }
@@ -110,6 +114,25 @@ impl Brain {
                             self.timer_init(module_id, freq);
                         }
                         _ => warn!("Unexpected TIMER command: '{}'", cmd),
+                    }
+                }
+                "POS" => {
+                    let tokens: Vec<&str> = tokens.get(1).unwrap().split(":").collect();
+                    let cmd = tokens.get(0).unwrap().as_ref();
+                    match cmd {
+                        "X" => {
+                            let x = tokens.get(1).unwrap().to_owned().parse::<f64>().unwrap();
+                            self.force_x = Some(x);
+                        },
+                        "Y" => {
+                            let y = tokens.get(1).unwrap().to_owned().parse::<f64>().unwrap();
+                            self.force_y = Some(y);
+                        },
+                        "A" => {
+                            let a = tokens.get(1).unwrap().to_owned().parse::<f64>().unwrap();
+                            self.force_a = Some(a);
+                        },
+                        _ => warn!("Unexpected POS command: '{}'", cmd),
                     }
                 }
                 "CAN" => {
@@ -143,7 +166,8 @@ impl Brain {
         let child = Command::new(locked_instance.get_path().to_owned())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
-            .spawn().unwrap();
+            .spawn()
+            .unwrap();
         locked_instance.stdin = Some(child.stdin.unwrap());
         drop(locked_instance);
 

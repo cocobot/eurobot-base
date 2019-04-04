@@ -1,9 +1,9 @@
-use canars::Instance;
-use canars::RequestResponse;
 use crate::com::dsdl::uavcan::protocol::param::Empty;
 use crate::com::dsdl::uavcan::protocol::param::Value;
 use crate::com::ComHandler;
 use crate::state::StateManagerInstance;
+use canars::Instance;
+use canars::RequestResponse;
 
 #[derive(Debug, Clone)]
 pub enum QValue {

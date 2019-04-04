@@ -4,7 +4,7 @@ pub mod msg;
 pub mod serial;
 
 use crossbeam_channel::unbounded;
-use crossbeam_channel::{Sender, Receiver};
+use crossbeam_channel::{Receiver, Sender};
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
@@ -13,13 +13,13 @@ use std::time::Duration;
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
 
+use crate::state::StateManagerInstance;
 use canars::CANFrame;
 use canars::Instance;
 use canars::Node;
 use canars::RxTransfer;
 use canars::TransferType;
 use msg::Msg;
-use crate::state::StateManagerInstance;
 
 pub struct ComHandler {}
 
@@ -57,7 +57,7 @@ impl Node<StateManagerInstance> for ComHandler {
         } else if dsdl::uavcan::cocobot::Position::check_id(data_type_id) {
             dsdl::uavcan::cocobot::Position::set_signature(data_type_signature);
             true
-        }else {
+        } else {
             debug!("xfer refused: {}", source_node_id);
             false
         }
@@ -90,7 +90,7 @@ impl Node<StateManagerInstance> for ComHandler {
             state.robots[id].x = position.x.into();
             state.robots[id].y = position.y.into();
             state.robots[id].a = position.a.into();
-        }else {
+        } else {
             error!(
                 "Xfer accepted but not implemented: {:?}",
                 xfer.get_data_type_id()
@@ -160,7 +160,7 @@ pub fn init(node_id: u8, state_manager: StateManagerInstance) -> (Com, Receiver<
     let node = Arc::new(Mutex::new(node));
 
     //create channels for communication
-    let (tx_send_msg, rx_send_msg)  = unbounded();
+    let (tx_send_msg, rx_send_msg) = unbounded();
     let (tx_send_can_frame, rx_send_can_frame) = unbounded();
     let (tx_receive_can_frame, rx_receive_can_frame) = unbounded();
 
@@ -215,20 +215,18 @@ pub fn init(node_id: u8, state_manager: StateManagerInstance) -> (Com, Receiver<
             }
         }
     });
-    
+
     //transfert can packet from node to simulator or serial
     let com_th3 = com.clone();
     let node_th3 = node.clone();
-    thread::spawn(move || {
-        loop {
-            let mut node = node_th3.lock().unwrap();
-            while let Some(frame) = node.pop_tx_queue() {
-                com_th3.send_can_frame(frame);
-            }
-            drop(node);
-
-            thread::sleep(time::Duration::from_millis(20));
+    thread::spawn(move || loop {
+        let mut node = node_th3.lock().unwrap();
+        while let Some(frame) = node.pop_tx_queue() {
+            com_th3.send_can_frame(frame);
         }
+        drop(node);
+
+        thread::sleep(time::Duration::from_millis(20));
     });
 
     (com, rx_send_can_frame)
