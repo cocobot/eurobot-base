@@ -75,9 +75,7 @@ static void cocobot_position_task(void * arg)
     cocobot_position_compute();
 
     //run the asserv
-#if REMOVE_ME
     cocobot_asserv_compute();
-#endif
 
     //wait 10ms
     vTaskDelayUntil( &xLastWakeTime, 10 / portTICK_PERIOD_MS);
@@ -253,6 +251,9 @@ void cocobot_position_set_motor_command(float left_motor_speed, float right_moto
 
 void cocobot_position_set_speed_distance_angle(float linear_speed, float angular_velocity)
 {
+#ifdef AUSBEE_SIM
+  mcual_arch_request("POS", 0, "SPEED:%f:%f", linear_speed, angular_velocity);
+#else
   float c1 = linear_speed + angular_velocity;
   float c2 = linear_speed - angular_velocity;
 
@@ -280,6 +281,7 @@ void cocobot_position_set_speed_distance_angle(float linear_speed, float angular
   right_sp = last_right_sp + right_motor_alpha * (right_sp - last_right_sp);
 
   cocobot_position_set_motor_command(left_sp, right_sp);
+#endif
 }
 
 /*

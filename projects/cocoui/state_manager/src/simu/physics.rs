@@ -6,7 +6,7 @@ extern crate nphysics2d;
 use super::brain::BrainInstance;
 use crate::simu::physics::canars::CANFrame;
 use crate::simu::physics::nalgebra::geometry::Point2;
-use crate::simu::physics::nalgebra::Vector2;
+use crate::simu::physics::nalgebra::{Vector2, Isometry2};
 use crate::simu::physics::ncollide2d::shape::{ConvexPolygon, ShapeHandle};
 use crate::simu::physics::nphysics2d::object::ColliderDesc;
 use crate::simu::physics::nphysics2d::object::RigidBodyDesc;
@@ -106,6 +106,8 @@ impl Physics {
             drop(config);
 
             loop {
+                let ts = world.timestep();
+
                 let locked_instance = instance.lock().unwrap();
                 for (i, b) in locked_instance.brains.iter().enumerate() {
                     let mut b = b.lock().unwrap();
@@ -113,18 +115,21 @@ impl Physics {
 
                     let pos = body.position().translation.vector;
                     if let Some((x, y, a)) = b.simu_position {
-                        let distance = ((pos.x - x) * (pos.x - x) + (pos.y - y) * (pos.y - y)).sqrt();
+                        let dir = body.position().rotation.transform_vector(&Vector2::x());
+                        let distance = body.velocity().linear.dot(&dir) * ts;
                         let angle = body.position().rotation.scaled_axis()[0] - a;
+                        let angle = if angle > std::f32::consts::PI {
+                            angle - std::f32::consts::PI * 2.0
+                        }
+                        else {
+                            angle
+                        };
 
                         let distance = distance * b.tick_per_meter / 1000.0;
                         let angle = angle * b.tick_per_180deg / std::f32::consts::PI;
 
-                        b.timers[2].adder += (distance / 2.0).floor() as i32;
-                        b.timers[5].adder += (distance / 2.0).floor() as i32;
-
-                        b.timers[2].adder += (angle / 2.0).floor() as i32;
-                        b.timers[5].adder -= (angle / 2.0).floor() as i32;
-                        warn!("DEP: {} = {} {}", i, distance, angle);
+                        b.timers[2].adder += (distance + angle) / 2.0;
+                        b.timers[5].adder += (distance - angle) / 2.0;
                     }
 
                     b.step(1000 / 60);
@@ -148,26 +153,22 @@ impl Physics {
 
                     if let Some(a) = b.force_a {
                         let mut pos = body.position().clone();
-                        //pos.translation.vector.x = x as f32;
-                        //body.set_position(pos);
+                        body.set_position(Isometry2::new(pos.translation.vector, (a as f32) * std::f32::consts::PI / 180.0));
                         b.force_a = None;
                         b.simu_position = None;
                     }
 
                 }
-                drop(locked_instance);
 
                 //update velocity changes
-                for (i, robot) in robots.iter().enumerate() {
-                    let body = world.rigid_body_mut(*robot).unwrap();
-                    body.set_linear_velocity(body.position().rotation.transform_vector(&Vector2::x()) * 200.0);
-                    if(i == 1) {
-                        body.set_angular_velocity(-0.1);
-                    }
-                    else {
-                        body.set_angular_velocity(0.0);
-                    }
+                for (i, b) in locked_instance.brains.iter().enumerate() {
+                    let mut b = b.lock().unwrap();
+                    let body = world.rigid_body_mut(*robots.get(i).unwrap()).unwrap();
+
+                    body.set_linear_velocity(body.position().rotation.transform_vector(&Vector2::x()) * b.speed_d / ts * 2.0);
+                    body.set_angular_velocity(b.speed_a / ts * 2.0);
                 }
+                drop(locked_instance);
 
                 world.step();
 
