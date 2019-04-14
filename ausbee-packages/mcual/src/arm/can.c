@@ -385,8 +385,8 @@ static void mcual_can_add_in_mailbox(uint8_t tx_mailbox, volatile CanardCANFrame
 
 void CAN1_TX_IRQHandler(void)
 {
-    static const uint32_t AllTME = CAN_TSR_TME0 | CAN_TSR_TME1 | CAN_TSR_TME2;
-    static bool is_empty = false;
+    const uint32_t AllTME = CAN_TSR_TME0 | CAN_TSR_TME1 | CAN_TSR_TME2;
+    bool is_empty = false;
     CanardCANFrame frame;  
 #if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
     BaseType_t xTaskWokenByReceive = pdFALSE;
@@ -541,24 +541,24 @@ static void mcual_can_rcev_frame(volatile CAN_FIFOMailBox_TypeDef* const mb)
 
 void CAN1_RX0_IRQHandler(void)
 {
+    // Release FIFO entry we just read
+    CAN1->RF0R = CAN_RF0R_RFOM0 | CAN_RF0R_FOVR0 | CAN_RF0R_FULL0;
+    
     //Manage error?
-
+    
     volatile CAN_FIFOMailBox_TypeDef* const mb = &CAN1->sFIFOMailBox[0];
 
     mcual_can_rcev_frame(mb);
-
-    // Release FIFO entry we just read
-    CAN1->RF0R = CAN_RF0R_RFOM0 | CAN_RF0R_FOVR0 | CAN_RF0R_FULL0;
 }
 
 void CAN1_RX1_IRQHandler(void)
 {
+    // Release FIFO entry we just read
+    CAN1->RF1R = CAN_RF1R_RFOM1 | CAN_RF1R_FOVR1 | CAN_RF1R_FULL1;
+
     volatile CAN_FIFOMailBox_TypeDef* const mb = &CAN1->sFIFOMailBox[1];
 
     mcual_can_rcev_frame(mb);
-
-    // Release FIFO entry we just read
-    CAN1->RF1R = CAN_RF1R_RFOM1 | CAN_RF1R_FOVR1 | CAN_RF1R_FULL1;
 }
 
 void CAN1_SCE_IRQHandler(void)
