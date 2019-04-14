@@ -62,23 +62,6 @@ typedef struct __attribute__((__packed__))
 } cocobot_com_usart_frame_t;
 #endif
 
-#ifdef DEBUG_FRAME
-#include <stdarg.h>
-char buf[128];
-void uprintf(char * fmt, ...)
-{
-   va_list ap;
-  va_start(ap, fmt);
-  vsnprintf(buf, sizeof(buf), fmt, ap);
-  va_end(ap);
-  
-  uint8_t * ptr = (uint8_t *)buf;
-  while(*ptr) {
-    mcual_usart_send(PLATFORM_USART_DEBUG, *ptr);
-    ptr += 1;
-  }
-}
-#endif
 
 static void cocobot_com_fill_status(uavcan_protocol_NodeStatus * ns)
 {
@@ -376,6 +359,7 @@ int16_t cocobot_com_usart_receive(CanardCANFrame* const frame)
 void cocobot_com_retransmit(const CanardCANFrame * rx_frame, cocobot_com_source_t source)
 {
 #ifdef DEBUG_FRAME
+ //if(SOURCE_ID_FROM_ID(rx_frame->id) == 72)
  //uprintf("[TRANSMIT] %lu/%d(%d) -- %d->%d -- %d %d %d %d %d %d %d %d\r\n",
  //          rx_frame->id,
  //          rx_frame->data_len,
