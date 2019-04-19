@@ -2,8 +2,13 @@
 #ifdef CONFIG_MCUAL_TIMER
 
 #include <stdlib.h>
-#include <stm32f4xx.h>
 #include <mcual.h>
+
+#ifdef CONFIG_DEVICE_STM32L496xx
+# include <stm32l4xx.h>
+#else
+# include <stm32f4xx.h>
+#endif
 
 static TIM_TypeDef * mcual_timer_get_register(mcual_timer_t timer)
 {
@@ -33,8 +38,10 @@ static TIM_TypeDef * mcual_timer_get_register(mcual_timer_t timer)
     case MCUAL_TIMER8:
       return TIM8;
 
+#ifdef TIM9
     case MCUAL_TIMER9:
       return TIM9;
+#endif
   }
 
   return NULL;
@@ -84,40 +91,87 @@ static void mcual_timer_set_clock(mcual_timer_t timer)
       RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
       break;
 
+#ifdef RCC_APB1ENR_TIM2EN
     case MCUAL_TIMER2:
       RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
       break;
+#endif
+#ifdef RCC_APB1ENR1_TIM2EN
+    case MCUAL_TIMER2:
+      RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN;
+      break;
+#endif
 
+#ifdef RCC_APB1ENR_TIM3EN
     case MCUAL_TIMER3:
       RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
       break;
+#endif
+#ifdef RCC_APB1ENR1_TIM3EN
+    case MCUAL_TIMER3:
+      RCC->APB1ENR1 |= RCC_APB1ENR1_TIM3EN;
+      break;
+#endif
 
+#ifdef RCC_APB1ENR_TIM4EN
     case MCUAL_TIMER4:
       RCC->APB1ENR |= RCC_APB1ENR_TIM4EN;
       break;
+#endif
+#ifdef RCC_APB1ENR1_TIM4EN
+    case MCUAL_TIMER4:
+      RCC->APB1ENR1 |= RCC_APB1ENR1_TIM4EN;
+      break;
+#endif
 
+#ifdef RCC_APB1ENR_TIM5EN
     case MCUAL_TIMER5:
       RCC->APB1ENR |= RCC_APB1ENR_TIM5EN;
       break;
+#endif
+#ifdef RCC_APB1ENR1_TIM5EN
+    case MCUAL_TIMER5:
+      RCC->APB1ENR1 |= RCC_APB1ENR1_TIM5EN;
+      break;
+#endif
 
+#ifdef RCC_APB1ENR_TIM6EN
     case MCUAL_TIMER6:
       RCC->APB1ENR |= RCC_APB1ENR_TIM6EN;
       break;
+#endif
+#if RCC_APB1ENR1_TIM6EN
+    case MCUAL_TIMER6:
+      RCC->APB1ENR1 |= RCC_APB1ENR1_TIM6EN;
+      break;
+#endif
 
+#if RCC_APB1ENR_TIM7EN
     case MCUAL_TIMER7:
       RCC->APB1ENR |= RCC_APB1ENR_TIM7EN;
       break;
+#endif
+#if RCC_APB1ENR1_TIM7EN
+    case MCUAL_TIMER7:
+      RCC->APB1ENR1 |= RCC_APB1ENR1_TIM7EN;
+      break;
+#endif
 
     case MCUAL_TIMER8:
       RCC->APB2ENR |= RCC_APB2ENR_TIM8EN;
       break;
 
+#if RCC_APB2ENR_TIM9EN
     case MCUAL_TIMER9:
       RCC->APB2ENR |= RCC_APB2ENR_TIM9EN;
       break;
+#endif
+#if RCC_APB2ENR1_TIM9EN
+    case MCUAL_TIMER9:
+      RCC->APB2ENR1 |= RCC_APB2ENR1_TIM9EN;
+      break;
+#endif
   }
-
-
 }
 
 void mcual_timer_init(mcual_timer_t timer, int32_t freq_Hz)

@@ -5,6 +5,7 @@
 #include <platform.h>
 #include <stm32f4xx.h>
 
+
 void mcual_loader_boot(void)
 {
   uint32_t *reset = (uint32_t *)(PLATFORM_FLASH_PGM_START);

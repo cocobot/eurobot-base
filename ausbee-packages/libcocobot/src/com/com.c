@@ -1,7 +1,6 @@
 #include <include/generated/autoconf.h>
 #ifdef CONFIG_LIBCOCOBOT_COM
 
-#include <stm32f4xx.h>
 #include <cocobot.h>
 #include <mcual.h>
 #include <platform.h>
@@ -375,6 +374,8 @@ int16_t cocobot_com_usart_receive(CanardCANFrame* const frame)
 
 void cocobot_com_retransmit(const CanardCANFrame * rx_frame, cocobot_com_source_t source)
 {
+  (void)rx_frame;
+  (void)source;
 #ifdef DEBUG_FRAME
  //uprintf("[TRANSMIT] %lu/%d(%d) -- %d->%d -- %d %d %d %d %d %d %d %d\r\n",
  //          rx_frame->id,
@@ -447,6 +448,8 @@ uint64_t cocobot_com_process_event(void)
 
   CanardCANFrame rx_frame;
   int16_t rx_res;
+  (void)rx_res;
+  (void)rx_frame;
 
 #ifdef CONFIG_LIBCOCOBOT_COM_CAN
   rx_res = 1;

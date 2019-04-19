@@ -1,3 +1,8 @@
+config MCUAL_USE_HAL
+	bool "+ Use STM32 HAL"
+	default n
+	depends on MCUAL
+
 config MCUAL_CLOCK
 	bool "+ Clock"
 	default n

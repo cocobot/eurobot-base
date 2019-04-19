@@ -2,6 +2,7 @@
 #define COCOBOT_COM_H
 
 #include <canard.h>
+#include <uavcan/protocol/NodeStatus.h>
 
 void cocobot_com_init(void);
 void cocobot_com_run(void);
