@@ -8,19 +8,19 @@ use std::sync::Arc;
 use std::sync::Mutex;
 
 use self::canars::CANFrame;
-use com::Com;
-use simu::physics::PhysicsInstance;
-
+use crate::com::Com;
+use crate::simu::physics::PhysicsInstance;
 
 #[derive(Copy, Clone)]
 pub struct Timer {
     freq: i32,
     count: u32,
+    pub adder: f32,
 }
 
 impl Timer {
     pub fn new() -> Timer {
-        Timer { freq: 0, count: 0 }
+        Timer { freq: 0, count: 0, adder: 0.0 }
     }
 
     pub fn init(&mut self, freq: i32) {
@@ -32,6 +32,17 @@ impl Timer {
             //counter only
             self.count += step_time * ((-self.freq) as u32) / 1000;
         }
+        let iadder = self.adder.floor() as i32;
+        if iadder > 0 {
+            let (cnt, _) = self.count.overflowing_add(iadder as u32);
+            self.count = cnt;
+        }
+        else {
+            let (cnt, _) = self.count.overflowing_sub((-iadder) as u32);
+            self.count = cnt;
+        }
+
+        self.adder -= iadder as f32; 
     }
 
     pub fn get_count(&self) -> u32 {
@@ -44,12 +55,21 @@ pub type BrainInstance = Arc<Mutex<Brain>>;
 pub struct Brain {
     com: Com,
     path: String,
-    timers: [Timer; Brain::TIMER_COUNT],
+    pub timers: [Timer; Brain::TIMER_COUNT],
     stdin: Option<ChildStdin>,
+
+    pub force_x: Option<f64>,
+    pub force_y: Option<f64>,
+    pub force_a: Option<f64>,
+    pub tick_per_180deg: f32,
+    pub tick_per_meter: f32,
+    pub speed_d: f32,
+    pub speed_a: f32,
+    pub simu_position: Option<(f32, f32, f32)>,
 }
 
 impl Brain {
-    const TIMER_COUNT: usize = 5;
+    const TIMER_COUNT: usize = 10;
 
     pub fn new(com: Com, path: String) -> BrainInstance {
         let brain = Brain {
@@ -57,6 +77,14 @@ impl Brain {
             path,
             timers: [Timer::new(); Brain::TIMER_COUNT],
             stdin: None,
+            force_x: None,
+            force_y: None,
+            force_a: None,
+            tick_per_180deg: 1e18,
+            tick_per_meter: 1e18,
+            speed_d: 0.0,
+            speed_a: 0.0,
+            simu_position: None,
         };
 
         let instance = Arc::new(Mutex::new(brain));
@@ -95,9 +123,7 @@ impl Brain {
                     let cmd = tokens.get(1).unwrap().as_ref();
                     match cmd {
                         "RUN" => info!("Simulation started ({})", self.get_path()),
-                        "REBOOT" => { 
-                            return true
-                        },
+                        "REBOOT" => return true,
                         _ => warn!("Unexpected ARCH command: '{}'", cmd),
                     }
                 }
@@ -110,6 +136,38 @@ impl Brain {
                             self.timer_init(module_id, freq);
                         }
                         _ => warn!("Unexpected TIMER command: '{}'", cmd),
+                    }
+                }
+                "POS" => {
+                    let tokens: Vec<&str> = tokens.get(1).unwrap().split(":").collect();
+                    let cmd = tokens.get(0).unwrap().as_ref();
+                    match cmd {
+                        "X" => {
+                            let x = tokens.get(1).unwrap().to_owned().parse::<f64>().unwrap();
+                            self.force_x = Some(x);
+                        },
+                        "Y" => {
+                            let y = tokens.get(1).unwrap().to_owned().parse::<f64>().unwrap();
+                            self.force_y = Some(y);
+                        },
+                        "A" => {
+                            let a = tokens.get(1).unwrap().to_owned().parse::<f64>().unwrap();
+                            self.force_a = Some(a);
+                        },
+                        "INIT" => {
+                            let d = tokens.get(1).unwrap().to_owned().parse::<f32>().unwrap();
+                            let a = tokens.get(2).unwrap().to_owned().parse::<f32>().unwrap();
+                            self.tick_per_meter = d;
+                            self.tick_per_180deg = a;
+                        },
+                        "SPEED" => {
+                            let d = tokens.get(1).unwrap().to_owned().parse::<f32>().unwrap();
+                            let a = tokens.get(2).unwrap().to_owned().parse::<f32>().unwrap();
+
+                            self.speed_d = d / self.tick_per_meter / 250.0;
+                            self.speed_a = a / self.tick_per_180deg / 250.0;
+                        },
+                        _ => warn!("Unexpected POS command: '{}'", cmd),
                     }
                 }
                 "CAN" => {
@@ -143,7 +201,8 @@ impl Brain {
         let child = Command::new(locked_instance.get_path().to_owned())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
-            .spawn().unwrap();
+            .spawn()
+            .unwrap();
         locked_instance.stdin = Some(child.stdin.unwrap());
         drop(locked_instance);
 

@@ -140,13 +140,13 @@ static void mcual_timer_set_clock(mcual_timer_t timer)
       RCC->APB1ENR |= RCC_APB1ENR_TIM6EN;
       break;
 #endif
-#if RCC_APB1ENR1_TIM6EN
+#ifdef RCC_APB1ENR1_TIM6EN
     case MCUAL_TIMER6:
       RCC->APB1ENR1 |= RCC_APB1ENR1_TIM6EN;
       break;
 #endif
 
-#if RCC_APB1ENR_TIM7EN
+#ifdef RCC_APB1ENR_TIM7EN
     case MCUAL_TIMER7:
       RCC->APB1ENR |= RCC_APB1ENR_TIM7EN;
       break;
@@ -161,7 +161,7 @@ static void mcual_timer_set_clock(mcual_timer_t timer)
       RCC->APB2ENR |= RCC_APB2ENR_TIM8EN;
       break;
 
-#if RCC_APB2ENR_TIM9EN
+#ifdef RCC_APB2ENR_TIM9EN
     case MCUAL_TIMER9:
       RCC->APB2ENR |= RCC_APB2ENR_TIM9EN;
       break;

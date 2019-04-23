@@ -13,22 +13,24 @@ use std::io::Read;
 use std::io::Seek;
 use std::io::SeekFrom;
 
-use com::msg::Msg;
-use com::msg::QValue;
-use com::Com;
-use config_manager::config::ConfigManagerInstance;
+use crate::com::msg::Msg;
+use crate::com::msg::QValue;
+use crate::com::Com;
+use crate::config_manager::config::ConfigManagerInstance;
 
-use hex_slice::AsHex;
+use crate::hex_slice::AsHex;
 
 #[derive(Debug, Clone)]
 pub struct State {
     pub nodes: HashMap<u8, stype::NodeInfo>,
+    pub robots: [stype::RobotInfo; 2],
 }
 
 impl State {
     fn new() -> State {
         State {
             nodes: HashMap::new(),
+            robots: [stype::RobotInfo::new(); 2],
         }
     }
 }
@@ -138,7 +140,7 @@ impl StateManager {
         self.state.clone()
     }
 
-    fn get_state_mut(&mut self) -> &mut State {
+    pub fn get_state_mut(&mut self) -> &mut State {
         &mut self.state
     }
 

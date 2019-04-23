@@ -13,7 +13,7 @@ use self::serialport::SerialPortSettings;
 use self::serialport::SerialPortType;
 
 use canars::CANFrame;
-use std::sync::mpsc::Receiver;
+use crossbeam_channel::Receiver;
 
 #[derive(Clone, Debug)]
 struct Frame {

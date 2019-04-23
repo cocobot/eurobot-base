@@ -15,3 +15,7 @@ void mcual_get_unique_id(uint8_t buffer[12])
     buffer[i] = *ptr;
   }
 }
+
+void vApplicationTickHook(void)
+{
+}

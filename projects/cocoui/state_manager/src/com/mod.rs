@@ -3,8 +3,8 @@ extern crate dsdl;
 pub mod msg;
 pub mod serial;
 
-use std::sync::mpsc;
-use std::sync::mpsc::{Receiver, Sender};
+use crossbeam_channel::unbounded;
+use crossbeam_channel::{Receiver, Sender};
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
@@ -13,13 +13,13 @@ use std::time::Duration;
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
 
+use crate::state::StateManagerInstance;
 use canars::CANFrame;
 use canars::Instance;
 use canars::Node;
 use canars::RxTransfer;
 use canars::TransferType;
-use com::msg::Msg;
-use state::StateManagerInstance;
+use msg::Msg;
 
 pub struct ComHandler {}
 
@@ -54,6 +54,9 @@ impl Node<StateManagerInstance> for ComHandler {
         } else if dsdl::uavcan::protocol::file::ReadRequest::check_id(data_type_id) {
             dsdl::uavcan::protocol::file::ReadRequest::set_signature(data_type_signature);
             true
+        } else if dsdl::uavcan::cocobot::Position::check_id(data_type_id) {
+            dsdl::uavcan::cocobot::Position::set_signature(data_type_signature);
+            true
         } else {
             debug!("xfer refused: {}", source_node_id);
             false
@@ -79,6 +82,14 @@ impl Node<StateManagerInstance> for ComHandler {
         } else if dsdl::uavcan::protocol::file::ReadRequest::check_id(xfer.get_data_type_id()) {
             let read = dsdl::uavcan::protocol::file::ReadRequest::decode(xfer).unwrap();
             state_manager.request_read(xfer.get_source_node_id(), read);
+        } else if dsdl::uavcan::cocobot::Position::check_id(xfer.get_data_type_id()) {
+            let position = dsdl::uavcan::cocobot::Position::decode(xfer).unwrap();
+
+            let state = state_manager.get_state_mut();
+            let id = if xfer.get_source_node_id() < 30 { 0 } else { 1 };
+            state.robots[id].x = position.x.into();
+            state.robots[id].y = position.y.into();
+            state.robots[id].a = position.a.into();
         } else {
             error!(
                 "Xfer accepted but not implemented: {:?}",
@@ -149,13 +160,9 @@ pub fn init(node_id: u8, state_manager: StateManagerInstance) -> (Com, Receiver<
     let node = Arc::new(Mutex::new(node));
 
     //create channels for communication
-    let (tx_send_msg, rx_send_msg): (Sender<msg::Msg>, Receiver<msg::Msg>) = mpsc::channel();
-    let (tx_send_can_frame, rx_send_can_frame): (Sender<CANFrame>, Receiver<CANFrame>) =
-        mpsc::channel();
-    let (tx_receive_can_frame, rx_receive_can_frame): (
-        Sender<(u64, CANFrame)>,
-        Receiver<(u64, CANFrame)>,
-    ) = mpsc::channel();
+    let (tx_send_msg, rx_send_msg) = unbounded();
+    let (tx_send_can_frame, rx_send_can_frame) = unbounded();
+    let (tx_receive_can_frame, rx_receive_can_frame) = unbounded();
 
     //Com initialisation
     let com = Com::new(tx_receive_can_frame, tx_send_can_frame, tx_send_msg);
@@ -208,20 +215,18 @@ pub fn init(node_id: u8, state_manager: StateManagerInstance) -> (Com, Receiver<
             }
         }
     });
-    
+
     //transfert can packet from node to simulator or serial
     let com_th3 = com.clone();
     let node_th3 = node.clone();
-    thread::spawn(move || {
-        loop {
-            let mut node = node_th3.lock().unwrap();
-            while let Some(frame) = node.pop_tx_queue() {
-                com_th3.send_can_frame(frame);
-            }
-            drop(node);
-
-            thread::sleep(time::Duration::from_millis(20));
+    thread::spawn(move || loop {
+        let mut node = node_th3.lock().unwrap();
+        while let Some(frame) = node.pop_tx_queue() {
+            com_th3.send_can_frame(frame);
         }
+        drop(node);
+
+        thread::sleep(time::Duration::from_millis(20));
     });
 
     (com, rx_send_can_frame)

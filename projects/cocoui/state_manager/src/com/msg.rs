@@ -1,9 +1,9 @@
+use crate::com::dsdl::uavcan::protocol::param::Empty;
+use crate::com::dsdl::uavcan::protocol::param::Value;
+use crate::com::ComHandler;
+use crate::state::StateManagerInstance;
 use canars::Instance;
 use canars::RequestResponse;
-use com::dsdl::uavcan::protocol::param::Empty;
-use com::dsdl::uavcan::protocol::param::Value;
-use com::ComHandler;
-use state::StateManagerInstance;
 
 #[derive(Debug, Clone)]
 pub enum QValue {
@@ -55,7 +55,7 @@ impl Msg {
 
         match &self {
             Msg::GetNodeInfo { node_id } => {
-                use com::dsdl::uavcan::protocol::GetNodeInfoRequest;
+                use crate::com::dsdl::uavcan::protocol::GetNodeInfoRequest;
                 let (pkt, _) = GetNodeInfoRequest::encode(GetNodeInfoRequest {});
                 node.request_or_respond(
                     *node_id,
@@ -72,7 +72,7 @@ impl Msg {
                 name,
                 value,
             } => {
-                use com::dsdl::uavcan::protocol::param::GetSetRequest;
+                use crate::com::dsdl::uavcan::protocol::param::GetSetRequest;
                 let (pkt, _) = GetSetRequest::encode(GetSetRequest {
                     index: 0,
                     name: name.as_bytes().to_vec(),
@@ -89,7 +89,7 @@ impl Msg {
                 );
             }
             Msg::Restart { node_id } => {
-                use com::dsdl::uavcan::protocol::RestartNodeRequest;
+                use crate::com::dsdl::uavcan::protocol::RestartNodeRequest;
                 let (pkt, _) = RestartNodeRequest::encode(RestartNodeRequest {
                     magic_number: RestartNodeRequest::MAGIC_NUMBER,
                 });
@@ -104,8 +104,8 @@ impl Msg {
                 );
             }
             Msg::Program { node_id } => {
-                use com::dsdl::uavcan::protocol::file::BeginFirmwareUpdateRequest;
-                use com::dsdl::uavcan::protocol::file::Path;
+                use crate::com::dsdl::uavcan::protocol::file::BeginFirmwareUpdateRequest;
+                use crate::com::dsdl::uavcan::protocol::file::Path;
                 let (pkt, _) = BeginFirmwareUpdateRequest::encode(BeginFirmwareUpdateRequest {
                     source_node_id: node.get_local_node_id(),
                     image_file_remote_path: Path {
@@ -127,8 +127,8 @@ impl Msg {
                 error,
                 data,
             } => {
-                use com::dsdl::uavcan::protocol::file::Error;
-                use com::dsdl::uavcan::protocol::file::ReadResponse;
+                use crate::com::dsdl::uavcan::protocol::file::Error;
+                use crate::com::dsdl::uavcan::protocol::file::ReadResponse;
 
                 let (pkt, _) = ReadResponse::encode(ReadResponse {
                     error: Error {

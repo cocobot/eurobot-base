@@ -4,11 +4,11 @@ mod physics;
 use self::brain::Brain;
 use self::physics::Physics;
 use self::physics::PhysicsInstance;
-use canars::CANFrame;
-use com::Com;
-use std::sync::mpsc::Receiver;
-
+use crate::canars::CANFrame;
+use crate::com::Com;
+use crossbeam_channel::Receiver;
 use config_manager::config::ConfigManagerInstance;
+use crate::state::StateManagerInstance;
 
 pub struct Simulation {
     config: ConfigManagerInstance,
@@ -17,11 +17,16 @@ pub struct Simulation {
 }
 
 impl Simulation {
-    fn new(config: ConfigManagerInstance, com: Com, tx_can: Receiver<CANFrame>) -> Simulation {
+    fn new(
+        config: ConfigManagerInstance,
+        com: Com,
+        state: StateManagerInstance,
+        tx_can: Receiver<CANFrame>,
+    ) -> Simulation {
         Simulation {
             config: config.clone(),
             com,
-            physics: Physics::new(config, tx_can),
+            physics: Physics::new(config, tx_can, state),
         }
     }
 
@@ -40,7 +45,12 @@ impl Simulation {
     }
 }
 
-pub fn init(config: ConfigManagerInstance, com: Com, tx_can: Receiver<CANFrame>) {
-    let simu = Simulation::new(config, com, tx_can);
+pub fn init(
+    config: ConfigManagerInstance,
+    com: Com,
+    state: StateManagerInstance,
+    tx_can: Receiver<CANFrame>,
+) {
+    let simu = Simulation::new(config, com, state, tx_can);
     simu.start();
 }

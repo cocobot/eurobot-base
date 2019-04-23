@@ -238,7 +238,7 @@ void cocobot_loader_init(void)
       //2s and no request -> start pgm
       if(_timestamp_us > 2000000)
       {
-   //     mcual_loader_boot();
+        mcual_loader_boot();
       }
     }
   }
