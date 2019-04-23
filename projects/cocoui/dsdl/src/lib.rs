@@ -23,7 +23,101 @@ fn saturate_unsigned<T: std::cmp::PartialOrd>(data: T, max: T) -> T {
 }
 
 pub mod uavcan {
-pub mod protocol {
+pub mod cocobot {
+
+#[derive(Debug, Clone)]
+pub struct Position {
+  // FieldTypes
+    pub x: f32, // float32 Saturate
+    pub y: f32, // float32 Saturate
+    pub a: f32, // float32 Saturate
+
+}
+
+impl Position {
+  pub const ID: u16 = 20000;
+  pub const SIGNATURE: u64 = 0x219A579968238A2F;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == Position::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = Position::SIGNATURE;
+  }
+
+  pub fn encode(instance: Position) -> (Vec<u8>, usize) {
+    let (vec, mut size) = Position::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: Position, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.x;
+
+    let vint_x = data;
+    canars::encode_scalar_f32(&mut buffer, offset, 32, vint_x); // 2147483647
+    offset += 32;
+    let data = instance.y;
+
+    let vint_y = data;
+    canars::encode_scalar_f32(&mut buffer, offset, 32, vint_y); // 2147483647
+    offset += 32;
+    let data = instance.a;
+
+    let vint_a = data;
+    canars::encode_scalar_f32(&mut buffer, offset, 32, vint_a); // 2147483647
+    offset += 32;
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<Position> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = Position::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = Position::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<Position> {
+    let mut offset = offset;
+
+    let vint_x = match xfer.decode_scalar_f32(offset, 32) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_y = match xfer.decode_scalar_f32(offset, 32) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_a = match xfer.decode_scalar_f32(offset, 32) {
+     Some(s) => s,
+     None => return None,
+    };
+
+    Some(Position {
+      x: vint_x,
+      y: vint_y,
+      a: vint_a,
+    })
+  }
+
+}
+
+}pub mod protocol {
 pub mod dynamic_node_id {
 pub mod server {
 

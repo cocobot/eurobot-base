@@ -505,6 +505,10 @@ uint64_t cocobot_com_process_event(void)
   }
 #endif
 
+#ifdef CONFIG_LIBCOCOBOT_POSITION 
+  cocobot_position_com_async(_timestamp_us);
+#endif
+  
   if (_timestamp_us >= _next_1hz_service_at)
   {
     platform_led_toggle(1);

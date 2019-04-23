@@ -7,7 +7,6 @@ LIBCOCOBOT_LOCAL_INCLUDE_PATH+=src/com/dsdl/
 #find all .c files and populate LIBCOCOBOT_SRC_FILES
 $(eval $(call pkg-generic-auto-discover-local-common-srcs,LIBCOCOBOT))
 
-LIBCOCOBOT_TARGET_LOCAL_SRC_FILES+=src/position/encoders.c
 LIBCOCOBOT_TEMP_SIM_FILES+=src/position/vrep.c
 
 #remove target and sim sources files to autodiscovered list

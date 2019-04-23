@@ -1,8 +1,8 @@
-#![feature(nll)]
 #[macro_use]
 extern crate log;
 extern crate canars;
 extern crate config_manager;
+extern crate crossbeam_channel;
 extern crate hex_slice;
 
 mod com;
@@ -26,7 +26,12 @@ pub fn init(config: ConfigManagerInstance) -> state::StateManagerInstance {
 
     //init simulation or serial link
     if simulation {
-        simu::init(config.clone(), com.clone(), rx_send_can_frame);
+        simu::init(
+            config.clone(),
+            com.clone(),
+            state_manager.clone(),
+            rx_send_can_frame,
+        );
     } else {
         //TODO: serial
         com::serial::init(com.clone(), rx_send_can_frame);

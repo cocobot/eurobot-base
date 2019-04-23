@@ -8,15 +8,9 @@
 #include <task.h>
 #include <semphr.h>
 #include "generated/autoconf.h"
+#include "uavcan/cocobot/Position.h"
 
-#ifdef AUSBEE_SIM
-#include <stdlib.h>
-#ifdef VREF_ENABLE
-#include <cocobot/vrep.h>
-#endif
-#else
 #include <cocobot/encoders.h>
-#endif //AUSBEE_SIM
 
 //useful macros
 #define TICK2RAD(tick)  ((((float)tick) * M_PI) / ((float)CONFIG_LIBCOCOBOT_POSITION_TICK_PER_180DEG))
@@ -37,17 +31,12 @@ static float last_left_sp = 0;
 static float last_right_sp = 0;
 static float left_motor_alpha = (((float)CONFIG_LIBCOCOBOT_LEFT_MOTOR_ALPHA) / 1000.0f);
 static float right_motor_alpha = (((float)CONFIG_LIBCOCOBOT_RIGHT_MOTOR_ALPHA) / 1000.0f);
+static uint64_t _next_10hz_service_at;
 
 static void cocobot_position_compute(void)
 {
   //update encoder values
-#ifdef AUSBEE_SIM
-#ifdef VREP_ENABLE
-    cocobot_vrep_get_motor_position(motor_position);
-#endif
-#else
   cocobot_encoders_get_motor_position(motor_position);
-#endif //AUSBEE_SIM
 
   xSemaphoreTake(mutex, portMAX_DELAY);
 
@@ -99,16 +88,16 @@ void cocobot_position_init(unsigned int task_priority)
   //create mutex
   mutex = xSemaphoreCreateMutex();
 
-#ifdef AUSBEE_SIM
-#ifdef VREP_ENABLE
-    cocobot_vrep_init();
-#endif
-#endif //AUSBEE_SIM
+  _next_10hz_service_at = 0;
 
   //Be sure that position manager have valid values before continuing the initialization process.
   //Need to run twice in order to intialize speed values
   cocobot_position_compute();
   cocobot_position_compute();
+
+#ifdef AUSBEE_SIM
+  mcual_arch_request("POS", 0, "INIT:%lu:%lu", CONFIG_LIBCOCOBOT_POSITION_TICK_PER_METER, CONFIG_LIBCOCOBOT_POSITION_TICK_PER_180DEG);
+#endif
 
   //Start task
   xTaskCreate(cocobot_position_task, "position", 200, NULL, task_priority, NULL);
@@ -262,6 +251,9 @@ void cocobot_position_set_motor_command(float left_motor_speed, float right_moto
 
 void cocobot_position_set_speed_distance_angle(float linear_speed, float angular_velocity)
 {
+#ifdef AUSBEE_SIM
+  mcual_arch_request("POS", 0, "SPEED:%f:%f", linear_speed, angular_velocity);
+#else
   float c1 = linear_speed + angular_velocity;
   float c2 = linear_speed - angular_velocity;
 
@@ -289,6 +281,7 @@ void cocobot_position_set_speed_distance_angle(float linear_speed, float angular
   right_sp = last_right_sp + right_motor_alpha * (right_sp - last_right_sp);
 
   cocobot_position_set_motor_command(left_sp, right_sp);
+#endif
 }
 
 /*
@@ -320,17 +313,6 @@ int cocobot_position_handle_console(char * command)
 }
 */
 
-#if 0
-void cocobot_position_handle_async_com(void)
-{
-  cocobot_com_send(COCOBOT_COM_POSITION_DEBUG_PID,
-                   "FFF",
-                   (double)cocobot_position_get_x(),
-                   (double)cocobot_position_get_y(),
-                   (double)cocobot_position_get_angle()
-                  );
-}
-#endif
 
 void cocobot_position_set_x(float x)
 {
@@ -342,9 +324,7 @@ void cocobot_position_set_x(float x)
   robot_x = MM2TICK(x);
   xSemaphoreGive(mutex);
 #ifdef AUSBEE_SIM
-#ifdef VREP_ENABLE
-    cocobot_vrep_position_set_x(x);
-#endif
+  mcual_arch_request("POS", 0, "X:%f", x);
 #endif
 
   cocobot_asserv_set_state(saved_state);
@@ -360,9 +340,7 @@ void cocobot_position_set_y(float y)
   robot_y = MM2TICK(y);
   xSemaphoreGive(mutex);
 #ifdef AUSBEE_SIM
-#ifdef VREP_ENABLE
-    cocobot_vrep_position_set_y(y);
-#endif
+  mcual_arch_request("POS", 0, "Y:%f", y);
 #endif
 
   cocobot_asserv_set_state(saved_state);
@@ -380,11 +358,41 @@ void cocobot_position_set_angle(float angle)
   robot_angle_offset += DEG2TICK(diff);
   xSemaphoreGive(mutex);
 #ifdef AUSBEE_SIM
-#ifdef VREP_ENABLE
-    cocobot_vrep_position_set_angle(angle);
-#endif
+  mcual_arch_request("POS", 0, "A:%f", angle);
 #endif
 
   cocobot_asserv_set_state(saved_state);
 }
+
+
+void cocobot_position_com_async(uint64_t timestamp_us)
+{
+  if (timestamp_us >= _next_10hz_service_at)
+  {
+    _next_10hz_service_at = timestamp_us + 100000;
+
+    uavcan_cocobot_Position pos;
+
+    pos.x = cocobot_position_get_x();
+    pos.y = cocobot_position_get_y();
+    pos.a = cocobot_position_get_angle();
+
+    void * buf = pvPortMalloc(UAVCAN_COCOBOT_POSITION_MAX_SIZE); 
+    if(buf != NULL) 
+    {
+      static uint8_t transfer_id;
+      transfer_id += 1;
+
+      const int size = uavcan_cocobot_Position_encode(&pos, buf);
+      cocobot_com_broadcast(UAVCAN_COCOBOT_POSITION_SIGNATURE,
+                            UAVCAN_COCOBOT_POSITION_ID,
+                            &transfer_id,
+                            CANARD_TRANSFER_PRIORITY_LOW,
+                            buf,
+                            (uint16_t)size);
+      vPortFree(buf);
+    }
+  }
+}
+
 #endif

@@ -1,11 +1,21 @@
 extern crate canars;
+extern crate nalgebra;
+extern crate ncollide2d;
 extern crate nphysics2d;
 
-use self::canars::CANFrame;
-use self::nphysics2d::world::World;
+use super::brain::BrainInstance;
+use crate::simu::physics::canars::CANFrame;
+use crate::simu::physics::nalgebra::geometry::Point2;
+use crate::simu::physics::nalgebra::{Vector2, Isometry2};
+use crate::simu::physics::ncollide2d::shape::{ConvexPolygon, ShapeHandle};
+use crate::simu::physics::nphysics2d::object::ColliderDesc;
+use crate::simu::physics::nphysics2d::object::RigidBodyDesc;
+use crate::simu::physics::nphysics2d::world::World;
+use crate::simu::physics::nphysics2d::math::{Force, ForceType};
+use crate::simu::physics::nphysics2d::object::Body;
+use crate::state::StateManagerInstance;
 use config_manager::config::ConfigManagerInstance;
-use simu::brain::BrainInstance;
-use std::sync::mpsc::Receiver;
+use crossbeam_channel::Receiver;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::time::Duration;
@@ -14,39 +24,168 @@ use std::{thread, time};
 pub type PhysicsInstance = Arc<Mutex<Physics>>;
 
 pub struct Physics {
-    _config: ConfigManagerInstance,
+    config: ConfigManagerInstance,
     tx_can: Receiver<CANFrame>,
     brains: Vec<BrainInstance>,
 }
 
 impl Physics {
-    pub fn new(config: ConfigManagerInstance, tx_can: Receiver<CANFrame>) -> PhysicsInstance {
+    pub fn new(
+        config: ConfigManagerInstance,
+        tx_can: Receiver<CANFrame>,
+        state: StateManagerInstance,
+    ) -> PhysicsInstance {
         let phys = Physics {
-            _config: config,
+            config: config,
             tx_can,
             brains: Vec::new(),
         };
 
         let instance = Arc::new(Mutex::new(phys));
 
-        Physics::start_simulation(instance.clone());
+        Physics::start_simulation(instance.clone(), state);
 
         instance
     }
 
-    fn start_simulation(instance: PhysicsInstance) {
+    fn start_simulation(instance: PhysicsInstance, state_instance: StateManagerInstance) {
         thread::spawn(move || {
             let mut world: World<f32> = World::new();
             let delay = time::Duration::from_millis(1000 / 60);
 
+            let locked_instance = instance.lock().unwrap();
+            let config = locked_instance.config.clone();
+            drop(locked_instance);
+            let config = config.lock().unwrap();
+
+            //create robots body
+            let rdata = [&config.robots.main, &config.robots.pmi];
+            //let rdata  = [&config.robots.main];
+            let mut robots = Vec::new();
+            for (i, robot) in rdata.iter().enumerate() {
+                let mut points = Vec::new();
+                for pt in robot.shape.iter() {
+                    points.push(Point2::new(pt[0] as f32, pt[1] as f32));
+                }
+                let shape = ConvexPolygon::try_from_points(points.iter().as_slice())
+                    .expect("Convex hull computation failed.");
+                let collider = ColliderDesc::new(ShapeHandle::new(shape)).density(1.0);
+
+                //create robot rigid body
+                let body_center = RigidBodyDesc::new()
+                    .gravity_enabled(false)
+                    .collider(&collider)
+                    .name(format!("r{}", i))
+                    .build(&mut world);
+
+                robots.push(body_center.handle());
+            }
+
+            //create borders
+            for border in config.field.borders.iter() {
+                let mut points = Vec::new();
+                points.push(Point2::new(
+                        border.rect[0] as f32, 
+                        border.rect[1] as f32));
+                points.push(Point2::new(
+                        border.rect[0] as f32, 
+                        (border.rect[1] + border.rect[3]) as f32));
+                points.push(Point2::new(
+                        (border.rect[0] + border.rect[2]) as f32, 
+                        (border.rect[1] + border.rect[3]) as f32));
+                points.push(Point2::new(
+                        (border.rect[0] + border.rect[2]) as f32, 
+                        border.rect[1] as f32));
+
+                let shape = ConvexPolygon::try_from_points(points.iter().as_slice())
+                    .expect("Convex hull computation failed.");
+                let collider = ColliderDesc::new(ShapeHandle::new(shape));
+                collider.build(&mut world);
+            }
+
+            drop(config);
+
             loop {
+                let ts = world.timestep();
+
                 let locked_instance = instance.lock().unwrap();
-                for b in locked_instance.brains.iter() {
-                    b.lock().unwrap().step(1000 / 60);
+                for (i, b) in locked_instance.brains.iter().enumerate() {
+                    let mut b = b.lock().unwrap();
+                    let body = world.rigid_body_mut(*robots.get(i).unwrap()).unwrap();
+
+                    let pos = body.position().translation.vector;
+                    if let Some((x, y, a)) = b.simu_position {
+                        let dir = body.position().rotation.transform_vector(&Vector2::x());
+                        let distance = body.velocity().linear.dot(&dir) * ts;
+                        let angle = body.position().rotation.scaled_axis()[0] - a;
+                        let angle = if angle > std::f32::consts::PI {
+                            angle - std::f32::consts::PI * 2.0
+                        }
+                        else {
+                            angle
+                        };
+
+                        let distance = distance * b.tick_per_meter / 1000.0;
+                        let angle = angle * b.tick_per_180deg / std::f32::consts::PI;
+
+                        b.timers[2].adder += (distance + angle) / 2.0;
+                        b.timers[5].adder += (distance - angle) / 2.0;
+                    }
+
+                    b.step(1000 / 60);
+
+                    b.simu_position = Some((pos.x, pos.y, body.position().rotation.scaled_axis()[0]));
+                    if let Some(x) = b.force_x {
+                        let mut pos = body.position().clone();
+                        pos.translation.vector.x = x as f32;
+                        body.set_position(pos);
+                        b.force_x = None;
+                        b.simu_position = None;
+                    }
+
+                    if let Some(y) = b.force_y {
+                        let mut pos = body.position().clone();
+                        pos.translation.vector.y = y as f32;
+                        body.set_position(pos);
+                        b.force_y = None;
+                        b.simu_position = None;
+                    }
+
+                    if let Some(a) = b.force_a {
+                        let mut pos = body.position().clone();
+                        body.set_position(Isometry2::new(pos.translation.vector, (a as f32) * std::f32::consts::PI / 180.0));
+                        b.force_a = None;
+                        b.simu_position = None;
+                    }
+
+                }
+
+                //update velocity changes
+                for (i, b) in locked_instance.brains.iter().enumerate() {
+                    let mut b = b.lock().unwrap();
+                    let body = world.rigid_body_mut(*robots.get(i).unwrap()).unwrap();
+
+                    body.set_linear_velocity(body.position().rotation.transform_vector(&Vector2::x()) * b.speed_d / ts * 2.0);
+                    body.set_angular_velocity(b.speed_a / ts * 2.0);
                 }
                 drop(locked_instance);
 
                 world.step();
+
+                //update robots position
+                let mut locked_state = state_instance.lock().unwrap();
+                let mut state = locked_state.get_state_mut();
+                for (i, robot) in robots.iter().enumerate() {
+                    let pos = world.rigid_body(*robot).unwrap().position();
+                    let position = pos.translation.vector;
+
+                    state.robots[i].simu = true;
+                    state.robots[i].simu_x = position[0] as f64;
+                    state.robots[i].simu_y = position[1] as f64;
+                    state.robots[i].simu_a = (pos.rotation.scaled_axis()[0] * 180.0 / std::f32::consts::PI) as f64;
+                }
+                drop(state);
+                drop(locked_state);
 
                 let mut waiting_tx = Vec::new();
                 let locked_instance = instance.lock().unwrap();
@@ -77,9 +216,9 @@ impl Physics {
     }
 
     pub fn remove_brain(&mut self, brain: BrainInstance) {
-        self.brains.iter()
+        self.brains
+            .iter()
             .position(|b| Arc::ptr_eq(&b, &brain))
             .map(|e| self.brains.remove(e));
     }
-
 }

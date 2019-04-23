@@ -1,10 +1,10 @@
-use ui::gtk::prelude::*;
+use crate::ui::gtk::prelude::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
 
-use state_manager::state::StateManagerInstance;
 use state_manager::state::stype::NodeInfo;
 use state_manager::state::stype::NodeInfoMode;
+use state_manager::state::StateManagerInstance;
 
 thread_local!(
     static BOARDS: RefCell<BoardsWindow> = RefCell::new(BoardsWindow::new());
@@ -40,7 +40,7 @@ impl BoardsWindow {
         tvc.set_expand(expand);
         tvc.pack_start(&cell, true);
         tvc.add_attribute(&cell, "text", col);
-        
+
         let tv = self.treeview.as_mut().unwrap();
         tv.append_column(&tvc);
         tv.show_all();
@@ -57,11 +57,11 @@ impl BoardsWindow {
                 window.set_position(gtk::WindowPosition::Center);
 
                 let model = gtk::ListStore::new(&[
-                                                u8::static_type(),
-                                                gtk::Type::String,
-                                                gtk::Type::String,
-                                                gtk::Type::String,
-                                                gtk::Type::String,
+                    u8::static_type(),
+                    gtk::Type::String,
+                    gtk::Type::String,
+                    gtk::Type::String,
+                    gtk::Type::String,
                 ]);
                 model.set_sort_column_id(gtk::SortColumn::Index(1), gtk::SortType::Ascending);
                 let treeview = gtk::TreeView::new_with_model(&model);
@@ -111,28 +111,26 @@ impl BoardsWindow {
 
         let iter = self.lines.get(&id).unwrap();
 
-        let name = format!("{} ({})", node.ui_name.unwrap_or("?".to_string()), node.name.unwrap_or("".to_string()));
+        let name = format!(
+            "{} ({})",
+            node.ui_name.unwrap_or("?".to_string()),
+            node.name.unwrap_or("".to_string())
+        );
         let mode = format!("{:?}", node.mode.unwrap_or(NodeInfoMode::Offline));
         let statut = match node.health {
-            Some(h) => {
-                format!("{:?}", h)
-            },
-            None => "".to_string()
+            Some(h) => format!("{:?}", h),
+            None => "".to_string(),
         };
         let uptime = match node.uptime_sec {
-            Some(sec) => {
-                format!("{} s", sec)
-            },
-            None => "".to_string()
+            Some(sec) => format!("{} s", sec),
+            None => "".to_string(),
         };
-        
-        model.set(iter, &[0, 1, 2, 3, 4], &[
-                  &id,
-                  &name,
-                  &mode,
-                  &statut,
-                  &uptime,
-        ]);
+
+        model.set(
+            iter,
+            &[0, 1, 2, 3, 4],
+            &[&id, &name, &mode, &statut, &uptime],
+        );
     }
 
     fn delete_event(&mut self) {
@@ -151,8 +149,8 @@ impl BoardsWindow {
                     self.update_row(*key, val.clone());
                 }
                 true
-            },
-            None => false
+            }
+            None => false,
         }
     }
 }
