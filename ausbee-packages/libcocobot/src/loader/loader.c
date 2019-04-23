@@ -226,7 +226,7 @@ void cocobot_loader_init(void)
 
     if(_mode != LOADER_MODE_IDLE)
     {
-      if(_timestamp_us - _last_activity_us > 1000000)
+      if(_timestamp_us - _last_activity_us > 5000000UL)
       {
         //bootloader has stalled. Abort
         _mode = LOADER_MODE_IDLE;
