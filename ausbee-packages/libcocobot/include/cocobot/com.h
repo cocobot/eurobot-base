@@ -25,4 +25,67 @@ int16_t cocobot_com_broadcast(uint64_t data_type_signature,
                               uint16_t payload_len);
 void cocobot_com_release_rx_transfer_payload(CanardRxTransfer* transfer);
 
+//user defined functions
+uint8_t com_should_accept_transfer(uint64_t* out_data_type_signature,
+                                   uint16_t data_type_id,
+                                   CanardTransferType transfer_type,
+                                   uint8_t source_node_id);
+uint8_t com_on_transfer_received(CanardRxTransfer* transfer);
+
+
+#define IF_RESPONSE_RECEIVED(NAME, name, action)\
+  if ((transfer->transfer_type == CanardTransferTypeResponse) && \
+      (transfer->data_type_id == NAME ## _ID)\
+     )\
+  {\
+    name data;\
+    void * dynbuf = NULL;\
+\
+    dynbuf = pvPortMalloc(NAME ## _RESPONSE_MAX_SIZE);\
+    if(dynbuf != NULL)\
+    {\
+      uint8_t * pdynbuf = dynbuf;\
+      if(name ## _decode(transfer, transfer->payload_len, &data, &pdynbuf) >= 0)\
+      {\
+        cocobot_com_release_rx_transfer_payload(transfer);\
+        {\
+          action;\
+        }\
+      }\
+    }\
+    if(dynbuf != NULL)\
+    {\
+      vPortFree(dynbuf);\
+    }\
+    return 1;\
+  }\
+
+#define IF_SMPLREQ_RECEIVED(NAME, name, action)\
+  if ((transfer->transfer_type == CanardTransferTypeResponse) && \
+      (transfer->data_type_id == NAME ## _ID)\
+     )\
+  {\
+    name data;\
+    void * dynbuf = NULL;\
+\
+    dynbuf = pvPortMalloc(NAME ## _MAX_SIZE);\
+    if(dynbuf != NULL)\
+    {\
+      uint8_t * pdynbuf = dynbuf;\
+      if(name ## _decode(transfer, transfer->payload_len, &data, &pdynbuf) >= 0)\
+      {\
+        cocobot_com_release_rx_transfer_payload(transfer);\
+        {\
+          action;\
+        }\
+      }\
+    }\
+    if(dynbuf != NULL)\
+    {\
+      vPortFree(dynbuf);\
+    }\
+    return 1;\
+  }\
+
+
 #endif// COCOBOT_COM_H

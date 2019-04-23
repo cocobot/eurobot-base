@@ -118,6 +118,167 @@ impl Position {
 }
 
 #[derive(Debug, Clone)]
+pub struct BrushlessConfigRequest {
+  // FieldTypes
+
+}
+
+impl BrushlessConfigRequest {
+  pub const ID: u16 = 200;
+  pub const SIGNATURE: u64 = 0xAB683D4592946F14;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == BrushlessConfigRequest::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = BrushlessConfigRequest::SIGNATURE;
+  }
+
+  pub fn encode(instance: BrushlessConfigRequest) -> (Vec<u8>, usize) {
+    let (vec, mut size) = BrushlessConfigRequest::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: BrushlessConfigRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<BrushlessConfigRequest> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = BrushlessConfigRequest::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = BrushlessConfigRequest::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<BrushlessConfigRequest> {
+    let mut offset = offset;
+
+    Some(BrushlessConfigRequest {
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct BrushlessConfigResponse {
+  // FieldTypes
+    pub kp: f32, // float32 Saturate
+    pub ki: f32, // float32 Saturate
+    pub imax: f32, // float32 Saturate
+    pub max_speed_rpm: f32, // float32 Saturate
+
+}
+
+impl BrushlessConfigResponse {
+  pub const ID: u16 = 200;
+  pub const SIGNATURE: u64 = 0xAB683D4592946F14;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == BrushlessConfigResponse::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = BrushlessConfigResponse::SIGNATURE;
+  }
+
+  pub fn encode(instance: BrushlessConfigResponse) -> (Vec<u8>, usize) {
+    let (vec, mut size) = BrushlessConfigResponse::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: BrushlessConfigResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.kp;
+
+    let vint_kp = data;
+    canars::encode_scalar_f32(&mut buffer, offset, 32, vint_kp); // 2147483647
+    offset += 32;
+    let data = instance.ki;
+
+    let vint_ki = data;
+    canars::encode_scalar_f32(&mut buffer, offset, 32, vint_ki); // 2147483647
+    offset += 32;
+    let data = instance.imax;
+
+    let vint_imax = data;
+    canars::encode_scalar_f32(&mut buffer, offset, 32, vint_imax); // 2147483647
+    offset += 32;
+    let data = instance.max_speed_rpm;
+
+    let vint_max_speed_rpm = data;
+    canars::encode_scalar_f32(&mut buffer, offset, 32, vint_max_speed_rpm); // 2147483647
+    offset += 32;
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<BrushlessConfigResponse> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = BrushlessConfigResponse::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = BrushlessConfigResponse::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<BrushlessConfigResponse> {
+    let mut offset = offset;
+
+    let vint_kp = match xfer.decode_scalar_f32(offset, 32) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_ki = match xfer.decode_scalar_f32(offset, 32) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_imax = match xfer.decode_scalar_f32(offset, 32) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_max_speed_rpm = match xfer.decode_scalar_f32(offset, 32) {
+     Some(s) => s,
+     None => return None,
+    };
+
+    Some(BrushlessConfigResponse {
+      kp: vint_kp,
+      ki: vint_ki,
+      imax: vint_imax,
+      max_speed_rpm: vint_max_speed_rpm,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
 pub struct SetMotorSpeed {
   // FieldTypes
     pub enable: bool, // bit len 1
@@ -199,25 +360,25 @@ impl SetMotorSpeed {
 }
 
 #[derive(Debug, Clone)]
-pub struct RequestBrushlessSpeedRequest {
+pub struct BrushlessSpeedRequest {
   // FieldTypes
 
 }
 
-impl RequestBrushlessSpeedRequest {
+impl BrushlessSpeedRequest {
   pub const ID: u16 = 201;
-  pub const SIGNATURE: u64 = 0x7EA7DF665B2231F8;
+  pub const SIGNATURE: u64 = 0x899E3A6A27481686;
 
   pub fn check_id(data_type: u16) -> bool {
-    data_type == RequestBrushlessSpeedRequest::ID
+    data_type == BrushlessSpeedRequest::ID
   }
 
   pub fn set_signature(signature: &mut u64){
-    *signature = RequestBrushlessSpeedRequest::SIGNATURE;
+    *signature = BrushlessSpeedRequest::SIGNATURE;
   }
 
-  pub fn encode(instance: RequestBrushlessSpeedRequest) -> (Vec<u8>, usize) {
-    let (vec, mut size) = RequestBrushlessSpeedRequest::encode_internal(instance, Vec::new(), 0, 1);
+  pub fn encode(instance: BrushlessSpeedRequest) -> (Vec<u8>, usize) {
+    let (vec, mut size) = BrushlessSpeedRequest::encode_internal(instance, Vec::new(), 0, 1);
 
     size = (size + 7 ) / 8;
     (vec, size)
@@ -225,58 +386,58 @@ impl RequestBrushlessSpeedRequest {
 
  #[allow(unused_mut)]
  #[allow(unused)]
-  pub fn encode_internal(instance: RequestBrushlessSpeedRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  pub fn encode_internal(instance: BrushlessSpeedRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
   let mut offset = offset;
 
     (buffer, offset)
   }
 
-  pub fn decode(xfer: &::RxTransfer) -> Option<RequestBrushlessSpeedRequest> {
+  pub fn decode(xfer: &::RxTransfer) -> Option<BrushlessSpeedRequest> {
     /* Backward compatibility support for removing TAO
      *  - first try to decode with TAO DISABLED
      *  - if it fails fall back to TAO ENABLED
      */
     let mut offset = 0;
-    let mut r = RequestBrushlessSpeedRequest::decode_internal(xfer, &mut offset, false);
+    let mut r = BrushlessSpeedRequest::decode_internal(xfer, &mut offset, false);
     if r.is_none() {
       offset = 0;
-      r = RequestBrushlessSpeedRequest::decode_internal(xfer, &mut offset, true);
+      r = BrushlessSpeedRequest::decode_internal(xfer, &mut offset, true);
     }
     r
   }
 
  #[allow(unused_mut)]
  #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<RequestBrushlessSpeedRequest> {
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<BrushlessSpeedRequest> {
     let mut offset = offset;
 
-    Some(RequestBrushlessSpeedRequest {
+    Some(BrushlessSpeedRequest {
     })
   }
 
 }
 
 #[derive(Debug, Clone)]
-pub struct RequestBrushlessSpeedResponse {
+pub struct BrushlessSpeedResponse {
   // FieldTypes
     pub rpm: f32, // float32 Saturate
 
 }
 
-impl RequestBrushlessSpeedResponse {
+impl BrushlessSpeedResponse {
   pub const ID: u16 = 201;
-  pub const SIGNATURE: u64 = 0x7EA7DF665B2231F8;
+  pub const SIGNATURE: u64 = 0x899E3A6A27481686;
 
   pub fn check_id(data_type: u16) -> bool {
-    data_type == RequestBrushlessSpeedResponse::ID
+    data_type == BrushlessSpeedResponse::ID
   }
 
   pub fn set_signature(signature: &mut u64){
-    *signature = RequestBrushlessSpeedResponse::SIGNATURE;
+    *signature = BrushlessSpeedResponse::SIGNATURE;
   }
 
-  pub fn encode(instance: RequestBrushlessSpeedResponse) -> (Vec<u8>, usize) {
-    let (vec, mut size) = RequestBrushlessSpeedResponse::encode_internal(instance, Vec::new(), 0, 1);
+  pub fn encode(instance: BrushlessSpeedResponse) -> (Vec<u8>, usize) {
+    let (vec, mut size) = BrushlessSpeedResponse::encode_internal(instance, Vec::new(), 0, 1);
 
     size = (size + 7 ) / 8;
     (vec, size)
@@ -284,7 +445,7 @@ impl RequestBrushlessSpeedResponse {
 
  #[allow(unused_mut)]
  #[allow(unused)]
-  pub fn encode_internal(instance: RequestBrushlessSpeedResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  pub fn encode_internal(instance: BrushlessSpeedResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
   let mut offset = offset;
 
     let data = instance.rpm;
@@ -295,23 +456,23 @@ impl RequestBrushlessSpeedResponse {
     (buffer, offset)
   }
 
-  pub fn decode(xfer: &::RxTransfer) -> Option<RequestBrushlessSpeedResponse> {
+  pub fn decode(xfer: &::RxTransfer) -> Option<BrushlessSpeedResponse> {
     /* Backward compatibility support for removing TAO
      *  - first try to decode with TAO DISABLED
      *  - if it fails fall back to TAO ENABLED
      */
     let mut offset = 0;
-    let mut r = RequestBrushlessSpeedResponse::decode_internal(xfer, &mut offset, false);
+    let mut r = BrushlessSpeedResponse::decode_internal(xfer, &mut offset, false);
     if r.is_none() {
       offset = 0;
-      r = RequestBrushlessSpeedResponse::decode_internal(xfer, &mut offset, true);
+      r = BrushlessSpeedResponse::decode_internal(xfer, &mut offset, true);
     }
     r
   }
 
  #[allow(unused_mut)]
  #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<RequestBrushlessSpeedResponse> {
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<BrushlessSpeedResponse> {
     let mut offset = offset;
 
     let vint_rpm = match xfer.decode_scalar_f32(offset, 32) {
@@ -319,234 +480,8 @@ impl RequestBrushlessSpeedResponse {
      None => return None,
     };
 
-    Some(RequestBrushlessSpeedResponse {
+    Some(BrushlessSpeedResponse {
       rpm: vint_rpm,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct RequestBrushlessConfigRequest {
-  // FieldTypes
-
-}
-
-impl RequestBrushlessConfigRequest {
-  pub const ID: u16 = 200;
-  pub const SIGNATURE: u64 = 0x30B39469BA0A8FFF;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == RequestBrushlessConfigRequest::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = RequestBrushlessConfigRequest::SIGNATURE;
-  }
-
-  pub fn encode(instance: RequestBrushlessConfigRequest) -> (Vec<u8>, usize) {
-    let (vec, mut size) = RequestBrushlessConfigRequest::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: RequestBrushlessConfigRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<RequestBrushlessConfigRequest> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = RequestBrushlessConfigRequest::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = RequestBrushlessConfigRequest::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<RequestBrushlessConfigRequest> {
-    let mut offset = offset;
-
-    Some(RequestBrushlessConfigRequest {
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct RequestBrushlessConfigResponse {
-  // FieldTypes
-    pub config: ::uavcan::cocobot::BrushlessConfig, //
-
-}
-
-impl RequestBrushlessConfigResponse {
-  pub const ID: u16 = 200;
-  pub const SIGNATURE: u64 = 0x30B39469BA0A8FFF;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == RequestBrushlessConfigResponse::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = RequestBrushlessConfigResponse::SIGNATURE;
-  }
-
-  pub fn encode(instance: RequestBrushlessConfigResponse) -> (Vec<u8>, usize) {
-    let (vec, mut size) = RequestBrushlessConfigResponse::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: RequestBrushlessConfigResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.config;
-
-    let (b, off) = ::uavcan::cocobot::BrushlessConfig::encode_internal(data, buffer, offset, 0);
-    offset = off;
-    buffer = b;
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<RequestBrushlessConfigResponse> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = RequestBrushlessConfigResponse::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = RequestBrushlessConfigResponse::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<RequestBrushlessConfigResponse> {
-    let mut offset = offset;
-
-    let vint_config = match ::uavcan::cocobot::BrushlessConfig::decode_internal(xfer, offset, tao) {
-      Some(s) => s,
-      None => return None,
-    };
-
-    Some(RequestBrushlessConfigResponse {
-      config: vint_config,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct BrushlessConfig {
-  // FieldTypes
-    pub kp: f32, // float32 Saturate
-    pub ki: f32, // float32 Saturate
-    pub imax: f32, // float32 Saturate
-    pub max_speed_rpm: f32, // float32 Saturate
-
-}
-
-impl BrushlessConfig {
-  pub const SIGNATURE: u64 = 0xFB33158EEDE6E517;
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = BrushlessConfig::SIGNATURE;
-  }
-
-  pub fn encode(instance: BrushlessConfig) -> (Vec<u8>, usize) {
-    let (vec, mut size) = BrushlessConfig::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: BrushlessConfig, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.kp;
-
-    let vint_kp = data;
-    canars::encode_scalar_f32(&mut buffer, offset, 32, vint_kp); // 2147483647
-    offset += 32;
-    let data = instance.ki;
-
-    let vint_ki = data;
-    canars::encode_scalar_f32(&mut buffer, offset, 32, vint_ki); // 2147483647
-    offset += 32;
-    let data = instance.imax;
-
-    let vint_imax = data;
-    canars::encode_scalar_f32(&mut buffer, offset, 32, vint_imax); // 2147483647
-    offset += 32;
-    let data = instance.max_speed_rpm;
-
-    let vint_max_speed_rpm = data;
-    canars::encode_scalar_f32(&mut buffer, offset, 32, vint_max_speed_rpm); // 2147483647
-    offset += 32;
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<BrushlessConfig> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = BrushlessConfig::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = BrushlessConfig::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<BrushlessConfig> {
-    let mut offset = offset;
-
-    let vint_kp = match xfer.decode_scalar_f32(offset, 32) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_ki = match xfer.decode_scalar_f32(offset, 32) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_imax = match xfer.decode_scalar_f32(offset, 32) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_max_speed_rpm = match xfer.decode_scalar_f32(offset, 32) {
-     Some(s) => s,
-     None => return None,
-    };
-
-    Some(BrushlessConfig {
-      kp: vint_kp,
-      ki: vint_ki,
-      imax: vint_imax,
-      max_speed_rpm: vint_max_speed_rpm,
     })
   }
 

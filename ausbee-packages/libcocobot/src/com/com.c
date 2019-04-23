@@ -207,6 +207,13 @@ static void cocobot_com_on_transfer_received(CanardInstance* ins,
   }
 #endif
 
+#ifdef CONFIG_LIBCOCOBOT_LOADER
+  if(com_on_transfer_received(transfer))
+  {
+    return;
+  }
+#endif
+
   canardReleaseRxTransferPayload(ins, transfer);
 }
 
@@ -252,6 +259,16 @@ static bool cocobot_com_should_accept_transfert(const CanardInstance* ins,
                                               data_type_id,
                                               transfer_type,
                                               source_node_id);
+  }
+#endif
+
+#ifdef CONFIG_LIBCOCOBOT_COM_USER_HANDLER
+  if(r == false)
+  {
+    r = com_should_accept_transfer(out_data_type_signature,
+                                   data_type_id,
+                                   transfer_type,
+                                   source_node_id);
   }
 #endif
 

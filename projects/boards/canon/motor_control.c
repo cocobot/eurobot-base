@@ -126,3 +126,17 @@ void motor_control_process_event(uint64_t timestamp_us)
 	//]
 	//TODO !
 }
+
+void motor_control_set_config(float kp, float ki, float imax, float max_speed_rpm)
+{
+  (void)kp;
+  (void)ki;
+  (void)imax;
+  (void)max_speed_rpm;
+}
+
+void motor_control_set_setpoint(uint8_t enable, float rpm)
+{
+  (void)enable;
+  (void)rpm;
+}
