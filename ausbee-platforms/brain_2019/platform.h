@@ -43,5 +43,6 @@ int32_t platform_adc_get_mV(uint32_t adc);
 
 void platform_spi_select(uint8_t select);
 uint8_t platform_spi_transfert(uint8_t data);
+void uprintf(char * fmt, ...);
 
 #endif// PLATFORM_H

@@ -72,5 +72,6 @@ uint32_t platform_gpio_get(uint32_t gpio);
 
 void platform_spi_select(uint8_t select);
 uint8_t platform_spi_transfert(uint8_t data);
+void uprintf(char * fmt, ...);
 
 #endif// PLATFORM_H

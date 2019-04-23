@@ -3,8 +3,7 @@
 #include "motor_control.h"
 
  
-int main(void) 
-{
+int main(void) {
   //initialisations of mcual and libcocobot
   platform_init();
   cocobot_com_init();
@@ -12,8 +11,7 @@ int main(void)
   motor_control_init();
 
   //main loop
-  while(1)
-  {
+  for(;;)  {
     //process communication requests
     uint64_t timestamp_us = cocobot_com_process_event();
 
