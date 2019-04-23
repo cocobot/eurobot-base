@@ -6,10 +6,10 @@
 #include <cocobot/encoders.h>
 #include <platform.h>
 
+#if defined(CONFIG_ENCODER_SPI) 
 static int32_t _enc_value[2];
 static uint16_t _enc_last_angle[2];
 
-#if defined(CONFIG_ENCODER_SPI) 
 static void cocobot_encoders_update(int id)
 {
   uint16_t raw;

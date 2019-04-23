@@ -105,7 +105,7 @@ void mcual_arch_parse_buffer(void)
 }
 
 
-void vApplicationTickHook( void )
+void vApplicationTickHook(void)
 {
   int num = read(0, _buffer + _buffer_offset, sizeof(_buffer) - _buffer_offset);
   if(num > 0)
