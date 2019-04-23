@@ -4,6 +4,7 @@
 # include <semphr.h>
 # include <task.h>
 #endif
+#include <stdio.h>
 #include "platform.h"
 
 #define PLATFORM_MAIN_CLOCK_KHZ 168000
@@ -17,6 +18,22 @@ static SemaphoreHandle_t mutex_spi;
 static SemaphoreHandle_t mutex_i2c;
 #endif
 #endif
+
+#include <stdarg.h>
+char buf[512];
+void uprintf(char * fmt, ...)
+{
+   va_list ap;
+  va_start(ap, fmt);
+  vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+  
+  uint8_t * ptr = (uint8_t *)buf;
+  while(*ptr) {
+    mcual_usart_send(PLATFORM_USART_DEBUG, *ptr);
+    ptr += 1;
+  }
+}
 
 void platform_init(void)
 {
