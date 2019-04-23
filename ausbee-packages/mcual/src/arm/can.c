@@ -339,9 +339,9 @@ int16_t mcual_can_recv_no_wait(CanardCANFrame* const out_frame)
     return 1;
 #else
     int16_t return_value = 0;
-    __disable_irq();
     if(rx_index_read != rx_index_write)
     {
+        __disable_irq();
         *out_frame = can_rx_buffer[rx_index_read];
         rx_index_read += 1;
         if(rx_index_read >= CONFIG_MCUAL_CAN_RX_SIZE)
@@ -349,8 +349,8 @@ int16_t mcual_can_recv_no_wait(CanardCANFrame* const out_frame)
             rx_index_read = 0;
         }
         return_value = 1;
+        __enable_irq();
     }
-    __enable_irq();
     return return_value;
 #endif
 }
@@ -385,17 +385,12 @@ static void mcual_can_add_in_mailbox(uint8_t tx_mailbox, volatile CanardCANFrame
 
 void CAN1_TX_IRQHandler(void)
 {
-    static const uint32_t AllTME = CAN_TSR_TME0 | CAN_TSR_TME1 | CAN_TSR_TME2;
-    static bool is_empty = false;
+    const uint32_t AllTME = CAN_TSR_TME0 | CAN_TSR_TME1 | CAN_TSR_TME2;
+    bool is_empty = false;
     CanardCANFrame frame;  
 #if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
     BaseType_t xTaskWokenByReceive = pdFALSE;
-    if(xQueueReceiveFromISR(can_tx_queue, &frame, &xTaskWokenByReceive))
-    {
-        if( xTaskWokenByReceive != pdFALSE )
-            taskYIELD ();
-    }
-    else
+    if(!xQueueReceiveFromISR(can_tx_queue, &frame, &xTaskWokenByReceive))
     {
         CAN1->IER &= ~CAN_IER_TMEIE;
         return;
@@ -434,8 +429,6 @@ void CAN1_TX_IRQHandler(void)
                         //The message is not send, it needs to be moved back into the queue
                         xTaskWokenByReceive = false;
                         xQueueSendToFrontFromISR(can_tx_queue, &frame, &xTaskWokenByReceive);
-                        if( xTaskWokenByReceive != pdFALSE )
-                            taskYIELD ();
 #endif
                         return; 
                     }
@@ -465,8 +458,6 @@ void CAN1_TX_IRQHandler(void)
                         //The message is not send, it needs to be moved back into the queue
                         xTaskWokenByReceive = false;
                         xQueueSendToFrontFromISR(can_tx_queue, &frame, &xTaskWokenByReceive);
-                        if( xTaskWokenByReceive != pdFALSE )
-                            taskYIELD ();
 #endif
                             return;                            // Priority inversion would occur! Reject transmission.
                         }
@@ -495,8 +486,6 @@ void CAN1_TX_IRQHandler(void)
                         //The message is not send, it needs to be moved back into the queue
                         xTaskWokenByReceive = false;
                         xQueueSendToFrontFromISR(can_tx_queue, &frame, &xTaskWokenByReceive);
-                        if( xTaskWokenByReceive != pdFALSE )
-                            taskYIELD ();
 #endif
                         return;                            // Priority inversion would occur! Reject transmission.
                     }
@@ -505,6 +494,10 @@ void CAN1_TX_IRQHandler(void)
             mcual_can_add_in_mailbox(2, &frame);
         }
     }
+#if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
+    if( xTaskWokenByReceive != pdFALSE )
+        taskYIELD ();
+#endif
 }
 
 static void mcual_can_rcev_frame(volatile CAN_FIFOMailBox_TypeDef* const mb)
@@ -530,6 +523,8 @@ static void mcual_can_rcev_frame(volatile CAN_FIFOMailBox_TypeDef* const mb)
 #if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     xQueueSendToBackFromISR(can_rx_queue, &frame, &xHigherPriorityTaskWoken);
+    if( xHigherPriorityTaskWoken != pdFALSE )
+        taskYIELD ();
 #else
     can_rx_buffer[rx_index_write] = frame;
     //Manage index
@@ -541,24 +536,35 @@ static void mcual_can_rcev_frame(volatile CAN_FIFOMailBox_TypeDef* const mb)
 
 void CAN1_RX0_IRQHandler(void)
 {
+    // Release FIFO entry we just read
+    CAN1->RF0R =  CAN_RF0R_FOVR0 | CAN_RF0R_FULL0;
+    
+    if(!(CAN1->RF0R & CAN_RF0R_FMP0))
+    {
+        //spurious ?
+        return;
+    }
     //Manage error?
-
+    
     volatile CAN_FIFOMailBox_TypeDef* const mb = &CAN1->sFIFOMailBox[0];
 
     mcual_can_rcev_frame(mb);
-
-    // Release FIFO entry we just read
-    CAN1->RF0R = CAN_RF0R_RFOM0 | CAN_RF0R_FOVR0 | CAN_RF0R_FULL0;
+    CAN1->RF0R = CAN_RF0R_RFOM0;
 }
 
 void CAN1_RX1_IRQHandler(void)
 {
+    // Release FIFO entry we just read
+    CAN1->RF1R = CAN_RF1R_FOVR1 | CAN_RF1R_FULL1;
+    if(!(CAN1->RF1R & CAN_RF1R_FMP1))
+    {
+        //spurious ?
+        return;
+    }
     volatile CAN_FIFOMailBox_TypeDef* const mb = &CAN1->sFIFOMailBox[1];
 
     mcual_can_rcev_frame(mb);
-
-    // Release FIFO entry we just read
-    CAN1->RF1R = CAN_RF1R_RFOM1 | CAN_RF1R_FOVR1 | CAN_RF1R_FULL1;
+    CAN1->RF1R = CAN_RF1R_RFOM1;
 }
 
 void CAN1_SCE_IRQHandler(void)
