@@ -390,12 +390,7 @@ void CAN1_TX_IRQHandler(void)
     CanardCANFrame frame;  
 #if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
     BaseType_t xTaskWokenByReceive = pdFALSE;
-    if(xQueueReceiveFromISR(can_tx_queue, &frame, &xTaskWokenByReceive))
-    {
-        if( xTaskWokenByReceive != pdFALSE )
-            taskYIELD ();
-    }
-    else
+    if(!xQueueReceiveFromISR(can_tx_queue, &frame, &xTaskWokenByReceive))
     {
         CAN1->IER &= ~CAN_IER_TMEIE;
         return;
@@ -434,8 +429,6 @@ void CAN1_TX_IRQHandler(void)
                         //The message is not send, it needs to be moved back into the queue
                         xTaskWokenByReceive = false;
                         xQueueSendToFrontFromISR(can_tx_queue, &frame, &xTaskWokenByReceive);
-                        if( xTaskWokenByReceive != pdFALSE )
-                            taskYIELD ();
 #endif
                         return; 
                     }
@@ -465,8 +458,6 @@ void CAN1_TX_IRQHandler(void)
                         //The message is not send, it needs to be moved back into the queue
                         xTaskWokenByReceive = false;
                         xQueueSendToFrontFromISR(can_tx_queue, &frame, &xTaskWokenByReceive);
-                        if( xTaskWokenByReceive != pdFALSE )
-                            taskYIELD ();
 #endif
                             return;                            // Priority inversion would occur! Reject transmission.
                         }
@@ -495,8 +486,6 @@ void CAN1_TX_IRQHandler(void)
                         //The message is not send, it needs to be moved back into the queue
                         xTaskWokenByReceive = false;
                         xQueueSendToFrontFromISR(can_tx_queue, &frame, &xTaskWokenByReceive);
-                        if( xTaskWokenByReceive != pdFALSE )
-                            taskYIELD ();
 #endif
                         return;                            // Priority inversion would occur! Reject transmission.
                     }
@@ -505,6 +494,10 @@ void CAN1_TX_IRQHandler(void)
             mcual_can_add_in_mailbox(2, &frame);
         }
     }
+#if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
+    if( xTaskWokenByReceive != pdFALSE )
+        taskYIELD ();
+#endif
 }
 
 static void mcual_can_rcev_frame(volatile CAN_FIFOMailBox_TypeDef* const mb)
@@ -530,7 +523,7 @@ static void mcual_can_rcev_frame(volatile CAN_FIFOMailBox_TypeDef* const mb)
 #if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     xQueueSendToBackFromISR(can_rx_queue, &frame, &xHigherPriorityTaskWoken);
-    if( xTaskWokenByReceive != pdFALSE )
+    if( xHigherPriorityTaskWoken != pdFALSE )
         taskYIELD ();
 #else
     can_rx_buffer[rx_index_write] = frame;
