@@ -187,6 +187,8 @@ int main(void)
   cocobot_pathfinder_init(initTable);
   cocobot_action_scheduler_use_pathfinder(1);
 
+  cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_OPERATIONAL);
+
   //set initial position
   switch(cocobot_game_state_get_color())
   {
