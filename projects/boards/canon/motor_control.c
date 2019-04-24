@@ -12,7 +12,7 @@
 
 /*timestamp var*/
 static uint64_t _Hall_timestamp_us = 0;
-//static uint64_t _Servo_timestamp_us = 0;
+static uint64_t _Servo_timestamp_us = 0;
 
 /*motor parameter*/
 static float _Velocity = 0;
@@ -114,17 +114,20 @@ void motor_control_init(void)
 }
 
 
-void motor_control_process_event(uint64_t timestamp_us)
-{
-	(void)timestamp_us;
+void motor_control_process_event(uint64_t timestamp_us){
+	int phase;
 
-	motor_control_speed(motor_control_get_phase(),timestamp_us);
-	//TODO !
-	//[
-	platform_gpio_set(PLATFORM_GPIO_UEN | PLATFORM_GPIO_VEN);
-	platform_gpio_clear(PLATFORM_GPIO_WEN);
-	//]
-	//TODO !
+	/*time to reevaluate servo loop*/
+	if (timestamp_us - _Servo_timestamp_us > MOTOR_SERVO_US){
+	 motor_compute_servo();
+	}
+
+	/*someting changed on halls*/
+	if (_Phase != (phase=motor_control_get_phase())){ //hall phase has changed
+		motor_control_speed(phase, timestamp_us);
+	}
+
+	return;
 }
 
 void motor_control_set_config(float kp, float ki, float imax, float max_speed_rpm)
