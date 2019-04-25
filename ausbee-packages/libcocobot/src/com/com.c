@@ -207,7 +207,7 @@ static void cocobot_com_on_transfer_received(CanardInstance* ins,
   }
 #endif
 
-#ifdef CONFIG_LIBCOCOBOT_LOADER
+#ifdef CONFIG_LIBCOCOBOT_COM_USER_HANDLER
   if(com_on_transfer_received(transfer))
   {
     return;

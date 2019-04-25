@@ -1,0 +1,4 @@
+config PLATFORM_CANIVO_2019_UART
+  bool " + canivo 2019 UART"
+  default n
+  depends on PLATFORM_CANIVO_2019

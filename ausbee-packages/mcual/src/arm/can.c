@@ -2,7 +2,11 @@
 #ifdef CONFIG_MCUAL_CAN
 
 #include <stdlib.h>
-#include <stm32f4xx.h>
+#ifdef CONFIG_DEVICE_STM32L496xx
+# include <stm32l4xx.h>
+#else
+# include <stm32f4xx.h>
+#endif
 #include <mcual.h>
 #include <unistd.h>
 #include <platform.h>
@@ -178,7 +182,12 @@ int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode if
 #endif
 
     //clock
+#ifdef RCC_APB1ENR_CAN1EN
     RCC->APB1ENR |= RCC_APB1ENR_CAN1EN;
+#endif
+#ifdef RCC_APB1ENR1_CAN1EN
+    RCC->APB1ENR1 |= RCC_APB1ENR1_CAN1EN;
+#endif
 
     /*
      * Initial setup

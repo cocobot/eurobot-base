@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_MCUAL_I2C
+
 #include <mcual.h>
 #include <stm32f4xx.h>
 #include <string.h>
@@ -477,3 +480,4 @@ void I2C1_ER_IRQHandler(void)
 
 #endif
 
+#endif

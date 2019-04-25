@@ -3,7 +3,12 @@
 
 #include <mcual.h>
 #include <platform.h>
-#include <stm32f4xx.h>
+#ifdef CONFIG_DEVICE_STM32L496xx
+# include <stm32l4xx.h>
+#else
+# include <stm32f4xx.h>
+#endif
+
 
 
 void mcual_loader_boot(void)
@@ -35,7 +40,11 @@ void mcual_loader_erase_pgm(void)
   while(FLASH->SR & FLASH_SR_BSY);
   for(i = PLATFORM_FLASH_SECTOR_PGM_START; i < PLATFORM_FLASH_SECTOR_PGM_END; i += 1)
   {
+#ifdef FLASH_CR_PSIZE_1
     FLASH->CR = (i << 3) | FLASH_CR_SER | FLASH_CR_PSIZE_1;                    
+#else
+    FLASH->CR = (i << 3);
+#endif
     FLASH->CR |= FLASH_CR_STRT;
     while(FLASH->SR & FLASH_SR_BSY);
   }
@@ -49,7 +58,11 @@ void mcual_loader_flash_pgm(uint32_t offset, uint8_t * data, uint32_t size)
   unsigned int i;
 
   //prepare flash
+#ifdef FLASH_CR_PSIZE_1
   FLASH->CR = FLASH_CR_PG | FLASH_CR_PSIZE_1;
+#else
+  FLASH->CR = FLASH_CR_PG;
+#endif
   while(FLASH->SR & FLASH_SR_BSY);
 
   //write data
@@ -80,7 +93,11 @@ void mcual_loader_flash_byte(uint32_t offset, uint8_t data)
   FLASH->KEYR = 0xCDEF89AB;
 
   //prepare flash
+#ifdef FLASH_CR_PSIZE_1
   FLASH->CR = FLASH_CR_PG | FLASH_CR_PSIZE_1;
+#else
+  FLASH->CR = FLASH_CR_PG;
+#endif
   while(FLASH->SR & FLASH_SR_BSY);
 
   //write data

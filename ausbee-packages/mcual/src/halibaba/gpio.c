@@ -1,5 +1,9 @@
 #include <include/generated/autoconf.h>
 #ifdef CONFIG_MCUAL_GPIO
+
+#include "../arm/gpio.c"
+
+/*
 #include <mcual.h>
 #include <stm32l4xx_hal.h>
 
@@ -265,5 +269,6 @@ generateSimpleIRQHandler(3);
 generateSimpleIRQHandler(4);
 generateComplexIRQHandler(5, 9);
 generateComplexIRQHandler(10, 15);
+*/
 
 #endif

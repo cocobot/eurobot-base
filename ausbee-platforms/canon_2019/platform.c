@@ -1,7 +1,8 @@
 #include "generated/autoconf.h"
 #include "platform.h"
 
-#define PLATFORM_MAIN_CLOCK_KHZ 80000
+//#define PLATFORM_MAIN_CLOCK_KHZ 80000
+#define PLATFORM_MAIN_CLOCK_KHZ 0
 
 void platform_init(void)
 {
@@ -29,7 +30,6 @@ void platform_init(void)
   platform_set_duty_cycle(PLATFORM_PWM_U, 0);
   platform_set_duty_cycle(PLATFORM_PWM_V, 0);
   platform_set_duty_cycle(PLATFORM_PWM_W, 0);
-
 }
 
 void platform_led_toggle(uint32_t led)

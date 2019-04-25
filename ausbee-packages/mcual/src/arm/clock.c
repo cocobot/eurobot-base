@@ -11,12 +11,24 @@
 #elif defined(STM32F401xx)
 # define APB1_CLOCK_MAX_FREQUECY_KHZ 20000 //because of i2c *stupid* peripheral.....
 # define APB2_CLOCK_MAX_FREQUECY_KHZ 84000
+#elif CONFIG_DEVICE_STM32L496xx
+#define APB1_CLOCK_MAX_FREQUECY_KHZ 80000
+#define APB2_CLOCK_MAX_FREQUECY_KHZ 80000
 #else
 # error Architecture not supported
 #endif
 
-#include <stm32f4xx.h>
+#ifdef CONFIG_DEVICE_STM32L496xx
+# include <stm32l4xx.h>
+#else
+# include <stm32f4xx.h>
+#endif
 #include <mcual.h>
+
+#if !defined  (HSI_VALUE)   
+  #define HSI_VALUE    ((uint32_t)16000000) /*!< Value of the Internal oscillator in Hz*/
+#endif /* HSI_VALUE */   
+
 
 extern int main(void);
 extern unsigned int _sdata;
@@ -46,11 +58,28 @@ void Reset_Handler(void)
 #endif
   RCC->CR |= RCC_CR_HSION;
   RCC->CFGR = 0x00000000;
+#ifdef RCC_CFGR_MCO2PRE
   RCC->CFGR |= RCC_CFGR_MCO2PRE;
+#endif
   RCC->CR &= ~(RCC_CR_HSEON | RCC_CR_CSSON | RCC_CR_PLLON | RCC_CR_HSEBYP);
+#ifdef RCC_CIR_LSIRDYF                     
   RCC->CIR = 0x00000000;
+#endif
+#ifdef RCC_CIER_LSIRDYIE_Pos                
+  RCC->CIER = 0x00000000;
+#endif
+#ifdef RCC_APB1ENR_PWREN
   RCC->APB1ENR |= RCC_APB1ENR_PWREN;
+#endif
+#ifdef RCC_APB1ENR1_PWREN
+  RCC->APB1ENR1 |= RCC_APB1ENR1_PWREN;
+#endif
+#ifdef PWR_CR_VOS
   PWR->CR |= PWR_CR_VOS;
+#endif
+#ifdef PWR_CR1_VOS
+  PWR->CR1 |= PWR_CR1_VOS;
+#endif
   RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
   RCC->CFGR |= RCC_CFGR_PPRE2_DIV16;
   RCC->CFGR |= RCC_CFGR_PPRE1_DIV16;
@@ -86,22 +115,24 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
     case MCUAL_CLOCK_SOURCE_INTERNAL:
       {
         //set internal clock ON
-        RCC->CR |= (uint32_t)(1 << 0);
+        RCC->CR |= (uint32_t)RCC_CR_HSION;
 
         source_freq_kHz = 16000;
+
+        cfgr |= (uint32_t)(RCC_CR_HSEON);
       }
       break;
 
     case MCUAL_CLOCK_SOURCE_EXTERNAL:
       {
         //set external clock ON
-        RCC->CR |= (uint32_t)(1 << 16);
+        RCC->CR |= (uint32_t)(RCC_CR_HSEON);
 
         //wait until external clock is stable
-        while(!(RCC->CR & (uint32_t)(1 << 17)));
+        while(!(RCC->CR & (uint32_t)(RCC_CR_HSERDY)));
 
         //set external clock as main clock
-        cfgr |= (uint32_t)(1 << 0);
+        cfgr |= (uint32_t)(RCC_CFGR_SW_HSE);
 
         source_freq_kHz = HSE_VALUE / 1000; 
       }
@@ -134,8 +165,13 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
       int32_t i_pll_p = (i + 1) * 2;
       int32_t i_fpll = target_freq_kHz * i_pll_p;
 
+#ifdef CONFIG_DEVICE_STM32L496xx
+      //VCO must be between 192Mhz and 432Mhz
+      if((i_fpll >= 64000) && (i_fpll <= 344000))
+#else
       //VCO must be between 192Mhz and 432Mhz
       if((i_fpll >= 192000) && (i_fpll <= 432000))
+#endif
       {
         int32_t i_pll_n = (i_fpll * pll_m / (source_freq_kHz));
 
