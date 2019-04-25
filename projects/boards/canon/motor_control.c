@@ -9,7 +9,6 @@
 #define MOTOR_SERVO_US 100
 #define MOTOR_POLES 6
 
-
 /*timestamp var*/
 static uint64_t _Hall_timestamp_us = 0;
 static uint64_t _Servo_timestamp_us = 0;
@@ -19,10 +18,7 @@ static float _Velocity = 0;
 static int _Phase = 0;
 static volatile uint32_t _Cur_PWM = 0; 
 
-/* for debug only*/
-void printerror(char* c){
-(void)c;
-}
+
 
 /* Normal HALL 		Phase sequence
  *	#		U	V	W			DRIVE	U		V		W
@@ -34,6 +30,60 @@ void printerror(char* c){
  * 	5		1	0	1		5				HZ	PWM	0
  */
 static const unsigned int _Hall[7] = {-1, 0, 2, 1, 4, 5, 3};
+static const int _Motor_phase[6][3] = {
+	{ 0, 1,-1},
+	{ 1, 0,-1},
+	{ 1,-1, 0},
+	{ 0,-1, 1},
+	{-1, 0, 1},
+	{-1, 1, 0}
+};
+
+static inline void set_phase(const int32_t* pin, int type){
+	switch(type){
+		case -1 :
+			platform_gpio_clear(pin[0]);
+			platform_set_duty_cycle(pin[1], 0);
+			break;
+		case 0:
+			platform_gpio_set(pin[0]);
+			platform_set_duty_cycle(pin[1], 0);
+			break;
+		case 1 :
+			platform_gpio_set(pin[0]);
+			platform_set_duty_cycle(pin[1], _Cur_PWM);
+			break;
+		default:
+			break;
+	}
+
+	return;
+}
+
+/**
+ * @brief Private function. Set PWM/EN to each drivers
+ * See _Hall comment for drive definitions
+ * Note : Not optimized for execution time AT ALL
+ * Should be ok though
+ */
+static void _set_motor_pwm(void){
+	int i;
+	static const int32_t pins[3][2]={
+		{PLATFORM_GPIO_UEN, PLATFORM_PWM_U},
+		{PLATFORM_GPIO_VEN, PLATFORM_PWM_V},
+		{PLATFORM_GPIO_WEN, PLATFORM_PWM_W}
+	};
+
+	for (i = 0; i < 3; i++){
+		set_phase(pins[_Phase], _Motor_phase[_Phase][i]);
+	}
+	return;
+}
+
+/* for debug only*/
+void printerror(char* c){
+(void)c;
+}
 
 /**
  * @brief Return current velocity, based on Hall sensors
@@ -119,7 +169,7 @@ void motor_control_process_event(uint64_t timestamp_us){
 
 	/*time to reevaluate servo loop*/
 	if (timestamp_us - _Servo_timestamp_us > MOTOR_SERVO_US){
-	 motor_compute_servo();
+	// motor_compute_servo();
 	}
 
 	/*someting changed on halls*/
@@ -127,6 +177,7 @@ void motor_control_process_event(uint64_t timestamp_us){
 		motor_control_speed(phase, timestamp_us);
 	}
 
+	_set_motor_pwm();
 	return;
 }
 

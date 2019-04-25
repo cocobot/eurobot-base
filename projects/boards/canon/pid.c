@@ -1,11 +1,12 @@
-#include "pid.h"
+//#include "pid.h"
+#include <platform.h>
 
 void pid_set(float kp, float ki){
-(void) kp;
-(void) ki;
+	(void) kp;
+	(void) ki;
 
-return;
-};
+	return;
+}
 
 void pid_reset(void){
 
@@ -13,8 +14,7 @@ void pid_reset(void){
 }
 
 uint32_t pid_update(void){
-	uint32_t new_pwm;
-	return; 
+	return 0; 
 }
 
 void pid_set_cons(float rpm){
