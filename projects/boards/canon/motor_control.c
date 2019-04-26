@@ -123,6 +123,21 @@ void motor_control_set_setpoint(uint8_t enable, float rpm)
 	(void)rpm;
 }
 
+/**
+ * @brief Stop motor and reset speed taget
+ * */
+void motor_control_stop(void){
+	int i;
+
+	for (i = 0; i < 3; i++){
+		platform_gpio_clear(_Driver_pins[i]->en);
+		platform_set_duty_cycle(_Driver_pins->pwm,0);
+	}
+
+	_Cur_PWM = 0;
+	return;
+}
+
 
 /**********************************
  * Private Function Definition
