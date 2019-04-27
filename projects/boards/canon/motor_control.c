@@ -130,7 +130,7 @@ void motor_control_stop(void){
 	int i;
 
 	for (i = 0; i < 3; i++){
-		platform_gpio_clear(_Driver_pins[i]->en);
+		platform_gpio_clear(_Driver_pins->en);
 		platform_set_duty_cycle(_Driver_pins->pwm,0);
 	}
 

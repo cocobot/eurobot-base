@@ -26,6 +26,8 @@ void pid_reset(void){
 }
 
 uint32_t pid_update(uint64_t dt){
+	(void) dt;
+	(void) _error;
 	return 0; 
 }
 
@@ -35,7 +37,7 @@ void pid_set_cons(float rpm){
 }
 
 void _quadramp(uint64_t dt){
-	float acc = (_target_speed - _current_target_speed) / dt;	
+	float acc = (_target_speed - _current_target_speed) / (float)dt;	
 
 	/* difference between asked target and current one ? */
 	if ((acc > -_max_acc) && (acc < _max_acc)){//acceleration below limmit
