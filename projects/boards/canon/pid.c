@@ -85,7 +85,10 @@ void pid_set_cons(float rpm){
 static inline float _quadramp(float target_speed, float current_speed, uint64_t dt){
 	float acc = (target_speed - current_speed) / (float)dt;	
 
-	/* difference between asked target and current one ? */
+	if (dt == 0){ //just to be shure
+		return current_speed;
+	}
+
 	if ((acc > -_max_acc) && (acc < _max_acc)){//acceleration below limmit
 		_quad_limit = 0;
 		return target_speed;
