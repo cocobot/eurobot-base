@@ -2,7 +2,7 @@
 #include <platform.h>
 
 
-/*if set, integral does not accumulate when if speed limit*/
+/*if set, integral does not accumulate when in speed limit*/
 #define PID_INTEGRAL_LIMIT 1 
 
 /*****************************
@@ -16,7 +16,7 @@ static float _kp = 0.0;
 static float _ki = 0.0;
 static float _kd = 0.0;
 static float _max_acc = 1.0;
-static float _max_speed = 10.0;
+static float _max_speed = 200.0;
 /*flags*/
 static int _quad_limit = 0;
 static int _speed_limit = 0;
@@ -35,9 +35,16 @@ static inline float _limit_out(float speed);
  * Public function definition
  * *****************************/
 
-void pid_set(float kp, float ki){
+void pid_set(float kp, float ki, float kd){
 	_kp = kp;
 	_ki = ki;
+	_kd = kd;
+	return;
+}
+
+void pid_set_limit(float speed_limit, float quad_limit){
+	_speed_limit = speed_limit;
+	_quad_limit = quad_limit;
 	return;
 }
 
@@ -45,6 +52,10 @@ void pid_reset(void){
 	_error = 0.0; //reset currrent error
 	_pid_filter(0.0, 0, 1);
 	return;
+}
+
+int pid_is_limited(void){
+	return (_quad_limit << 1) | _speed_limit;
 }
 
 float pid_update(float velocity, uint64_t dt){
@@ -119,7 +130,7 @@ static float _pid_filter(float error, uint64_t dt, int reset){
 #endif
 
 	//derivative
-	if (dt > 0){ //just to be shure
+	if (dt > 0){ //just to be safe
 		d = _kd * (error - last_error) / (float)dt; 
 		last_error = error;
 	}
