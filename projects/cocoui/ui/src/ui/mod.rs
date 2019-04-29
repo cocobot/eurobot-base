@@ -575,7 +575,7 @@ pub fn init(config: ConfigManagerInstance, state: StateManagerInstance) {
 
     window.show_all();
     update();
-    //boards::show();
+    boards::show();
 }
 
 pub fn start() {
