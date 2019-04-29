@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+float motor_control_get_velocity(void);
 
 /**
  * @brief Intialisation of the motor control algorith

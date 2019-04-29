@@ -351,14 +351,17 @@ int16_t mcual_can_recv_no_wait(CanardCANFrame* const out_frame)
     if(rx_index_read != rx_index_write)
     {
         __disable_irq();
-        *out_frame = can_rx_buffer[rx_index_read];
-        rx_index_read += 1;
-        if(rx_index_read >= CONFIG_MCUAL_CAN_RX_SIZE)
+        if(rx_index_read != rx_index_write)
         {
-            rx_index_read = 0;
+            *out_frame = can_rx_buffer[rx_index_read];
+            rx_index_read += 1;
+            if(rx_index_read >= CONFIG_MCUAL_CAN_RX_SIZE)
+            {
+                rx_index_read = 0;
+            }
+            return_value = 1;
+            __enable_irq();
         }
-        return_value = 1;
-        __enable_irq();
     }
     return return_value;
 #endif
