@@ -149,9 +149,22 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
     FLASH->ACR = acr;
 
 
+#ifdef CONFIG_DEVICE_STM32L496xx
+    int32_t pll_m = 2;
+    int32_t pll_n = 20;
+    int32_t pll_p = 2;
+    //int32_t pll_q = 2;
+    //int32_t pll_r = 2;
+    RCC->PLLCFGR = ((pll_p) << RCC_PLLCFGR_PLLP_Pos)
+                  | ((pll_m - 1) << RCC_PLLCFGR_PLLM_Pos)
+                  | ((pll_n) << RCC_PLLCFGR_PLLN_Pos)
+                  | RCC_PLLCFGR_PLLSRC_HSI
+                  | RCC_PLLCFGR_PLLQEN
+                  | RCC_PLLCFGR_PLLPEN
+                  | RCC_PLLCFGR_PLLREN;              
+#else
     //set VCO input frequency to 2Mhz (or lower)
     int32_t pll_m = (source_freq_kHz / 1001)+1;
-
     pll_m = 4;
 
     int32_t pll_n = 1;
@@ -165,13 +178,8 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
       int32_t i_pll_p = (i + 1) * 2;
       int32_t i_fpll = target_freq_kHz * i_pll_p;
 
-#ifdef CONFIG_DEVICE_STM32L496xx
-      //VCO must be between 192Mhz and 432Mhz
-      if((i_fpll >= 64000) && (i_fpll <= 344000))
-#else
       //VCO must be between 192Mhz and 432Mhz
       if((i_fpll >= 192000) && (i_fpll <= 432000))
-#endif
       {
         int32_t i_pll_n = (i_fpll * pll_m / (source_freq_kHz));
 
@@ -200,6 +208,7 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
     /* Configure the main PLL */
     RCC->PLLCFGR = pll_m | (pll_n << 6) | (((pll_p >> 1) -1) << 16) |
                    (source == MCUAL_CLOCK_SOURCE_EXTERNAL ? RCC_PLLCFGR_PLLSRC_HSE : 0) | (pll_q << 24);
+#endif
 
     /* Enable the main PLL */
     RCC->CR |= RCC_CR_PLLON;
@@ -269,6 +278,10 @@ void mcual_clock_init(mcual_clock_source_t source, int32_t target_freq_kHz)
 
 uint32_t mcual_clock_get_frequency_Hz(mcual_clock_id_t clock_id)
 {
+#ifdef CONFIG_DEVICE_STM32L496xx
+  (void)clock_id;
+  return 80000000UL;
+#else
   uint32_t clock_Hz = 0;
 
   switch(RCC->CFGR & RCC_CFGR_SWS)
@@ -397,6 +410,7 @@ uint32_t mcual_clock_get_frequency_Hz(mcual_clock_id_t clock_id)
   }
 
   return 0;
+#endif
 }
 
 #endif

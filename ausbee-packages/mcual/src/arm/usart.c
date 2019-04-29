@@ -2,7 +2,11 @@
 #ifdef CONFIG_MCUAL_USART
 
 #include <stdlib.h>
-#include <stm32f4xx.h>
+#ifdef CONFIG_DEVICE_STM32L496xx
+# include <stm32l4xx.h>
+#else
+# include <stm32f4xx.h>
+#endif
 #include <mcual.h>
 
 #ifdef CONFIG_MCUAL_USART_USE_FREERTOS_QUEUES
@@ -25,6 +29,48 @@ volatile int32_t rx_buffer_write[MCUAL_USART_NUMBER];
 #endif
 
 
+#ifdef CONFIG_DEVICE_STM32L496xx
+#ifdef CONFIG_MCUAL_USART_USE_FREERTOS_QUEUES
+#error not impl
+#else
+#define generateIRQHandler(n, id, name)  \
+uint8_t tx_buffer_##n[CONFIG_MCUAL_USART_ ## n ## _TX_SIZE];\
+uint8_t rx_buffer_##n[CONFIG_MCUAL_USART_ ## n ## _RX_SIZE];\
+void name ## _IRQHandler(void)\
+{\
+  uint32_t sr = name->ISR;\
+\
+  if(sr & USART_ISR_TXE)\
+  {\
+\
+    if(tx_buffer_read[id] != tx_buffer_write[id])\
+    {\
+      name->TDR = tx_buffer_##n[tx_buffer_read[id]];\
+      tx_buffer_read[id] += 1;\
+      if(tx_buffer_read[id] >= CONFIG_MCUAL_USART_##n##_TX_SIZE)\
+      {\
+        tx_buffer_read[id] = 0;\
+      }\
+    }\
+    else\
+    {\
+      name->CR1 &= ~USART_CR1_TXEIE;\
+    }\
+  }\
+\
+  if(sr & (USART_ISR_RXNE | USART_ISR_ORE)) \
+  {\
+    name->ISR &= ~(USART_ISR_RXNE | USART_ISR_ORE);\
+    rx_buffer_##n[rx_buffer_write[id]] = name->RDR;\
+    rx_buffer_write[id] += 1;\
+    if(rx_buffer_write[id] >= CONFIG_MCUAL_USART_##n##_RX_SIZE)\
+    {\
+      rx_buffer_write[id] = 0;\
+    }\
+  }\
+}
+#endif
+#else
 #ifdef CONFIG_MCUAL_USART_USE_FREERTOS_QUEUES
 #define generateIRQHandler(n, id, name)  \
 void name ## _IRQHandler(void)\
@@ -45,9 +91,9 @@ void name ## _IRQHandler(void)\
     }\
   }\
 \
-  if(sr & (USART_SR_RXNE | USART_SR_ORE)) \
+  if(sr & (USART_ISR_RXNE | USART_ISR_ORE)) \
   {\
-    name->SR &= ~(USART_SR_RXNE | USART_SR_ORE);\
+    name->ISR &= ~(USART_ISR_RXNE | USART_ISR_ORE);\
     uint8_t byte = name->DR;\
     xQueueSendFromISR(rx_queues[id], &byte, NULL);\
   }\
@@ -89,6 +135,7 @@ void name ## _IRQHandler(void)\
     }\
   }\
 }
+#endif
 #endif
 
 #ifdef CONFIG_MCUAL_USART_1
@@ -135,6 +182,8 @@ static USART_TypeDef * mcual_usart_get_register(mcual_usart_id_t usart_id)
     case MCUAL_USART5:
       return UART5;
 
+#ifdef CONFIG_DEVICE_STM32L496xx
+#else
     case MCUAL_USART6:
       return USART6;
 
@@ -143,6 +192,7 @@ static USART_TypeDef * mcual_usart_get_register(mcual_usart_id_t usart_id)
 
     case MCUAL_USART8:
       return UART8;
+#endif
   }
 
   return NULL;
@@ -384,26 +434,48 @@ void mcual_usart_init(mcual_usart_id_t usart_id, uint32_t baudrate)
       clock = MCUAL_CLOCK_PERIPHERAL_2;
       break;
 
-    case 2:
+    case MCUAL_USART2:
+#ifdef RCC_APB1ENR_USART2EN
       RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
+#endif
+#ifdef RCC_APB1ENR1_USART2EN
+      RCC->APB1ENR1 |= RCC_APB1ENR1_USART2EN;
+#endif
       clock = MCUAL_CLOCK_PERIPHERAL_1;
       break;
 
-    case 3:
+    case MCUAL_USART3:
+#ifdef RCC_APB1ENR_USART3EN
       RCC->APB1ENR |= RCC_APB1ENR_USART3EN;
+#endif
+#ifdef RCC_APB1ENR1_USART3EN
+      RCC->APB1ENR1 |= RCC_APB1ENR1_USART3EN;
+#endif
       clock = MCUAL_CLOCK_PERIPHERAL_1;
       break;
 
-    case 4:
-      RCC->APB1ENR |= RCC_APB1ENR_UART4EN;
+    case MCUAL_USART4:
+#ifdef RCC_APB1ENR_USART4EN
+      RCC->APB1ENR |= RCC_APB1ENR_USART4EN;
+#endif
+#ifdef RCC_APB1ENR1_USART4EN
+      RCC->APB1ENR1 |= RCC_APB1ENR1_USART4EN;
+#endif
       clock = MCUAL_CLOCK_PERIPHERAL_1;
       break;
 
-    case 5:
-      RCC->APB1ENR |= RCC_APB1ENR_UART5EN;
+    case MCUAL_USART5:
+#ifdef RCC_APB1ENR_USART5EN
+      RCC->APB1ENR |= RCC_APB1ENR_USART5EN;
+#endif
+#ifdef RCC_APB1ENR1_USART5EN
+      RCC->APB1ENR1 |= RCC_APB1ENR1_USART5EN;
+#endif
       clock = MCUAL_CLOCK_PERIPHERAL_1;
       break;
 
+#ifdef CONFIG_DEVICE_STM32L496xx
+#else
     case 6:
       RCC->APB2ENR |= RCC_APB2ENR_USART6EN;
       clock = MCUAL_CLOCK_PERIPHERAL_2;
@@ -418,6 +490,7 @@ void mcual_usart_init(mcual_usart_id_t usart_id, uint32_t baudrate)
       RCC->APB1ENR |= RCC_APB1ENR_UART8EN;
       clock = MCUAL_CLOCK_PERIPHERAL_1;
       break;
+#endif
   }
 
   //compute baudrate

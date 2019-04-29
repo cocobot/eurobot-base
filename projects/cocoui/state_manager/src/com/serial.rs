@@ -210,17 +210,17 @@ impl SerialManager {
 fn find_serial_port(com: Com, opened_serial_port: &mut Arc<Mutex<Vec<Box<SerialManager>>>>) {
     if let Ok(ports) = serialport::available_ports() {
         for p in ports {
-            match p.port_type {
-                SerialPortType::UsbPort(ref info) => {
-                    if info.serial_number.is_none() {
-                        continue;
-                    }
-                    if info.serial_number.as_ref().unwrap() != "A105TLE3" {
-                        continue;
-                    }
-                }
-                _ => continue,
-            }
+            //match p.port_type {
+            //    SerialPortType::UsbPort(ref info) => {
+            //        if info.serial_number.is_none() {
+            //            continue;
+            //        }
+            //        if info.serial_number.as_ref().unwrap() != "A105TLE3" {
+            //            continue;
+            //        }
+            //    }
+            //    _ => continue,
+            //}
             match opened_serial_port.lock() {
                 Ok(mut list) => {
                     if !list.iter().any(|x| x.name() == p.port_name) {

@@ -28,6 +28,7 @@
 #define PLATFORM_FLASH_SECTOR_PGM_END           255
 #define PLATFORM_FLASH_PGM_START                0x08004000
 
+#define PLATFORM_USART_USER           MCUAL_USART3
 
 void platform_init(void);
 void platform_led_toggle(uint32_t led);
