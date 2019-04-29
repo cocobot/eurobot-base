@@ -20,8 +20,8 @@ void mcual_loader_boot(void)
     FLASH->CR = FLASH_CR_LOCK;
     USART1->CR1 = 0;
     SCB->VTOR = PLATFORM_FLASH_PGM_START;
-    __set_MSP(*((uint32_t*)PLATFORM_FLASH_SECTOR_PGM_START));
-    void (*boot)(void) __attribute__((noreturn)) = (void *)(*(uint32_t*)(PLATFORM_FLASH_SECTOR_PGM_START + 4));
+    __set_MSP(*(uint32_t*)(PLATFORM_FLASH_PGM_START));
+    void (*boot)(void) __attribute__((noreturn)) = (void *)(*(uint32_t*)(PLATFORM_FLASH_PGM_START + 4));
     boot();
   }
 }
@@ -38,7 +38,7 @@ void mcual_loader_erase_pgm(void)
 
   //erase pgm flash. This will temporally lock the cpu (no com !)
   while(FLASH->SR & FLASH_SR_BSY);
-  for(i = PLATFORM_FLASH_SECTOR_PGM_START; i < PLATFORM_FLASH_SECTOR_PGM_END; i += 1)
+  for(i = PLATFORM_FLASH_SECTOR_PGM_START; i <= PLATFORM_FLASH_SECTOR_PGM_END; i += 1)
   {
 #ifdef FLASH_CR_PSIZE_1
     FLASH->CR = (i << 3) | FLASH_CR_SER | FLASH_CR_PSIZE_1;                    
