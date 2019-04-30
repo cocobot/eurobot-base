@@ -15,5 +15,6 @@
 #include <cocobot/shifters.h>
 #include <cocobot/com.h>
 #include <cocobot/loader.h>
+#include <cocobot/inverse_kinematics.h>
 
 #endif// COCOBOT_H

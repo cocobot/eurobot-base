@@ -205,3 +205,8 @@ config LIBCOCOBOT_LOADER
 	bool "+ Loader"
 	default n
 	depends on LIBCOCOBOT && LIBCOCOBOT_COM
+
+config LIBCOCOBOT_INVERSE_KINEMATICS
+	bool "+ Inverse Kinematics"
+	default n
+	depends on LIBCOCOBOT
