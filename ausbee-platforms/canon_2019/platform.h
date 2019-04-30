@@ -43,5 +43,6 @@ void platform_gpio_set_interrupt(uint32_t gpio, mcual_gpio_edge_t edge, mcual_gp
 
 void platform_set_frequency(uint32_t pwm_output, uint32_t freq_Hz);
 void platform_set_duty_cycle(uint32_t pwm_output, uint32_t duty_cycle);
+void uprintf(char * fmt, ...);
 
 #endif// PLATFORM_H

@@ -3,6 +3,23 @@
 
 #define PLATFORM_MAIN_CLOCK_KHZ 80000
 
+
+#include <stdarg.h>
+char buf[512];
+void uprintf(char * fmt, ...)
+{
+   va_list ap;
+  va_start(ap, fmt);
+  vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+  
+  uint8_t * ptr = (uint8_t *)buf;
+  while(*ptr) {
+    mcual_usart_send(PLATFORM_USART_USER, *ptr);
+    ptr += 1;
+  }
+}
+
 void platform_init(void)
 {
   //init clock
