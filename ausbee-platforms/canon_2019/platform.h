@@ -26,7 +26,7 @@
 #define PLATFORM_FLASH_SECTOR_BOOTLOADER_END    7
 #define PLATFORM_FLASH_SECTOR_PGM_START         8
 #define PLATFORM_FLASH_SECTOR_PGM_END           255
-#define PLATFORM_FLASH_PGM_START                0x08004000
+#define PLATFORM_FLASH_PGM_START                0x08000000
 
 
 void platform_init(void);
