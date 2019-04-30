@@ -15,7 +15,7 @@ void mcual_bootloader(void)
 void mcual_get_unique_id(uint8_t buffer[12])
 {
 #ifdef CONFIG_DEVICE_STM32L496xx
-  uint8_t * ptr = (uint8_t *)&buffer[0];
+  uint8_t * ptr = (uint8_t *)UID_BASE;
 #else
   uint8_t * ptr = (uint8_t *)0x1FFF7A10;
 #endif

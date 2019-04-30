@@ -184,14 +184,23 @@ void mcual_timer_init(mcual_timer_t timer, int32_t freq_Hz)
   
   if(freq_Hz > 0)
   {
+#ifdef CONFIG_DEVICE_STM32L496xx
+    reg->ARR = mcual_clock_get_frequency_Hz(clock) / freq_Hz;
+#else
     reg->ARR = mcual_clock_get_frequency_Hz(clock) * 2 / freq_Hz;
+#endif
     reg->PSC = 0;
   }
   else
   {
     reg->ARR = 0xFFFFFFFF;
     int32_t pres = -freq_Hz;
+#ifdef CONFIG_DEVICE_STM32L496xx
+    reg->PSC = mcual_clock_get_frequency_Hz(clock) / pres;
+#else
     reg->PSC = mcual_clock_get_frequency_Hz(clock) * 2 / pres;
+#endif
+
     reg->EGR = TIM_EGR_UG;
   }
   reg->CCMR1 = 0;

@@ -1,8 +1,7 @@
 #include "generated/autoconf.h"
 #include "platform.h"
 
-//#define PLATFORM_MAIN_CLOCK_KHZ 80000
-#define PLATFORM_MAIN_CLOCK_KHZ 0
+#define PLATFORM_MAIN_CLOCK_KHZ 80000
 
 void platform_init(void)
 {
@@ -30,6 +29,16 @@ void platform_init(void)
   platform_set_duty_cycle(PLATFORM_PWM_U, 0);
   platform_set_duty_cycle(PLATFORM_PWM_V, 0);
   platform_set_duty_cycle(PLATFORM_PWM_W, 0);
+  
+  //init uart pins
+  mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN10, MCUAL_GPIO_OUTPUT);
+  mcual_gpio_init(MCUAL_GPIOC, MCUAL_GPIO_PIN11, MCUAL_GPIO_INPUT);
+  mcual_gpio_set_function(MCUAL_GPIOC, MCUAL_GPIO_PIN10, 7);
+  mcual_gpio_set_function(MCUAL_GPIOC, MCUAL_GPIO_PIN11, 7);
+  mcual_usart_init(PLATFORM_USART_USER, 115200);
+
+  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN8, MCUAL_GPIO_OUTPUT);
+  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN8, 0);
 }
 
 void platform_led_toggle(uint32_t led)

@@ -35,7 +35,7 @@ typedef enum
   COCOBOT_COM_SOURCE_RF,
 } cocobot_com_source_t;
 
-static uint32_t const _canard_id  = 0xFFFFFFFF;
+static uint64_t const _canard_id = CONFIG_LIBCOCOBOT_COM_ID;
 static CanardInstance _canard;
 static uint8_t _canard_memory_pool[CONFIG_LIBCOCOBOT_COM_MEMORY_POOL_SIZE];
 static uint8_t _internal_buffer[UAVCAN_PROTOCOL_GETNODEINFO_RESPONSE_MAX_SIZE];
@@ -170,7 +170,7 @@ static void cocobot_com_on_transfer_received(CanardInstance* ins,
       if(strcmp((char *)reqgsr.name.data, "ID") == 0)
       {
 #ifndef AUSBEE_SIM
-        mcual_loader_flash_byte((uint32_t)&_canard_id, reqgsr.value.integer_value);
+        mcual_loader_flash_u64((uint32_t)&_canard_id, reqgsr.value.integer_value);
 #endif
         gsr.value.union_tag = UAVCAN_PROTOCOL_PARAM_VALUE_INTEGER_VALUE;
         gsr.value.integer_value = reqgsr.value.integer_value;
@@ -564,10 +564,8 @@ void cocobot_com_init(void)
 #endif
 #endif
 
-  //volatile uint32_t * ptr = (uint32_t *)&_canard_id;
-	//canardSetLocalNodeID(&_canard, *ptr & 0x7F);
-  //DEBUG
-	canardSetLocalNodeID(&_canard, CONFIG_LIBCOCOBOT_COM_ID);
+  volatile uint64_t * ptr = (uint64_t *)&_canard_id;
+	canardSetLocalNodeID(&_canard, *ptr & 0x7F);
 
   _last_timer_ticks = 0;
   _timestamp_us = 0;

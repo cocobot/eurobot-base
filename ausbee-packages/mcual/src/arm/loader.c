@@ -84,8 +84,8 @@ void mcual_loader_flash_pgm(uint32_t offset, uint8_t * data, uint32_t size)
   FLASH->CR = 0;
 }
 
-__attribute__ ((__section__(".data")))
-void mcual_loader_flash_byte(uint32_t offset, uint8_t data)
+__attribute__ ((__section__(".data#")))
+void mcual_loader_flash_u64(uint32_t offset, uint64_t data)
 {
   __disable_irq();
   FLASH->CR |= FLASH_CR_LOCK;
@@ -101,7 +101,7 @@ void mcual_loader_flash_byte(uint32_t offset, uint8_t data)
   while(FLASH->SR & FLASH_SR_BSY);
 
   //write data
-  uint32_t * ptr = (uint32_t *)offset;
+  uint64_t * ptr = (uint64_t *)offset;
   *ptr = data;
   while(FLASH->SR & FLASH_SR_BSY);
 
