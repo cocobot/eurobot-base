@@ -64,6 +64,15 @@ int main(void) {
 
     //run motor control algorithm
     motor_control_process_event(timestamp_us);
+
+
+    //test debug printf
+    static uint64_t last_print = 0;
+    if(timestamp_us - last_print > 200000)
+    {
+      uprintf("TS = %lu\r\n", timestamp_us);
+      last_print = timestamp_us;
+    }
   }
 
   return 0;

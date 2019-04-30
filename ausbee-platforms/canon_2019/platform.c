@@ -1,10 +1,11 @@
+#include <stdio.h>
+#include <stdarg.h>
 #include "generated/autoconf.h"
 #include "platform.h"
 
 #define PLATFORM_MAIN_CLOCK_KHZ 80000
 
 
-#include <stdarg.h>
 char buf[512];
 void uprintf(char * fmt, ...)
 {
