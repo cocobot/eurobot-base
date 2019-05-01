@@ -74,6 +74,11 @@ static void print_uart(void){
 	}
 	return;
 }
+#else
+	static void printerror(char const * str){
+		(void)str;
+		return;
+	}
 #endif
 
 /*******************************
