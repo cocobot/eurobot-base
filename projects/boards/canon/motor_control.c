@@ -10,7 +10,10 @@
 #define MOTOR_CONTROL_PWM_FACTOR 0.1
 #define MOTOR_CONTROL_SERVO_REFRES_US 100
 #define MOTOR_CONTROL_POLES 6
-
+/*debug*/
+#define MOTOR_CONTROL_DEBUG_EN 1
+#define MOTOR_CONTROL_DEBUG_PRINT 500000
+#define MOTOR_CONTROL_DEBUG_BUFFER 255
 /*********************************
  * Global variables definition
  *********************************/
@@ -44,12 +47,34 @@ static int _motor_control_get_hall(void); //reads HALL inputs
 static int _motor_control_update_speed(int phase, uint64_t timestamp_us); 
 
 
+#if MOTOR_CONTROL_DEBUG_EN
 /* for debug only*/
-void printerror(char* c){
-	(void)c;
+static char _Debug_buffer[MOTOR_CONTROL_DEBUG_BUFFER];
+static unsigned int _Dbg_idx = 0;
+static uint64_t _Dbg_timestamp_us = 0;
+
+static void printerror(char const * str){
+	char c;
+	while((c = *(str++)) != '\0'){
+		if (_Dbg_idx < (MOTOR_CONTROL_DEBUG_BUFFER - 1)){
+			*(_Debug_buffer + (_Dbg_idx++))  = c;
+		}
+		else {
+			return;
+		}
+	}
+	return;
 }
 
-
+static void print_uart(void){
+	if (_Dbg_idx > 0){
+		_Debug_buffer[_Dbg_idx] = '\0';
+		uprintf("%s",_Debug_buffer);
+		_Dbg_idx = 0;
+	}
+	return;
+}
+#endif
 
 /*******************************
  * Public Function definition
@@ -102,6 +127,14 @@ void motor_control_process_event(uint64_t timestamp_us){
 		_Servo_timestamp_us = timestamp_us;
 	}
 
+#if MOTOR_CONTROL_DEBUG_EN
+	/* time to print*/
+	if (timestamp_us - _Dbg_timestamp_us > MOTOR_CONTROL_DEBUG_PRINT){
+		print_uart();
+		_Dbg_timestamp_us = timestamp_us;
+	}
+#endif
+	
 	return;
 }
 

@@ -68,9 +68,9 @@ int main(void) {
 
     //test debug printf
     static uint64_t last_print = 0;
-    if(timestamp_us - last_print > 200000)
+    if(timestamp_us - last_print > 2000000)
     {
-      uprintf("TS = %lu\r\n", timestamp_us);
+      uprintf("TS = %d\r\n", (int)timestamp_us);
       last_print = timestamp_us;
     }
   }
