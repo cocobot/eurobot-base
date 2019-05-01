@@ -1,6 +1,9 @@
 #include <platform.h>
 #include "motor_control.h"
 #include "pid.h"
+#include <stdio.h>
+#include <stdarg.h>
+
 
 /**
  * @brief Frequency of pwm outputs in kilohertz
@@ -14,13 +17,12 @@
 #define MOTOR_CONTROL_DEBUG_EN 1
 #define MOTOR_CONTROL_DEBUG_PRINT 500000
 #define MOTOR_CONTROL_DEBUG_BUFFER 255
+#define MOTOR_CONTROL_DEBUG_PRINT_PHASE 1
+#define MOTOR_CONTROL_DEBUG_PRINT_HALL_VALUE 1
+
 /*********************************
  * Global variables definition
  *********************************/
-
-
-/*timestamp var*/
-
 /*motor parameter*/
 static float _Velocity = 0;
 static int _Phase = 0;
@@ -50,14 +52,17 @@ static int _motor_control_update_speed(int phase, uint64_t timestamp_us);
 static char _Debug_buffer[MOTOR_CONTROL_DEBUG_BUFFER];
 static unsigned int _Dbg_idx = 0;
 
-static void printerror(char const * str){
-	char c;
-	while((c = *(str++)) != '\0'){
-		if (_Dbg_idx < (MOTOR_CONTROL_DEBUG_BUFFER - 1)){
-			*(_Debug_buffer + (_Dbg_idx++))  = c;
-		}
-		else {
-			return;
+static void print(char const * format, ...){
+	int count;
+	va_list args;
+  int left = MOTOR_CONTROL_DEBUG_BUFFER - _Dbg_idx - 1;
+
+	if (left > 2){
+		va_start(args, format);
+		count = vsnprintf(_Debug_buffer + _Dbg_idx, (size_t)left, format, args);
+		va_end(args);
+		if (count > 0){
+			_Dbg_idx += count; 
 		}
 	}
 	return;
@@ -65,14 +70,15 @@ static void printerror(char const * str){
 
 static void print_uart(void){
 	if (_Dbg_idx > 0){
-		_Debug_buffer[_Dbg_idx] = '\0';
 		uprintf("%s",_Debug_buffer);
 		_Dbg_idx = 0;
 	}
 	return;
 }
+
 #else
-	static void printerror(char const * str){
+
+	static void print(char const * str,...){
 		(void)str;
 		return;
 	}
@@ -114,12 +120,15 @@ void motor_control_process_event(uint64_t timestamp_us){
 	uint64_t dt;
 
 	if (phase == -1){// error on hall
-		printerror("Invalid Hall value !\n");
+		print("Invalid Hall value !\n");
 		return;
 	}
 	if (_Phase != phase){ //motor positon changed. Compute new speed
+#if MOTOR_CONTROL_DEBUG_PRINT_PHASE
+			print("Old Phase : %d Curr Phase : %d\n",_Phase,phase);
+#endif		
 		if (_motor_control_update_speed(phase, timestamp_us) < 0){
-			printerror("Invalid Hall value !\n");
+			print("Invalid Hall value !\n");
 			return;
 		}
 	}
@@ -131,7 +140,7 @@ void motor_control_process_event(uint64_t timestamp_us){
 		/*compute pid*/
 		speed_val = pid_update(_Velocity, dt);
 		if (pid_is_limited()){
-			printerror("Warning : Quadramp or speed limit\n");
+			print("Warning : Quadramp or speed limit\n");
 		}
 
 		/*transform for float to pwm (signed) and update pwm*/
