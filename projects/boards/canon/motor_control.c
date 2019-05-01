@@ -19,6 +19,7 @@
 #define MOTOR_CONTROL_DEBUG_BUFFER 255
 #define MOTOR_CONTROL_DEBUG_PRINT_PHASE 1
 #define MOTOR_CONTROL_DEBUG_PRINT_HALL_VALUE 1
+#define MOTOR_CONTROL_WARN_LAG 1 //direct print
 
 /*********************************
  * Global variables definition
@@ -136,6 +137,12 @@ void motor_control_process_event(uint64_t timestamp_us){
 	/*time to reevaluate servo loop*/
 	dt = timestamp_us - servo_timestamp_us;
 	if (dt > MOTOR_CONTROL_SERVO_REFRES_US){
+
+#if MOTOR_CONTROL_WARN_LAG
+		if (dt / MOTOR_CONTROL_SERVO_REFRES_US >= 2){
+			uprintf("LAG ! : %d", dt / MOTOR_CONTROL_SERVO_REFRES_US);
+		}
+#endif
 
 		/*compute pid*/
 		speed_val = pid_update(_Velocity, dt);
