@@ -20,8 +20,6 @@
 
 
 /*timestamp var*/
-static uint64_t _Hall_timestamp_us = 0;
-static uint64_t _Servo_timestamp_us = 0;
 
 /*motor parameter*/
 static float _Velocity = 0;
@@ -51,7 +49,6 @@ static int _motor_control_update_speed(int phase, uint64_t timestamp_us);
 /* for debug only*/
 static char _Debug_buffer[MOTOR_CONTROL_DEBUG_BUFFER];
 static unsigned int _Dbg_idx = 0;
-static uint64_t _Dbg_timestamp_us = 0;
 
 static void printerror(char const * str){
 	char c;
@@ -93,10 +90,17 @@ float motor_control_get_velocity(void){
 
 void motor_control_init(void){
 	/*dissable all PWM Drivers*/
-	platform_gpio_clear(PLATFORM_GPIO_UEN | PLATFORM_GPIO_VEN | PLATFORM_GPIO_WEN);
+	platform_gpio_clear( 
+			PLATFORM_GPIO_UEN | 
+			PLATFORM_GPIO_VEN | 
+			PLATFORM_GPIO_WEN);
 
 	//init frequency and duty cycle
-	platform_set_frequency(PLATFORM_PWM_U | PLATFORM_PWM_V | PLATFORM_PWM_W, MOTOR_CONTROL_PWM_FREQUENCY_kHz);
+	platform_set_frequency(
+			PLATFORM_PWM_U | 
+			PLATFORM_PWM_V | 
+			PLATFORM_PWM_W, 
+			MOTOR_CONTROL_PWM_FREQUENCY_kHz);
 	platform_set_duty_cycle(PLATFORM_PWM_U, 0);
 	platform_set_duty_cycle(PLATFORM_PWM_V, 0);
 	platform_set_duty_cycle(PLATFORM_PWM_W, 0);
@@ -104,8 +108,10 @@ void motor_control_init(void){
 
 
 void motor_control_process_event(uint64_t timestamp_us){
+	static uint64_t servo_timestamp_us = 0;
 	int phase = _motor_control_get_hall();
 	float speed_val;
+	uint64_t dt;
 
 	if (phase == -1){// error on hall
 		printerror("Invalid Hall value !\n");
@@ -119,24 +125,26 @@ void motor_control_process_event(uint64_t timestamp_us){
 	}
 
 	/*time to reevaluate servo loop*/
-	if (timestamp_us - _Servo_timestamp_us > MOTOR_CONTROL_SERVO_REFRES_US){
+	dt = timestamp_us - servo_timestamp_us;
+	if (dt > MOTOR_CONTROL_SERVO_REFRES_US){
 
 		/*compute pid*/
-		speed_val = pid_update(_Velocity, timestamp_us - _Servo_timestamp_us);
+		speed_val = pid_update(_Velocity, dt);
 		if (pid_is_limited()){
 			printerror("Warning : Quadramp or speed limit\n");
 		}
 
 		/*transform for float to pwm (signed) and update pwm*/
 		_set_motor_pwm((int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR));
-		_Servo_timestamp_us = timestamp_us;
+		servo_timestamp_us = timestamp_us;
 	}
 
 #if MOTOR_CONTROL_DEBUG_EN
+	static uint64_t dbg_timestamp_us = 0;
 	/* time to print*/
-	if (timestamp_us - _Dbg_timestamp_us > MOTOR_CONTROL_DEBUG_PRINT){
+	if (timestamp_us - dbg_timestamp_us > MOTOR_CONTROL_DEBUG_PRINT){
 		print_uart();
-		_Dbg_timestamp_us = timestamp_us;
+		dbg_timestamp_us = timestamp_us;
 	}
 #endif
 	
@@ -259,9 +267,11 @@ static int _motor_control_get_hall(void){
  */
 static int _motor_control_update_speed(int phase, uint64_t timestamp_us){
 
-	int delta_ph = phase - _Phase; //get phase delta.
-	uint64_t dt = timestamp_us - _Hall_timestamp_us; //get time delta;
+	static uint64_t hall_timestamp_us = 0;
 	float dangle; //angle delta in fraction of turn
+	int delta_ph = phase - _Phase; //get phase delta.
+	uint64_t dt; //get time delta;
+ 	dt = timestamp_us - hall_timestamp_us; //get time delta;
 
 	if (dt == 0){ // somethings wrong
 		return -1;
@@ -284,7 +294,8 @@ static int _motor_control_update_speed(int phase, uint64_t timestamp_us){
 	dangle = (float)delta_ph  / (float)(MOTOR_CONTROL_POLES * 6); 
 	_Velocity = dangle / ((float)(dt) * 1e-6 ) * 60;
 	_Phase = phase;
-	_Hall_timestamp_us = timestamp_us;
+
+	hall_timestamp_us = timestamp_us;
 
 	return 1; 
 }
