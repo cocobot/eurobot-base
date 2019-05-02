@@ -42,7 +42,12 @@ void platform_init(void)
   mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN2, MCUAL_GPIO_OUTPUT);
 
   //init motor outputs
-  //TODO init mcual_gpio for timer
+  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN8, MCUAL_GPIO_OUTPUT);
+  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN9, MCUAL_GPIO_OUTPUT);
+  mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN10, MCUAL_GPIO_OUTPUT);
+  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN8, 1);
+  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN9, 1);
+  mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN10, 1);
   platform_set_frequency(PLATFORM_PWM_U | PLATFORM_PWM_V | PLATFORM_PWM_W, 1000);
   platform_set_duty_cycle(PLATFORM_PWM_U, 0);
   platform_set_duty_cycle(PLATFORM_PWM_V, 0);
@@ -172,15 +177,25 @@ void platform_set_frequency(uint32_t pwm_output, uint32_t freq_Hz)
   if(pwm_output & (PLATFORM_PWM_U | PLATFORM_PWM_V | PLATFORM_PWM_W))
   {
     (void)freq_Hz;
-    //TODO:
-    //mcual_timer_init(, freq_Hz);
+    mcual_timer_init(MCUAL_TIMER1, freq_Hz);
+    mcual_timer_enable_channel(MCUAL_TIMER1, MCUAL_TIMER_CHANNEL1);
+    mcual_timer_enable_channel(MCUAL_TIMER1, MCUAL_TIMER_CHANNEL2);
+    mcual_timer_enable_channel(MCUAL_TIMER1, MCUAL_TIMER_CHANNEL3);
   }
 }
 
 void platform_set_duty_cycle(uint32_t pwm_output, uint32_t duty_cycle)
 {
-  (void)pwm_output;
-  (void)duty_cycle;
-  //TODO
-  //mcual_timer_set_duty_cycle(MCUAL_, MCUAL_TIMER_CHANNEL1, duty_cycle);
+  if(pwm_output & PLATFORM_PWM_U)
+  {
+    mcual_timer_set_duty_cycle(MCUAL_TIMER1, MCUAL_TIMER_CHANNEL1, duty_cycle);
+  }
+  if(pwm_output & PLATFORM_PWM_V)
+  {
+    mcual_timer_set_duty_cycle(MCUAL_TIMER1, MCUAL_TIMER_CHANNEL2, duty_cycle);
+  }
+  if(pwm_output & PLATFORM_PWM_W)
+  {
+    mcual_timer_set_duty_cycle(MCUAL_TIMER1, MCUAL_TIMER_CHANNEL3, duty_cycle);
+  }
 }
