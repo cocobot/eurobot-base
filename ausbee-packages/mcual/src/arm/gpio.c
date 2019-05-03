@@ -130,7 +130,7 @@ void mcual_gpio_clear(mcual_gpio_port_t port, mcual_gpio_pin_t pin)
   GPIO_TypeDef * reg = mcual_gpio_get_register(port);
 
 #ifdef CONFIG_DEVICE_STM32L496xx
-  reg->BSRR = pin << 8;
+  reg->BRR = pin;
 #else
   reg->BSRRH = pin;
 #endif
