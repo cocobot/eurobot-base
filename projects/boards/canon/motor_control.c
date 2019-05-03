@@ -1,4 +1,5 @@
 #include <platform.h>
+#include <cocobot.h>
 #include "motor_control.h"
 #include "pid.h"
 #include <stdio.h>
@@ -9,17 +10,18 @@
  * @brief Frequency of pwm outputs in kilohertz
  */
 #define MOTOR_CONTROL_PWM_FREQUENCY_kHz 20000
-#define MOTOR_CONTROL_MAX_PWM 1000
+#define MOTOR_CONTROL_MAX_PWM 1000000
 #define MOTOR_CONTROL_PWM_FACTOR 0.1
-#define MOTOR_CONTROL_SERVO_REFRES_US 100
+#define MOTOR_CONTROL_SERVO_REFRES_US 20000
 #define MOTOR_CONTROL_POLES 6
 /*debug*/
 #define MOTOR_CONTROL_DEBUG_EN 1
 #define MOTOR_CONTROL_DEBUG_PRINT 500000
 #define MOTOR_CONTROL_DEBUG_BUFFER 255
-#define MOTOR_CONTROL_DEBUG_PRINT_PHASE 1
+#define MOTOR_CONTROL_DEBUG_PRINT_PHASE 0
 #define MOTOR_CONTROL_DEBUG_PRINT_HALL_VALUE 1
-#define MOTOR_CONTROL_WARN_LAG 1 //direct print
+#define MOTOR_CONTROL_DEBUG_PRINT_VELOCITY 1
+#define MOTOR_CONTROL_WARN_LAG 0 //direct print
 
 /*********************************
  * Global variables definition
@@ -56,7 +58,7 @@ static unsigned int _Dbg_idx = 0;
 static void print(char const * format, ...){
 	int count;
 	va_list args;
-  int left = MOTOR_CONTROL_DEBUG_BUFFER - _Dbg_idx - 1;
+	int left = MOTOR_CONTROL_DEBUG_BUFFER - _Dbg_idx - 1;
 
 	if (left > 2){
 		va_start(args, format);
@@ -79,10 +81,10 @@ static void print_uart(void){
 
 #else
 
-	static void print(char const * str,...){
-		(void)str;
-		return;
-	}
+static void print(char const * str,...){
+	(void)str;
+	return;
+}
 #endif
 
 /*******************************
@@ -111,27 +113,30 @@ void motor_control_init(void){
 	platform_set_duty_cycle(PLATFORM_PWM_U, 0);
 	platform_set_duty_cycle(PLATFORM_PWM_V, 0);
 	platform_set_duty_cycle(PLATFORM_PWM_W, 0);
+	uprintf("INIT DONE !\n");
 }
 
 
 void motor_control_process_event(uint64_t timestamp_us){
 	static uint64_t servo_timestamp_us = 0;
 	int phase = _motor_control_get_hall();
-	float speed_val;
+	static float speed_val = 0.0;
 	uint64_t dt;
-
+	
 	if (phase == -1){// error on hall
 		print("Invalid Hall value !\n");
 		return;
 	}
 	if (_Phase != phase){ //motor positon changed. Compute new speed
 #if MOTOR_CONTROL_DEBUG_PRINT_PHASE
-			print("Old Phase : %d Curr Phase : %d\n",_Phase,phase);
+		print("Old Phase : %d Curr Phase : %d\n",_Phase,phase);
 #endif		
 		if (_motor_control_update_speed(phase, timestamp_us) < 0){
 			print("Invalid Hall value !\n");
 			return;
 		}
+
+		_set_motor_pwm((int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR));
 	}
 
 	/*time to reevaluate servo loop*/
@@ -147,12 +152,13 @@ void motor_control_process_event(uint64_t timestamp_us){
 		/*compute pid*/
 		speed_val = pid_update(_Velocity, dt);
 		if (pid_is_limited()){
-			print("Warning : Quadramp or speed limit\n");
+		//	print("Warning : Quadramp or speed limit\n");
 		}
 
 		/*transform for float to pwm (signed) and update pwm*/
 		_set_motor_pwm((int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR));
 		servo_timestamp_us = timestamp_us;
+		uprintf("%d\n",(int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR));		
 	}
 
 #if MOTOR_CONTROL_DEBUG_EN
@@ -163,7 +169,7 @@ void motor_control_process_event(uint64_t timestamp_us){
 		dbg_timestamp_us = timestamp_us;
 	}
 #endif
-	
+
 	return;
 }
 
@@ -222,10 +228,8 @@ static void _set_motor_pwm(int32_t pwm){
 
 	/*set IO according to direction and current phase*/
 	for (i = 0; i < 3; i++){ //sweeping U, V, W phase
-
 		pin = &(_Driver_pins[i]); //current phase pin pointers
 		motor_pin_val = pwm * motor_phases[_Phase][i]; //current pwm value 
-
 		if (motor_pin_val > 0){ //should be PWM
 			platform_set_duty_cycle(pin->pwm, pwm);
 			platform_gpio_set(pin->en);
@@ -241,7 +245,6 @@ static void _set_motor_pwm(int32_t pwm){
 	}
 	return;
 }
-
 
 /************************************************
  * HALL PHASE 						 PWM Sync - ClockWise
@@ -264,7 +267,7 @@ static int _motor_control_get_hall(void){
 	const unsigned int hall = //get current hall values
 		(!!platform_gpio_get(PLATFORM_GPIO_UHALL)<<2) |
 		(!!platform_gpio_get(PLATFORM_GPIO_VHALL)<<1) |
-		!!platform_gpio_get(PLATFORM_GPIO_VHALL);
+		!!platform_gpio_get(PLATFORM_GPIO_WHALL);
 
 	if ((hall >= 1) && (hall <= 6)){ //hall value ok
 		return hall_to_phase[hall - 1];
@@ -287,7 +290,7 @@ static int _motor_control_update_speed(int phase, uint64_t timestamp_us){
 	float dangle; //angle delta in fraction of turn
 	int delta_ph = phase - _Phase; //get phase delta.
 	uint64_t dt; //get time delta;
- 	dt = timestamp_us - hall_timestamp_us; //get time delta;
+	dt = timestamp_us - hall_timestamp_us; //get time delta;
 
 	if (dt == 0){ // somethings wrong
 		return -1;
@@ -298,19 +301,26 @@ static int _motor_control_update_speed(int phase, uint64_t timestamp_us){
 		delta_ph += 6;
 	}
 
+	if (delta_ph >=3){
+		delta_ph -= 6;
+	}
+
 	if (delta_ph == 0){ //artefact
 		return 0;
 	}
-	if (delta_ph == 3){ //impossible to tell direction of rotation
+	if ((delta_ph == 3) || (delta_ph == -3)){ //impossible to tell direction of rotation
 		return -1;
 	}
 
 	/*update global variables*/
 
-	dangle = (float)delta_ph  / (float)(MOTOR_CONTROL_POLES * 6); 
-	_Velocity = dangle / ((float)(dt) * 1e-6 ) * 60;
+	dangle = ((float)delta_ph) / (MOTOR_CONTROL_POLES * 6); 
+	_Velocity = (dangle * 1000000) / dt  * 60;
 	_Phase = phase;
 
+#if MOTOR_CONTROL_DEBUG_PRINT_VELOCITY
+	uprintf("Speed : %ld\n",(long int)(_Velocity*1000000));
+#endif
 	hall_timestamp_us = timestamp_us;
 
 	return 1; 

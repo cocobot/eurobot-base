@@ -15,7 +15,7 @@ static float _error = 0.0;
 static float _kp = 0.0;
 static float _ki = 0.0;
 static float _kd = 0.0;
-static float _max_acc = 1.0;
+static float _max_acc = 100.0;
 static float _max_speed = 200.0;
 /*flags*/
 static int _quad_limit = 0;
@@ -43,8 +43,8 @@ void pid_set(float kp, float ki, float kd){
 }
 
 void pid_set_limit(float speed_limit, float quad_limit){
-	_speed_limit = speed_limit;
-	_quad_limit = quad_limit;
+	_max_speed = speed_limit;
+	_max_acc = quad_limit;
 	return;
 }
 
