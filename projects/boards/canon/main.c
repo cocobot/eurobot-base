@@ -60,6 +60,7 @@ int main(void) {
 	motor_control_set_config(0.1,0.000001,1000,10000);
 	motor_control_set_setpoint(1,0.2);
 
+
 	//main loop
 	for(;;)  {
 		//process communication requests

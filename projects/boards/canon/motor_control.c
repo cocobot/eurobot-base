@@ -18,9 +18,9 @@
 #define MOTOR_CONTROL_DEBUG_EN 1
 #define MOTOR_CONTROL_DEBUG_PRINT 500000
 #define MOTOR_CONTROL_DEBUG_BUFFER 255
-#define MOTOR_CONTROL_DEBUG_PRINT_PHASE 0
-#define MOTOR_CONTROL_DEBUG_PRINT_HALL_VALUE 1
-#define MOTOR_CONTROL_DEBUG_PRINT_VELOCITY 1
+#define MOTOR_CONTROL_DEBUG_PRINT_PHASE 1
+#define MOTOR_CONTROL_DEBUG_PRINT_HALL_VALUE 0
+#define MOTOR_CONTROL_DEBUG_PRINT_VELOCITY 0
 #define MOTOR_CONTROL_WARN_LAG 0 //direct print
 
 /*********************************
@@ -44,7 +44,7 @@ static struct motor_driver_pin _Driver_pins[3]={
 /********************************
  * Private functions declaration
  ********************************/
-static void _set_motor_pwm(int32_t pwm); //control mosfet drivers
+static void _set_motor_pwm(int32_t pwm, int phase); //control mosfet drivers
 static int _motor_control_get_hall(void); //reads HALL inputs
 /*compute current speed and phase configuration*/
 static int _motor_control_update_speed(int phase, uint64_t timestamp_us); 
@@ -54,6 +54,7 @@ static int _motor_control_update_speed(int phase, uint64_t timestamp_us);
 /* for debug only*/
 static char _Debug_buffer[MOTOR_CONTROL_DEBUG_BUFFER];
 static unsigned int _Dbg_idx = 0;
+
 
 static void print(char const * format, ...){
 	int count;
@@ -120,11 +121,13 @@ void motor_control_init(void){
 void motor_control_process_event(uint64_t timestamp_us){
 	static uint64_t servo_timestamp_us = 0;
 	int phase = _motor_control_get_hall();
-	static float speed_val = 0.0;
 	uint64_t dt;
-	
+	static float speed_val = 160000.0;
+	//static float speed_val = 000.0;
+	static int phase2 = 0;
+
 	if (phase == -1){// error on hall
-		print("Invalid Hall value !\n");
+		//print("Invalid Hall value !\n");
 		return;
 	}
 	if (_Phase != phase){ //motor positon changed. Compute new speed
@@ -132,15 +135,24 @@ void motor_control_process_event(uint64_t timestamp_us){
 		print("Old Phase : %d Curr Phase : %d\n",_Phase,phase);
 #endif		
 		if (_motor_control_update_speed(phase, timestamp_us) < 0){
-			print("Invalid Hall value !\n");
+			//print("Invalid Hall value !\n");
 			return;
 		}
 
-		_set_motor_pwm((int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR));
+	//	_set_motor_pwm((int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR),_Phase);
 	}
 
 	/*time to reevaluate servo loop*/
 	dt = timestamp_us - servo_timestamp_us;
+
+	if(dt >1000000000){
+			//print("Phase %d\n",phase2);
+			_set_motor_pwm((int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR),phase2);
+			phase2 = phase2 == 5 ? 0 : phase2 + 1;
+			servo_timestamp_us = timestamp_us;
+	}
+
+
 	if (dt > MOTOR_CONTROL_SERVO_REFRES_US){
 
 #if MOTOR_CONTROL_WARN_LAG
@@ -148,7 +160,7 @@ void motor_control_process_event(uint64_t timestamp_us){
 			uprintf("LAG ! : %d", dt / MOTOR_CONTROL_SERVO_REFRES_US);
 		}
 #endif
-
+#if 0
 		/*compute pid*/
 		speed_val = pid_update(_Velocity, dt);
 		if (pid_is_limited()){
@@ -159,7 +171,9 @@ void motor_control_process_event(uint64_t timestamp_us){
 		_set_motor_pwm((int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR));
 		servo_timestamp_us = timestamp_us;
 		uprintf("%d\n",(int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR));		
+#endif
 	}
+
 
 #if MOTOR_CONTROL_DEBUG_EN
 	static uint64_t dbg_timestamp_us = 0;
@@ -213,23 +227,26 @@ void motor_control_set_setpoint(uint8_t enable, float rpm)
  * Note : Not optimized for execution time AT ALL
  * Should be ok though
  */
-static void _set_motor_pwm(int32_t pwm){
+static void _set_motor_pwm(int32_t pwm, int phase){
 	int i;
 	struct motor_driver_pin * pin;
 	int32_t motor_pin_val;
 	static const int32_t motor_phases[6][3] = {
-		{ 0, 1,-1},
 		{ 1, 0,-1},
-		{ 1,-1, 0},
+		{-1, 1, 0},
 		{ 0,-1, 1},
-		{-1, 0, 1},
-		{-1, 1, 0}
+		{ 1, 0,-1},
+		{-1, 1, 0},
+		{ 0,-1, 1}
 	};
+
+
+
 
 	/*set IO according to direction and current phase*/
 	for (i = 0; i < 3; i++){ //sweeping U, V, W phase
 		pin = &(_Driver_pins[i]); //current phase pin pointers
-		motor_pin_val = pwm * motor_phases[_Phase][i]; //current pwm value 
+		motor_pin_val = pwm * motor_phases[phase][i]; //current pwm value 
 		if (motor_pin_val > 0){ //should be PWM
 			platform_set_duty_cycle(pin->pwm, pwm);
 			platform_gpio_set(pin->en);
