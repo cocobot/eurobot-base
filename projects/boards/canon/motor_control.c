@@ -122,7 +122,7 @@ void motor_control_process_event(uint64_t timestamp_us){
 	static uint64_t servo_timestamp_us = 0;
 	int phase = _motor_control_get_hall();
 	uint64_t dt;
-	static float speed_val = 160000.0;
+	static float speed_val = 50000.0;
 	//static float speed_val = 000.0;
 	static int phase2 = 0;
 
@@ -131,9 +131,6 @@ void motor_control_process_event(uint64_t timestamp_us){
 		return;
 	}
 	if (_Phase != phase){ //motor positon changed. Compute new speed
-#if MOTOR_CONTROL_DEBUG_PRINT_PHASE
-		print("Old Phase : %d Curr Phase : %d\n",_Phase,phase);
-#endif		
 		if (_motor_control_update_speed(phase, timestamp_us) < 0){
 			//print("Invalid Hall value !\n");
 			return;
@@ -145,10 +142,10 @@ void motor_control_process_event(uint64_t timestamp_us){
 	/*time to reevaluate servo loop*/
 	dt = timestamp_us - servo_timestamp_us;
 
-	if(dt >1000000000){
+	if(dt >100000000){
 			//print("Phase %d\n",phase2);
 			_set_motor_pwm((int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR),phase2);
-			phase2 = phase2 == 5 ? 0 : phase2 + 1;
+			phase2 = phase2 == 0 ? 5 : phase2 - 1;
 			servo_timestamp_us = timestamp_us;
 	}
 
@@ -231,6 +228,7 @@ static void _set_motor_pwm(int32_t pwm, int phase){
 	int i;
 	struct motor_driver_pin * pin;
 	int32_t motor_pin_val;
+/*
 	static const int32_t motor_phases[6][3] = {
 		{ 1, 0,-1},
 		{-1, 1, 0},
@@ -239,6 +237,16 @@ static void _set_motor_pwm(int32_t pwm, int phase){
 		{-1, 1, 0},
 		{ 0,-1, 1}
 	};
+*/
+	static const int32_t motor_phases[6][3] = {
+		{ 1,-1, 0},
+		{-1, 1, 0},
+		{ 0, 1,-1},
+		{ 0,-1, 1},
+		{-1, 0, 1},
+		{ 1, 0,-1}
+	};
+
 
 
 
@@ -335,8 +343,12 @@ static int _motor_control_update_speed(int phase, uint64_t timestamp_us){
 	_Velocity = (dangle * 1000000) / dt  * 60;
 	_Phase = phase;
 
+#if MOTOR_CONTROL_DEBUG_PRINT_PHASE
+//	print("time : %lu, Phase : %d\n",(unsigned long int)timestamp_us,phase);
+  	print("time : %lu, Phase : %d\n",(unsigned long int)dt,phase);
+#endif
 #if MOTOR_CONTROL_DEBUG_PRINT_VELOCITY
-	uprintf("Speed : %ld\n",(long int)(_Velocity*1000000));
+	print("Speed : %ld\n",(long int)(_Velocity*1000000));
 #endif
 	hall_timestamp_us = timestamp_us;
 
