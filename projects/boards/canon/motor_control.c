@@ -15,6 +15,9 @@
 #define MOTOR_CONTROL_SERVO_REFRES_US 20000
 #define MOTOR_CONTROL_POLES 8
 #define MOTOR_CONTROL_GEAR 5
+
+#define MOTOR_CONTROL_HALL_ISR 1
+
 /*debug*/
 #define MOTOR_CONTROL_DEBUG_EN 1
 #define MOTOR_CONTROL_DEBUG_PRINT 500000
@@ -29,7 +32,9 @@
  *********************************/
 /*motor parameter*/
 static float _Velocity = 0;
-static int _Phase = 0;
+static volatile int _Phase = 0;
+static volatile int _Delta_phase ;
+static volatile int32_t _Pwm = 0;
 
 struct motor_driver_pin {
 	uint32_t en;
@@ -45,11 +50,15 @@ static struct motor_driver_pin _Driver_pins[3]={
 /********************************
  * Private functions declaration
  ********************************/
-static void _set_motor_pwm(int32_t pwm, int phase); //control mosfet drivers
 static int _motor_control_get_hall(void); //reads HALL inputs
 /*compute current speed and phase configuration*/
-static int _motor_control_update_speed(int phase, uint64_t timestamp_us); 
+static float _motor_control_update_speed( uint64_t timestamp_us); 
 
+#if MOTOR_CONTROL_HALL_ISR
+static void _motor_control_update_callback(void);
+#else
+static void _set_motor_pwm(int32_t pwm, int phase); //control mosfet drivers
+#endif 
 
 #if MOTOR_CONTROL_DEBUG_EN
 /* for debug only*/
@@ -102,6 +111,15 @@ float motor_control_get_velocity(void){
 }
 
 void motor_control_init(void){
+#if MOTOR_CONTROL_HALL_ISR
+ platform_gpio_set_interrupt(
+		 PLATFORM_GPIO_UHALL, MCUAL_GPIO_BOTH_EDGE,_motor_control_update_callback);
+ platform_gpio_set_interrupt(
+		 PLATFORM_GPIO_VHALL, MCUAL_GPIO_BOTH_EDGE,_motor_control_update_callback);
+ platform_gpio_set_interrupt(
+		 PLATFORM_GPIO_WHALL, MCUAL_GPIO_BOTH_EDGE,_motor_control_update_callback);
+#endif
+
 	/*dissable all PWM Drivers*/
 	platform_gpio_clear( 
 			PLATFORM_GPIO_UEN | 
@@ -123,45 +141,29 @@ void motor_control_init(void){
 
 void motor_control_process_event(uint64_t timestamp_us){
 	static uint64_t servo_timestamp_us = 0;
-	int phase = _motor_control_get_hall();
 	uint64_t dt;
 	static int flag = 1;
 	static float speed_val =50000.0;
+	float velocity = _motor_control_update_speed(timestamp_us);
 	//static float speed_val = 80000.0;
-	if (phase == -1){// error on hall
-		//print("Invalid Hall value !\n");
-		return;
-	}
-	if (_Phase != phase){ //motor positon changed. Compute new speed
-		if (_motor_control_update_speed(phase, timestamp_us) < 0){
-			//print("Invalid Hall value !\n");
-			return;
-		}
-		_set_motor_pwm((int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR),
-				_Phase == 5 ? 0 : _Phase + 1);
+
+	/*time to reevaluate servo loop*/
+	dt = timestamp_us - servo_timestamp_us;
+
+	if(dt > 100000 ){
+		print("cons %d speed %d\n",(long int)speed_val,(int)(velocity*1000));
+
 		if ( speed_val > 500000.0){
 			flag = -1;
 		}if (speed_val < 20000.0){
 			flag = 1;
 		}
 
-			speed_val += flag * 100;
-			print("cons %d ",(long int)speed_val);	
-		}
+		speed_val += flag *1000;
 
-	/*time to reevaluate servo loop*/
-	dt = timestamp_us - servo_timestamp_us;
-
-	if(dt > 1000000 ){
-		if ( speed_val > 300000.0){
-		//	flag = -1;
-		}if (speed_val < 20000.0){
-		//	flag = 1;
-		}
-
-		//	speed_val += flag * 100;
-		//	print("cons %d ",(long int)speed_val);	
+		_Pwm =  ((int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR));
 			servo_timestamp_us = timestamp_us;
+			_motor_control_update_callback();
 	}
 
 
@@ -239,6 +241,92 @@ void motor_control_set_setpoint(uint8_t enable, float rpm)
  * Note : Not optimized for execution time AT ALL
  * Should be ok though
  */
+/************************************************
+ * HALL PHASE 						 PWM Sync - ClockWise
+ * Phase HALL 		Val Val-1			Phase sequence
+ *	#		U	V	W							DRIVE	U		V		W
+ * 	0		0	0	1		1		0						0		PWM	HZ
+ * 	1		0	1	1		3		2						PWM	0		HZ
+ * 	2		0	1	0		2		1						PWM HZ	0
+ * 	3		1	1	0		6		5						0		HZ	PWM
+ * 	4		1	0	0		4		3						HZ	0		PWM
+ * 	5		1	0	1		5		4						HZ	PWM	0
+ ***********************************************/
+/**
+ * @brief : convert hall sensors value to phase value
+ * @return phase number, -1 if error
+ * */
+static int _motor_control_get_hall(void){
+	static const unsigned int hall_to_phase[6] = {0, 2, 1, 4, 5, 3};
+
+	const unsigned int hall = //get current hall values
+		(!!platform_gpio_get(PLATFORM_GPIO_UHALL)<<2) |
+		(!!platform_gpio_get(PLATFORM_GPIO_VHALL)<<1) |
+		!!platform_gpio_get(PLATFORM_GPIO_WHALL);
+
+	if ((hall >= 1) && (hall <= 6)){ //hall value ok
+		return hall_to_phase[hall - 1];
+	}
+	else{ //not a valid value
+		return -1;
+	}
+}
+
+#if MOTOR_CONTROL_HALL_ISR
+static void _motor_control_update_callback(void){
+	int i;
+	struct motor_driver_pin * pin;
+	int32_t motor_pin_val;
+	static const int32_t motor_phases[6][3] = {
+		{ 1, 0,-1},
+		{-1, 0, 1},
+		{ 0,-1, 1},
+		{ 0, 1,-1},
+		{-1, 1, 0},
+		{ 1,-1, 0}
+	};
+	int phase = _motor_control_get_hall();
+
+	if (phase == -1){ //something wrong
+		return;
+	}
+	
+	_Delta_phase += 1;
+
+	if (_Pwm > 0){
+		phase = (phase + 1) % 6;
+	}
+	else if (_Pwm < 0){
+		phase = (phase - 1) % 6;
+	}
+	else {
+		motor_control_set_setpoint(0,0.0);
+		return;
+	}
+
+	/*set IO according to direction and current phase*/
+	for (i = 0; i < 3; i++){ //sweeping U, V, W phase
+		
+		pin = &(_Driver_pins[i]); //current phase pin pointers
+		motor_pin_val = _Pwm * motor_phases[phase][i]; //current pwm value 
+		
+		if (motor_pin_val > 0){ //should be PWM
+			platform_set_duty_cycle(pin->pwm, _Pwm);
+			platform_gpio_set(pin->en);
+		}
+		else if (motor_pin_val == 0){ // Should be grounded
+			platform_set_duty_cycle(pin->pwm, 0);
+			platform_gpio_set(pin->en);
+		} 
+		else { // should be HZ
+			platform_gpio_clear(pin->en);
+			platform_set_duty_cycle(pin->pwm, 0);
+		}
+	}
+	
+	return;
+}
+#else
 static void _set_motor_pwm(int32_t pwm, int phase){
 	int i;
 	struct motor_driver_pin * pin;
@@ -282,36 +370,8 @@ static void _set_motor_pwm(int32_t pwm, int phase){
 	return;
 }
 
-/************************************************
- * HALL PHASE 						 PWM Sync - ClockWise
- * Phase HALL 		Val Val-1			Phase sequence
- *	#		U	V	W							DRIVE	U		V		W
- * 	0		0	0	1		1		0						0		PWM	HZ
- * 	1		0	1	1		3		2						PWM	0		HZ
- * 	2		0	1	0		2		1						PWM HZ	0
- * 	3		1	1	0		6		5						0		HZ	PWM
- * 	4		1	0	0		4		3						HZ	0		PWM
- * 	5		1	0	1		5		4						HZ	PWM	0
- ***********************************************/
-/**
- * @brief : convert hall sensors value to phase value
- * @return phase number, -1 if error
- * */
-static int _motor_control_get_hall(void){
-	static const unsigned int hall_to_phase[6] = {0, 2, 1, 4, 5, 3};
 
-	const unsigned int hall = //get current hall values
-		(!!platform_gpio_get(PLATFORM_GPIO_UHALL)<<2) |
-		(!!platform_gpio_get(PLATFORM_GPIO_VHALL)<<1) |
-		!!platform_gpio_get(PLATFORM_GPIO_WHALL);
-
-	if ((hall >= 1) && (hall <= 6)){ //hall value ok
-		return hall_to_phase[hall - 1];
-	}
-	else{ //not a valid value
-		return -1;
-	}
-}
+#endif
 
 
 /**
@@ -320,50 +380,24 @@ static int _motor_control_get_hall(void){
  * @return : 0 if nothing changed
  * @return : 1 if update
  */
-static int _motor_control_update_speed(int phase, uint64_t timestamp_us){
-
+static float _motor_control_update_speed(uint64_t timestamp_us){
+	
 	static uint64_t hall_timestamp_us = 0;
 	float dangle; //angle delta in fraction of turn
-	int delta_ph = phase - _Phase; //get phase delta.
+	float velocity;
 	uint64_t dt; //get time delta;
 	dt = timestamp_us - hall_timestamp_us; //get time delta;
 
-	if (dt == 0){ // somethings wrong
-		return -1;
-	}
-
-	/*correct the phase delta (rollover at 5)*/
-	if (delta_ph <= -3){
-		delta_ph += 6;
-	}
-
-	if (delta_ph >=3){
-		delta_ph -= 6;
-	}
-
-	if (delta_ph == 0){ //artefact
-		return 0;
-	}
-	if ((delta_ph == 3) || (delta_ph == -3)){ //impossible to tell direction of rotation
-		return -1;
-	}
-
 	/*update global variables*/
+	uprintf("dp %d",_Delta_phase);
 
-	dangle = ((float)delta_ph) / (MOTOR_CONTROL_POLES * MOTOR_CONTROL_DEBUG_PRINT_PHASE * 12); 
-	_Velocity = (dangle * 1000000) / dt  * 60;
-	_Phase = phase;
-
-#if MOTOR_CONTROL_DEBUG_PRINT_PHASE
-//	print("time : %lu, Phase : %d\n",(unsigned long int)timestamp_us,phase);
-//  	print("time : %lu, Phase : %d\n",(unsigned long int)timestamp_us/1000000,phase);
-#endif
-#if MOTOR_CONTROL_DEBUG_PRINT_VELOCITY
-	print("Speed : %ld\n",(long int)(_Velocity*1000));
-#endif
+	dangle = ( _Delta_phase) / (MOTOR_CONTROL_POLES * 12); 
+	velocity = (dangle * 1000000) / dt  * 60;
+	_Phase = (_Phase + _Delta_phase) % 6;
+  _Delta_phase = 0;
 	hall_timestamp_us = timestamp_us;
 
-	return 1; 
+	return velocity; 
 }
 
 
