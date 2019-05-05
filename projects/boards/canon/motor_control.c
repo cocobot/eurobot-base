@@ -13,14 +13,15 @@
 #define MOTOR_CONTROL_MAX_PWM 1000000
 #define MOTOR_CONTROL_PWM_FACTOR 0.1
 #define MOTOR_CONTROL_SERVO_REFRES_US 20000
-#define MOTOR_CONTROL_POLES 6
+#define MOTOR_CONTROL_POLES 8
+#define MOTOR_CONTROL_GEAR 5
 /*debug*/
 #define MOTOR_CONTROL_DEBUG_EN 1
 #define MOTOR_CONTROL_DEBUG_PRINT 500000
 #define MOTOR_CONTROL_DEBUG_BUFFER 255
 #define MOTOR_CONTROL_DEBUG_PRINT_PHASE 1
 #define MOTOR_CONTROL_DEBUG_PRINT_HALL_VALUE 0
-#define MOTOR_CONTROL_DEBUG_PRINT_VELOCITY 0
+#define MOTOR_CONTROL_DEBUG_PRINT_VELOCITY 1
 #define MOTOR_CONTROL_WARN_LAG 0 //direct print
 
 /*********************************
@@ -56,6 +57,7 @@ static char _Debug_buffer[MOTOR_CONTROL_DEBUG_BUFFER];
 static unsigned int _Dbg_idx = 0;
 
 
+#if 1
 static void print(char const * format, ...){
 	int count;
 	va_list args;
@@ -72,6 +74,7 @@ static void print(char const * format, ...){
 	return;
 }
 
+#endif
 static void print_uart(void){
 	if (_Dbg_idx > 0){
 		uprintf("%s",_Debug_buffer);
@@ -122,10 +125,9 @@ void motor_control_process_event(uint64_t timestamp_us){
 	static uint64_t servo_timestamp_us = 0;
 	int phase = _motor_control_get_hall();
 	uint64_t dt;
-	static float speed_val = 50000.0;
-	//static float speed_val = 000.0;
-	static int phase2 = 0;
-
+	static int flag = 1;
+	static float speed_val =50000.0;
+	//static float speed_val = 80000.0;
 	if (phase == -1){// error on hall
 		//print("Invalid Hall value !\n");
 		return;
@@ -135,17 +137,30 @@ void motor_control_process_event(uint64_t timestamp_us){
 			//print("Invalid Hall value !\n");
 			return;
 		}
+		_set_motor_pwm((int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR),
+				_Phase == 5 ? 0 : _Phase + 1);
+		if ( speed_val > 500000.0){
+			flag = -1;
+		}if (speed_val < 20000.0){
+			flag = 1;
+		}
 
-	//	_set_motor_pwm((int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR),_Phase);
-	}
+			speed_val += flag * 100;
+			print("cons %d ",(long int)speed_val);	
+		}
 
 	/*time to reevaluate servo loop*/
 	dt = timestamp_us - servo_timestamp_us;
 
-	if(dt >100000000){
-			//print("Phase %d\n",phase2);
-			_set_motor_pwm((int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR),phase2);
-			phase2 = phase2 == 0 ? 5 : phase2 - 1;
+	if(dt > 1000000 ){
+		if ( speed_val > 300000.0){
+		//	flag = -1;
+		}if (speed_val < 20000.0){
+		//	flag = 1;
+		}
+
+		//	speed_val += flag * 100;
+		//	print("cons %d ",(long int)speed_val);	
 			servo_timestamp_us = timestamp_us;
 	}
 
@@ -239,17 +254,13 @@ static void _set_motor_pwm(int32_t pwm, int phase){
 	};
 */
 	static const int32_t motor_phases[6][3] = {
-		{ 1,-1, 0},
-		{-1, 1, 0},
-		{ 0, 1,-1},
-		{ 0,-1, 1},
+		{ 1, 0,-1},
 		{-1, 0, 1},
-		{ 1, 0,-1}
+		{ 0,-1, 1},
+		{ 0, 1,-1},
+		{-1, 1, 0},
+		{ 1,-1, 0}
 	};
-
-
-
-
 
 	/*set IO according to direction and current phase*/
 	for (i = 0; i < 3; i++){ //sweeping U, V, W phase
@@ -339,16 +350,16 @@ static int _motor_control_update_speed(int phase, uint64_t timestamp_us){
 
 	/*update global variables*/
 
-	dangle = ((float)delta_ph) / (MOTOR_CONTROL_POLES * 6); 
+	dangle = ((float)delta_ph) / (MOTOR_CONTROL_POLES * MOTOR_CONTROL_DEBUG_PRINT_PHASE * 12); 
 	_Velocity = (dangle * 1000000) / dt  * 60;
 	_Phase = phase;
 
 #if MOTOR_CONTROL_DEBUG_PRINT_PHASE
 //	print("time : %lu, Phase : %d\n",(unsigned long int)timestamp_us,phase);
-  	print("time : %lu, Phase : %d\n",(unsigned long int)dt,phase);
+//  	print("time : %lu, Phase : %d\n",(unsigned long int)timestamp_us/1000000,phase);
 #endif
 #if MOTOR_CONTROL_DEBUG_PRINT_VELOCITY
-	print("Speed : %ld\n",(long int)(_Velocity*1000000));
+	print("Speed : %ld\n",(long int)(_Velocity*1000));
 #endif
 	hall_timestamp_us = timestamp_us;
 
