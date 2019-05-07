@@ -150,18 +150,20 @@ void motor_control_process_event(uint64_t timestamp_us){
 	/*time to reevaluate servo loop*/
 	dt = timestamp_us - servo_timestamp_us;
 
-	if(dt > 100000 ){
+	if(dt > 10000 ){
 		print("cons %d speed %d\n",(long int)speed_val,(int)(velocity));
 
-		if ( speed_val > 1000000.0){
+		if ( speed_val > 500000.0){
 			flag = -1;
-		}if (speed_val < 20000.0){
+		}if (speed_val <-520000.0){
 			flag = 1;
 		}
 
 		speed_val += flag *1000;
 
 		_Pwm =  ((int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR));
+		print("PWM : %d", _Pwm);
+
 		servo_timestamp_us = timestamp_us;
 		_motor_control_update_callback();
 	}
@@ -275,6 +277,7 @@ static int _motor_control_get_hall(void){
 #if MOTOR_CONTROL_HALL_ISR
 static void _motor_control_update_callback(void){
 	int i;
+	int32_t pwm;
 	struct motor_driver_pin * pin;
 	int32_t motor_pin_val;
 	static const int32_t motor_phases[6][3] = {
@@ -295,9 +298,11 @@ static void _motor_control_update_callback(void){
 
 	if (_Pwm > 0){
 		phase = (phase + 1) % 6;
+		pwm = _Pwm;
 	}
 	else if (_Pwm < 0){
-		phase = (phase - 1) % 6;
+		phase += (phase > 1) ? -2 : 4;
+		pwm = - _Pwm;
 	}
 	else {
 		motor_control_set_setpoint(0,0.0);
@@ -308,10 +313,10 @@ static void _motor_control_update_callback(void){
 	for (i = 0; i < 3; i++){ //sweeping U, V, W phase
 
 		pin = &(_Driver_pins[i]); //current phase pin pointers
-		motor_pin_val = _Pwm * motor_phases[phase][i]; //current pwm value 
+		motor_pin_val = motor_phases[phase][i]; //current pwm value 
 
 		if (motor_pin_val > 0){ //should be PWM
-			platform_set_duty_cycle(pin->pwm, _Pwm);
+			platform_set_duty_cycle(pin->pwm, pwm );
 			platform_gpio_set(pin->en);
 		}
 		else if (motor_pin_val == 0){ // Should be grounded
