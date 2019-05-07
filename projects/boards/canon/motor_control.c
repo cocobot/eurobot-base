@@ -4,7 +4,7 @@
 #include "pid.h"
 #include <stdio.h>
 #include <stdarg.h>
-
+#include <stm32l4xx.h>
 
 /**
  * @brief Frequency of pwm outputs in kilohertz
@@ -16,7 +16,6 @@
 #define MOTOR_CONTROL_POLES 8
 #define MOTOR_CONTROL_GEAR 5
 
-#define MOTOR_CONTROL_HALL_ISR 1
 
 /*debug*/
 #define MOTOR_CONTROL_DEBUG_EN 1
@@ -53,12 +52,7 @@ static struct motor_driver_pin _Driver_pins[3]={
 static int _motor_control_get_hall(void); //reads HALL inputs
 /*compute current speed and phase configuration*/
 static float _motor_control_update_speed( uint64_t timestamp_us); 
-
-#if MOTOR_CONTROL_HALL_ISR
 static void _motor_control_update_callback(void);
-#else
-static void _set_motor_pwm(int32_t pwm, int phase); //control mosfet drivers
-#endif 
 
 #if MOTOR_CONTROL_DEBUG_EN
 /* for debug only*/
@@ -111,14 +105,12 @@ float motor_control_get_velocity(void){
 }
 
 void motor_control_init(void){
-#if MOTOR_CONTROL_HALL_ISR
 	platform_gpio_set_interrupt(
 			PLATFORM_GPIO_UHALL, MCUAL_GPIO_BOTH_EDGE,_motor_control_update_callback);
 	platform_gpio_set_interrupt(
 			PLATFORM_GPIO_VHALL, MCUAL_GPIO_BOTH_EDGE,_motor_control_update_callback);
 	platform_gpio_set_interrupt(
 			PLATFORM_GPIO_WHALL, MCUAL_GPIO_BOTH_EDGE,_motor_control_update_callback);
-#endif
 
 	/*dissable all PWM Drivers*/
 	platform_gpio_clear( 
@@ -150,16 +142,16 @@ void motor_control_process_event(uint64_t timestamp_us){
 	/*time to reevaluate servo loop*/
 	dt = timestamp_us - servo_timestamp_us;
 
-	if(dt > 10000 ){
+	if(dt > 100000 ){
 		print("cons %d speed %d\n",(long int)speed_val,(int)(velocity));
 
-		if ( speed_val > 500000.0){
+		if ( speed_val > 3000000.0){
 			flag = -1;
-		}if (speed_val <-520000.0){
+		}if (speed_val <-3020000.0){
 			flag = 1;
 		}
 
-		speed_val += flag *1000;
+		speed_val += flag *10000;
 
 		_Pwm =  ((int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR));
 		print("PWM : %d", _Pwm);
@@ -274,8 +266,8 @@ static int _motor_control_get_hall(void){
 	}
 }
 
-#if MOTOR_CONTROL_HALL_ISR
 static void _motor_control_update_callback(void){
+	__disable_irq();
 	int i;
 	int32_t pwm;
 	struct motor_driver_pin * pin;
@@ -285,16 +277,20 @@ static void _motor_control_update_callback(void){
 		{-1, 0, 1},
 		{ 0,-1, 1},
 		{ 0, 1,-1},
-		{-1, 1, 0},
+		{-1, 1, 0},	
 		{ 1,-1, 0}
 	};
-	int phase = _motor_control_get_hall();
+	int phase; 
+	static int old_phase;
+
+	phase = _motor_control_get_hall();
 
 	if (phase == -1){ //something wrong
+		__enable_irq();
 		return;
 	}
 
-	_Delta_phase += 1;
+	_Delta_phase += ();
 
 	if (_Pwm > 0){
 		phase = (phase + 1) % 6;
@@ -306,6 +302,7 @@ static void _motor_control_update_callback(void){
 	}
 	else {
 		motor_control_set_setpoint(0,0.0);
+		__enable_irq();
 		return;
 	}
 
@@ -329,55 +326,9 @@ static void _motor_control_update_callback(void){
 		}
 	}
 
+	__enable_irq();
 	return;
 }
-#else
-static void _set_motor_pwm(int32_t pwm, int phase){
-	int i;
-	struct motor_driver_pin * pin;
-	int32_t motor_pin_val;
-	/*
-		 static const int32_t motor_phases[6][3] = {
-		 { 1, 0,-1},
-		 {-1, 1, 0},
-		 { 0,-1, 1},
-		 { 1, 0,-1},
-		 {-1, 1, 0},
-		 { 0,-1, 1}
-		 };
-		 */
-	static const int32_t motor_phases[6][3] = {
-		{ 1, 0,-1},
-		{-1, 0, 1},
-		{ 0,-1, 1},
-		{ 0, 1,-1},
-		{-1, 1, 0},
-		{ 1,-1, 0}
-	};
-
-	/*set IO according to direction and current phase*/
-	for (i = 0; i < 3; i++){ //sweeping U, V, W phase
-		pin = &(_Driver_pins[i]); //current phase pin pointers
-		motor_pin_val = pwm * motor_phases[phase][i]; //current pwm value 
-		if (motor_pin_val > 0){ //should be PWM
-			platform_set_duty_cycle(pin->pwm, pwm);
-			platform_gpio_set(pin->en);
-		}
-		else if (motor_pin_val == 0){ // Should be grounded
-			platform_set_duty_cycle(pin->pwm, 0);
-			platform_gpio_set(pin->en);
-		} 
-		else { // should be HZ
-			platform_gpio_clear(pin->en);
-			platform_set_duty_cycle(pin->pwm, 0);
-		}
-	}
-	return;
-}
-
-
-#endif
-
 
 /**
  * @brief : compute motor angular speed according to hall sensors
