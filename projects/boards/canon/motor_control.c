@@ -34,6 +34,8 @@ static float _Velocity = 0;
 static volatile int _Phase = 0;
 static volatile int _Delta_phase ;
 static volatile int32_t _Pwm = 0;
+static volatile uint64_t _Hall_timestamp;
+static volatile uint64_t _Timestamp;
 
 struct motor_driver_pin {
 	uint32_t en;
@@ -49,7 +51,7 @@ static struct motor_driver_pin _Driver_pins[3]={
 /********************************
  * Private functions declaration
  ********************************/
-static int _motor_control_get_hall(void); //reads HALL inputs
+static inline int _motor_control_get_hall(void); //reads HALL inputs
 /*compute current speed and phase configuration*/
 static float _motor_control_update_speed( uint64_t timestamp_us); 
 static void _motor_control_update_callback(void);
@@ -139,19 +141,26 @@ void motor_control_process_event(uint64_t timestamp_us){
 	float velocity = _motor_control_update_speed(timestamp_us);
 	//static float speed_val = 80000.0;
 
+	__disable_irq();
+	_Timestamp = timestamp_us;
+  __enable_irq();
+
 	/*time to reevaluate servo loop*/
 	dt = timestamp_us - servo_timestamp_us;
 
 	if(dt > 100000 ){
-		print("cons %d speed %d\n",(long int)speed_val,(int)(velocity));
+		
+		velocity = _motor_control_update_speed(timestamp_us);
+	
+		print("cons %d speed %ld\n",(long int)speed_val,(long int)(velocity));
 
-		if ( speed_val > 3000000.0){
+		if ( speed_val > 500000.0){
 			flag = -1;
-		}if (speed_val <-3020000.0){
+		}if (speed_val <-520000.0){
 			flag = 1;
 		}
 
-		speed_val += flag *10000;
+		speed_val += flag *1000;
 
 		_Pwm =  ((int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR));
 		print("PWM : %d", _Pwm);
@@ -250,7 +259,7 @@ void motor_control_set_setpoint(uint8_t enable, float rpm)
  * @brief : convert hall sensors value to phase value
  * @return phase number, -1 if error
  * */
-static int _motor_control_get_hall(void){
+static inline int _motor_control_get_hall(void){
 	static const unsigned int hall_to_phase[6] = {0, 2, 1, 4, 5, 3};
 
 	const unsigned int hall = //get current hall values
@@ -272,6 +281,9 @@ static void _motor_control_update_callback(void){
 	int32_t pwm;
 	struct motor_driver_pin * pin;
 	int32_t motor_pin_val;
+	int phase; 
+	static int old_phase = 0;
+	int dphase;
 	static const int32_t motor_phases[6][3] = {
 		{ 1, 0,-1},
 		{-1, 0, 1},
@@ -280,8 +292,6 @@ static void _motor_control_update_callback(void){
 		{-1, 1, 0},	
 		{ 1,-1, 0}
 	};
-	int phase; 
-	static int old_phase;
 
 	phase = _motor_control_get_hall();
 
@@ -290,7 +300,22 @@ static void _motor_control_update_callback(void){
 		return;
 	}
 
-	_Delta_phase += ();
+	dphase = phase - old_phase;
+	old_phase = phase;
+
+	if (_Delta_phase == 0){
+		_Hall_timestamp = _Timestamp;
+	}
+
+	if (dphase <= -3){
+		_Delta_phase += dphase + 6;
+	}
+	else if (dphase >= 3){
+		_Delta_phase += dphase - 6;
+	}
+	else{
+			_Delta_phase += dphase;
+	}
 
 	if (_Pwm > 0){
 		phase = (phase + 1) % 6;
@@ -338,19 +363,25 @@ static void _motor_control_update_callback(void){
  */
 static float _motor_control_update_speed(uint64_t timestamp_us){
 
-	static uint64_t hall_timestamp_us = 0;
 	static float dangle; //angle delta in fraction of turn
 	uint64_t dt; //get time delta;
-	dt = timestamp_us - hall_timestamp_us; //get time delta;
+	static float velocity = 0;
+	
+	dt = timestamp_us - _Hall_timestamp; //get time delta;
+	
+	if (dt == 0){
+		return velocity;
+	}
 
 	/*update global variables*/
-	if (_Delta_phase > 0){
+	if (_Delta_phase != 0){
 		dangle = ((float)( _Delta_phase)) / (MOTOR_CONTROL_POLES * 12); 
 		_Delta_phase = 0;
-		_Phase = (_Phase + _Delta_phase) % 6;
-		hall_timestamp_us = timestamp_us;
 	}
-	return  (dangle * 1000000) / dt  * 60;
+	
+	velocity =  (dangle * 1000000) / dt  * 60;
+	
+	return velocity;
 }
 
 
