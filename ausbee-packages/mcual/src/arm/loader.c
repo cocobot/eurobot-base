@@ -17,6 +17,19 @@ void mcual_loader_boot(void)
 
   if(*reset != 0xFFFFFFFF)
   {
+    __disable_irq();
+
+    unsigned int i;
+    for(i = 0; i < sizeof(NVIC->ICER)/sizeof(NVIC->ICER[0]); i += 1)
+    {
+      NVIC->ICER[i] = 0xFFFFFFFF;
+    }
+
+    for(i = 0; i < sizeof(NVIC->ICPR)/sizeof(NVIC->ICPR[0]); i += 1)
+    {
+      NVIC->ICPR[i] = 0xFFFFFFFF;
+    }
+
     FLASH->CR = FLASH_CR_LOCK;
     USART1->CR1 = 0;
     SCB->VTOR = PLATFORM_FLASH_PGM_START;
