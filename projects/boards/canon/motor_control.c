@@ -30,12 +30,9 @@
  * Global variables definition
  *********************************/
 /*motor parameter*/
-static float _Velocity = 0;
 static volatile int _Phase = 0;
 static volatile int _Delta_phase ;
 static volatile int32_t _Pwm = 0;
-static volatile uint64_t _Hall_timestamp;
-static volatile uint64_t _Timestamp;
 
 struct motor_driver_pin {
 	uint32_t en;
@@ -53,7 +50,6 @@ static struct motor_driver_pin _Driver_pins[3]={
  ********************************/
 static inline int _motor_control_get_hall(void); //reads HALL inputs
 /*compute current speed and phase configuration*/
-static float _motor_control_update_speed( uint64_t timestamp_us); 
 static void _motor_control_update_callback(void);
 
 #if MOTOR_CONTROL_DEBUG_EN
@@ -102,9 +98,6 @@ static void print(char const * str,...){
 /**
  * @brief Return current velocity, based on Hall sensors
  */
-float motor_control_get_velocity(void){
-	return _Velocity;
-}
 
 void motor_control_init(void){
 	platform_gpio_set_interrupt(
@@ -138,21 +131,15 @@ void motor_control_process_event(uint64_t timestamp_us){
 	uint64_t dt;
 	static int flag = 1;
 	static float speed_val =50000.0;
-	float velocity = _motor_control_update_speed(timestamp_us);
 	//static float speed_val = 80000.0;
 
-	__disable_irq();
-	_Timestamp = timestamp_us;
-  __enable_irq();
 
 	/*time to reevaluate servo loop*/
 	dt = timestamp_us - servo_timestamp_us;
 
 	if(dt > 100000 ){
-		
-		velocity = _motor_control_update_speed(timestamp_us);
 	
-		print("cons %d speed %ld\n",(long int)speed_val,(long int)(velocity));
+		print("cons %d \n",(long int)speed_val);
 
 		if ( speed_val > 500000.0){
 			flag = -1;
@@ -171,24 +158,10 @@ void motor_control_process_event(uint64_t timestamp_us){
 
 
 	if (dt > MOTOR_CONTROL_SERVO_REFRES_US){
-
-#if MOTOR_CONTROL_WARN_LAG
-		if (dt / MOTOR_CONTROL_SERVO_REFRES_US >= 2){
-			uprintf("LAG ! : %d", dt / MOTOR_CONTROL_SERVO_REFRES_US);
-		}
-#endif
-#if 0
-		/*compute pid*/
-		speed_val = pid_update(_Velocity, dt);
-		if (pid_is_limited()){
-			//	print("Warning : Quadramp or speed limit\n");
-		}
-
-		/*transform for float to pwm (signed) and update pwm*/
-		_set_motor_pwm((int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR));
+	/*quadramp calculation*/
+		_Pwm = (int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR);
 		servo_timestamp_us = timestamp_us;
 		uprintf("%d\n",(int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR));		
-#endif
 	}
 
 
@@ -204,9 +177,8 @@ void motor_control_process_event(uint64_t timestamp_us){
 	return;
 }
 
-void motor_control_set_config(float kp, float ki, float imax, float max_speed_rpm)
+void motor_control_set_config(float imax, float max_speed_rpm)
 {
-	pid_set(kp, ki, 0.0);
 	pid_set_limit(max_speed_rpm,imax);
 	pid_set_cons(0.0);
 	pid_reset();
@@ -303,10 +275,6 @@ static void _motor_control_update_callback(void){
 	dphase = phase - old_phase;
 	old_phase = phase;
 
-	if (_Delta_phase == 0){
-		_Hall_timestamp = _Timestamp;
-	}
-
 	if (dphase <= -3){
 		_Delta_phase += dphase + 6;
 	}
@@ -354,34 +322,4 @@ static void _motor_control_update_callback(void){
 	__enable_irq();
 	return;
 }
-
-/**
- * @brief : compute motor angular speed according to hall sensors
- * @return : -1 if overspeed (dt = 0 or hall delta >=3)
- * @return : 0 if nothing changed
- * @return : 1 if update
- */
-static float _motor_control_update_speed(uint64_t timestamp_us){
-
-	static float dangle; //angle delta in fraction of turn
-	uint64_t dt; //get time delta;
-	static float velocity = 0;
-	
-	dt = timestamp_us - _Hall_timestamp; //get time delta;
-	
-	if (dt == 0){
-		return velocity;
-	}
-
-	/*update global variables*/
-	if (_Delta_phase != 0){
-		dangle = ((float)( _Delta_phase)) / (MOTOR_CONTROL_POLES * 12); 
-		_Delta_phase = 0;
-	}
-	
-	velocity =  (dangle * 1000000) / dt  * 60;
-	
-	return velocity;
-}
-
 
