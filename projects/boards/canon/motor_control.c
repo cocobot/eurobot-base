@@ -112,12 +112,12 @@ float motor_control_get_velocity(void){
 
 void motor_control_init(void){
 #if MOTOR_CONTROL_HALL_ISR
- platform_gpio_set_interrupt(
-		 PLATFORM_GPIO_UHALL, MCUAL_GPIO_BOTH_EDGE,_motor_control_update_callback);
- platform_gpio_set_interrupt(
-		 PLATFORM_GPIO_VHALL, MCUAL_GPIO_BOTH_EDGE,_motor_control_update_callback);
- platform_gpio_set_interrupt(
-		 PLATFORM_GPIO_WHALL, MCUAL_GPIO_BOTH_EDGE,_motor_control_update_callback);
+	platform_gpio_set_interrupt(
+			PLATFORM_GPIO_UHALL, MCUAL_GPIO_BOTH_EDGE,_motor_control_update_callback);
+	platform_gpio_set_interrupt(
+			PLATFORM_GPIO_VHALL, MCUAL_GPIO_BOTH_EDGE,_motor_control_update_callback);
+	platform_gpio_set_interrupt(
+			PLATFORM_GPIO_WHALL, MCUAL_GPIO_BOTH_EDGE,_motor_control_update_callback);
 #endif
 
 	/*dissable all PWM Drivers*/
@@ -151,9 +151,9 @@ void motor_control_process_event(uint64_t timestamp_us){
 	dt = timestamp_us - servo_timestamp_us;
 
 	if(dt > 100000 ){
-		print("cons %d speed %d\n",(long int)speed_val,(int)(velocity*1000));
+		print("cons %d speed %d\n",(long int)speed_val,(int)(velocity));
 
-		if ( speed_val > 500000.0){
+		if ( speed_val > 1000000.0){
 			flag = -1;
 		}if (speed_val < 20000.0){
 			flag = 1;
@@ -162,8 +162,8 @@ void motor_control_process_event(uint64_t timestamp_us){
 		speed_val += flag *1000;
 
 		_Pwm =  ((int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR));
-			servo_timestamp_us = timestamp_us;
-			_motor_control_update_callback();
+		servo_timestamp_us = timestamp_us;
+		_motor_control_update_callback();
 	}
 
 
@@ -178,7 +178,7 @@ void motor_control_process_event(uint64_t timestamp_us){
 		/*compute pid*/
 		speed_val = pid_update(_Velocity, dt);
 		if (pid_is_limited()){
-		//	print("Warning : Quadramp or speed limit\n");
+			//	print("Warning : Quadramp or speed limit\n");
 		}
 
 		/*transform for float to pwm (signed) and update pwm*/
@@ -290,7 +290,7 @@ static void _motor_control_update_callback(void){
 	if (phase == -1){ //something wrong
 		return;
 	}
-	
+
 	_Delta_phase += 1;
 
 	if (_Pwm > 0){
@@ -306,10 +306,10 @@ static void _motor_control_update_callback(void){
 
 	/*set IO according to direction and current phase*/
 	for (i = 0; i < 3; i++){ //sweeping U, V, W phase
-		
+
 		pin = &(_Driver_pins[i]); //current phase pin pointers
 		motor_pin_val = _Pwm * motor_phases[phase][i]; //current pwm value 
-		
+
 		if (motor_pin_val > 0){ //should be PWM
 			platform_set_duty_cycle(pin->pwm, _Pwm);
 			platform_gpio_set(pin->en);
@@ -323,7 +323,7 @@ static void _motor_control_update_callback(void){
 			platform_set_duty_cycle(pin->pwm, 0);
 		}
 	}
-	
+
 	return;
 }
 #else
@@ -331,16 +331,16 @@ static void _set_motor_pwm(int32_t pwm, int phase){
 	int i;
 	struct motor_driver_pin * pin;
 	int32_t motor_pin_val;
-/*
-	static const int32_t motor_phases[6][3] = {
-		{ 1, 0,-1},
-		{-1, 1, 0},
-		{ 0,-1, 1},
-		{ 1, 0,-1},
-		{-1, 1, 0},
-		{ 0,-1, 1}
-	};
-*/
+	/*
+		 static const int32_t motor_phases[6][3] = {
+		 { 1, 0,-1},
+		 {-1, 1, 0},
+		 { 0,-1, 1},
+		 { 1, 0,-1},
+		 {-1, 1, 0},
+		 { 0,-1, 1}
+		 };
+		 */
 	static const int32_t motor_phases[6][3] = {
 		{ 1, 0,-1},
 		{-1, 0, 1},
@@ -381,23 +381,20 @@ static void _set_motor_pwm(int32_t pwm, int phase){
  * @return : 1 if update
  */
 static float _motor_control_update_speed(uint64_t timestamp_us){
-	
+
 	static uint64_t hall_timestamp_us = 0;
-	float dangle; //angle delta in fraction of turn
-	float velocity;
+	static float dangle; //angle delta in fraction of turn
 	uint64_t dt; //get time delta;
 	dt = timestamp_us - hall_timestamp_us; //get time delta;
 
 	/*update global variables*/
-	uprintf("dp %d",_Delta_phase);
-
-	dangle = ( _Delta_phase) / (MOTOR_CONTROL_POLES * 12); 
-	velocity = (dangle * 1000000) / dt  * 60;
-	_Phase = (_Phase + _Delta_phase) % 6;
-  _Delta_phase = 0;
-	hall_timestamp_us = timestamp_us;
-
-	return velocity; 
+	if (_Delta_phase > 0){
+		dangle = ((float)( _Delta_phase)) / (MOTOR_CONTROL_POLES * 12); 
+		_Delta_phase = 0;
+		_Phase = (_Phase + _Delta_phase) % 6;
+		hall_timestamp_us = timestamp_us;
+	}
+	return  (dangle * 1000000) / dt  * 60;
 }
 
 
