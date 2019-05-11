@@ -57,6 +57,9 @@ impl Node<StateManagerInstance> for ComHandler {
         } else if dsdl::uavcan::cocobot::Position::check_id(data_type_id) {
             dsdl::uavcan::cocobot::Position::set_signature(data_type_signature);
             true
+        } else if dsdl::uavcan::protocol::debug::LogMessage::check_id(data_type_id) {
+            dsdl::uavcan::protocol::debug::LogMessage::set_signature(data_type_signature);
+            true
         } else {
             debug!("xfer refused: {}", source_node_id);
             false
@@ -82,6 +85,27 @@ impl Node<StateManagerInstance> for ComHandler {
         } else if dsdl::uavcan::protocol::file::ReadRequest::check_id(xfer.get_data_type_id()) {
             let read = dsdl::uavcan::protocol::file::ReadRequest::decode(xfer).unwrap();
             state_manager.request_read(xfer.get_source_node_id(), read);
+       } else if dsdl::uavcan::protocol::debug::LogMessage::check_id(xfer.get_data_type_id()) {
+            let msg = dsdl::uavcan::protocol::debug::LogMessage::decode(xfer).unwrap();
+
+            if let Ok(name) = std::str::from_utf8(&msg.text) {
+                match msg.level.value {
+                    dsdl::uavcan::protocol::debug::LogLevel::DEBUG => {
+                        debug!("{:?}", name.to_string());
+                    },
+                    dsdl::uavcan::protocol::debug::LogLevel::INFO => {
+                        info!("{:?}", name.to_string());
+                    },
+                    dsdl::uavcan::protocol::debug::LogLevel::WARNING => {
+                        warn!("{:?}", name.to_string());
+                    },
+                    dsdl::uavcan::protocol::debug::LogLevel::ERROR => {
+                        error!("{:?}", name.to_string());
+                    },
+
+                    _ => {},
+                }
+            }
         } else if dsdl::uavcan::cocobot::Position::check_id(xfer.get_data_type_id()) {
             let position = dsdl::uavcan::cocobot::Position::decode(xfer).unwrap();
 

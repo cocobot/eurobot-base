@@ -12,6 +12,15 @@ void run_homologation(void * arg)
   (void)arg;
   cocobot_game_state_wait_for_starter_removed();
 
+  cocobot_com_printf(COM_DEBUG, "msg debug 1");
+  cocobot_com_printf(COM_DEBUG, "msg debug 2");
+  cocobot_com_printf(COM_INFO, "msg info 3");
+  cocobot_com_printf(COM_INFO, "msg info 4");
+  cocobot_com_printf(COM_WARNING, "msg warning 5");
+  cocobot_com_printf(COM_WARNING, "msg warning 6");
+  cocobot_com_printf(COM_ERROR, "msg error 7");
+  cocobot_com_printf(COM_ERROR, "msg error 8");
+
   //panneau domotique
   cocobot_game_state_add_points_to_score(5);
   float x = 325;

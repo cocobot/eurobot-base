@@ -3,7 +3,7 @@
 
 #include <mcual.h>
 #include <platform.h>
-#ifdef CONFIG_DEVICE_STM32L496xx
+#if CONFIG_DEVICE_STM32L496xx
 # include <stm32l4xx.h>
 #else
 # include <stm32f4xx.h>
@@ -56,7 +56,8 @@ void mcual_loader_erase_pgm(void)
 #ifdef FLASH_CR_PSIZE_1
     FLASH->CR = (i << 3) | FLASH_CR_SER | FLASH_CR_PSIZE_1;                    
 #else
-    FLASH->CR = (i << 3);
+    FLASH->SR = 0xFFFFFFFF;
+    FLASH->CR = (i << 3) | FLASH_CR_PER;
 #endif
     FLASH->CR |= FLASH_CR_STRT;
     while(FLASH->SR & FLASH_SR_BSY);
@@ -69,28 +70,45 @@ void mcual_loader_erase_pgm(void)
 void mcual_loader_flash_pgm(uint32_t offset, uint8_t * data, uint32_t size)
 {
   unsigned int i;
+  FLASH->ACR &= ~FLASH_ACR_DCEN;
 
   //prepare flash
 #ifdef FLASH_CR_PSIZE_1
   FLASH->CR = FLASH_CR_PG | FLASH_CR_PSIZE_1;
+  while(FLASH->SR & FLASH_SR_BSY);
 #else
+  while(FLASH->SR & FLASH_SR_BSY);
+  FLASH->SR = 0xFFFFFFFF;
   FLASH->CR = FLASH_CR_PG;
 #endif
-  while(FLASH->SR & FLASH_SR_BSY);
 
   //write data
   uint32_t * ptr = (uint32_t *)(PLATFORM_FLASH_PGM_START + offset);
+#if CONFIG_DEVICE_STM32L496xx
+  for(i = 0; i < size; i += 8, ptr += 2)
+#else
   for(i = 0; i < size; i += 4, ptr += 1)
+#endif
   {
     uint32_t value;
 
+#if CONFIG_DEVICE_STM32L496xx
     value = data[i + 0];
     value |= (data[i + 1] << 8);
     value |= (data[i + 2] << 16);
     value |= (data[i + 3] << 24);
-
     *ptr = value;
+#else
+    value = data[i + 4];
+    value |= (data[i + 5] << 8);
+    value |= (data[i + 6] << 16);
+    value |= (data[i + 7] << 24);
+    *(ptr + 1) = value;
+#endif
     while(FLASH->SR & FLASH_SR_BSY);
+#if CONFIG_DEVICE_STM32L496xx
+    FLASH->SR = 0xFFFFFFFF;
+#endif
   }
 
   //clean up register
@@ -101,7 +119,9 @@ __attribute__ ((__section__(".data#")))
 void mcual_loader_flash_u64(uint32_t offset, uint64_t data)
 {
   __disable_irq();
-  FLASH->CR |= FLASH_CR_LOCK;
+
+  FLASH->ACR &= ~FLASH_ACR_DCEN;
+
   FLASH->KEYR = 0x45670123;
   FLASH->KEYR = 0xCDEF89AB;
 
@@ -114,7 +134,7 @@ void mcual_loader_flash_u64(uint32_t offset, uint64_t data)
   while(FLASH->SR & FLASH_SR_BSY);
 
   //write data
-  uint64_t * ptr = (uint64_t *)offset;
+  volatile uint64_t * ptr = (volatile uint64_t *)offset;
   *ptr = data;
   while(FLASH->SR & FLASH_SR_BSY);
 

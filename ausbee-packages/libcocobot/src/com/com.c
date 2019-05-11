@@ -5,6 +5,7 @@
 #include <mcual.h>
 #include <platform.h>
 #include <stdio.h>
+#include <stdarg.h>
 #ifdef CONFIG_OS_USE_FREERTOS
 # include <FreeRTOS.h>
 # include <task.h>
@@ -19,6 +20,7 @@
 #include "dsdl/uavcan/protocol/RestartNode.h"
 #include "dsdl/uavcan/protocol/NodeStatus.h"
 #include "dsdl/uavcan/protocol/param/GetSet.h"
+#include "dsdl/uavcan/protocol/debug/LogMessage.h"
 #include <include/generated/git.h>
 #include <cocobot/rf.h>
 
@@ -672,6 +674,46 @@ int16_t cocobot_com_broadcast(uint64_t data_type_signature,
 void cocobot_com_release_rx_transfer_payload(CanardRxTransfer* transfer)
 {
    canardReleaseRxTransferPayload(&_canard, transfer);
+}
+
+void cocobot_com_printf(uint8_t level, char * fmt, ...)
+{
+  uavcan_protocol_debug_LogMessage msg;
+  va_list ap;
+
+  msg.level.value = level;
+
+  msg.source.len = 0;
+  msg.source.data = "";
+
+  msg.text.data = pvPortMalloc(UAVCAN_PROTOCOL_DEBUG_LOGMESSAGE_TEXT_MAX_LENGTH);
+
+  if(msg.text.data != NULL)
+  {
+    va_start(ap, fmt);
+    msg.text.len = vsnprintf(msg.text.data, UAVCAN_PROTOCOL_DEBUG_LOGMESSAGE_TEXT_MAX_LENGTH, fmt, ap);
+    va_end(ap);
+
+    void * buf = pvPortMalloc(UAVCAN_PROTOCOL_DEBUG_LOGMESSAGE_MAX_SIZE); 
+    if(buf != NULL) 
+    {
+      const uint32_t size = uavcan_protocol_debug_LogMessage_encode(&msg, &_internal_buffer[0]);
+
+      ///!\ do not remove static !!!
+      static uint8_t transfer_id;
+
+      cocobot_com_broadcast(UAVCAN_PROTOCOL_DEBUG_LOGMESSAGE_SIGNATURE,
+                            UAVCAN_PROTOCOL_DEBUG_LOGMESSAGE_ID,
+                            &transfer_id,
+                            CANARD_TRANSFER_PRIORITY_LOW,
+                            &_internal_buffer[0],
+                            size);
+
+      vPortFree(buf);
+    }
+
+    vPortFree(msg.text.data);
+  }
 }
 
 //canard stm32 compat

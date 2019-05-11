@@ -13,6 +13,8 @@ use std::collections::HashMap;
 use std::f64::consts::PI;
 
 mod boards;
+mod motors;
+mod meca;
 
 macro_rules! update_elm {
     ($a: expr, $b: expr) => {
@@ -276,9 +278,22 @@ impl UICache {
     }
 }
 
+
+struct RobotPanelUI {
+}
+
+impl RobotPanelUI {
+    pub fn new() -> RobotPanelUI {
+        RobotPanelUI {
+        }
+    }
+}
+
 struct UI {
     state: Option<StateManagerInstance>,
     field: Option<gtk::DrawingArea>,
+
+    robots: [RobotPanelUI; 2],
 
     //cache
     cache: UICache,
@@ -290,6 +305,7 @@ impl UI {
             state: None,
             field: None,
             cache: UICache::new(),
+            robots: [RobotPanelUI::new(), RobotPanelUI::new()],
         }
     }
 }
@@ -511,6 +527,15 @@ pub fn create_shortcuts(window: gtk::Window) {
                     state.command("pgm 11");
                 });
             }
+            gdk::enums::key::O => {
+                debug!("KEY O");
+                UII.with(|ui| {
+                    let ui = ui.borrow();
+
+                    let state = ui.state.as_ref().unwrap().lock().unwrap();
+                    state.command("pgm 12");
+                });
+            }
             gdk::enums::key::R => {
                 debug!("KEY R");
                 UII.with(|ui| {
@@ -544,6 +569,8 @@ pub fn init(config: ConfigManagerInstance, state: StateManagerInstance) {
     }
 
     boards::init(state.clone());
+    motors::init(state.clone());
+    meca::init(state.clone());
 
     let glade_src = include_str!("glade/ui.glade");
     let builder = gtk::Builder::new_from_string(glade_src);
@@ -557,6 +584,16 @@ pub fn init(config: ConfigManagerInstance, state: StateManagerInstance) {
 
         ui.field = builder.get_object("field");
         ui.state = Some(state.clone());
+
+        let btn : gtk::Button = builder.get_object("pmotor").unwrap();
+        btn.connect_clicked( |_| {
+            motors::show(true);
+        });
+
+        let btn : gtk::Button = builder.get_object("pmeca").unwrap();
+        btn.connect_clicked( |_| {
+            meca::show(true);
+        });
 
         update_elm!(ui.field, |x: &mut gtk::DrawingArea| x
             .connect_draw(draw_field));

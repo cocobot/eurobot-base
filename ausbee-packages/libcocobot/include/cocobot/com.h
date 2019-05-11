@@ -3,6 +3,12 @@
 
 #include <canard.h>
 #include <uavcan/protocol/NodeStatus.h>
+#include <uavcan/protocol/debug/LogLevel.h>
+
+#define COM_DEBUG   UAVCAN_PROTOCOL_DEBUG_LOGLEVEL_DEBUG                                  
+#define COM_INFO    UAVCAN_PROTOCOL_DEBUG_LOGLEVEL_INFO                                  
+#define COM_WARNING UAVCAN_PROTOCOL_DEBUG_LOGLEVEL_WARNING                                  
+#define COM_ERROR   UAVCAN_PROTOCOL_DEBUG_LOGLEVEL_ERROR                                  
 
 void cocobot_com_init(void);
 void cocobot_com_run(void);
@@ -32,6 +38,7 @@ uint8_t com_should_accept_transfer(uint64_t* out_data_type_signature,
                                    uint8_t source_node_id);
 uint8_t com_on_transfer_received(CanardRxTransfer* transfer);
 
+void cocobot_com_printf(uint8_t level, char * fmt, ...);
 
 #define IF_RESPONSE_RECEIVED(NAME, name, action)\
   if ((transfer->transfer_type == CanardTransferTypeResponse) && \
