@@ -29,6 +29,9 @@
 #define PLATFORM_LED_GREEN_8          (1 << 18)
 #define PLATFORM_LED_GREEN_9          (1 << 19)
 
+#define PLATFORM_LED_RED_9_pos        9
+#define PLATFORM_LED_GREEN_9_pos      19
+
 #define PLATFORM_GPIO_SW_0            (1 << 0)
 #define PLATFORM_GPIO_SW_1            (1 << 1)
 #define PLATFORM_GPIO_SW_2            (1 << 2)

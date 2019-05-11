@@ -31,6 +31,7 @@ uint8_t com_should_accept_transfer(uint64_t* out_data_type_signature,
                                    CanardTransferType transfer_type,
                                    uint8_t source_node_id);
 uint8_t com_on_transfer_received(CanardRxTransfer* transfer);
+uint8_t cocobot_com_get_node_id(void);
 
 
 #define IF_RESPONSE_RECEIVED(NAME, name, action)\

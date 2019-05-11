@@ -61,6 +61,11 @@ typedef struct __attribute__((__packed__))
 } cocobot_com_usart_frame_t;
 #endif
 
+uint8_t cocobot_com_get_node_id(void)
+{
+  return _canard_id & 0xFF;
+}
+
 static void cocobot_com_fill_status(uavcan_protocol_NodeStatus * ns)
 {
   ns->uptime_sec = _timestamp_us / 1000000;
@@ -545,10 +550,6 @@ void cocobot_com_init(void)
   mcual_usart_init(PLATFORM_USART_USER, 115200);
 #endif
 
-#ifdef CONFIG_LIBCOCOBOT_COM_RF
-  cocobot_com_rf_init();
-#endif
-
 #ifdef CONFIG_OS_USE_FREERTOS
   //create mutex
   _mutex = xSemaphoreCreateMutex();
@@ -585,6 +586,10 @@ static void cocobot_com_thread(void * arg)
 #endif
 
 	mcual_can_init(&canbus_timings, mcualCanIfaceModeNormal);
+#endif
+
+#ifdef CONFIG_LIBCOCOBOT_COM_RF
+  cocobot_com_rf_init();
 #endif
 
   (void)arg;
