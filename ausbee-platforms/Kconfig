@@ -5,6 +5,13 @@ config PLATFORM_BRAIN_2019
   select USE_FPU
   select PLATFORM_DEVICE_STM32F429_439xx
 
+config PLATFORM_MECANELE_2019
+  bool "Mecanele 2019"
+  #select device
+  select PLATFORM_ARM_CORE_CORTEX_M4
+  select USE_FPU
+  select PLATFORM_DEVICE_STM32F429_439xx
+
 config PLATFORM_COM_2019
   bool "Com 2019"
   #select device
