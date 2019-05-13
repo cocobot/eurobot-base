@@ -1,7 +1,6 @@
 #include <platform.h>
 #include <cocobot.h>
 #include "motor_control.h"
-#include "pid.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <stm32l4xx.h>
@@ -33,6 +32,14 @@
 static volatile int _Phase = 0;
 static volatile int _Delta_phase ;
 static volatile int32_t _Pwm = 0;
+static float _max_acc = 100.0;
+static float _max_speed = 200.0;
+static float _speed_cons = 0.0;
+
+/*flags*/
+static int _quad_limit = 0;
+static int _speed_limit = 0;
+
 
 struct motor_driver_pin {
 	uint32_t en;
@@ -51,6 +58,8 @@ static struct motor_driver_pin _Driver_pins[3]={
 static inline int _motor_control_get_hall(void); //reads HALL inputs
 /*compute current speed and phase configuration*/
 static void _motor_control_update_callback(void);
+static inline float _quadramp(float target_speed, uint64_t dt);
+static inline float _limit_out(float speed);
 
 #if MOTOR_CONTROL_DEBUG_EN
 /* for debug only*/
@@ -149,7 +158,9 @@ void motor_control_process_event(uint64_t timestamp_us){
 
 		speed_val += flag *1000;
 
-		_Pwm =  ((int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR));
+		_speed_cons = speed_val;
+
+		_Pwm =  ((int32_t)(_speed_cons * MOTOR_CONTROL_PWM_FACTOR));
 		print("PWM : %d", _Pwm);
 
 		servo_timestamp_us = timestamp_us;
@@ -159,7 +170,7 @@ void motor_control_process_event(uint64_t timestamp_us){
 
 	if (dt > MOTOR_CONTROL_SERVO_REFRES_US){
 	/*quadramp calculation*/
-		_Pwm = (int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR);
+		_Pwm = (int32_t)(_limit_out(_quadramp(speed_val,dt)) * MOTOR_CONTROL_PWM_FACTOR);
 		servo_timestamp_us = timestamp_us;
 		uprintf("%d\n",(int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR));		
 	}
@@ -177,12 +188,9 @@ void motor_control_process_event(uint64_t timestamp_us){
 	return;
 }
 
-void motor_control_set_config(float imax, float max_speed_rpm)
-{
-	pid_set_limit(max_speed_rpm,imax);
-	pid_set_cons(0.0);
-	pid_reset();
-
+void motor_control_set_config(float imax, float max_speed_rpm){
+	_max_speed = max_speed_rpm;
+	_max_acc = imax;
 	return;
 }
 
@@ -191,16 +199,15 @@ void motor_control_set_setpoint(uint8_t enable, float rpm)
 	int i;
 
 	if (enable){
-		pid_set_cons(rpm);
+		_speed_cons = rpm;
 	}
 	else {
+		_speed_cons = 0.0;
 		for (i = 0; i < 3; i++){
 			platform_gpio_clear(_Driver_pins->en);
 			platform_set_duty_cycle(_Driver_pins->pwm,0);
 		}
 
-		pid_set_cons(0.0);
-		pid_reset();
 	}
 
 	return;
@@ -323,3 +330,48 @@ static void _motor_control_update_callback(void){
 	return;
 }
 
+static inline float _quadramp(float target_speed, uint64_t dt){
+	static float current_speed = 0.0;
+	float acc = (target_speed - current_speed) / (float)dt;	
+	
+	if (dt == 0){ //just to be shure
+		return current_speed;
+	}
+
+	if ((acc > -_max_acc) && (acc < _max_acc)){//acceleration below limmit
+		_quad_limit = 0;
+		current_speed = target_speed;
+		return target_speed;
+	}
+	else{ //quadramp limit
+		_quad_limit = 1;
+		if (acc > 0){ //increse speed
+			 current_speed += _max_acc * (float)dt;
+		}
+		else{ //decrease speed
+			current_speed -= _max_acc * (float)dt;
+		}
+		return current_speed;
+	}
+	return 0.0; //never reached
+}
+
+
+static inline float _limit_out(float speed){
+
+	if ((speed > -_max_speed) && (speed < _max_speed)){// in normal range
+		_speed_limit = 0;
+		return speed;
+	}
+	else {
+		_speed_limit = 1;
+		if (speed < 0.0){
+			return -_max_speed;
+		}
+		else {
+			return _max_speed;
+		}
+	}
+
+	return 0.0; //never reached
+}
