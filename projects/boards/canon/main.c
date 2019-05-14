@@ -37,7 +37,7 @@ uint8_t com_should_accept_transfer(uint64_t* out_data_type_signature,
 uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
 {
 	IF_RESPONSE_RECEIVED(UAVCAN_COCOBOT_BRUSHLESSCONFIG, uavcan_cocobot_BrushlessConfigResponse,
-			motor_control_set_config(data.kp, data.ki, data.imax, data.max_speed_rpm);
+			motor_control_set_config(data.imax, data.max_speed_rpm);
 			);
 
 	IF_SMPLREQ_RECEIVED(UAVCAN_COCOBOT_SETMOTORSPEED, uavcan_cocobot_SetMotorSpeed,
@@ -57,7 +57,7 @@ int main(void) {
 	cocobot_com_init();
 	cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_OPERATIONAL);
 	motor_control_init();
-	motor_control_set_config(0.1,0.000001,1000,10000);
+	motor_control_set_config(0.00025,400);
 	motor_control_set_setpoint(1,0.2);
 
 
