@@ -57,7 +57,7 @@ int main(void) {
 	cocobot_com_init();
 	cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_OPERATIONAL);
 	motor_control_init();
-	motor_control_set_config(1000,10000);
+	motor_control_set_config(0.00025,400);
 	motor_control_set_setpoint(1,0.2);
 
 
