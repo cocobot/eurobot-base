@@ -10,6 +10,15 @@ extern cocobot_pathfinder_table_init_s initTable [];
 void run_homologation(void * arg)
 {
   (void)arg;
+
+  cocobot_position_init(4);
+	while(1)
+	{
+		uprintf("Pouet ppuet\r\n");
+		vTaskDelay(100/portTICK_PERIOD_MS);
+		mcual_gpio_toggle(MCUAL_GPIOB, MCUAL_GPIO_PIN9);
+	}
+
   cocobot_game_state_wait_for_starter_removed();
 
   cocobot_com_printf(COM_DEBUG, "msg debug 1");
@@ -185,34 +194,34 @@ int main(void)
 {
   platform_init();
 
-  cocobot_com_init();
-  cocobot_com_run();
-  cocobot_position_init(4);
-  cocobot_action_scheduler_init();
-  cocobot_asserv_init();
-  cocobot_trajectory_init(4);
-  //cocobot_opponent_detection_init(3);
-  cocobot_game_state_init(NULL);
-  cocobot_pathfinder_init(initTable);
-  cocobot_action_scheduler_use_pathfinder(1);
+  //cocobot_com_init();
+  //cocobot_com_run();
+  //cocobot_position_init(4);
+  //cocobot_action_scheduler_init();
+  //cocobot_asserv_init();
+  //cocobot_trajectory_init(4);
+  ////cocobot_opponent_detection_init(3);
+  //cocobot_game_state_init(NULL);
+  //cocobot_pathfinder_init(initTable);
+  //cocobot_action_scheduler_use_pathfinder(1);
 
-  cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_OPERATIONAL);
+  //cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_OPERATIONAL);
 
-  //set initial position
-  switch(cocobot_game_state_get_color())
-  {
-    case COCOBOT_GAME_STATE_COLOR_NEG:
-      cocobot_position_set_x(-1225 - 60);
-      cocobot_position_set_y(600);
-      cocobot_position_set_angle(0);
-      break;
+  ////set initial position
+  //switch(cocobot_game_state_get_color())
+  //{
+  //  case COCOBOT_GAME_STATE_COLOR_NEG:
+  //    cocobot_position_set_x(-1225 - 60);
+  //    cocobot_position_set_y(600);
+  //    cocobot_position_set_angle(0);
+  //    break;
 
-    case COCOBOT_GAME_STATE_COLOR_POS:
-      cocobot_position_set_x(1225 + 60);
-      cocobot_position_set_y(600);
-      cocobot_position_set_angle(180);
-      break;
-  }
+  //  case COCOBOT_GAME_STATE_COLOR_POS:
+  //    cocobot_position_set_x(1225 + 60);
+  //    cocobot_position_set_y(600);
+  //    cocobot_position_set_angle(180);
+  //    break;
+  //}
 
   xTaskCreate(run_homologation, "strat", 600, NULL, 2, NULL );
 

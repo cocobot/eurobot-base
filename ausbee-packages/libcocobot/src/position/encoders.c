@@ -62,5 +62,7 @@ void cocobot_encoders_get_motor_position(int32_t motor_position[2])
   motor_position[0] = mcual_timer_get_value(MCUAL_TIMER2);
   motor_position[1] = mcual_timer_get_value(MCUAL_TIMER5);
 #endif
+
+	uprintf("cod: %ld %ld\r\n", motor_position[0], motor_position[1]);
 }
 #endif

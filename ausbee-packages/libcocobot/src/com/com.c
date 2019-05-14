@@ -684,14 +684,14 @@ void cocobot_com_printf(uint8_t level, char * fmt, ...)
   msg.level.value = level;
 
   msg.source.len = 0;
-  msg.source.data = "";
+  msg.source.data = (uint8_t *)"";
 
   msg.text.data = pvPortMalloc(UAVCAN_PROTOCOL_DEBUG_LOGMESSAGE_TEXT_MAX_LENGTH);
 
   if(msg.text.data != NULL)
   {
     va_start(ap, fmt);
-    msg.text.len = vsnprintf(msg.text.data, UAVCAN_PROTOCOL_DEBUG_LOGMESSAGE_TEXT_MAX_LENGTH, fmt, ap);
+    msg.text.len = vsnprintf((char *)msg.text.data, UAVCAN_PROTOCOL_DEBUG_LOGMESSAGE_TEXT_MAX_LENGTH, fmt, ap);
     va_end(ap);
 
     void * buf = pvPortMalloc(UAVCAN_PROTOCOL_DEBUG_LOGMESSAGE_MAX_SIZE); 

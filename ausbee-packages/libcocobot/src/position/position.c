@@ -75,7 +75,7 @@ static void cocobot_position_task(void * arg)
     cocobot_position_compute();
 
     //run the asserv
-    cocobot_asserv_compute();
+    //////////////TODO cocobot_asserv_compute();
 
     //wait 10ms
     vTaskDelayUntil( &xLastWakeTime, 10 / portTICK_PERIOD_MS);
