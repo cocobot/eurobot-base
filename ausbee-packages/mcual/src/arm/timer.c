@@ -230,7 +230,7 @@ void mcual_timer_init_encoder(mcual_timer_t timer)
   //No input filter, Polarity is not inverted
 
   //To avoid overflow, set it to the middle
-  reg->CNT = 0x7FFFFFFF;
+  reg->CNT = 0;
 
   //Start the timer
   reg->CR1 = TIM_CR1_CEN;

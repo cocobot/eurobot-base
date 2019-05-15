@@ -12,6 +12,8 @@
 
 #include <cocobot/encoders.h>
 
+#include "asserv_data.h"
+
 //useful macros
 #define TICK2RAD(tick)  ((((float)tick) * M_PI) / ((float)CONFIG_LIBCOCOBOT_POSITION_TICK_PER_180DEG))
 #define TICK2DEG(tick)  ((((float)tick) * 180.0) / ((float)CONFIG_LIBCOCOBOT_POSITION_TICK_PER_180DEG))
@@ -38,8 +40,6 @@ static void cocobot_position_compute(void)
   //update encoder values
   cocobot_encoders_get_motor_position(motor_position);
 
-  xSemaphoreTake(mutex, portMAX_DELAY);
-
   //compute new curvilinear distance
   int32_t new_distance = motor_position[0] + motor_position[1];
   int32_t delta_distance = new_distance - robot_distance;
@@ -59,8 +59,6 @@ static void cocobot_position_compute(void)
   robot_distance = new_distance;
   robot_linear_speed = delta_distance;
   robot_angular_velocity = delta_angle;
-
-  xSemaphoreGive(mutex);
 }
 
 static void cocobot_position_task(void * arg)
@@ -72,10 +70,14 @@ static void cocobot_position_task(void * arg)
   xLastWakeTime = xTaskGetTickCount();
   while(1)
   {
+    xSemaphoreTake(mutex, portMAX_DELAY);
+
     cocobot_position_compute();
 
+    xSemaphoreGive(mutex);
+
     //run the asserv
-    //////////////TODO cocobot_asserv_compute();
+    cocobot_asserv_compute();
 
     //wait 10ms
     vTaskDelayUntil( &xLastWakeTime, 10 / portTICK_PERIOD_MS);
@@ -155,6 +157,24 @@ float cocobot_position_get_speed_angle(void)
   xSemaphoreGive(mutex);
 
   return a;
+}
+
+int32_t cocobot_position_get_left_encoder(void)
+{
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  int32_t v = motor_position[0];
+  xSemaphoreGive(mutex);
+
+  return v;
+}
+
+int32_t cocobot_position_get_right_encoder(void)
+{
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  int32_t v = motor_position[1];
+  xSemaphoreGive(mutex);
+
+  return v;
 }
 
 void cocobot_position_set_motor_command(float left_motor_speed, float right_motor_speed)
