@@ -9,6 +9,7 @@
 #include <semphr.h>
 #include "generated/autoconf.h"
 #include "uavcan/cocobot/Position.h"
+#include "uavcan/cocobot/SetMotorSpeed.h"
 
 #include <cocobot/encoders.h>
 
@@ -34,6 +35,15 @@ static float last_right_sp = 0;
 static float left_motor_alpha = (((float)CONFIG_LIBCOCOBOT_LEFT_MOTOR_ALPHA) / 1000.0f);
 static float right_motor_alpha = (((float)CONFIG_LIBCOCOBOT_RIGHT_MOTOR_ALPHA) / 1000.0f);
 static uint64_t _next_10hz_service_at;
+
+#ifdef COCOBOT_CAN_MOTOR
+static uavcan_cocobot_SetMotorSpeedRequest st_left;
+static uavcan_cocobot_SetMotorSpeedRequest st_right;
+static uint8_t buf_left[UAVCAN_COCOBOT_SETMOTORSPEED_REQUEST_MAX_SIZE];
+static uint8_t buf_right[UAVCAN_COCOBOT_SETMOTORSPEED_REQUEST_MAX_SIZE];
+static uint8_t transfer_id_left;
+static uint8_t transfer_id_right;
+#endif
 
 static void cocobot_position_compute(void)
 {
@@ -179,6 +189,42 @@ int32_t cocobot_position_get_right_encoder(void)
 
 void cocobot_position_set_motor_command(float left_motor_speed, float right_motor_speed)
 {
+#ifdef COCOBOT_CAN_MOTOR
+  if(cocobot_asserv_get_state() == COCOBOT_ASSERV_ENABLE)
+  {
+    st_left.enable = 1;
+    st_right.enable = 1;
+  }
+  else
+  {
+    st_left.enable = 0;
+    st_right.enable = 0;
+  }
+
+  st_left.rpm = left_motor_speed; 
+  st_right.rpm = right_motor_speed; 
+
+  const uint16_t left_size = uavcan_cocobot_SetMotorSpeedRequest_encode(&st_left, &buf_left[0]);
+  const uint16_t right_size = uavcan_cocobot_SetMotorSpeedRequest_encode(&st_right, &buf_right[0]);
+
+  cocobot_com_request_or_respond(COCOBOT_LEFT_MOTOR_NODE_ID,
+                        UAVCAN_COCOBOT_SETMOTORSPEED_SIGNATURE,
+                        UAVCAN_COCOBOT_SETMOTORSPEED_ID,
+                        &transfer_id_left,
+                        CANARD_TRANSFER_PRIORITY_HIGH,
+                        CanardRequest,
+                        &buf_left[0],
+                        left_size);
+
+  cocobot_com_request_or_respond(COCOBOT_RIGHT_MOTOR_NODE_ID,
+                        UAVCAN_COCOBOT_SETMOTORSPEED_SIGNATURE,
+                        UAVCAN_COCOBOT_SETMOTORSPEED_ID,
+                        &transfer_id_right,
+                        CANARD_TRANSFER_PRIORITY_HIGH,
+                        CanardRequest,
+                        &buf_right[0],
+                        right_size);
+#else
   if(left_motor_speed > 0xffff)
   {
     left_motor_speed = 0xffff;
@@ -267,6 +313,7 @@ void cocobot_position_set_motor_command(float left_motor_speed, float right_moto
 #endif
   }
 #endif //AUSBEE_SIM
+#endif
 }
 
 void cocobot_position_set_speed_distance_angle(float linear_speed, float angular_velocity)
