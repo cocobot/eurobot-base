@@ -7,6 +7,8 @@
 #include "cocobot/asserv_pid.h"
 #include "generated/autoconf.h"
 
+#include "asserv_data.h"
+
 static cocobot_asserv_ramp_t _ramp_dist;
 static cocobot_asserv_ramp_t _ramp_angu;
 static cocobot_asserv_pid_t _pid_dist;

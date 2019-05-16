@@ -11,24 +11,20 @@ void run_homologation(void * arg)
 {
   (void)arg;
 
-  cocobot_position_init(4);
-	while(1)
-	{
-		uprintf("Pouet ppuet\r\n");
-		vTaskDelay(100/portTICK_PERIOD_MS);
-		mcual_gpio_toggle(MCUAL_GPIOB, MCUAL_GPIO_PIN9);
-	}
+  while(1)
+  {
+    //do nothing !
+    uprintf("x=%d y=%d a=%d d=%d -- l=%ld r=%ld\r\n", 
+            (int)cocobot_position_get_x(),
+            (int)cocobot_position_get_y(),
+            (int)cocobot_position_get_angle(),
+            (int)cocobot_position_get_distance(),
+            (int)cocobot_position_get_left_encoder(),
+            (int)cocobot_position_get_right_encoder());
+    vTaskDelay(100/portTICK_PERIOD_MS);
+  }
 
   cocobot_game_state_wait_for_starter_removed();
-
-  cocobot_com_printf(COM_DEBUG, "msg debug 1");
-  cocobot_com_printf(COM_DEBUG, "msg debug 2");
-  cocobot_com_printf(COM_INFO, "msg info 3");
-  cocobot_com_printf(COM_INFO, "msg info 4");
-  cocobot_com_printf(COM_WARNING, "msg warning 5");
-  cocobot_com_printf(COM_WARNING, "msg warning 6");
-  cocobot_com_printf(COM_ERROR, "msg error 7");
-  cocobot_com_printf(COM_ERROR, "msg error 8");
 
   //panneau domotique
   cocobot_game_state_add_points_to_score(5);
@@ -194,34 +190,34 @@ int main(void)
 {
   platform_init();
 
-  //cocobot_com_init();
-  //cocobot_com_run();
-  //cocobot_position_init(4);
-  //cocobot_action_scheduler_init();
-  //cocobot_asserv_init();
-  //cocobot_trajectory_init(4);
-  ////cocobot_opponent_detection_init(3);
-  //cocobot_game_state_init(NULL);
-  //cocobot_pathfinder_init(initTable);
-  //cocobot_action_scheduler_use_pathfinder(1);
+  cocobot_com_init();
+  cocobot_com_run();
+  cocobot_position_init(4);
+  cocobot_action_scheduler_init();
+  cocobot_asserv_init();
+  cocobot_trajectory_init(4);
+  //cocobot_opponent_detection_init(3);
+  cocobot_game_state_init(NULL);
+  cocobot_pathfinder_init(initTable);
+  cocobot_action_scheduler_use_pathfinder(1);
 
-  //cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_OPERATIONAL);
+  cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_OPERATIONAL);
 
-  ////set initial position
-  //switch(cocobot_game_state_get_color())
-  //{
-  //  case COCOBOT_GAME_STATE_COLOR_NEG:
-  //    cocobot_position_set_x(-1225 - 60);
-  //    cocobot_position_set_y(600);
-  //    cocobot_position_set_angle(0);
-  //    break;
+  //set initial position
+  switch(cocobot_game_state_get_color())
+  {
+    case COCOBOT_GAME_STATE_COLOR_NEG:
+      cocobot_position_set_x(-1225 - 60);
+      cocobot_position_set_y(600);
+      cocobot_position_set_angle(0);
+      break;
 
-  //  case COCOBOT_GAME_STATE_COLOR_POS:
-  //    cocobot_position_set_x(1225 + 60);
-  //    cocobot_position_set_y(600);
-  //    cocobot_position_set_angle(180);
-  //    break;
-  //}
+    case COCOBOT_GAME_STATE_COLOR_POS:
+      cocobot_position_set_x(1225 + 60);
+      cocobot_position_set_y(600);
+      cocobot_position_set_angle(180);
+      break;
+  }
 
   xTaskCreate(run_homologation, "strat", 600, NULL, 2, NULL );
 

@@ -9,8 +9,11 @@
 #include <semphr.h>
 #include "generated/autoconf.h"
 #include "uavcan/cocobot/Position.h"
+#include "uavcan/cocobot/SetMotorSpeed.h"
 
 #include <cocobot/encoders.h>
+
+#include "asserv_data.h"
 
 //useful macros
 #define TICK2RAD(tick)  ((((float)tick) * M_PI) / ((float)CONFIG_LIBCOCOBOT_POSITION_TICK_PER_180DEG))
@@ -33,12 +36,19 @@ static float left_motor_alpha = (((float)CONFIG_LIBCOCOBOT_LEFT_MOTOR_ALPHA) / 1
 static float right_motor_alpha = (((float)CONFIG_LIBCOCOBOT_RIGHT_MOTOR_ALPHA) / 1000.0f);
 static uint64_t _next_10hz_service_at;
 
+#ifdef COCOBOT_CAN_MOTOR
+static uavcan_cocobot_SetMotorSpeedRequest st_left;
+static uavcan_cocobot_SetMotorSpeedRequest st_right;
+static uint8_t buf_left[UAVCAN_COCOBOT_SETMOTORSPEED_REQUEST_MAX_SIZE];
+static uint8_t buf_right[UAVCAN_COCOBOT_SETMOTORSPEED_REQUEST_MAX_SIZE];
+static uint8_t transfer_id_left;
+static uint8_t transfer_id_right;
+#endif
+
 static void cocobot_position_compute(void)
 {
   //update encoder values
   cocobot_encoders_get_motor_position(motor_position);
-
-  xSemaphoreTake(mutex, portMAX_DELAY);
 
   //compute new curvilinear distance
   int32_t new_distance = motor_position[0] + motor_position[1];
@@ -59,8 +69,6 @@ static void cocobot_position_compute(void)
   robot_distance = new_distance;
   robot_linear_speed = delta_distance;
   robot_angular_velocity = delta_angle;
-
-  xSemaphoreGive(mutex);
 }
 
 static void cocobot_position_task(void * arg)
@@ -72,10 +80,14 @@ static void cocobot_position_task(void * arg)
   xLastWakeTime = xTaskGetTickCount();
   while(1)
   {
+    xSemaphoreTake(mutex, portMAX_DELAY);
+
     cocobot_position_compute();
 
+    xSemaphoreGive(mutex);
+
     //run the asserv
-    //////////////TODO cocobot_asserv_compute();
+    cocobot_asserv_compute();
 
     //wait 10ms
     vTaskDelayUntil( &xLastWakeTime, 10 / portTICK_PERIOD_MS);
@@ -157,8 +169,62 @@ float cocobot_position_get_speed_angle(void)
   return a;
 }
 
+int32_t cocobot_position_get_left_encoder(void)
+{
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  int32_t v = motor_position[0];
+  xSemaphoreGive(mutex);
+
+  return v;
+}
+
+int32_t cocobot_position_get_right_encoder(void)
+{
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  int32_t v = motor_position[1];
+  xSemaphoreGive(mutex);
+
+  return v;
+}
+
 void cocobot_position_set_motor_command(float left_motor_speed, float right_motor_speed)
 {
+#ifdef COCOBOT_CAN_MOTOR
+  if(cocobot_asserv_get_state() == COCOBOT_ASSERV_ENABLE)
+  {
+    st_left.enable = 1;
+    st_right.enable = 1;
+  }
+  else
+  {
+    st_left.enable = 0;
+    st_right.enable = 0;
+  }
+
+  st_left.rpm = left_motor_speed; 
+  st_right.rpm = right_motor_speed; 
+
+  const uint16_t left_size = uavcan_cocobot_SetMotorSpeedRequest_encode(&st_left, &buf_left[0]);
+  const uint16_t right_size = uavcan_cocobot_SetMotorSpeedRequest_encode(&st_right, &buf_right[0]);
+
+  cocobot_com_request_or_respond(COCOBOT_LEFT_MOTOR_NODE_ID,
+                        UAVCAN_COCOBOT_SETMOTORSPEED_SIGNATURE,
+                        UAVCAN_COCOBOT_SETMOTORSPEED_ID,
+                        &transfer_id_left,
+                        CANARD_TRANSFER_PRIORITY_HIGH,
+                        CanardRequest,
+                        &buf_left[0],
+                        left_size);
+
+  cocobot_com_request_or_respond(COCOBOT_RIGHT_MOTOR_NODE_ID,
+                        UAVCAN_COCOBOT_SETMOTORSPEED_SIGNATURE,
+                        UAVCAN_COCOBOT_SETMOTORSPEED_ID,
+                        &transfer_id_right,
+                        CANARD_TRANSFER_PRIORITY_HIGH,
+                        CanardRequest,
+                        &buf_right[0],
+                        right_size);
+#else
   if(left_motor_speed > 0xffff)
   {
     left_motor_speed = 0xffff;
@@ -247,6 +313,7 @@ void cocobot_position_set_motor_command(float left_motor_speed, float right_moto
 #endif
   }
 #endif //AUSBEE_SIM
+#endif
 }
 
 void cocobot_position_set_speed_distance_angle(float linear_speed, float angular_velocity)

@@ -8,9 +8,14 @@ extern crate canars;
 
 use canars::RxTransfer;
 
-fn saturate<T>(data: T, max: usize) ->T {
-  unimplemented!();
-  data
+fn saturate<T: std::cmp::PartialOrd>(data: T, max: T) ->T {
+  if data > max {
+    max
+  }
+  else {
+    data
+  }
+
 }
 
 fn saturate_unsigned<T: std::cmp::PartialOrd>(data: T, max: T) -> T {
