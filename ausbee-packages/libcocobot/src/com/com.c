@@ -399,7 +399,6 @@ void cocobot_com_retransmit(const CanardCANFrame * rx_frame, cocobot_com_source_
  if(source != COCOBOT_COM_SOURCE_CAN)
  {
     mcual_can_transmit(rx_frame);
-    platform_led_set(1);
  }
 #endif
 

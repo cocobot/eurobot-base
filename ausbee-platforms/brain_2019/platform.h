@@ -14,6 +14,7 @@
 #define PLATFORM_GPIO_EEPROM_WP       (1 << 2)
 
 #define PLATFORM_USART_DEBUG          MCUAL_USART1
+#define PLATFORM_USART_USER           MCUAL_USART1
 
 #define PLATFORM_ADC_VBAT             MCUAL_ADC10
 
