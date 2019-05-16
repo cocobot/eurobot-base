@@ -50,10 +50,19 @@ uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
 
 
 
+static volatile int plob = 0;
 int main(void) {
 
 	//initialisations of mcual and libcocobot
 	platform_init();
+	uprintf("Salut les loutre ! \n");
+	for (;;){		
+		plob++;
+		if (plob){
+			uprintf("FLOP\n");
+		}
+	}
+
 	cocobot_com_init();
 	cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_OPERATIONAL);
 	motor_control_init();

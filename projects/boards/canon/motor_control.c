@@ -12,19 +12,20 @@
 #define MOTOR_CONTROL_PWM_FREQUENCY_kHz 20000
 #define MOTOR_CONTROL_MAX_PWM 1000000
 #define MOTOR_CONTROL_PWM_FACTOR 200.0
-#define MOTOR_CONTROL_SERVO_REFRES_US 20000
+#define MOTOR_CONTROL_SERVO_REFRES_US 10000
 #define MOTOR_CONTROL_POLES 8
 #define MOTOR_CONTROL_GEAR 5
 
 
 /*debug*/
-#define MOTOR_CONTROL_DEBUG_EN 0
+#define MOTOR_CONTROL_DEBUG_EN 1
 #define MOTOR_CONTROL_DEBUG_PRINT 500000
 #define MOTOR_CONTROL_DEBUG_BUFFER 555
 #define MOTOR_CONTROL_DEBUG_PRINT_PHASE 1
 #define MOTOR_CONTROL_DEBUG_PRINT_HALL_VALUE 0
 #define MOTOR_CONTROL_DEBUG_PRINT_VELOCITY 1
 #define MOTOR_CONTROL_WARN_LAG 0 //direct print
+#define MOTOR_CONTROL_DEMO 1
 
 /*********************************
  * Global variables definition
@@ -139,41 +140,31 @@ void motor_control_init(void){
 
 void motor_control_process_event(uint64_t timestamp_us){
 	static uint64_t servo_timestamp_us = 0;
-	uint64_t dt;
-	//static int flag = 1;
-	static float speed_val = -60.0;
-	static int stamp = 100;
-	//static float speed_val = 80000.0;
+	uint64_t dt = timestamp_us - servo_timestamp_us;
 
 	_time = timestamp_us;
 
-	/*time to reevaluate servo loop*/
-	dt = timestamp_us - servo_timestamp_us;
+#if MOTOR_CONTROL_DEMO
+	static float speed_val = -60.0;
+	static int stamp = 100;
 
 	if(dt > 1000 ){
-
-		print("%d %d %d\n",_quad_limit, _speed_limit,_Pwm);
-
-
 		if (!(stamp--)){
 			_speed_cons =  speed_val;
 			speed_val *= -1;
 			stamp = 5000;
 		}
 		_Pwm = (int32_t)(_limit_out(_quadramp(_speed_cons,dt)) * MOTOR_CONTROL_PWM_FACTOR);
-		//	print("PWM : %d\n", _Pwm);
-
-		servo_timestamp_us = timestamp_us;
 		_motor_control_update_callback();
 	}
 
-#if 0
+#else
 	if (dt > MOTOR_CONTROL_SERVO_REFRES_US){
 		/*quadramp calculation*/
 		_Pwm = (int32_t)(_limit_out(_quadramp(_speed_cons,dt)) * MOTOR_CONTROL_PWM_FACTOR);
 		_motor_control_update_callback();
 		servo_timestamp_us = timestamp_us;
-		uprintf("%d\n",(int32_t)(speed_val * MOTOR_CONTROL_PWM_FACTOR));		
+		print("%d %d %d\n",_quad_limit, _speed_limit,_Pwm);
 	}
 #endif
 
@@ -195,8 +186,7 @@ void motor_control_set_config(float imax, float max_speed_rpm){
 	return;
 }
 
-void motor_control_set_setpoint(uint8_t enable, float rpm)
-{
+void motor_control_set_setpoint(uint8_t enable, float rpm){
 	int i;
 
 	if (enable){

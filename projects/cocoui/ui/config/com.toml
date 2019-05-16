@@ -48,6 +48,12 @@ name="Vincent"
 id=72
 uid=""
 
+[[boards]]
+name="Romain"
+id=73
+uid=""
+
+
 #ID 110->120 usb com boards
 [[boards]]
 name="Houston"
