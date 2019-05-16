@@ -40,7 +40,7 @@ uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
 			motor_control_set_config(data.imax, data.max_speed_rpm);
 			);
 
-	IF_SMPLREQ_RECEIVED(UAVCAN_COCOBOT_SETMOTORSPEED, uavcan_cocobot_SetMotorSpeed,
+	IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_SETMOTORSPEED, uavcan_cocobot_SetMotorSpeedRequest,
 			motor_control_set_setpoint(data.enable, data.rpm);
 			);
 
