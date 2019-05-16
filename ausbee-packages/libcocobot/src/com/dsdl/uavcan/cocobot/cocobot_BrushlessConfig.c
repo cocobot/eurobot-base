@@ -13,11 +13,8 @@
 #endif
 
 #ifndef CANARD_INTERNAL_SATURATE_UNSIGNED
-#define CANARD_INTERNAL_SATURATE_UNSIGNED(x, max) ( ((x) > max) ? max : (x) );
+#define CANARD_INTERNAL_SATURATE_UNSIGNED(x, max) ( ((x) >= max) ? max : (x) );
 #endif
-
-#define CANARD_INTERNAL_ENABLE_TAO  ((uint8_t) 1)
-#define CANARD_INTERNAL_DISABLE_TAO ((uint8_t) 0)
 
 #if defined(__GNUC__)
 # define CANARD_MAYBE_UNUSED(x) x __attribute__((unused))
@@ -42,8 +39,7 @@ int32_t uavcan_cocobot_BrushlessConfigRequest_decode_internal(const CanardRxTran
   uint16_t CANARD_MAYBE_UNUSED(payload_len),
   uavcan_cocobot_BrushlessConfigRequest* CANARD_MAYBE_UNUSED(dest),
   uint8_t** CANARD_MAYBE_UNUSED(dyn_arr_buf),
-  int32_t offset,
-  uint8_t CANARD_MAYBE_UNUSED(tao))
+  int32_t offset)
 {
     return offset;
 }
@@ -108,7 +104,6 @@ uint32_t uavcan_cocobot_BrushlessConfigResponse_encode(uavcan_cocobot_BrushlessC
   *                     uavcan_cocobot_BrushlessConfigResponse dyn memory will point to dyn_arr_buf memory.
   *                     NULL will ignore dynamic arrays decoding.
   * @param offset: Call with 0, bit offset to msg storage
-  * @param tao: is tail array optimization used
   * @retval offset or ERROR value if < 0
   */
 int32_t uavcan_cocobot_BrushlessConfigResponse_decode_internal(
@@ -116,33 +111,32 @@ int32_t uavcan_cocobot_BrushlessConfigResponse_decode_internal(
   uint16_t CANARD_MAYBE_UNUSED(payload_len),
   uavcan_cocobot_BrushlessConfigResponse* dest,
   uint8_t** CANARD_MAYBE_UNUSED(dyn_arr_buf),
-  int32_t offset,
-  uint8_t CANARD_MAYBE_UNUSED(tao))
+  int32_t offset)
 {
     int32_t ret = 0;
 
-    ret = canardDecodeScalar(transfer, offset, 32, false, (void*)&dest->kp);
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 32, false, (void*)&dest->kp);
     if (ret != 32)
     {
         goto uavcan_cocobot_BrushlessConfigResponse_error_exit;
     }
     offset += 32;
 
-    ret = canardDecodeScalar(transfer, offset, 32, false, (void*)&dest->ki);
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 32, false, (void*)&dest->ki);
     if (ret != 32)
     {
         goto uavcan_cocobot_BrushlessConfigResponse_error_exit;
     }
     offset += 32;
 
-    ret = canardDecodeScalar(transfer, offset, 32, false, (void*)&dest->imax);
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 32, false, (void*)&dest->imax);
     if (ret != 32)
     {
         goto uavcan_cocobot_BrushlessConfigResponse_error_exit;
     }
     offset += 32;
 
-    ret = canardDecodeScalar(transfer, offset, 32, false, (void*)&dest->max_speed_rpm);
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 32, false, (void*)&dest->max_speed_rpm);
     if (ret != 32)
     {
         goto uavcan_cocobot_BrushlessConfigResponse_error_exit;
@@ -179,33 +173,13 @@ int32_t uavcan_cocobot_BrushlessConfigResponse_decode(const CanardRxTransfer* tr
     const int32_t offset = 0;
     int32_t ret = 0;
 
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    uint8_t tao = CANARD_INTERNAL_DISABLE_TAO;
-
-    while (1)
+    // Clear the destination struct
+    for (uint32_t c = 0; c < sizeof(uavcan_cocobot_BrushlessConfigResponse); c++)
     {
-        // Clear the destination struct
-        for (uint32_t c = 0; c < sizeof(uavcan_cocobot_BrushlessConfigResponse); c++)
-        {
-            ((uint8_t*)dest)[c] = 0x00;
-        }
-
-        ret = uavcan_cocobot_BrushlessConfigResponse_decode_internal(transfer, payload_len, dest, dyn_arr_buf, offset, tao);
-
-        if (ret >= 0)
-        {
-            break;
-        }
-
-        if (tao == CANARD_INTERNAL_ENABLE_TAO)
-        {
-            break;
-        }
-        tao = CANARD_INTERNAL_ENABLE_TAO;
+        ((uint8_t*)dest)[c] = 0x00;
     }
+
+    ret = uavcan_cocobot_BrushlessConfigResponse_decode_internal(transfer, payload_len, dest, dyn_arr_buf, offset);
 
     return ret;
 }

@@ -399,6 +399,7 @@ void cocobot_com_retransmit(const CanardCANFrame * rx_frame, cocobot_com_source_
  if(source != COCOBOT_COM_SOURCE_CAN)
  {
     mcual_can_transmit(rx_frame);
+    platform_led_set(1);
  }
 #endif
 
@@ -443,6 +444,7 @@ uint64_t cocobot_com_process_event(void)
   _last_timer_ticks = ticks;
   
   _timestamp_us += ((uint64_t)delta);
+
 
   //Transmit Tx queue
   cocobot_com_transmit_tx_queue();
@@ -507,7 +509,7 @@ uint64_t cocobot_com_process_event(void)
 #endif
 
 #ifdef CONFIG_LIBCOCOBOT_POSITION 
-  cocobot_position_com_async(_timestamp_us);
+ //// cocobot_position_com_async(_timestamp_us);
 #endif
   
   if (_timestamp_us >= _next_1hz_service_at)
@@ -601,7 +603,7 @@ static void cocobot_com_thread(void * arg)
 
 void cocobot_com_run(void)
 {
-  xTaskCreate(cocobot_com_thread, "can", 512, NULL, 1, NULL);
+  xTaskCreate(cocobot_com_thread, "can", 1024, NULL, 1, NULL);
 }
 #endif
 

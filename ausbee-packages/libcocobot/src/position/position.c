@@ -71,6 +71,7 @@ static void cocobot_position_compute(void)
   robot_angular_velocity = delta_angle;
 }
 
+#include <stdio.h>
 static void cocobot_position_task(void * arg)
 {
   //arg is always NULL. Prevent "variable unused" warning
@@ -204,6 +205,12 @@ void cocobot_position_set_motor_command(float left_motor_speed, float right_moto
   st_left.rpm = left_motor_speed; 
   st_right.rpm = right_motor_speed; 
 
+  //TEST !!
+  st_left.enable = 1;
+  st_right.enable = 1;
+  st_left.rpm = motor_position[0];
+  st_right.rpm = motor_position[1];
+
   const uint16_t left_size = uavcan_cocobot_SetMotorSpeedRequest_encode(&st_left, &buf_left[0]);
   const uint16_t right_size = uavcan_cocobot_SetMotorSpeedRequest_encode(&st_right, &buf_right[0]);
 
@@ -320,7 +327,7 @@ void cocobot_position_set_speed_distance_angle(float linear_speed, float angular
 {
 #ifdef AUSBEE_SIM
   mcual_arch_request("POS", 0, "SPEED:%f:%f", linear_speed, angular_velocity);
-#else
+#endif
   float c1 = linear_speed + angular_velocity;
   float c2 = linear_speed - angular_velocity;
 
@@ -348,7 +355,6 @@ void cocobot_position_set_speed_distance_angle(float linear_speed, float angular
   right_sp = last_right_sp + right_motor_alpha * (right_sp - last_right_sp);
 
   cocobot_position_set_motor_command(left_sp, right_sp);
-#endif
 }
 
 /*

@@ -56,7 +56,7 @@ extern
 uint32_t uavcan_cocobot_SetMotorSpeedRequest_encode_internal(uavcan_cocobot_SetMotorSpeedRequest* source, void* msg_buf, uint32_t offset, uint8_t root_item);
 
 extern
-int32_t uavcan_cocobot_SetMotorSpeedRequest_decode_internal(const CanardRxTransfer* transfer, uint16_t payload_len, uavcan_cocobot_SetMotorSpeedRequest* dest, uint8_t** dyn_arr_buf, int32_t offset, uint8_t tao);
+int32_t uavcan_cocobot_SetMotorSpeedRequest_decode_internal(const CanardRxTransfer* transfer, uint16_t payload_len, uavcan_cocobot_SetMotorSpeedRequest* dest, uint8_t** dyn_arr_buf, int32_t offset);
 
 #define UAVCAN_COCOBOT_SETMOTORSPEED_RESPONSE_MAX_SIZE     ((0 + 7)/8)
 
@@ -75,7 +75,7 @@ extern
 uint32_t uavcan_cocobot_SetMotorSpeedResponse_encode_internal(uavcan_cocobot_SetMotorSpeedResponse* source, void* msg_buf, uint32_t offset, uint8_t root_item);
 
 extern
-int32_t uavcan_cocobot_SetMotorSpeedResponse_decode_internal(const CanardRxTransfer* transfer, uint16_t payload_len, uavcan_cocobot_SetMotorSpeedResponse* dest, uint8_t** dyn_arr_buf, int32_t offset, uint8_t tao);
+int32_t uavcan_cocobot_SetMotorSpeedResponse_decode_internal(const CanardRxTransfer* transfer, uint16_t payload_len, uavcan_cocobot_SetMotorSpeedResponse* dest, uint8_t** dyn_arr_buf, int32_t offset);
 
 #ifdef __cplusplus
 } // extern "C"

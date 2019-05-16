@@ -56,7 +56,7 @@ extern
 uint32_t uavcan_cocobot_BrushlessConfigRequest_encode_internal(uavcan_cocobot_BrushlessConfigRequest* source, void* msg_buf, uint32_t offset, uint8_t root_item);
 
 extern
-int32_t uavcan_cocobot_BrushlessConfigRequest_decode_internal(const CanardRxTransfer* transfer, uint16_t payload_len, uavcan_cocobot_BrushlessConfigRequest* dest, uint8_t** dyn_arr_buf, int32_t offset, uint8_t tao);
+int32_t uavcan_cocobot_BrushlessConfigRequest_decode_internal(const CanardRxTransfer* transfer, uint16_t payload_len, uavcan_cocobot_BrushlessConfigRequest* dest, uint8_t** dyn_arr_buf, int32_t offset);
 
 #define UAVCAN_COCOBOT_BRUSHLESSCONFIG_RESPONSE_MAX_SIZE   ((128 + 7)/8)
 
@@ -82,7 +82,7 @@ extern
 uint32_t uavcan_cocobot_BrushlessConfigResponse_encode_internal(uavcan_cocobot_BrushlessConfigResponse* source, void* msg_buf, uint32_t offset, uint8_t root_item);
 
 extern
-int32_t uavcan_cocobot_BrushlessConfigResponse_decode_internal(const CanardRxTransfer* transfer, uint16_t payload_len, uavcan_cocobot_BrushlessConfigResponse* dest, uint8_t** dyn_arr_buf, int32_t offset, uint8_t tao);
+int32_t uavcan_cocobot_BrushlessConfigResponse_decode_internal(const CanardRxTransfer* transfer, uint16_t payload_len, uavcan_cocobot_BrushlessConfigResponse* dest, uint8_t** dyn_arr_buf, int32_t offset);
 
 #ifdef __cplusplus
 } // extern "C"

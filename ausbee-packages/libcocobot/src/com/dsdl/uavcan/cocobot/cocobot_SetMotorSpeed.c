@@ -13,11 +13,8 @@
 #endif
 
 #ifndef CANARD_INTERNAL_SATURATE_UNSIGNED
-#define CANARD_INTERNAL_SATURATE_UNSIGNED(x, max) ( ((x) > max) ? max : (x) );
+#define CANARD_INTERNAL_SATURATE_UNSIGNED(x, max) ( ((x) >= max) ? max : (x) );
 #endif
-
-#define CANARD_INTERNAL_ENABLE_TAO  ((uint8_t) 1)
-#define CANARD_INTERNAL_DISABLE_TAO ((uint8_t) 0)
 
 #if defined(__GNUC__)
 # define CANARD_MAYBE_UNUSED(x) x __attribute__((unused))
@@ -38,8 +35,8 @@ uint32_t uavcan_cocobot_SetMotorSpeedRequest_encode_internal(uavcan_cocobot_SetM
   uint32_t offset,
   uint8_t CANARD_MAYBE_UNUSED(root_item))
 {
-    source->enable = CANARD_INTERNAL_SATURATE_UNSIGNED(source->enable, 0)
-    canardEncodeScalar(msg_buf, offset, 1, (void*)&source->enable); // 0
+    source->enable = CANARD_INTERNAL_SATURATE_UNSIGNED(source->enable, 1)
+    canardEncodeScalar(msg_buf, offset, 1, (void*)&source->enable); // 1
     offset += 1;
 
     canardEncodeScalar(msg_buf, offset, 32, (void*)&source->rpm); // 2147483647
@@ -72,7 +69,6 @@ uint32_t uavcan_cocobot_SetMotorSpeedRequest_encode(uavcan_cocobot_SetMotorSpeed
   *                     uavcan_cocobot_SetMotorSpeedRequest dyn memory will point to dyn_arr_buf memory.
   *                     NULL will ignore dynamic arrays decoding.
   * @param offset: Call with 0, bit offset to msg storage
-  * @param tao: is tail array optimization used
   * @retval offset or ERROR value if < 0
   */
 int32_t uavcan_cocobot_SetMotorSpeedRequest_decode_internal(
@@ -80,19 +76,18 @@ int32_t uavcan_cocobot_SetMotorSpeedRequest_decode_internal(
   uint16_t CANARD_MAYBE_UNUSED(payload_len),
   uavcan_cocobot_SetMotorSpeedRequest* dest,
   uint8_t** CANARD_MAYBE_UNUSED(dyn_arr_buf),
-  int32_t offset,
-  uint8_t CANARD_MAYBE_UNUSED(tao))
+  int32_t offset)
 {
     int32_t ret = 0;
 
-    ret = canardDecodeScalar(transfer, offset, 1, false, (void*)&dest->enable);
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 1, false, (void*)&dest->enable);
     if (ret != 1)
     {
         goto uavcan_cocobot_SetMotorSpeedRequest_error_exit;
     }
     offset += 1;
 
-    ret = canardDecodeScalar(transfer, offset, 32, false, (void*)&dest->rpm);
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 32, false, (void*)&dest->rpm);
     if (ret != 32)
     {
         goto uavcan_cocobot_SetMotorSpeedRequest_error_exit;
@@ -129,33 +124,13 @@ int32_t uavcan_cocobot_SetMotorSpeedRequest_decode(const CanardRxTransfer* trans
     const int32_t offset = 0;
     int32_t ret = 0;
 
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    uint8_t tao = CANARD_INTERNAL_DISABLE_TAO;
-
-    while (1)
+    // Clear the destination struct
+    for (uint32_t c = 0; c < sizeof(uavcan_cocobot_SetMotorSpeedRequest); c++)
     {
-        // Clear the destination struct
-        for (uint32_t c = 0; c < sizeof(uavcan_cocobot_SetMotorSpeedRequest); c++)
-        {
-            ((uint8_t*)dest)[c] = 0x00;
-        }
-
-        ret = uavcan_cocobot_SetMotorSpeedRequest_decode_internal(transfer, payload_len, dest, dyn_arr_buf, offset, tao);
-
-        if (ret >= 0)
-        {
-            break;
-        }
-
-        if (tao == CANARD_INTERNAL_ENABLE_TAO)
-        {
-            break;
-        }
-        tao = CANARD_INTERNAL_ENABLE_TAO;
+        ((uint8_t*)dest)[c] = 0x00;
     }
+
+    ret = uavcan_cocobot_SetMotorSpeedRequest_decode_internal(transfer, payload_len, dest, dyn_arr_buf, offset);
 
     return ret;
 }
@@ -177,8 +152,7 @@ int32_t uavcan_cocobot_SetMotorSpeedResponse_decode_internal(const CanardRxTrans
   uint16_t CANARD_MAYBE_UNUSED(payload_len),
   uavcan_cocobot_SetMotorSpeedResponse* CANARD_MAYBE_UNUSED(dest),
   uint8_t** CANARD_MAYBE_UNUSED(dyn_arr_buf),
-  int32_t offset,
-  uint8_t CANARD_MAYBE_UNUSED(tao))
+  int32_t offset)
 {
     return offset;
 }

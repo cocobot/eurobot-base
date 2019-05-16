@@ -38,8 +38,10 @@ impl Timer {
             self.count = cnt;
         }
         else {
-            let (cnt, _) = self.count.overflowing_sub((-iadder) as u32);
-            self.count = cnt;
+            // error!("# {}", iadder);
+            // let iadder : u64 = -iadder as u64;
+            // let (cnt, _) = self.count.overflowing_sub((iadder & 0xFFFFFFFF) as u32);
+            // self.count = cnt;
         }
 
         self.adder -= iadder as f32; 
@@ -171,6 +173,7 @@ impl Brain {
                     }
                 }
                 "CAN" => {
+                    debug!(">> {}", line);
                     let tokens: Vec<&str> = tokens.get(1).unwrap().split(":").collect();
 
                     let mut data: [u8; CANFrame::CAN_FRAME_MAX_DATA_LEN] =
@@ -235,9 +238,11 @@ impl Brain {
                             break;
                         }
                     } else {
+                        error!(" ? ");
                         break;
                     }
                 } else {
+                    error!(" ?! ");
                     break;
                 }
             }
