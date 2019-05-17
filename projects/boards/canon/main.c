@@ -37,11 +37,11 @@ uint8_t com_should_accept_transfer(uint64_t* out_data_type_signature,
 uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
 {
 	IF_RESPONSE_RECEIVED(UAVCAN_COCOBOT_BRUSHLESSCONFIG, uavcan_cocobot_BrushlessConfigResponse,
-			motor_control_set_config(data.imax, data.max_speed_rpm);
+		//	motor_control_set_config(data.imax, data.max_speed_rpm);
 			);
 
 	IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_SETMOTORSPEED, uavcan_cocobot_SetMotorSpeedRequest,
-			motor_control_set_setpoint(data.enable, data.rpm);
+		//	motor_control_set_setpoint(data.enable, data.rpm);
 			);
 
 
@@ -50,24 +50,15 @@ uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
 
 
 
-static volatile int plob = 0;
 int main(void) {
 
 	//initialisations of mcual and libcocobot
 	platform_init();
-	uprintf("Salut les loutre ! \n");
-	for (;;){		
-		plob++;
-		if (plob){
-			uprintf("FLOP\n");
-		}
-	}
-
 	cocobot_com_init();
 	cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_OPERATIONAL);
 	motor_control_init();
 	motor_control_set_config(0.00025,400);
-	motor_control_set_setpoint(1,0.2);
+	motor_control_set_setpoint(1,60);
 
 
 	//main loop
