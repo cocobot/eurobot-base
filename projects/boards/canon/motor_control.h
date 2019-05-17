@@ -3,18 +3,6 @@
 
 #include <stdint.h>
 
-//hall
-//u bleu
-//v green
-//w white
-//GND black
-//Vdd red
-//U yellow
-//V red
-//W black
-
-
-
 float motor_control_get_velocity(void);
 
 /**

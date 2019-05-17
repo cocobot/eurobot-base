@@ -2,6 +2,7 @@
 #include <cocobot.h>
 #include <malloc_wrapper.h>
 #include "motor_control.h"
+#include <stm32l4xx.h>
 
 #include "uavcan/cocobot/BrushlessConfig.h"
 #include "uavcan/cocobot/SetMotorSpeed.h"
@@ -37,13 +38,12 @@ uint8_t com_should_accept_transfer(uint64_t* out_data_type_signature,
 uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
 {
 	IF_RESPONSE_RECEIVED(UAVCAN_COCOBOT_BRUSHLESSCONFIG, uavcan_cocobot_BrushlessConfigResponse,
-		//	motor_control_set_config(data.imax, data.max_speed_rpm);
+			motor_control_set_config(data.imax, data.max_speed_rpm);
 			);
 
 	IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_SETMOTORSPEED, uavcan_cocobot_SetMotorSpeedRequest,
-		//	motor_control_set_setpoint(data.enable, data.rpm);
+			motor_control_set_setpoint(data.enable, data.rpm);
 			);
-
 
 	return 0;
 }
@@ -54,6 +54,7 @@ int main(void) {
 
 	//initialisations of mcual and libcocobot
 	platform_init();
+	__enable_irq();
 	cocobot_com_init();
 	cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_OPERATIONAL);
 	motor_control_init();
