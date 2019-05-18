@@ -3,7 +3,7 @@
 #include <platform.h>
 #include <cocobot.h>
 #include <stdio.h>
-#include <cocobot_arm_action.h>
+#include "cocobot_arm_action.h"
 
 int main(void) 
 {
