@@ -25,7 +25,7 @@
 #define MOTOR_CONTROL_DEBUG_PRINT_HALL_VALUE 0
 #define MOTOR_CONTROL_DEBUG_PRINT_VELOCITY 1
 #define MOTOR_CONTROL_WARN_LAG 0 //direct print
-#define MOTOR_CONTROL_DEMO 1
+#define MOTOR_CONTROL_DEMO 0
 
 /*********************************
  * Global variables definition

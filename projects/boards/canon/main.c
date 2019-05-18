@@ -2,6 +2,7 @@
 #include <cocobot.h>
 #include <malloc_wrapper.h>
 #include "motor_control.h"
+#include <stm32l4xx.h>
 
 #include "uavcan/cocobot/BrushlessConfig.h"
 #include "uavcan/cocobot/SetMotorSpeed.h"
@@ -44,30 +45,21 @@ uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
 			motor_control_set_setpoint(data.enable, data.rpm);
 			);
 
-
 	return 0;
 }
 
 
 
-static volatile int plob = 0;
 int main(void) {
 
 	//initialisations of mcual and libcocobot
 	platform_init();
-	uprintf("Salut les loutre ! \n");
-	for (;;){		
-		plob++;
-		if (plob){
-			uprintf("FLOP\n");
-		}
-	}
-
+	__enable_irq();
 	cocobot_com_init();
 	cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_OPERATIONAL);
 	motor_control_init();
 	motor_control_set_config(0.00025,400);
-	motor_control_set_setpoint(1,0.2);
+	motor_control_set_setpoint(1,60);
 
 
 	//main loop
