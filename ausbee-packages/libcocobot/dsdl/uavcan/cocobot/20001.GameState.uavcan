@@ -1,0 +1,12 @@
+#
+# battery in mV
+uint16 battery 
+
+# time in s
+uint16 time
+
+# score
+uint16 score
+
+# 1 if positive, 0 if negative
+bool color
