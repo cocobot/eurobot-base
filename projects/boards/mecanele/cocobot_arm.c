@@ -1,10 +1,10 @@
 #include <cocobot.h>
 #include <stdio.h>
-#include "cocobot_arm_action.h"
+#include "cocobot_arm.h"
 
 static cocobot_arm_t arm[4] = {0};
 
-void cocobot_arm_action_init(void)
+void cocobot_arm_init(void)
 {
   cocobot_kinematics_init_DH_parameters(0.0971, 0.0637, 0.150, 0.080, 0.040, -0.0117);
 
@@ -19,17 +19,17 @@ void cocobot_arm_action_init(void)
                                            -180,  180);
 
   // TODO: replace by real current servo angles
-  cocobot_arm_action_move_arti(&arm[0], 0, 0, 0, 0);
+  cocobot_arm_move_arti(&arm[0], 0, 0, 0, 0);
   cocobot_arm_print_pos(&arm[0]);
-  cocobot_arm_action_move_arti(&arm[1], 90, 0, 0, 0);
+  cocobot_arm_move_arti(&arm[1], 90, 0, 0, 0);
   cocobot_arm_print_pos(&arm[1]);
-  cocobot_arm_action_move_arti(&arm[2], 180, 0, 0, 0);
+  cocobot_arm_move_arti(&arm[2], 180, 0, 0, 0);
   cocobot_arm_print_pos(&arm[2]);
-  cocobot_arm_action_move_arti(&arm[3], 270, 0, 0, 0);
+  cocobot_arm_move_arti(&arm[3], 270, 0, 0, 0);
   cocobot_arm_print_pos(&arm[3]);
 }
 
-void cocobot_arm_action_move_arti(cocobot_arm_t * arm_ref, float a1_deg, float a2_deg, float a3_deg, float a4_deg)
+void cocobot_arm_move_arti(cocobot_arm_t * arm_ref, float a1_deg, float a2_deg, float a3_deg, float a4_deg)
 {
   arm_ref->current_joint_pos.a1_deg = a1_deg;
   arm_ref->current_joint_pos.a2_deg = a2_deg;
@@ -42,7 +42,7 @@ void cocobot_arm_action_move_arti(cocobot_arm_t * arm_ref, float a1_deg, float a
   cocobot_kinematics_compute_forward(&(arm_ref->current_joint_pos), &(arm_ref->current_cartesian_pos));
 }
 
-void cocobot_arm_action_move_cartesian(cocobot_arm_t * arm_ref, float x, float y, float z, float alpha_deg)
+void cocobot_arm_move_cartesian(cocobot_arm_t * arm_ref, float x, float y, float z, float alpha_deg)
 {
   arm_ref->current_cartesian_pos.x = x;
   arm_ref->current_cartesian_pos.y = y;
@@ -64,7 +64,7 @@ void cocobot_arm_print_pos(cocobot_arm_t * arm_ref)
   cocobot_kinematics_print_cartesian_pos(&(arm_ref->current_cartesian_pos));
 }
 
-void cocobot_arm_action_test_print(void)
+void cocobot_arm_test_and_print(void)
 {
   printf("\n==========ARM ACTION TEST PRINT==========\n");
 
@@ -72,13 +72,13 @@ void cocobot_arm_action_test_print(void)
   printf("\n-------------------- Init:\n");
   cocobot_arm_print_pos(&arm_test);
   printf("\n-------------------- Move arti (0, 0, 0, 0):\n");
-  cocobot_arm_action_move_arti(&arm_test, 0, 0, 0, 0);
+  cocobot_arm_move_arti(&arm_test, 0, 0, 0, 0);
   cocobot_arm_print_pos(&arm_test);
   printf("\n-------------------- Move arti (-15, -30, 75, -10):\n");
-  cocobot_arm_action_move_arti(&arm_test, -15, -30, 75, -10);
+  cocobot_arm_move_arti(&arm_test, -15, -30, 75, -10);
   cocobot_arm_print_pos(&arm_test);
   printf("\n-------------------- Move cart (0.23, -0.023, 0.13, -42)\n");
-  cocobot_arm_action_move_cartesian(&arm_test, 0.23, -0.023, 0.13, -42);
+  cocobot_arm_move_cartesian(&arm_test, 0.23, -0.023, 0.13, -42);
   cocobot_arm_print_pos(&arm_test);
 
   printf("==========END ARM ACTION TEST PRINT==========\n\n");

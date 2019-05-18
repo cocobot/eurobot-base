@@ -3,7 +3,7 @@
 #include <platform.h>
 #include <cocobot.h>
 #include <stdio.h>
-#include "cocobot_arm_action.h"
+#include "cocobot_arm.h"
 
 int main(void) 
 {
@@ -12,8 +12,8 @@ int main(void)
   cocobot_com_init();
   cocobot_com_run();
 
-  cocobot_arm_action_init();
-  cocobot_arm_action_test_print();
+  cocobot_arm_init();
+  //cocobot_arm_test_and_print();
 
   vTaskStartScheduler();
 
