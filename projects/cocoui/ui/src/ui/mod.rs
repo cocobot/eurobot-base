@@ -280,11 +280,17 @@ impl UICache {
 
 
 struct RobotPanelUI {
+  info_x: Option<gtk::Label>,  
+  info_y: Option<gtk::Label>,  
+  info_a: Option<gtk::Label>,  
 }
 
 impl RobotPanelUI {
     pub fn new() -> RobotPanelUI {
         RobotPanelUI {
+          info_x: None,
+          info_y: None,
+          info_a: None,
         }
     }
 }
@@ -502,14 +508,22 @@ fn update() {
 
             //update state
             let mut state_cpy = None;
+            let mut state_cpy2 = None;
             if let Some(state) = ui.state.as_ref() {
                 let state = state.lock().unwrap();
                 state_cpy = Some(state.get_state());
+                state_cpy2 = Some(state.get_state());
             }
             ui.cache.state = state_cpy;
 
             //update field canvas
             update_elm!(ui.field, |x: &mut gtk::DrawingArea| x.queue_draw());
+
+            let state_cpy2 = state_cpy2.unwrap();
+            //update robot panels
+            ui.robots[0].info_x.as_mut().unwrap().set_text(&format!("x: {:.0}", state_cpy2.robots[0].x));
+            ui.robots[0].info_y.as_mut().unwrap().set_text(&format!("y: {:.0}", state_cpy2.robots[0].y));
+            ui.robots[0].info_a.as_mut().unwrap().set_text(&format!("a: {:.0}", state_cpy2.robots[0].a));
         });
         gtk::Continue(true)
     });
@@ -584,6 +598,14 @@ pub fn init(config: ConfigManagerInstance, state: StateManagerInstance) {
 
         ui.field = builder.get_object("field");
         ui.state = Some(state.clone());
+
+        //robots panels
+        let lbl : gtk::Label = builder.get_object("pr_info_x").unwrap();
+        ui.robots[0].info_x = Some(lbl);
+        let lbl : gtk::Label = builder.get_object("pr_info_y").unwrap();
+        ui.robots[0].info_y = Some(lbl);
+        let lbl : gtk::Label = builder.get_object("pr_info_a").unwrap();
+        ui.robots[0].info_a = Some(lbl);
 
         let btn : gtk::Button = builder.get_object("pmotor").unwrap();
         btn.connect_clicked( |_| {
