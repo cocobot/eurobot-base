@@ -65,8 +65,8 @@ void platform_init(void)
 	mcual_gpio_init(MCUAL_GPIOA, MCUAL_GPIO_PIN12, MCUAL_GPIO_INPUT);
 	mcual_gpio_init(MCUAL_GPIOB, MCUAL_GPIO_PIN13, MCUAL_GPIO_INPUT);
 	mcual_gpio_init(MCUAL_GPIOB, MCUAL_GPIO_PIN12, MCUAL_GPIO_INPUT);
-	mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN11, 9); 
-	mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN12, 9); 
+	mcual_gpio_set_function(MCUAL_GPIOB, MCUAL_GPIO_PIN12, 10); 
+	mcual_gpio_set_function(MCUAL_GPIOB, MCUAL_GPIO_PIN13, 10); 
 }
 
 void platform_led_toggle(uint32_t led)

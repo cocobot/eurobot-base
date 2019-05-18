@@ -16,6 +16,11 @@
 #include <queue.h>
 #endif
 
+#ifdef CONFIG_MCUAL_USE_CAN1
+#define BXCAN CAN1
+#else
+#define BXCAN CAN2
+#endif
 
 #ifdef CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
 QueueHandle_t can_tx_queue;
@@ -184,9 +189,11 @@ int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode if
     //clock
 #ifdef RCC_APB1ENR_CAN1EN
     RCC->APB1ENR |= RCC_APB1ENR_CAN1EN;
+    RCC->APB1ENR |= RCC_APB1ENR_CAN2EN;
 #endif
 #ifdef RCC_APB1ENR1_CAN1EN
     RCC->APB1ENR1 |= RCC_APB1ENR1_CAN1EN;
+    RCC->APB1ENR1 |= RCC_APB1ENR1_CAN2EN;
 #endif
 
     /*
@@ -197,6 +204,8 @@ int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode if
     //g_abort_tx_on_error = (iface_mode == CanardSTM32IfaceModeAutomaticTxAbortOnError);
 
 
+    //CAN1 first
+#ifdef CONFIG_MCUAL_USE_CAN2
     CAN1->IER = 0;                   // We need no interrupts
     CAN1->MCR &= ~CAN_MCR_SLEEP;     // Exit sleep mode
     CAN1->MCR |= CAN_MCR_INRQ;       // Request init
@@ -207,39 +216,42 @@ int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode if
         return -MCUAL_CAN_ERROR_MSR_INAK_NOT_SET;
     }
 
+#endif
+    BXCAN->IER = 0;                   // We need no interrupts
+    BXCAN->MCR &= ~CAN_MCR_SLEEP;     // Exit sleep mode
+    BXCAN->MCR |= CAN_MCR_INRQ;       // Request init
+
+    if (!waitMSRINAKBitStateChange(BXCAN, true))                // Wait for synchronization
+    {
+        BXCAN->MCR = CAN_MCR_RESET;
+        return -MCUAL_CAN_ERROR_MSR_INAK_NOT_SET;
+    }
+
     /*
      * Hardware initialization (the hardware has already confirmed initialization mode, see above)
      */
-    CAN1->MCR = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_INRQ; 
+    BXCAN->MCR = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_INRQ; 
 
-    CAN1->BTR = (((timings->max_resynchronization_jump_width - 1U) &    3U) << 24U) |
+    BXCAN->BTR = (((timings->max_resynchronization_jump_width - 1U) &    3U) << 24U) |
                  (((timings->bit_segment_1 - 1U)                    &   15U) << 16U) |
                  (((timings->bit_segment_2 - 1U)                    &    7U) << 20U) |
                  ((timings->bit_rate_prescaler - 1U)                & 1023U) |
                  ((iface == mcualCanIfaceModeSilent) ? CAN_BTR_SILM : 0);
 
     //Todo, to be removed
-    CANARD_ASSERT(0 == CAN1->IER);             // Making sure the iterrupts are indeed disabled
+    CANARD_ASSERT(0 == BXCAN->IER);             // Making sure the iterrupts are indeed disabled
 
-    CAN1->MCR &= ~CAN_MCR_INRQ;   // Leave init mode
+    BXCAN->MCR &= ~CAN_MCR_INRQ;   // Leave init mode
 
-    if (!waitMSRINAKBitStateChange(CAN1, false))
+    if (!waitMSRINAKBitStateChange(BXCAN, false))
     {
-        CAN1->MCR = CAN_MCR_RESET;
+        BXCAN->MCR = CAN_MCR_RESET;
         return -MCUAL_CAN_ERROR_MSR_INAK_NOT_CLEARED;
     }
 
-    /*
-     * Default filter configuration. Note that ALL filters are available ONLY via CAN1!
-     * CAN2 filters are offset by 14.
-     * We use 14 filters at most always which simplifies the code and ensures compatibility with all
-     * MCU within the STM32 family.
-     */
-    {
-        uint32_t fmr = CAN1->FMR & 0xFFFFC0F1U;
-        fmr |= MCUAL_CAN_NUM_ACCEPTANCE_FILTERS << 8U;                // CAN2 start bank = 14 (if CAN2 is present)
-        CAN1->FMR = fmr | CAN_FMR_FINIT;
-    }
+    uint32_t fmr = CAN1->FMR & 0xFFFFC0F1U;
+    fmr |= 14 << 8U;                // CAN2 start bank = 14 (if CAN2 is present)
+    CAN1->FMR = fmr | CAN_FMR_FINIT;
 
     CANARD_ASSERT(((CAN1->FMR >> 8U) & 0x3FU) == MCUAL_CAN_NUM_ACCEPTANCE_FILTERS);
 
@@ -247,34 +259,51 @@ int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode if
     CAN1->FS1R = 0x0FFFFFFF;                               // All 32-bit
 
     // Filters are alternating between FIFO0 and FIFO1 in order to equalize the load.
-    // This will cause occasional priority inversion and frame reordering on reception,
-    // but that is acceptable for UAVCAN, and a majority of other protocols will tolerate
-    // this too, since there will be no reordering within the same CAN ID.
+    /*
+     * Default filter configuration. Note that ALL filters are available ONLY via CAN1!
+     * CAN2 filters are offset by 14.
+     * We use 14 filters at most always which simplifies the code and ensures compatibility with all
+     * MCU within the STM32 family.
+     */
     CAN1->FFA1R = 0x0AAAAAAA;
 
+#ifdef CONFIG_MCUAL_USE_CAN2
+    CAN1->sFilterRegister[14].FR1 = 0;
+    CAN1->sFilterRegister[14].FR2 = 0;
+    CAN1->FA1R = 1 << 14;                                        // One filter enabled
+#else
     CAN1->sFilterRegister[0].FR1 = 0;
     CAN1->sFilterRegister[0].FR2 = 0;
     CAN1->FA1R = 1;                                        // One filter enabled
+#endif
 
     CAN1->FMR &= ~CAN_FMR_FINIT;              // Leave initialization mode
 
     //Enable Rx Fifo pending message isr
-    CAN1->IER |= CAN_IER_FMPIE1 | CAN_IER_FMPIE0;
+    BXCAN->IER |= CAN_IER_FMPIE1 | CAN_IER_FMPIE0;
 
     //Enable isr here
+#ifdef CONFIG_MCUAL_USE_CAN2
+    NVIC_SetPriority(CAN2_TX_IRQn, 7);
+    NVIC_SetPriority(CAN2_RX0_IRQn, 8);
+    NVIC_SetPriority(CAN2_RX1_IRQn, 9);
+    NVIC_EnableIRQ(CAN2_TX_IRQn);
+    NVIC_EnableIRQ(CAN2_RX0_IRQn);
+    NVIC_EnableIRQ(CAN2_RX1_IRQn);
+#else
     NVIC_SetPriority(CAN1_TX_IRQn, 7);
     NVIC_SetPriority(CAN1_RX0_IRQn, 8);
     NVIC_SetPriority(CAN1_RX1_IRQn, 9);
     NVIC_EnableIRQ(CAN1_TX_IRQn);
     NVIC_EnableIRQ(CAN1_RX0_IRQn);
     NVIC_EnableIRQ(CAN1_RX1_IRQn);
+#endif
 
     //Todo : Missing: stats, mode automaticTxAbortOnError
 
     //Need to prime the pump for TX isr
     //Bad hack?
-    CAN1->sTxMailBox[0].TIR = CAN_TI0R_TXRQ;
-
+    BXCAN->sTxMailBox[0].TIR = CAN_TI0R_TXRQ;
     return 0;
 }
 
@@ -306,7 +335,7 @@ int16_t mcual_can_transmit(const CanardCANFrame* const frame)
     }
 #endif
     //Enable TX interrupt
-    CAN1->IER |= CAN_IER_TMEIE;
+    BXCAN->IER |= CAN_IER_TMEIE;
     return 1;
 }
 
@@ -314,11 +343,11 @@ void mcual_can_wait_tx_ended()
 {
 #ifdef CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
     //need to do better than that
-    while(CAN1->IER & CAN_IER_TMEIE)
+    while(BXCAN->IER & CAN_IER_TMEIE)
         vTaskDelay(1 / portTICK_PERIOD_MS);
 #else
     //while the interrupt is enable, the buffer is not empty
-    while(CAN1->IER & CAN_IER_TMEIE)
+    while(BXCAN->IER & CAN_IER_TMEIE)
         ;
 #endif
 }
@@ -369,7 +398,7 @@ int16_t mcual_can_recv_no_wait(CanardCANFrame* const out_frame)
 
 static void mcual_can_add_in_mailbox(uint8_t tx_mailbox, volatile CanardCANFrame * frame)
 {
-    volatile CAN_TxMailBox_TypeDef* const mb = &CAN1->sTxMailBox[tx_mailbox];
+    volatile CAN_TxMailBox_TypeDef* const mb = &BXCAN->sTxMailBox[tx_mailbox];
 
     mb->TDTR = frame->data_len;                         // DLC equals data length except in CAN FD
 
@@ -391,11 +420,15 @@ static void mcual_can_add_in_mailbox(uint8_t tx_mailbox, volatile CanardCANFrame
 
     //if there is nothing left to send
     if(tx_index_read == tx_index_write)
-        CAN1->IER &= ~CAN_IER_TMEIE;
+        BXCAN->IER &= ~CAN_IER_TMEIE;
 #endif
 }
 
+#ifdef CONFIG_MCUAL_USE_CAN2
+void CAN2_TX_IRQHandler(void)
+#else
 void CAN1_TX_IRQHandler(void)
+#endif
 {
     const uint32_t AllTME = CAN_TSR_TME0 | CAN_TSR_TME1 | CAN_TSR_TME2;
     bool is_empty = false;
@@ -404,7 +437,7 @@ void CAN1_TX_IRQHandler(void)
     BaseType_t xTaskWokenByReceive = pdFALSE;
     if(!xQueueReceiveFromISR(can_tx_queue, &frame, &xTaskWokenByReceive))
     {
-        CAN1->IER &= ~CAN_IER_TMEIE;
+        BXCAN->IER &= ~CAN_IER_TMEIE;
         return;
     }
 #else
@@ -412,16 +445,16 @@ void CAN1_TX_IRQHandler(void)
 #endif
     bool tme[3];
 
-    if ((CAN1->TSR & AllTME) != AllTME) // At least one TX mailbox is used, detailed check is needed
+    if ((BXCAN->TSR & AllTME) != AllTME) // At least one TX mailbox is used, detailed check is needed
     {
-        tme[0] = ((CAN1->TSR & CAN_TSR_TME0) != 0);
-        tme[1] = ((CAN1->TSR & CAN_TSR_TME1) != 0);
-        tme[2] = ((CAN1->TSR & CAN_TSR_TME2) != 0);
+        tme[0] = ((BXCAN->TSR & CAN_TSR_TME0) != 0);
+        tme[1] = ((BXCAN->TSR & CAN_TSR_TME1) != 0);
+        tme[2] = ((BXCAN->TSR & CAN_TSR_TME2) != 0);
     }
     else
         is_empty = true;
 
-    if(CAN1->TSR & CAN_TSR_TME0)
+    if(BXCAN->TSR & CAN_TSR_TME0)
     {
         //All mailboxes are empty, add directly in mailbox 0
         if(is_empty)
@@ -433,7 +466,7 @@ void CAN1_TX_IRQHandler(void)
                 //if empty
                 if(!tme[i])
                 {
-                    if (!isFramePriorityHigher(frame.id, convertFrameIDRegisterToCanard(CAN1->sTxMailBox[i].TIR)))
+                    if (!isFramePriorityHigher(frame.id, convertFrameIDRegisterToCanard(BXCAN->sTxMailBox[i].TIR)))
                     {
                         // There's a mailbox whose priority is higher or equal the priority of the new frame.
                         // Priority inversion would occur! Reject transmission.
@@ -449,7 +482,7 @@ void CAN1_TX_IRQHandler(void)
             mcual_can_add_in_mailbox(0, &frame);
         }
     }
-    else if(CAN1->TSR & CAN_TSR_TME1)
+    else if(BXCAN->TSR & CAN_TSR_TME1)
     {
         //All mailboxes are empty, add directly in mailbox 1
         if(is_empty)
@@ -463,7 +496,7 @@ void CAN1_TX_IRQHandler(void)
                     //if empty
                     if(!tme[i])
                     {
-                        if (!isFramePriorityHigher(frame.id, convertFrameIDRegisterToCanard(CAN1->sTxMailBox[i].TIR)))
+                        if (!isFramePriorityHigher(frame.id, convertFrameIDRegisterToCanard(BXCAN->sTxMailBox[i].TIR)))
                         {
                             // There's a mailbox whose priority is higher or equal the priority of the new frame.
 #if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
@@ -479,7 +512,7 @@ void CAN1_TX_IRQHandler(void)
             mcual_can_add_in_mailbox(1, &frame);
         }
     }
-    else if(CAN1->TSR & CAN_TSR_TME2)
+    else if(BXCAN->TSR & CAN_TSR_TME2)
     {
         //All mailboxes are empty, add directly in mailbox 2
         if(is_empty)
@@ -491,7 +524,7 @@ void CAN1_TX_IRQHandler(void)
                 //if empty
                 if(!tme[i])
                 {
-                    if (!isFramePriorityHigher(frame.id, convertFrameIDRegisterToCanard(CAN1->sTxMailBox[i].TIR)))
+                    if (!isFramePriorityHigher(frame.id, convertFrameIDRegisterToCanard(BXCAN->sTxMailBox[i].TIR)))
                     {
                         // There's a mailbox whose priority is higher or equal the priority of the new frame.
 #if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
@@ -546,40 +579,52 @@ static void mcual_can_rcev_frame(volatile CAN_FIFOMailBox_TypeDef* const mb)
 #endif
 }
 
+#ifdef CONFIG_MCUAL_USE_CAN2
+void CAN2_RX0_IRQHandler(void)
+#else
 void CAN1_RX0_IRQHandler(void)
+#endif
 {
     // Release FIFO entry we just read
-    CAN1->RF0R =  CAN_RF0R_FOVR0 | CAN_RF0R_FULL0;
+    BXCAN->RF0R =  CAN_RF0R_FOVR0 | CAN_RF0R_FULL0;
     
-    if(!(CAN1->RF0R & CAN_RF0R_FMP0))
+    if(!(BXCAN->RF0R & CAN_RF0R_FMP0))
     {
         //spurious ?
         return;
     }
     //Manage error?
     
-    volatile CAN_FIFOMailBox_TypeDef* const mb = &CAN1->sFIFOMailBox[0];
+    volatile CAN_FIFOMailBox_TypeDef* const mb = &BXCAN->sFIFOMailBox[0];
 
     mcual_can_rcev_frame(mb);
-    CAN1->RF0R = CAN_RF0R_RFOM0;
+    BXCAN->RF0R = CAN_RF0R_RFOM0;
 }
 
+#ifdef CONFIG_MCUAL_USE_CAN2
+void CAN2_RX1_IRQHandler(void)
+#else
 void CAN1_RX1_IRQHandler(void)
+#endif
 {
     // Release FIFO entry we just read
-    CAN1->RF1R = CAN_RF1R_FOVR1 | CAN_RF1R_FULL1;
-    if(!(CAN1->RF1R & CAN_RF1R_FMP1))
+    BXCAN->RF1R = CAN_RF1R_FOVR1 | CAN_RF1R_FULL1;
+    if(!(BXCAN->RF1R & CAN_RF1R_FMP1))
     {
         //spurious ?
         return;
     }
-    volatile CAN_FIFOMailBox_TypeDef* const mb = &CAN1->sFIFOMailBox[1];
+    volatile CAN_FIFOMailBox_TypeDef* const mb = &BXCAN->sFIFOMailBox[1];
 
     mcual_can_rcev_frame(mb);
-    CAN1->RF1R = CAN_RF1R_RFOM1;
+    BXCAN->RF1R = CAN_RF1R_RFOM1;
 }
 
+#ifdef CONFIG_MCUAL_USE_CAN2
+void CAN2_SCE_IRQHandler(void)
+#else
 void CAN1_SCE_IRQHandler(void)
+#endif
 {
     ;
 }

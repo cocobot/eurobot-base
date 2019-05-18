@@ -198,6 +198,14 @@ config MCUAL_CAN
 	default n
 	depends on MCUAL && MCUAL_CLOCK
 
+choice
+ prompt "+ Can peripheral used"
+    depends on MCUAL_CAN
+ config MCUAL_USE_CAN1
+    bool "CAN1"
+ config MCUAL_USE_CAN2
+    bool "CAN2"
+endchoice
 
 config MCUAL_CAN_USE_FREERTOS_QUEUES
   bool "+ use FreeRTOS queues"
