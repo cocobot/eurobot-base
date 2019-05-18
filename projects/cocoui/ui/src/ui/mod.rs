@@ -283,6 +283,9 @@ struct RobotPanelUI {
   info_x: Option<gtk::Label>,  
   info_y: Option<gtk::Label>,  
   info_a: Option<gtk::Label>,  
+  info_score: Option<gtk::Label>,  
+  info_elapsed_time: Option<gtk::Label>,  
+  info_battery: Option<gtk::Label>,  
 }
 
 impl RobotPanelUI {
@@ -291,6 +294,9 @@ impl RobotPanelUI {
           info_x: None,
           info_y: None,
           info_a: None,
+          info_score: None,
+          info_elapsed_time: None,
+          info_battery: None,
         }
     }
 }
@@ -524,6 +530,9 @@ fn update() {
             ui.robots[0].info_x.as_mut().unwrap().set_text(&format!("x: {:.0}", state_cpy2.robots[0].x));
             ui.robots[0].info_y.as_mut().unwrap().set_text(&format!("y: {:.0}", state_cpy2.robots[0].y));
             ui.robots[0].info_a.as_mut().unwrap().set_text(&format!("a: {:.0}", state_cpy2.robots[0].a));
+            ui.robots[0].info_score.as_mut().unwrap().set_text(&format!("score: {:.0}", state_cpy2.robots[0].score));
+            ui.robots[0].info_elapsed_time.as_mut().unwrap().set_text(&format!("time: {:.0}", state_cpy2.robots[0].time));
+            ui.robots[0].info_battery.as_mut().unwrap().set_text(&format!("battery: {:.0}", state_cpy2.robots[0].battery));
         });
         gtk::Continue(true)
     });
@@ -606,6 +615,12 @@ pub fn init(config: ConfigManagerInstance, state: StateManagerInstance) {
         ui.robots[0].info_y = Some(lbl);
         let lbl : gtk::Label = builder.get_object("pr_info_a").unwrap();
         ui.robots[0].info_a = Some(lbl);
+        let lbl : gtk::Label = builder.get_object("pr_info_score").unwrap();
+        ui.robots[0].info_score = Some(lbl);
+        let lbl : gtk::Label = builder.get_object("pr_info_elapsed_time").unwrap();
+        ui.robots[0].info_elapsed_time = Some(lbl);
+        let lbl : gtk::Label = builder.get_object("pr_info_battery").unwrap();
+        ui.robots[0].info_battery = Some(lbl);
 
         let btn : gtk::Button = builder.get_object("pmotor").unwrap();
         btn.connect_clicked( |_| {

@@ -357,36 +357,6 @@ void cocobot_position_set_speed_distance_angle(float linear_speed, float angular
   cocobot_position_set_motor_command(left_sp, right_sp);
 }
 
-/*
-int cocobot_position_handle_console(char * command)
-{
-  if(strcmp(command,"left_motor_alpha") == 0)
-  {
-    float set;
-    if(cocobot_console_get_fargument(0, &set))
-    {
-      left_motor_alpha = set / 1000.0;
-    }
-    cocobot_console_send_answer("%.3f", (double)(left_motor_alpha * 1000));
-    return 1;
-  }
-
-  if(strcmp(command,"right_motor_alpha") == 0)
-  {
-    float set;
-    if(cocobot_console_get_fargument(0, &set))
-    {
-      right_motor_alpha = set / 1000.0;
-    }
-    cocobot_console_send_answer("%.3f", (double)(right_motor_alpha * 1000));
-    return 1;
-  }
-
-  return 0;
-}
-*/
-
-
 void cocobot_position_set_x(float x)
 {
   cocobot_asserv_state_t saved_state = cocobot_asserv_get_state();

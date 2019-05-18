@@ -152,8 +152,25 @@ impl<'a> RxTransfer<'a> {
         Some(r)
     }
 
-    pub fn decode_scalar_bool(&self, _offset: &mut usize, _size: u8) -> Option<bool> {
-        unimplemented!();
+    pub fn decode_scalar_bool(&self, offset: &mut usize, size: u8) -> Option<bool> {
+        let mut r = 0;
+        let mut i = 0;
+        let mut size = size;
+        while size > 0 {
+            let mut to_read = size;
+            if to_read > 8 {
+                to_read = 8;
+            }
+            let p1 = match self.decode_scalar_u8(offset, to_read) {
+                Some(s) => s as u16,
+                None => return None,
+            };
+            r |= p1 << i;
+            size -= to_read;
+            i += 8;
+        }
+        Some(r > 0)
+
     }
 
     pub fn decode_scalar_f32(&self, offset: &mut usize, size: u8) -> Option<f32> {

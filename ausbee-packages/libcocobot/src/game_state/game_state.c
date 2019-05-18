@@ -1,5 +1,5 @@
 #include <include/generated/autoconf.h>
-#ifdef CONFIG_LIBCOCOBOT_ASSERV
+#ifdef CONFIG_LIBCOCOBOT_GAME_STATE
 
 #include <stdlib.h>
 #include <cocobot.h>
@@ -10,6 +10,7 @@
 # include <time.h> //for random seed
 #endif
 #include <platform.h>
+#include "uavcan/cocobot/GameState.h"
 
 #define USER_DATA_SIZE 16
 #define SCORE_DIGIT 3
@@ -20,36 +21,8 @@ static cocobot_game_state_color_t _color;
 static void * _userdata[USER_DATA_SIZE];
 static uint8_t _starter_removed;
 static TickType_t _start_time = 0;
-//static TickType_t _last_update_time = 0;
 static int _score = 0;
-
-//static unsigned char _seven_seg[10] = {
-//  0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7C,0x07,0x7F,0x67};
-
-void cocobot_game_state_display_score(void)
-{
-#if 0
-  int i;
-  int j;
-  unsigned char digit[SCORE_DIGIT];
-  int score = _score; 
-
-  for (j = 0; j < SCORE_DIGIT; j++)
-  {
-    digit[j] = score % 10;
-    score /= 10;
-  }
-
-  for (j = 0; j < SCORE_DIGIT; j++)
-  { 
-    for (i = 0; i < 8; i++)
-    {
-      cocobot_shifters_set(i + 8*j, (_seven_seg[digit[j]] & (1 << i)) == 0);
-    }
-  }
-  cocobot_shifters_update();
-#endif
-}
+static uint64_t _next_1hz_service_at;
 
 void cocobot_game_state_add_points_to_score(int _toAdd)
 {
@@ -65,24 +38,7 @@ void cocobot_game_state_set_score(int score)
 {
    _score = score;
 }
-#if 0
-void cocobot_game_state_handle_async_com(void)
-{
-  TickType_t now = xTaskGetTickCount();
-  if(now - _last_update_time > 1000 / portTICK_PERIOD_MS)
-  {
-    _last_update_time = now;
-    cocobot_com_send(COCOBOT_COM_GAME_STATE_DEBUG_PID,
-                     "BBDDD",
-                     COCOBOT_ROBOT_ID,  //0 for principal, 1 for secondary 
-                     _color,  //0 for x negative, 1 for x positive 
-                     platform_adc_get_mV(PLATFORM_ADC_VBAT), //battery voltage
-                     cocobot_game_state_get_elapsed_time() / 1000, //elapsed time
-                     _score
-                    );
-  }
-}
-#endif
+
 
 static void cocobot_game_state_match_ended_event(TimerHandle_t xTimer)
 {
@@ -101,6 +57,7 @@ void cocobot_game_state_init(cocobot_game_state_funny_action_t funny_action)
   _funny_action = funny_action;
 
   _starter_removed = 0;
+  _next_1hz_service_at = 0;
 
 #ifdef AUSBEE_SIM
   //random color in simu
@@ -170,5 +127,35 @@ void cocobot_game_state_set_userdata(unsigned int id, void * data)
 void * cocobot_game_state_get_userdata(unsigned int id)
 {
   return _userdata[id];
+}
+
+void cocobot_game_state_com_async(uint64_t timestamp_us)
+{
+  if (timestamp_us >= _next_1hz_service_at)
+  {
+    _next_1hz_service_at = timestamp_us + 1000000;
+
+    uavcan_cocobot_GameState gs;
+
+    gs.battery = platform_adc_get_mV(PLATFORM_ADC_VBAT);
+    gs.time = cocobot_game_state_get_elapsed_time();
+    gs.color = cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_POS;
+    gs.score = cocobot_game_state_getScore();
+
+    void * buf = pvPortMalloc(UAVCAN_COCOBOT_GAMESTATE_MAX_SIZE); 
+    if(buf != NULL) 
+    {
+      static uint8_t transfer_id;
+
+      const int size = uavcan_cocobot_GameState_encode(&gs, buf);
+      cocobot_com_broadcast(UAVCAN_COCOBOT_GAMESTATE_SIGNATURE,
+                            UAVCAN_COCOBOT_GAMESTATE_ID,
+                            &transfer_id,
+                            CANARD_TRANSFER_PRIORITY_LOW,
+                            buf,
+                            (uint16_t)size);
+      vPortFree(buf);
+    }
+  }
 }
 #endif

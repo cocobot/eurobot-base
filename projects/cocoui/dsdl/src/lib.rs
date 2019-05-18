@@ -31,6 +31,109 @@ pub mod uavcan {
 pub mod cocobot {
 
 #[derive(Debug, Clone)]
+pub struct GameState {
+  // FieldTypes
+    pub battery: u16, // bit len 16
+    pub time: u16, // bit len 16
+    pub score: u16, // bit len 16
+    pub color: bool, // bit len 1
+
+}
+
+impl GameState {
+  pub const ID: u16 = 20001;
+  pub const SIGNATURE: u64 = 0x6D587713AA5AC19F;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == GameState::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = GameState::SIGNATURE;
+  }
+
+  pub fn encode(instance: GameState) -> (Vec<u8>, usize) {
+    let (vec, mut size) = GameState::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: GameState, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.battery;
+
+    let vint_battery = data;
+    canars::encode_scalar_u16(&mut buffer, offset, 16, vint_battery); // 65535
+    offset += 16;
+    let data = instance.time;
+
+    let vint_time = data;
+    canars::encode_scalar_u16(&mut buffer, offset, 16, vint_time); // 65535
+    offset += 16;
+    let data = instance.score;
+
+    let vint_score = data;
+    canars::encode_scalar_u16(&mut buffer, offset, 16, vint_score); // 65535
+    offset += 16;
+    let data = instance.color;
+
+    let vint_color = ::saturate_unsigned(data, true);
+    canars::encode_scalar_bool(&mut buffer, offset, 1, vint_color); // 1
+    offset += 1;
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<GameState> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = GameState::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = GameState::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<GameState> {
+    let mut offset = offset;
+
+    let vint_battery = match xfer.decode_scalar_u16(offset, 16) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_time = match xfer.decode_scalar_u16(offset, 16) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_score = match xfer.decode_scalar_u16(offset, 16) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_color = match xfer.decode_scalar_bool(offset, 1) {
+     Some(s) => s,
+     None => return None,
+    };
+
+    Some(GameState {
+      battery: vint_battery,
+      time: vint_time,
+      score: vint_score,
+      color: vint_color,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
 pub struct BrushlessConfigRequest {
   // FieldTypes
 
@@ -551,7 +654,2032 @@ impl Position {
 }
 
 }pub mod protocol {
-pub mod param {
+pub mod file {
+
+#[derive(Debug, Clone)]
+pub struct Path {
+  // FieldTypes
+    pub path: Vec<u8>, // Dynamic Array 8bit[200] max items
+
+}
+
+impl Path {
+  pub const SIGNATURE: u64 = 0x12AEFC50878A43E2;
+  pub const SEPARATOR: u8 = '/' as u8;
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = Path::SIGNATURE;
+  }
+
+  pub fn encode(instance: Path) -> (Vec<u8>, usize) {
+    let (vec, mut size) = Path::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: Path, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.path;
+
+    // Dynamic Array (path)
+    if root_item == 0 {
+        // - Add array length
+      canars::encode_scalar_u8(&mut buffer, offset, 8, data.len() as u8);
+      offset += 8;
+    }
+
+    // - Add array items
+    for c in &data {
+        canars::encode_scalar_u8(&mut buffer, offset, 8, *c);
+        offset += 8;
+    }
+
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<Path> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = Path::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = Path::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<Path> {
+    let mut offset = offset;
+
+    let vint_path_len;
+    //  - Last item in struct & Root item & (Array Size > 8 bit), tail array optimization
+    if xfer.get_payload_len() > 0 && tao {
+      //  - Calculate Array length from MSG length
+      vint_path_len = ((xfer.get_payload_len() as usize * 8) - *offset) / 8; // 8 bit array item size
+    }
+    else {
+      // - Array length 8 bits
+      vint_path_len = match xfer.decode_scalar_u8(offset, 8) {
+       Some(s) => s as usize,
+       None => return None,
+      };
+    }
+    let mut vint_path = Vec::new();
+    for _c in 0..vint_path_len {
+      let data = match xfer.decode_scalar_u8(offset, 8) {
+        Some(s) => s,
+        None => return None,
+      };
+      vint_path.push(data);
+    }
+    //  - Get Array
+
+    Some(Path {
+      path: vint_path,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct GetInfoRequest {
+  // FieldTypes
+    pub path: ::uavcan::protocol::file::Path, //
+
+}
+
+impl GetInfoRequest {
+  pub const ID: u16 = 45;
+  pub const SIGNATURE: u64 = 0x5004891EE8A27531;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == GetInfoRequest::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = GetInfoRequest::SIGNATURE;
+  }
+
+  pub fn encode(instance: GetInfoRequest) -> (Vec<u8>, usize) {
+    let (vec, mut size) = GetInfoRequest::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: GetInfoRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.path;
+
+    let (b, off) = ::uavcan::protocol::file::Path::encode_internal(data, buffer, offset, 0);
+    offset = off;
+    buffer = b;
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<GetInfoRequest> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = GetInfoRequest::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = GetInfoRequest::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<GetInfoRequest> {
+    let mut offset = offset;
+
+    let vint_path = match ::uavcan::protocol::file::Path::decode_internal(xfer, offset, tao) {
+      Some(s) => s,
+      None => return None,
+    };
+
+    Some(GetInfoRequest {
+      path: vint_path,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct GetInfoResponse {
+  // FieldTypes
+    pub size: u64, // bit len 40
+    pub error: ::uavcan::protocol::file::Error, //
+    pub entry_type: ::uavcan::protocol::file::EntryType, //
+
+}
+
+impl GetInfoResponse {
+  pub const ID: u16 = 45;
+  pub const SIGNATURE: u64 = 0x5004891EE8A27531;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == GetInfoResponse::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = GetInfoResponse::SIGNATURE;
+  }
+
+  pub fn encode(instance: GetInfoResponse) -> (Vec<u8>, usize) {
+    let (vec, mut size) = GetInfoResponse::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: GetInfoResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.size;
+
+    let vint_size = ::saturate_unsigned(data, 1099511627775);
+    canars::encode_scalar_u64(&mut buffer, offset, 40, vint_size); // 1099511627775
+    offset += 40;
+    let data = instance.error;
+
+    let (b, off) = ::uavcan::protocol::file::Error::encode_internal(data, buffer, offset, 0);
+    offset = off;
+    buffer = b;
+    let data = instance.entry_type;
+
+    let (b, off) = ::uavcan::protocol::file::EntryType::encode_internal(data, buffer, offset, 0);
+    offset = off;
+    buffer = b;
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<GetInfoResponse> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = GetInfoResponse::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = GetInfoResponse::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<GetInfoResponse> {
+    let mut offset = offset;
+
+    let vint_size = match xfer.decode_scalar_u64(offset, 40) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_error = match ::uavcan::protocol::file::Error::decode_internal(xfer, offset, false) {
+      Some(s) => s,
+      None => return None,
+    };
+    let vint_entry_type = match ::uavcan::protocol::file::EntryType::decode_internal(xfer, offset, tao) {
+      Some(s) => s,
+      None => return None,
+    };
+
+    Some(GetInfoResponse {
+      size: vint_size,
+      error: vint_error,
+      entry_type: vint_entry_type,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct GetDirectoryEntryInfoRequest {
+  // FieldTypes
+    pub entry_index: u32, // bit len 32
+    pub directory_path: ::uavcan::protocol::file::Path, //
+
+}
+
+impl GetDirectoryEntryInfoRequest {
+  pub const ID: u16 = 46;
+  pub const SIGNATURE: u64 = 0x8C46E8AB568BDA79;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == GetDirectoryEntryInfoRequest::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = GetDirectoryEntryInfoRequest::SIGNATURE;
+  }
+
+  pub fn encode(instance: GetDirectoryEntryInfoRequest) -> (Vec<u8>, usize) {
+    let (vec, mut size) = GetDirectoryEntryInfoRequest::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: GetDirectoryEntryInfoRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.entry_index;
+
+    let vint_entry_index = data;
+    canars::encode_scalar_u32(&mut buffer, offset, 32, vint_entry_index); // 4294967295
+    offset += 32;
+    let data = instance.directory_path;
+
+    let (b, off) = ::uavcan::protocol::file::Path::encode_internal(data, buffer, offset, 0);
+    offset = off;
+    buffer = b;
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<GetDirectoryEntryInfoRequest> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = GetDirectoryEntryInfoRequest::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = GetDirectoryEntryInfoRequest::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<GetDirectoryEntryInfoRequest> {
+    let mut offset = offset;
+
+    let vint_entry_index = match xfer.decode_scalar_u32(offset, 32) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_directory_path = match ::uavcan::protocol::file::Path::decode_internal(xfer, offset, tao) {
+      Some(s) => s,
+      None => return None,
+    };
+
+    Some(GetDirectoryEntryInfoRequest {
+      entry_index: vint_entry_index,
+      directory_path: vint_directory_path,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct GetDirectoryEntryInfoResponse {
+  // FieldTypes
+    pub error: ::uavcan::protocol::file::Error, //
+    pub entry_type: ::uavcan::protocol::file::EntryType, //
+    pub entry_full_path: ::uavcan::protocol::file::Path, //
+
+}
+
+impl GetDirectoryEntryInfoResponse {
+  pub const ID: u16 = 46;
+  pub const SIGNATURE: u64 = 0x8C46E8AB568BDA79;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == GetDirectoryEntryInfoResponse::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = GetDirectoryEntryInfoResponse::SIGNATURE;
+  }
+
+  pub fn encode(instance: GetDirectoryEntryInfoResponse) -> (Vec<u8>, usize) {
+    let (vec, mut size) = GetDirectoryEntryInfoResponse::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: GetDirectoryEntryInfoResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.error;
+
+    let (b, off) = ::uavcan::protocol::file::Error::encode_internal(data, buffer, offset, 0);
+    offset = off;
+    buffer = b;
+    let data = instance.entry_type;
+
+    let (b, off) = ::uavcan::protocol::file::EntryType::encode_internal(data, buffer, offset, 0);
+    offset = off;
+    buffer = b;
+    let data = instance.entry_full_path;
+
+    let (b, off) = ::uavcan::protocol::file::Path::encode_internal(data, buffer, offset, 0);
+    offset = off;
+    buffer = b;
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<GetDirectoryEntryInfoResponse> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = GetDirectoryEntryInfoResponse::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = GetDirectoryEntryInfoResponse::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<GetDirectoryEntryInfoResponse> {
+    let mut offset = offset;
+
+    let vint_error = match ::uavcan::protocol::file::Error::decode_internal(xfer, offset, false) {
+      Some(s) => s,
+      None => return None,
+    };
+    let vint_entry_type = match ::uavcan::protocol::file::EntryType::decode_internal(xfer, offset, false) {
+      Some(s) => s,
+      None => return None,
+    };
+    let vint_entry_full_path = match ::uavcan::protocol::file::Path::decode_internal(xfer, offset, tao) {
+      Some(s) => s,
+      None => return None,
+    };
+
+    Some(GetDirectoryEntryInfoResponse {
+      error: vint_error,
+      entry_type: vint_entry_type,
+      entry_full_path: vint_entry_full_path,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct EntryType {
+  // FieldTypes
+    pub flags: u8, // bit len 8
+
+}
+
+impl EntryType {
+  pub const SIGNATURE: u64 = 0x6924572FBB2086E5;
+  pub const FLAG_FILE: u8 = 1 as u8;
+  pub const FLAG_DIRECTORY: u8 = 2 as u8;
+  pub const FLAG_SYMLINK: u8 = 4 as u8;
+  pub const FLAG_READABLE: u8 = 8 as u8;
+  pub const FLAG_WRITEABLE: u8 = 16 as u8;
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = EntryType::SIGNATURE;
+  }
+
+  pub fn encode(instance: EntryType) -> (Vec<u8>, usize) {
+    let (vec, mut size) = EntryType::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: EntryType, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.flags;
+
+    let vint_flags = data;
+    canars::encode_scalar_u8(&mut buffer, offset, 8, vint_flags); // 255
+    offset += 8;
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<EntryType> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = EntryType::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = EntryType::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<EntryType> {
+    let mut offset = offset;
+
+    let vint_flags = match xfer.decode_scalar_u8(offset, 8) {
+     Some(s) => s,
+     None => return None,
+    };
+
+    Some(EntryType {
+      flags: vint_flags,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct BeginFirmwareUpdateRequest {
+  // FieldTypes
+    pub source_node_id: u8, // bit len 8
+    pub image_file_remote_path: ::uavcan::protocol::file::Path, //
+
+}
+
+impl BeginFirmwareUpdateRequest {
+  pub const ID: u16 = 40;
+  pub const SIGNATURE: u64 = 0xB7D725DF72724126;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == BeginFirmwareUpdateRequest::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = BeginFirmwareUpdateRequest::SIGNATURE;
+  }
+
+  pub fn encode(instance: BeginFirmwareUpdateRequest) -> (Vec<u8>, usize) {
+    let (vec, mut size) = BeginFirmwareUpdateRequest::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: BeginFirmwareUpdateRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.source_node_id;
+
+    let vint_source_node_id = data;
+    canars::encode_scalar_u8(&mut buffer, offset, 8, vint_source_node_id); // 255
+    offset += 8;
+    let data = instance.image_file_remote_path;
+
+    let (b, off) = ::uavcan::protocol::file::Path::encode_internal(data, buffer, offset, 0);
+    offset = off;
+    buffer = b;
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<BeginFirmwareUpdateRequest> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = BeginFirmwareUpdateRequest::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = BeginFirmwareUpdateRequest::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<BeginFirmwareUpdateRequest> {
+    let mut offset = offset;
+
+    let vint_source_node_id = match xfer.decode_scalar_u8(offset, 8) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_image_file_remote_path = match ::uavcan::protocol::file::Path::decode_internal(xfer, offset, tao) {
+      Some(s) => s,
+      None => return None,
+    };
+
+    Some(BeginFirmwareUpdateRequest {
+      source_node_id: vint_source_node_id,
+      image_file_remote_path: vint_image_file_remote_path,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct BeginFirmwareUpdateResponse {
+  // FieldTypes
+    pub error: u8, // bit len 8
+    pub optional_error_message: Vec<u8>, // Dynamic Array 8bit[127] max items
+
+}
+
+impl BeginFirmwareUpdateResponse {
+  pub const ID: u16 = 40;
+  pub const SIGNATURE: u64 = 0xB7D725DF72724126;
+  pub const ERROR_OK: u8 = 0 as u8;
+  pub const ERROR_INVALID_MODE: u8 = 1 as u8;
+  pub const ERROR_IN_PROGRESS: u8 = 2 as u8;
+  pub const ERROR_UNKNOWN: u8 = 255 as u8;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == BeginFirmwareUpdateResponse::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = BeginFirmwareUpdateResponse::SIGNATURE;
+  }
+
+  pub fn encode(instance: BeginFirmwareUpdateResponse) -> (Vec<u8>, usize) {
+    let (vec, mut size) = BeginFirmwareUpdateResponse::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: BeginFirmwareUpdateResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.error;
+
+    let vint_error = data;
+    canars::encode_scalar_u8(&mut buffer, offset, 8, vint_error); // 255
+    offset += 8;
+    let data = instance.optional_error_message;
+
+    // Dynamic Array (optional_error_message)
+    if root_item == 0 {
+        // - Add array length
+      canars::encode_scalar_u8(&mut buffer, offset, 7, data.len() as u8);
+      offset += 7;
+    }
+
+    // - Add array items
+    for c in &data {
+        canars::encode_scalar_u8(&mut buffer, offset, 8, *c);
+        offset += 8;
+    }
+
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<BeginFirmwareUpdateResponse> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = BeginFirmwareUpdateResponse::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = BeginFirmwareUpdateResponse::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<BeginFirmwareUpdateResponse> {
+    let mut offset = offset;
+
+    let vint_error = match xfer.decode_scalar_u8(offset, 8) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_optional_error_message_len;
+    //  - Last item in struct & Root item & (Array Size > 8 bit), tail array optimization
+    if xfer.get_payload_len() > 0 && tao {
+      //  - Calculate Array length from MSG length
+      vint_optional_error_message_len = ((xfer.get_payload_len() as usize * 8) - *offset) / 8; // 8 bit array item size
+    }
+    else {
+      // - Array length 7 bits
+      vint_optional_error_message_len = match xfer.decode_scalar_u8(offset, 7) {
+       Some(s) => s as usize,
+       None => return None,
+      };
+    }
+    let mut vint_optional_error_message = Vec::new();
+    for _c in 0..vint_optional_error_message_len {
+      let data = match xfer.decode_scalar_u8(offset, 8) {
+        Some(s) => s,
+        None => return None,
+      };
+      vint_optional_error_message.push(data);
+    }
+    //  - Get Array
+
+    Some(BeginFirmwareUpdateResponse {
+      error: vint_error,
+      optional_error_message: vint_optional_error_message,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct ReadRequest {
+  // FieldTypes
+    pub offset: u64, // bit len 40
+    pub path: ::uavcan::protocol::file::Path, //
+
+}
+
+impl ReadRequest {
+  pub const ID: u16 = 48;
+  pub const SIGNATURE: u64 = 0x8DCDCA939F33F678;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == ReadRequest::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = ReadRequest::SIGNATURE;
+  }
+
+  pub fn encode(instance: ReadRequest) -> (Vec<u8>, usize) {
+    let (vec, mut size) = ReadRequest::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: ReadRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.offset;
+
+    let vint_offset = ::saturate_unsigned(data, 1099511627775);
+    canars::encode_scalar_u64(&mut buffer, offset, 40, vint_offset); // 1099511627775
+    offset += 40;
+    let data = instance.path;
+
+    let (b, off) = ::uavcan::protocol::file::Path::encode_internal(data, buffer, offset, 0);
+    offset = off;
+    buffer = b;
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<ReadRequest> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = ReadRequest::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = ReadRequest::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<ReadRequest> {
+    let mut offset = offset;
+
+    let vint_offset = match xfer.decode_scalar_u64(offset, 40) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_path = match ::uavcan::protocol::file::Path::decode_internal(xfer, offset, tao) {
+      Some(s) => s,
+      None => return None,
+    };
+
+    Some(ReadRequest {
+      offset: vint_offset,
+      path: vint_path,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct ReadResponse {
+  // FieldTypes
+    pub error: ::uavcan::protocol::file::Error, //
+    pub data: Vec<u8>, // Dynamic Array 8bit[256] max items
+
+}
+
+impl ReadResponse {
+  pub const ID: u16 = 48;
+  pub const SIGNATURE: u64 = 0x8DCDCA939F33F678;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == ReadResponse::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = ReadResponse::SIGNATURE;
+  }
+
+  pub fn encode(instance: ReadResponse) -> (Vec<u8>, usize) {
+    let (vec, mut size) = ReadResponse::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: ReadResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.error;
+
+    let (b, off) = ::uavcan::protocol::file::Error::encode_internal(data, buffer, offset, 0);
+    offset = off;
+    buffer = b;
+    let data = instance.data;
+
+    // Dynamic Array (data)
+    if root_item == 0 {
+        // - Add array length
+      canars::encode_scalar_u16(&mut buffer, offset, 9, data.len() as u16);
+      offset += 9;
+    }
+
+    // - Add array items
+    for c in &data {
+        canars::encode_scalar_u8(&mut buffer, offset, 8, *c);
+        offset += 8;
+    }
+
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<ReadResponse> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = ReadResponse::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = ReadResponse::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<ReadResponse> {
+    let mut offset = offset;
+
+    let vint_error = match ::uavcan::protocol::file::Error::decode_internal(xfer, offset, false) {
+      Some(s) => s,
+      None => return None,
+    };
+    let vint_data_len;
+    //  - Last item in struct & Root item & (Array Size > 8 bit), tail array optimization
+    if xfer.get_payload_len() > 0 && tao {
+      //  - Calculate Array length from MSG length
+      vint_data_len = ((xfer.get_payload_len() as usize * 8) - *offset) / 8; // 8 bit array item size
+    }
+    else {
+      // - Array length 9 bits
+      vint_data_len = match xfer.decode_scalar_u16(offset, 9) {
+       Some(s) => s as usize,
+       None => return None,
+      };
+    }
+    let mut vint_data = Vec::new();
+    for _c in 0..vint_data_len {
+      let data = match xfer.decode_scalar_u8(offset, 8) {
+        Some(s) => s,
+        None => return None,
+      };
+      vint_data.push(data);
+    }
+    //  - Get Array
+
+    Some(ReadResponse {
+      error: vint_error,
+      data: vint_data,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct WriteRequest {
+  // FieldTypes
+    pub offset: u64, // bit len 40
+    pub path: ::uavcan::protocol::file::Path, //
+    pub data: Vec<u8>, // Dynamic Array 8bit[192] max items
+
+}
+
+impl WriteRequest {
+  pub const ID: u16 = 49;
+  pub const SIGNATURE: u64 = 0x515AA1DC77E58429;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == WriteRequest::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = WriteRequest::SIGNATURE;
+  }
+
+  pub fn encode(instance: WriteRequest) -> (Vec<u8>, usize) {
+    let (vec, mut size) = WriteRequest::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: WriteRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.offset;
+
+    let vint_offset = ::saturate_unsigned(data, 1099511627775);
+    canars::encode_scalar_u64(&mut buffer, offset, 40, vint_offset); // 1099511627775
+    offset += 40;
+    let data = instance.path;
+
+    let (b, off) = ::uavcan::protocol::file::Path::encode_internal(data, buffer, offset, 0);
+    offset = off;
+    buffer = b;
+    let data = instance.data;
+
+    // Dynamic Array (data)
+    if root_item == 0 {
+        // - Add array length
+      canars::encode_scalar_u8(&mut buffer, offset, 8, data.len() as u8);
+      offset += 8;
+    }
+
+    // - Add array items
+    for c in &data {
+        canars::encode_scalar_u8(&mut buffer, offset, 8, *c);
+        offset += 8;
+    }
+
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<WriteRequest> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = WriteRequest::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = WriteRequest::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<WriteRequest> {
+    let mut offset = offset;
+
+    let vint_offset = match xfer.decode_scalar_u64(offset, 40) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_path = match ::uavcan::protocol::file::Path::decode_internal(xfer, offset, false) {
+      Some(s) => s,
+      None => return None,
+    };
+    let vint_data_len;
+    //  - Last item in struct & Root item & (Array Size > 8 bit), tail array optimization
+    if xfer.get_payload_len() > 0 && tao {
+      //  - Calculate Array length from MSG length
+      vint_data_len = ((xfer.get_payload_len() as usize * 8) - *offset) / 8; // 8 bit array item size
+    }
+    else {
+      // - Array length 8 bits
+      vint_data_len = match xfer.decode_scalar_u8(offset, 8) {
+       Some(s) => s as usize,
+       None => return None,
+      };
+    }
+    let mut vint_data = Vec::new();
+    for _c in 0..vint_data_len {
+      let data = match xfer.decode_scalar_u8(offset, 8) {
+        Some(s) => s,
+        None => return None,
+      };
+      vint_data.push(data);
+    }
+    //  - Get Array
+
+    Some(WriteRequest {
+      offset: vint_offset,
+      path: vint_path,
+      data: vint_data,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct WriteResponse {
+  // FieldTypes
+    pub error: ::uavcan::protocol::file::Error, //
+
+}
+
+impl WriteResponse {
+  pub const ID: u16 = 49;
+  pub const SIGNATURE: u64 = 0x515AA1DC77E58429;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == WriteResponse::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = WriteResponse::SIGNATURE;
+  }
+
+  pub fn encode(instance: WriteResponse) -> (Vec<u8>, usize) {
+    let (vec, mut size) = WriteResponse::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: WriteResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.error;
+
+    let (b, off) = ::uavcan::protocol::file::Error::encode_internal(data, buffer, offset, 0);
+    offset = off;
+    buffer = b;
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<WriteResponse> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = WriteResponse::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = WriteResponse::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<WriteResponse> {
+    let mut offset = offset;
+
+    let vint_error = match ::uavcan::protocol::file::Error::decode_internal(xfer, offset, tao) {
+      Some(s) => s,
+      None => return None,
+    };
+
+    Some(WriteResponse {
+      error: vint_error,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct Error {
+  // FieldTypes
+    pub value: i16, // bit len 16
+
+}
+
+impl Error {
+  pub const SIGNATURE: u64 = 0xA83071FFEA4FAE15;
+  pub const OK: i16 = 0 as i16;
+  pub const UNKNOWN_ERROR: i16 = 32767 as i16;
+  pub const NOT_FOUND: i16 = 2 as i16;
+  pub const IO_ERROR: i16 = 5 as i16;
+  pub const ACCESS_DENIED: i16 = 13 as i16;
+  pub const IS_DIRECTORY: i16 = 21 as i16;
+  pub const INVALID_VALUE: i16 = 22 as i16;
+  pub const FILE_TOO_LARGE: i16 = 27 as i16;
+  pub const OUT_OF_SPACE: i16 = 28 as i16;
+  pub const NOT_IMPLEMENTED: i16 = 38 as i16;
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = Error::SIGNATURE;
+  }
+
+  pub fn encode(instance: Error) -> (Vec<u8>, usize) {
+    let (vec, mut size) = Error::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: Error, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.value;
+
+    let vint_value = data;
+    canars::encode_scalar_i16(&mut buffer, offset, 16, vint_value); // 32767
+    offset += 16;
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<Error> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = Error::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = Error::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<Error> {
+    let mut offset = offset;
+
+    let vint_value = match xfer.decode_scalar_i16(offset, 16) {
+     Some(s) => s,
+     None => return None,
+    };
+
+    Some(Error {
+      value: vint_value,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct DeleteRequest {
+  // FieldTypes
+    pub path: ::uavcan::protocol::file::Path, //
+
+}
+
+impl DeleteRequest {
+  pub const ID: u16 = 47;
+  pub const SIGNATURE: u64 = 0x78648C99170B47AA;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == DeleteRequest::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = DeleteRequest::SIGNATURE;
+  }
+
+  pub fn encode(instance: DeleteRequest) -> (Vec<u8>, usize) {
+    let (vec, mut size) = DeleteRequest::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: DeleteRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.path;
+
+    let (b, off) = ::uavcan::protocol::file::Path::encode_internal(data, buffer, offset, 0);
+    offset = off;
+    buffer = b;
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<DeleteRequest> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = DeleteRequest::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = DeleteRequest::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<DeleteRequest> {
+    let mut offset = offset;
+
+    let vint_path = match ::uavcan::protocol::file::Path::decode_internal(xfer, offset, tao) {
+      Some(s) => s,
+      None => return None,
+    };
+
+    Some(DeleteRequest {
+      path: vint_path,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct DeleteResponse {
+  // FieldTypes
+    pub error: ::uavcan::protocol::file::Error, //
+
+}
+
+impl DeleteResponse {
+  pub const ID: u16 = 47;
+  pub const SIGNATURE: u64 = 0x78648C99170B47AA;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == DeleteResponse::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = DeleteResponse::SIGNATURE;
+  }
+
+  pub fn encode(instance: DeleteResponse) -> (Vec<u8>, usize) {
+    let (vec, mut size) = DeleteResponse::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: DeleteResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.error;
+
+    let (b, off) = ::uavcan::protocol::file::Error::encode_internal(data, buffer, offset, 0);
+    offset = off;
+    buffer = b;
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<DeleteResponse> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = DeleteResponse::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = DeleteResponse::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<DeleteResponse> {
+    let mut offset = offset;
+
+    let vint_error = match ::uavcan::protocol::file::Error::decode_internal(xfer, offset, tao) {
+      Some(s) => s,
+      None => return None,
+    };
+
+    Some(DeleteResponse {
+      error: vint_error,
+    })
+  }
+
+}
+
+}pub mod dynamic_node_id {
+pub mod server {
+
+#[derive(Debug, Clone)]
+pub struct Discovery {
+  // FieldTypes
+    pub configured_cluster_size: u8, // bit len 8
+    pub known_nodes: Vec<u8>, // Dynamic Array 8bit[5] max items
+
+}
+
+impl Discovery {
+  pub const ID: u16 = 390;
+  pub const SIGNATURE: u64 = 0x821AE2F525F69F21;
+  pub const BROADCASTING_PERIOD_MS: u16 = 1000 as u16;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == Discovery::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = Discovery::SIGNATURE;
+  }
+
+  pub fn encode(instance: Discovery) -> (Vec<u8>, usize) {
+    let (vec, mut size) = Discovery::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: Discovery, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.configured_cluster_size;
+
+    let vint_configured_cluster_size = data;
+    canars::encode_scalar_u8(&mut buffer, offset, 8, vint_configured_cluster_size); // 255
+    offset += 8;
+    let data = instance.known_nodes;
+
+    // Dynamic Array (known_nodes)
+    if root_item == 0 {
+        // - Add array length
+      canars::encode_scalar_u8(&mut buffer, offset, 3, data.len() as u8);
+      offset += 3;
+    }
+
+    // - Add array items
+    for c in &data {
+        canars::encode_scalar_u8(&mut buffer, offset, 8, *c);
+        offset += 8;
+    }
+
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<Discovery> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = Discovery::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = Discovery::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<Discovery> {
+    let mut offset = offset;
+
+    let vint_configured_cluster_size = match xfer.decode_scalar_u8(offset, 8) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_known_nodes_len;
+    //  - Last item in struct & Root item & (Array Size > 8 bit), tail array optimization
+    if xfer.get_payload_len() > 0 && tao {
+      //  - Calculate Array length from MSG length
+      vint_known_nodes_len = ((xfer.get_payload_len() as usize * 8) - *offset) / 8; // 8 bit array item size
+    }
+    else {
+      // - Array length 3 bits
+      vint_known_nodes_len = match xfer.decode_scalar_u8(offset, 3) {
+       Some(s) => s as usize,
+       None => return None,
+      };
+    }
+    let mut vint_known_nodes = Vec::new();
+    for _c in 0..vint_known_nodes_len {
+      let data = match xfer.decode_scalar_u8(offset, 8) {
+        Some(s) => s,
+        None => return None,
+      };
+      vint_known_nodes.push(data);
+    }
+    //  - Get Array
+
+    Some(Discovery {
+      configured_cluster_size: vint_configured_cluster_size,
+      known_nodes: vint_known_nodes,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct Entry {
+  // FieldTypes
+    pub term: u32, // bit len 32
+    pub unique_id: [u8; 16], // Static Array 8bit[16] max items
+    // void1
+    pub node_id: u8, // bit len 7
+
+}
+
+impl Entry {
+  pub const SIGNATURE: u64 = 0x7FAA779D64FA75C2;
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = Entry::SIGNATURE;
+  }
+
+  pub fn encode(instance: Entry) -> (Vec<u8>, usize) {
+    let (vec, mut size) = Entry::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: Entry, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.term;
+
+    let vint_term = data;
+    canars::encode_scalar_u32(&mut buffer, offset, 32, vint_term); // 4294967295
+    offset += 32;
+    let data = instance.unique_id;
+
+    // Static array (unique_id)
+    for c in &data {
+        canars::encode_scalar_u8(&mut buffer, offset, 8, *c);
+        offset += 8;
+    }
+
+    unimplemented!(); //E2
+    let data = instance.node_id;
+
+    let vint_node_id = ::saturate_unsigned(data, 127);
+    canars::encode_scalar_u8(&mut buffer, offset, 7, vint_node_id); // 127
+    offset += 7;
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<Entry> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = Entry::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = Entry::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<Entry> {
+    let mut offset = offset;
+
+    let vint_term = match xfer.decode_scalar_u32(offset, 32) {
+     Some(s) => s,
+     None => return None,
+    };
+    // Static array (unique_id)
+    let mut vint_unique_id = [0 as u8; 16];
+    for c in 0..16 {
+      vint_unique_id[c] = match xfer.decode_scalar_u8(offset, 8) {
+       Some(s) => s,
+       None => return None,
+      };
+    }
+
+        unimplemented!(); //3
+    let vint_node_id = match xfer.decode_scalar_u8(offset, 7) {
+     Some(s) => s,
+     None => return None,
+    };
+
+    Some(Entry {
+      term: vint_term,
+      unique_id: vint_unique_id,
+      node_id: vint_node_id,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct AppendEntriesRequest {
+  // FieldTypes
+    pub term: u32, // bit len 32
+    pub prev_log_term: u32, // bit len 32
+    pub prev_log_index: u8, // bit len 8
+    pub leader_commit: u8, // bit len 8
+    pub entries: Vec<::uavcan::protocol::dynamic_node_id::server::Entry>, // Dynamic Array 168bit[1] max items
+
+}
+
+impl AppendEntriesRequest {
+  pub const ID: u16 = 30;
+  pub const SIGNATURE: u64 = 0x8032C7097B48A3CC;
+  pub const DEFAULT_MIN_ELECTION_TIMEOUT_MS: u16 = 2000 as u16;
+  pub const DEFAULT_MAX_ELECTION_TIMEOUT_MS: u16 = 4000 as u16;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == AppendEntriesRequest::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = AppendEntriesRequest::SIGNATURE;
+  }
+
+  pub fn encode(instance: AppendEntriesRequest) -> (Vec<u8>, usize) {
+    let (vec, mut size) = AppendEntriesRequest::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: AppendEntriesRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.term;
+
+    let vint_term = data;
+    canars::encode_scalar_u32(&mut buffer, offset, 32, vint_term); // 4294967295
+    offset += 32;
+    let data = instance.prev_log_term;
+
+    let vint_prev_log_term = data;
+    canars::encode_scalar_u32(&mut buffer, offset, 32, vint_prev_log_term); // 4294967295
+    offset += 32;
+    let data = instance.prev_log_index;
+
+    let vint_prev_log_index = data;
+    canars::encode_scalar_u8(&mut buffer, offset, 8, vint_prev_log_index); // 255
+    offset += 8;
+    let data = instance.leader_commit;
+
+    let vint_leader_commit = data;
+    canars::encode_scalar_u8(&mut buffer, offset, 8, vint_leader_commit); // 255
+    offset += 8;
+    let data = instance.entries;
+
+    // Dynamic Array (entries)
+    if root_item == 0 {
+        // - Add array length
+      canars::encode_scalar_u8(&mut buffer, offset, 1, data.len() as u8);
+      offset += 1;
+    }
+
+    // - Add array items
+    for c in &data {
+      let (b, off) = ::uavcan::protocol::dynamic_node_id::server::Entry::encode_internal(c.clone(), buffer, offset, 0);
+      offset = off;
+      buffer = b;
+    }
+
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<AppendEntriesRequest> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = AppendEntriesRequest::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = AppendEntriesRequest::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<AppendEntriesRequest> {
+    let mut offset = offset;
+
+    let vint_term = match xfer.decode_scalar_u32(offset, 32) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_prev_log_term = match xfer.decode_scalar_u32(offset, 32) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_prev_log_index = match xfer.decode_scalar_u8(offset, 8) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_leader_commit = match xfer.decode_scalar_u8(offset, 8) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_entries_len;
+    //  - Last item in struct & Root item & (Array Size > 8 bit), tail array optimization
+    if xfer.get_payload_len() > 0 && tao {
+      //  - Calculate Array length from MSG length
+      vint_entries_len = ((xfer.get_payload_len() as usize * 8) - *offset) / 168; // 168 bit array item size
+    }
+    else {
+      // - Array length 1 bits
+      vint_entries_len = match xfer.decode_scalar_u8(offset, 1) {
+       Some(s) => s as usize,
+       None => return None,
+      };
+    }
+    let mut vint_entries = Vec::new();
+    for _c in 0..vint_entries_len {
+            unimplemented!(); //1
+    }
+    //  - Get Array
+
+    Some(AppendEntriesRequest {
+      term: vint_term,
+      prev_log_term: vint_prev_log_term,
+      prev_log_index: vint_prev_log_index,
+      leader_commit: vint_leader_commit,
+      entries: vint_entries,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct AppendEntriesResponse {
+  // FieldTypes
+    pub term: u32, // bit len 32
+    pub success: bool, // bit len 1
+
+}
+
+impl AppendEntriesResponse {
+  pub const ID: u16 = 30;
+  pub const SIGNATURE: u64 = 0x8032C7097B48A3CC;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == AppendEntriesResponse::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = AppendEntriesResponse::SIGNATURE;
+  }
+
+  pub fn encode(instance: AppendEntriesResponse) -> (Vec<u8>, usize) {
+    let (vec, mut size) = AppendEntriesResponse::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: AppendEntriesResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.term;
+
+    let vint_term = data;
+    canars::encode_scalar_u32(&mut buffer, offset, 32, vint_term); // 4294967295
+    offset += 32;
+    let data = instance.success;
+
+    let vint_success = ::saturate_unsigned(data, true);
+    canars::encode_scalar_bool(&mut buffer, offset, 1, vint_success); // 1
+    offset += 1;
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<AppendEntriesResponse> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = AppendEntriesResponse::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = AppendEntriesResponse::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<AppendEntriesResponse> {
+    let mut offset = offset;
+
+    let vint_term = match xfer.decode_scalar_u32(offset, 32) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_success = match xfer.decode_scalar_bool(offset, 1) {
+     Some(s) => s,
+     None => return None,
+    };
+
+    Some(AppendEntriesResponse {
+      term: vint_term,
+      success: vint_success,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct RequestVoteRequest {
+  // FieldTypes
+    pub term: u32, // bit len 32
+    pub last_log_term: u32, // bit len 32
+    pub last_log_index: u8, // bit len 8
+
+}
+
+impl RequestVoteRequest {
+  pub const ID: u16 = 31;
+  pub const SIGNATURE: u64 = 0xCDDE07BB89A56356;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == RequestVoteRequest::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = RequestVoteRequest::SIGNATURE;
+  }
+
+  pub fn encode(instance: RequestVoteRequest) -> (Vec<u8>, usize) {
+    let (vec, mut size) = RequestVoteRequest::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: RequestVoteRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.term;
+
+    let vint_term = data;
+    canars::encode_scalar_u32(&mut buffer, offset, 32, vint_term); // 4294967295
+    offset += 32;
+    let data = instance.last_log_term;
+
+    let vint_last_log_term = data;
+    canars::encode_scalar_u32(&mut buffer, offset, 32, vint_last_log_term); // 4294967295
+    offset += 32;
+    let data = instance.last_log_index;
+
+    let vint_last_log_index = data;
+    canars::encode_scalar_u8(&mut buffer, offset, 8, vint_last_log_index); // 255
+    offset += 8;
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<RequestVoteRequest> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = RequestVoteRequest::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = RequestVoteRequest::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<RequestVoteRequest> {
+    let mut offset = offset;
+
+    let vint_term = match xfer.decode_scalar_u32(offset, 32) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_last_log_term = match xfer.decode_scalar_u32(offset, 32) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_last_log_index = match xfer.decode_scalar_u8(offset, 8) {
+     Some(s) => s,
+     None => return None,
+    };
+
+    Some(RequestVoteRequest {
+      term: vint_term,
+      last_log_term: vint_last_log_term,
+      last_log_index: vint_last_log_index,
+    })
+  }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct RequestVoteResponse {
+  // FieldTypes
+    pub term: u32, // bit len 32
+    pub vote_granted: bool, // bit len 1
+
+}
+
+impl RequestVoteResponse {
+  pub const ID: u16 = 31;
+  pub const SIGNATURE: u64 = 0xCDDE07BB89A56356;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == RequestVoteResponse::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = RequestVoteResponse::SIGNATURE;
+  }
+
+  pub fn encode(instance: RequestVoteResponse) -> (Vec<u8>, usize) {
+    let (vec, mut size) = RequestVoteResponse::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: RequestVoteResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.term;
+
+    let vint_term = data;
+    canars::encode_scalar_u32(&mut buffer, offset, 32, vint_term); // 4294967295
+    offset += 32;
+    let data = instance.vote_granted;
+
+    let vint_vote_granted = ::saturate_unsigned(data, true);
+    canars::encode_scalar_bool(&mut buffer, offset, 1, vint_vote_granted); // 1
+    offset += 1;
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<RequestVoteResponse> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = RequestVoteResponse::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = RequestVoteResponse::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<RequestVoteResponse> {
+    let mut offset = offset;
+
+    let vint_term = match xfer.decode_scalar_u32(offset, 32) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_vote_granted = match xfer.decode_scalar_bool(offset, 1) {
+     Some(s) => s,
+     None => return None,
+    };
+
+    Some(RequestVoteResponse {
+      term: vint_term,
+      vote_granted: vint_vote_granted,
+    })
+  }
+
+}
+
+}
+
+#[derive(Debug, Clone)]
+pub struct Allocation {
+  // FieldTypes
+    pub node_id: u8, // bit len 7
+    pub first_part_of_unique_id: bool, // bit len 1
+    pub unique_id: Vec<u8>, // Dynamic Array 8bit[16] max items
+
+}
+
+impl Allocation {
+  pub const ID: u16 = 1;
+  pub const SIGNATURE: u64 = 0xB2A812620A11D40;
+  pub const MAX_REQUEST_PERIOD_MS: u16 = 1000 as u16;
+  pub const MIN_REQUEST_PERIOD_MS: u16 = 600 as u16;
+  pub const MAX_FOLLOWUP_DELAY_MS: u16 = 400 as u16;
+  pub const MIN_FOLLOWUP_DELAY_MS: u16 = 0 as u16;
+  pub const FOLLOWUP_TIMEOUT_MS: u16 = 500 as u16;
+  pub const MAX_LENGTH_OF_UNIQUE_ID_IN_REQUEST: u8 = 6 as u8;
+  pub const ANY_NODE_ID: u8 = 0 as u8;
+
+  pub fn check_id(data_type: u16) -> bool {
+    data_type == Allocation::ID
+  }
+
+  pub fn set_signature(signature: &mut u64){
+    *signature = Allocation::SIGNATURE;
+  }
+
+  pub fn encode(instance: Allocation) -> (Vec<u8>, usize) {
+    let (vec, mut size) = Allocation::encode_internal(instance, Vec::new(), 0, 1);
+
+    size = (size + 7 ) / 8;
+    (vec, size)
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn encode_internal(instance: Allocation, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
+  let mut offset = offset;
+
+    let data = instance.node_id;
+
+    let vint_node_id = ::saturate_unsigned(data, 127);
+    canars::encode_scalar_u8(&mut buffer, offset, 7, vint_node_id); // 127
+    offset += 7;
+    let data = instance.first_part_of_unique_id;
+
+    let vint_first_part_of_unique_id = ::saturate_unsigned(data, true);
+    canars::encode_scalar_bool(&mut buffer, offset, 1, vint_first_part_of_unique_id); // 1
+    offset += 1;
+    let data = instance.unique_id;
+
+    // Dynamic Array (unique_id)
+    if root_item == 0 {
+        // - Add array length
+      canars::encode_scalar_u8(&mut buffer, offset, 5, data.len() as u8);
+      offset += 5;
+    }
+
+    // - Add array items
+    for c in &data {
+        canars::encode_scalar_u8(&mut buffer, offset, 8, *c);
+        offset += 8;
+    }
+
+    (buffer, offset)
+  }
+
+  pub fn decode(xfer: &::RxTransfer) -> Option<Allocation> {
+    /* Backward compatibility support for removing TAO
+     *  - first try to decode with TAO DISABLED
+     *  - if it fails fall back to TAO ENABLED
+     */
+    let mut offset = 0;
+    let mut r = Allocation::decode_internal(xfer, &mut offset, false);
+    if r.is_none() {
+      offset = 0;
+      r = Allocation::decode_internal(xfer, &mut offset, true);
+    }
+    r
+  }
+
+ #[allow(unused_mut)]
+ #[allow(unused)]
+  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<Allocation> {
+    let mut offset = offset;
+
+    let vint_node_id = match xfer.decode_scalar_u8(offset, 7) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_first_part_of_unique_id = match xfer.decode_scalar_bool(offset, 1) {
+     Some(s) => s,
+     None => return None,
+    };
+    let vint_unique_id_len;
+    //  - Last item in struct & Root item & (Array Size > 8 bit), tail array optimization
+    if xfer.get_payload_len() > 0 && tao {
+      //  - Calculate Array length from MSG length
+      vint_unique_id_len = ((xfer.get_payload_len() as usize * 8) - *offset) / 8; // 8 bit array item size
+    }
+    else {
+      // - Array length 5 bits
+      vint_unique_id_len = match xfer.decode_scalar_u8(offset, 5) {
+       Some(s) => s as usize,
+       None => return None,
+      };
+    }
+    let mut vint_unique_id = Vec::new();
+    for _c in 0..vint_unique_id_len {
+      let data = match xfer.decode_scalar_u8(offset, 8) {
+        Some(s) => s,
+        None => return None,
+      };
+      vint_unique_id.push(data);
+    }
+    //  - Get Array
+
+    Some(Allocation {
+      node_id: vint_node_id,
+      first_part_of_unique_id: vint_first_part_of_unique_id,
+      unique_id: vint_unique_id,
+    })
+  }
+
+}
+
+}pub mod param {
 
 #[derive(Debug, Clone)]
 pub struct GetSetRequest {
@@ -1933,2031 +4061,6 @@ impl Indication {
     Some(Indication {
       value: vint_value,
       parameter_name: vint_parameter_name,
-    })
-  }
-
-}
-
-}pub mod dynamic_node_id {
-pub mod server {
-
-#[derive(Debug, Clone)]
-pub struct Discovery {
-  // FieldTypes
-    pub configured_cluster_size: u8, // bit len 8
-    pub known_nodes: Vec<u8>, // Dynamic Array 8bit[5] max items
-
-}
-
-impl Discovery {
-  pub const ID: u16 = 390;
-  pub const SIGNATURE: u64 = 0x821AE2F525F69F21;
-  pub const BROADCASTING_PERIOD_MS: u16 = 1000 as u16;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == Discovery::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = Discovery::SIGNATURE;
-  }
-
-  pub fn encode(instance: Discovery) -> (Vec<u8>, usize) {
-    let (vec, mut size) = Discovery::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: Discovery, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.configured_cluster_size;
-
-    let vint_configured_cluster_size = data;
-    canars::encode_scalar_u8(&mut buffer, offset, 8, vint_configured_cluster_size); // 255
-    offset += 8;
-    let data = instance.known_nodes;
-
-    // Dynamic Array (known_nodes)
-    if root_item == 0 {
-        // - Add array length
-      canars::encode_scalar_u8(&mut buffer, offset, 3, data.len() as u8);
-      offset += 3;
-    }
-
-    // - Add array items
-    for c in &data {
-        canars::encode_scalar_u8(&mut buffer, offset, 8, *c);
-        offset += 8;
-    }
-
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<Discovery> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = Discovery::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = Discovery::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<Discovery> {
-    let mut offset = offset;
-
-    let vint_configured_cluster_size = match xfer.decode_scalar_u8(offset, 8) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_known_nodes_len;
-    //  - Last item in struct & Root item & (Array Size > 8 bit), tail array optimization
-    if xfer.get_payload_len() > 0 && tao {
-      //  - Calculate Array length from MSG length
-      vint_known_nodes_len = ((xfer.get_payload_len() as usize * 8) - *offset) / 8; // 8 bit array item size
-    }
-    else {
-      // - Array length 3 bits
-      vint_known_nodes_len = match xfer.decode_scalar_u8(offset, 3) {
-       Some(s) => s as usize,
-       None => return None,
-      };
-    }
-    let mut vint_known_nodes = Vec::new();
-    for _c in 0..vint_known_nodes_len {
-      let data = match xfer.decode_scalar_u8(offset, 8) {
-        Some(s) => s,
-        None => return None,
-      };
-      vint_known_nodes.push(data);
-    }
-    //  - Get Array
-
-    Some(Discovery {
-      configured_cluster_size: vint_configured_cluster_size,
-      known_nodes: vint_known_nodes,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct Entry {
-  // FieldTypes
-    pub term: u32, // bit len 32
-    pub unique_id: [u8; 16], // Static Array 8bit[16] max items
-    // void1
-    pub node_id: u8, // bit len 7
-
-}
-
-impl Entry {
-  pub const SIGNATURE: u64 = 0x7FAA779D64FA75C2;
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = Entry::SIGNATURE;
-  }
-
-  pub fn encode(instance: Entry) -> (Vec<u8>, usize) {
-    let (vec, mut size) = Entry::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: Entry, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.term;
-
-    let vint_term = data;
-    canars::encode_scalar_u32(&mut buffer, offset, 32, vint_term); // 4294967295
-    offset += 32;
-    let data = instance.unique_id;
-
-    // Static array (unique_id)
-    for c in &data {
-        canars::encode_scalar_u8(&mut buffer, offset, 8, *c);
-        offset += 8;
-    }
-
-    unimplemented!(); //E2
-    let data = instance.node_id;
-
-    let vint_node_id = ::saturate_unsigned(data, 127);
-    canars::encode_scalar_u8(&mut buffer, offset, 7, vint_node_id); // 127
-    offset += 7;
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<Entry> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = Entry::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = Entry::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<Entry> {
-    let mut offset = offset;
-
-    let vint_term = match xfer.decode_scalar_u32(offset, 32) {
-     Some(s) => s,
-     None => return None,
-    };
-    // Static array (unique_id)
-    let mut vint_unique_id = [0 as u8; 16];
-    for c in 0..16 {
-      vint_unique_id[c] = match xfer.decode_scalar_u8(offset, 8) {
-       Some(s) => s,
-       None => return None,
-      };
-    }
-
-        unimplemented!(); //3
-    let vint_node_id = match xfer.decode_scalar_u8(offset, 7) {
-     Some(s) => s,
-     None => return None,
-    };
-
-    Some(Entry {
-      term: vint_term,
-      unique_id: vint_unique_id,
-      node_id: vint_node_id,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct AppendEntriesRequest {
-  // FieldTypes
-    pub term: u32, // bit len 32
-    pub prev_log_term: u32, // bit len 32
-    pub prev_log_index: u8, // bit len 8
-    pub leader_commit: u8, // bit len 8
-    pub entries: Vec<::uavcan::protocol::dynamic_node_id::server::Entry>, // Dynamic Array 168bit[1] max items
-
-}
-
-impl AppendEntriesRequest {
-  pub const ID: u16 = 30;
-  pub const SIGNATURE: u64 = 0x8032C7097B48A3CC;
-  pub const DEFAULT_MIN_ELECTION_TIMEOUT_MS: u16 = 2000 as u16;
-  pub const DEFAULT_MAX_ELECTION_TIMEOUT_MS: u16 = 4000 as u16;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == AppendEntriesRequest::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = AppendEntriesRequest::SIGNATURE;
-  }
-
-  pub fn encode(instance: AppendEntriesRequest) -> (Vec<u8>, usize) {
-    let (vec, mut size) = AppendEntriesRequest::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: AppendEntriesRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.term;
-
-    let vint_term = data;
-    canars::encode_scalar_u32(&mut buffer, offset, 32, vint_term); // 4294967295
-    offset += 32;
-    let data = instance.prev_log_term;
-
-    let vint_prev_log_term = data;
-    canars::encode_scalar_u32(&mut buffer, offset, 32, vint_prev_log_term); // 4294967295
-    offset += 32;
-    let data = instance.prev_log_index;
-
-    let vint_prev_log_index = data;
-    canars::encode_scalar_u8(&mut buffer, offset, 8, vint_prev_log_index); // 255
-    offset += 8;
-    let data = instance.leader_commit;
-
-    let vint_leader_commit = data;
-    canars::encode_scalar_u8(&mut buffer, offset, 8, vint_leader_commit); // 255
-    offset += 8;
-    let data = instance.entries;
-
-    // Dynamic Array (entries)
-    if root_item == 0 {
-        // - Add array length
-      canars::encode_scalar_u8(&mut buffer, offset, 1, data.len() as u8);
-      offset += 1;
-    }
-
-    // - Add array items
-    for c in &data {
-      let (b, off) = ::uavcan::protocol::dynamic_node_id::server::Entry::encode_internal(c.clone(), buffer, offset, 0);
-      offset = off;
-      buffer = b;
-    }
-
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<AppendEntriesRequest> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = AppendEntriesRequest::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = AppendEntriesRequest::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<AppendEntriesRequest> {
-    let mut offset = offset;
-
-    let vint_term = match xfer.decode_scalar_u32(offset, 32) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_prev_log_term = match xfer.decode_scalar_u32(offset, 32) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_prev_log_index = match xfer.decode_scalar_u8(offset, 8) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_leader_commit = match xfer.decode_scalar_u8(offset, 8) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_entries_len;
-    //  - Last item in struct & Root item & (Array Size > 8 bit), tail array optimization
-    if xfer.get_payload_len() > 0 && tao {
-      //  - Calculate Array length from MSG length
-      vint_entries_len = ((xfer.get_payload_len() as usize * 8) - *offset) / 168; // 168 bit array item size
-    }
-    else {
-      // - Array length 1 bits
-      vint_entries_len = match xfer.decode_scalar_u8(offset, 1) {
-       Some(s) => s as usize,
-       None => return None,
-      };
-    }
-    let mut vint_entries = Vec::new();
-    for _c in 0..vint_entries_len {
-            unimplemented!(); //1
-    }
-    //  - Get Array
-
-    Some(AppendEntriesRequest {
-      term: vint_term,
-      prev_log_term: vint_prev_log_term,
-      prev_log_index: vint_prev_log_index,
-      leader_commit: vint_leader_commit,
-      entries: vint_entries,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct AppendEntriesResponse {
-  // FieldTypes
-    pub term: u32, // bit len 32
-    pub success: bool, // bit len 1
-
-}
-
-impl AppendEntriesResponse {
-  pub const ID: u16 = 30;
-  pub const SIGNATURE: u64 = 0x8032C7097B48A3CC;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == AppendEntriesResponse::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = AppendEntriesResponse::SIGNATURE;
-  }
-
-  pub fn encode(instance: AppendEntriesResponse) -> (Vec<u8>, usize) {
-    let (vec, mut size) = AppendEntriesResponse::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: AppendEntriesResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.term;
-
-    let vint_term = data;
-    canars::encode_scalar_u32(&mut buffer, offset, 32, vint_term); // 4294967295
-    offset += 32;
-    let data = instance.success;
-
-    let vint_success = ::saturate_unsigned(data, true);
-    canars::encode_scalar_bool(&mut buffer, offset, 1, vint_success); // 1
-    offset += 1;
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<AppendEntriesResponse> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = AppendEntriesResponse::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = AppendEntriesResponse::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<AppendEntriesResponse> {
-    let mut offset = offset;
-
-    let vint_term = match xfer.decode_scalar_u32(offset, 32) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_success = match xfer.decode_scalar_bool(offset, 1) {
-     Some(s) => s,
-     None => return None,
-    };
-
-    Some(AppendEntriesResponse {
-      term: vint_term,
-      success: vint_success,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct RequestVoteRequest {
-  // FieldTypes
-    pub term: u32, // bit len 32
-    pub last_log_term: u32, // bit len 32
-    pub last_log_index: u8, // bit len 8
-
-}
-
-impl RequestVoteRequest {
-  pub const ID: u16 = 31;
-  pub const SIGNATURE: u64 = 0xCDDE07BB89A56356;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == RequestVoteRequest::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = RequestVoteRequest::SIGNATURE;
-  }
-
-  pub fn encode(instance: RequestVoteRequest) -> (Vec<u8>, usize) {
-    let (vec, mut size) = RequestVoteRequest::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: RequestVoteRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.term;
-
-    let vint_term = data;
-    canars::encode_scalar_u32(&mut buffer, offset, 32, vint_term); // 4294967295
-    offset += 32;
-    let data = instance.last_log_term;
-
-    let vint_last_log_term = data;
-    canars::encode_scalar_u32(&mut buffer, offset, 32, vint_last_log_term); // 4294967295
-    offset += 32;
-    let data = instance.last_log_index;
-
-    let vint_last_log_index = data;
-    canars::encode_scalar_u8(&mut buffer, offset, 8, vint_last_log_index); // 255
-    offset += 8;
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<RequestVoteRequest> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = RequestVoteRequest::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = RequestVoteRequest::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<RequestVoteRequest> {
-    let mut offset = offset;
-
-    let vint_term = match xfer.decode_scalar_u32(offset, 32) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_last_log_term = match xfer.decode_scalar_u32(offset, 32) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_last_log_index = match xfer.decode_scalar_u8(offset, 8) {
-     Some(s) => s,
-     None => return None,
-    };
-
-    Some(RequestVoteRequest {
-      term: vint_term,
-      last_log_term: vint_last_log_term,
-      last_log_index: vint_last_log_index,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct RequestVoteResponse {
-  // FieldTypes
-    pub term: u32, // bit len 32
-    pub vote_granted: bool, // bit len 1
-
-}
-
-impl RequestVoteResponse {
-  pub const ID: u16 = 31;
-  pub const SIGNATURE: u64 = 0xCDDE07BB89A56356;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == RequestVoteResponse::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = RequestVoteResponse::SIGNATURE;
-  }
-
-  pub fn encode(instance: RequestVoteResponse) -> (Vec<u8>, usize) {
-    let (vec, mut size) = RequestVoteResponse::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: RequestVoteResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.term;
-
-    let vint_term = data;
-    canars::encode_scalar_u32(&mut buffer, offset, 32, vint_term); // 4294967295
-    offset += 32;
-    let data = instance.vote_granted;
-
-    let vint_vote_granted = ::saturate_unsigned(data, true);
-    canars::encode_scalar_bool(&mut buffer, offset, 1, vint_vote_granted); // 1
-    offset += 1;
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<RequestVoteResponse> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = RequestVoteResponse::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = RequestVoteResponse::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<RequestVoteResponse> {
-    let mut offset = offset;
-
-    let vint_term = match xfer.decode_scalar_u32(offset, 32) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_vote_granted = match xfer.decode_scalar_bool(offset, 1) {
-     Some(s) => s,
-     None => return None,
-    };
-
-    Some(RequestVoteResponse {
-      term: vint_term,
-      vote_granted: vint_vote_granted,
-    })
-  }
-
-}
-
-}
-
-#[derive(Debug, Clone)]
-pub struct Allocation {
-  // FieldTypes
-    pub node_id: u8, // bit len 7
-    pub first_part_of_unique_id: bool, // bit len 1
-    pub unique_id: Vec<u8>, // Dynamic Array 8bit[16] max items
-
-}
-
-impl Allocation {
-  pub const ID: u16 = 1;
-  pub const SIGNATURE: u64 = 0xB2A812620A11D40;
-  pub const MAX_REQUEST_PERIOD_MS: u16 = 1000 as u16;
-  pub const MIN_REQUEST_PERIOD_MS: u16 = 600 as u16;
-  pub const MAX_FOLLOWUP_DELAY_MS: u16 = 400 as u16;
-  pub const MIN_FOLLOWUP_DELAY_MS: u16 = 0 as u16;
-  pub const FOLLOWUP_TIMEOUT_MS: u16 = 500 as u16;
-  pub const MAX_LENGTH_OF_UNIQUE_ID_IN_REQUEST: u8 = 6 as u8;
-  pub const ANY_NODE_ID: u8 = 0 as u8;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == Allocation::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = Allocation::SIGNATURE;
-  }
-
-  pub fn encode(instance: Allocation) -> (Vec<u8>, usize) {
-    let (vec, mut size) = Allocation::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: Allocation, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.node_id;
-
-    let vint_node_id = ::saturate_unsigned(data, 127);
-    canars::encode_scalar_u8(&mut buffer, offset, 7, vint_node_id); // 127
-    offset += 7;
-    let data = instance.first_part_of_unique_id;
-
-    let vint_first_part_of_unique_id = ::saturate_unsigned(data, true);
-    canars::encode_scalar_bool(&mut buffer, offset, 1, vint_first_part_of_unique_id); // 1
-    offset += 1;
-    let data = instance.unique_id;
-
-    // Dynamic Array (unique_id)
-    if root_item == 0 {
-        // - Add array length
-      canars::encode_scalar_u8(&mut buffer, offset, 5, data.len() as u8);
-      offset += 5;
-    }
-
-    // - Add array items
-    for c in &data {
-        canars::encode_scalar_u8(&mut buffer, offset, 8, *c);
-        offset += 8;
-    }
-
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<Allocation> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = Allocation::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = Allocation::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<Allocation> {
-    let mut offset = offset;
-
-    let vint_node_id = match xfer.decode_scalar_u8(offset, 7) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_first_part_of_unique_id = match xfer.decode_scalar_bool(offset, 1) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_unique_id_len;
-    //  - Last item in struct & Root item & (Array Size > 8 bit), tail array optimization
-    if xfer.get_payload_len() > 0 && tao {
-      //  - Calculate Array length from MSG length
-      vint_unique_id_len = ((xfer.get_payload_len() as usize * 8) - *offset) / 8; // 8 bit array item size
-    }
-    else {
-      // - Array length 5 bits
-      vint_unique_id_len = match xfer.decode_scalar_u8(offset, 5) {
-       Some(s) => s as usize,
-       None => return None,
-      };
-    }
-    let mut vint_unique_id = Vec::new();
-    for _c in 0..vint_unique_id_len {
-      let data = match xfer.decode_scalar_u8(offset, 8) {
-        Some(s) => s,
-        None => return None,
-      };
-      vint_unique_id.push(data);
-    }
-    //  - Get Array
-
-    Some(Allocation {
-      node_id: vint_node_id,
-      first_part_of_unique_id: vint_first_part_of_unique_id,
-      unique_id: vint_unique_id,
-    })
-  }
-
-}
-
-}pub mod file {
-
-#[derive(Debug, Clone)]
-pub struct Path {
-  // FieldTypes
-    pub path: Vec<u8>, // Dynamic Array 8bit[200] max items
-
-}
-
-impl Path {
-  pub const SIGNATURE: u64 = 0x12AEFC50878A43E2;
-  pub const SEPARATOR: u8 = '/' as u8;
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = Path::SIGNATURE;
-  }
-
-  pub fn encode(instance: Path) -> (Vec<u8>, usize) {
-    let (vec, mut size) = Path::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: Path, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.path;
-
-    // Dynamic Array (path)
-    if root_item == 0 {
-        // - Add array length
-      canars::encode_scalar_u8(&mut buffer, offset, 8, data.len() as u8);
-      offset += 8;
-    }
-
-    // - Add array items
-    for c in &data {
-        canars::encode_scalar_u8(&mut buffer, offset, 8, *c);
-        offset += 8;
-    }
-
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<Path> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = Path::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = Path::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<Path> {
-    let mut offset = offset;
-
-    let vint_path_len;
-    //  - Last item in struct & Root item & (Array Size > 8 bit), tail array optimization
-    if xfer.get_payload_len() > 0 && tao {
-      //  - Calculate Array length from MSG length
-      vint_path_len = ((xfer.get_payload_len() as usize * 8) - *offset) / 8; // 8 bit array item size
-    }
-    else {
-      // - Array length 8 bits
-      vint_path_len = match xfer.decode_scalar_u8(offset, 8) {
-       Some(s) => s as usize,
-       None => return None,
-      };
-    }
-    let mut vint_path = Vec::new();
-    for _c in 0..vint_path_len {
-      let data = match xfer.decode_scalar_u8(offset, 8) {
-        Some(s) => s,
-        None => return None,
-      };
-      vint_path.push(data);
-    }
-    //  - Get Array
-
-    Some(Path {
-      path: vint_path,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct GetInfoRequest {
-  // FieldTypes
-    pub path: ::uavcan::protocol::file::Path, //
-
-}
-
-impl GetInfoRequest {
-  pub const ID: u16 = 45;
-  pub const SIGNATURE: u64 = 0x5004891EE8A27531;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == GetInfoRequest::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = GetInfoRequest::SIGNATURE;
-  }
-
-  pub fn encode(instance: GetInfoRequest) -> (Vec<u8>, usize) {
-    let (vec, mut size) = GetInfoRequest::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: GetInfoRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.path;
-
-    let (b, off) = ::uavcan::protocol::file::Path::encode_internal(data, buffer, offset, 0);
-    offset = off;
-    buffer = b;
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<GetInfoRequest> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = GetInfoRequest::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = GetInfoRequest::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<GetInfoRequest> {
-    let mut offset = offset;
-
-    let vint_path = match ::uavcan::protocol::file::Path::decode_internal(xfer, offset, tao) {
-      Some(s) => s,
-      None => return None,
-    };
-
-    Some(GetInfoRequest {
-      path: vint_path,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct GetInfoResponse {
-  // FieldTypes
-    pub size: u64, // bit len 40
-    pub error: ::uavcan::protocol::file::Error, //
-    pub entry_type: ::uavcan::protocol::file::EntryType, //
-
-}
-
-impl GetInfoResponse {
-  pub const ID: u16 = 45;
-  pub const SIGNATURE: u64 = 0x5004891EE8A27531;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == GetInfoResponse::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = GetInfoResponse::SIGNATURE;
-  }
-
-  pub fn encode(instance: GetInfoResponse) -> (Vec<u8>, usize) {
-    let (vec, mut size) = GetInfoResponse::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: GetInfoResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.size;
-
-    let vint_size = ::saturate_unsigned(data, 1099511627775);
-    canars::encode_scalar_u64(&mut buffer, offset, 40, vint_size); // 1099511627775
-    offset += 40;
-    let data = instance.error;
-
-    let (b, off) = ::uavcan::protocol::file::Error::encode_internal(data, buffer, offset, 0);
-    offset = off;
-    buffer = b;
-    let data = instance.entry_type;
-
-    let (b, off) = ::uavcan::protocol::file::EntryType::encode_internal(data, buffer, offset, 0);
-    offset = off;
-    buffer = b;
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<GetInfoResponse> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = GetInfoResponse::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = GetInfoResponse::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<GetInfoResponse> {
-    let mut offset = offset;
-
-    let vint_size = match xfer.decode_scalar_u64(offset, 40) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_error = match ::uavcan::protocol::file::Error::decode_internal(xfer, offset, false) {
-      Some(s) => s,
-      None => return None,
-    };
-    let vint_entry_type = match ::uavcan::protocol::file::EntryType::decode_internal(xfer, offset, tao) {
-      Some(s) => s,
-      None => return None,
-    };
-
-    Some(GetInfoResponse {
-      size: vint_size,
-      error: vint_error,
-      entry_type: vint_entry_type,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct GetDirectoryEntryInfoRequest {
-  // FieldTypes
-    pub entry_index: u32, // bit len 32
-    pub directory_path: ::uavcan::protocol::file::Path, //
-
-}
-
-impl GetDirectoryEntryInfoRequest {
-  pub const ID: u16 = 46;
-  pub const SIGNATURE: u64 = 0x8C46E8AB568BDA79;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == GetDirectoryEntryInfoRequest::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = GetDirectoryEntryInfoRequest::SIGNATURE;
-  }
-
-  pub fn encode(instance: GetDirectoryEntryInfoRequest) -> (Vec<u8>, usize) {
-    let (vec, mut size) = GetDirectoryEntryInfoRequest::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: GetDirectoryEntryInfoRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.entry_index;
-
-    let vint_entry_index = data;
-    canars::encode_scalar_u32(&mut buffer, offset, 32, vint_entry_index); // 4294967295
-    offset += 32;
-    let data = instance.directory_path;
-
-    let (b, off) = ::uavcan::protocol::file::Path::encode_internal(data, buffer, offset, 0);
-    offset = off;
-    buffer = b;
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<GetDirectoryEntryInfoRequest> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = GetDirectoryEntryInfoRequest::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = GetDirectoryEntryInfoRequest::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<GetDirectoryEntryInfoRequest> {
-    let mut offset = offset;
-
-    let vint_entry_index = match xfer.decode_scalar_u32(offset, 32) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_directory_path = match ::uavcan::protocol::file::Path::decode_internal(xfer, offset, tao) {
-      Some(s) => s,
-      None => return None,
-    };
-
-    Some(GetDirectoryEntryInfoRequest {
-      entry_index: vint_entry_index,
-      directory_path: vint_directory_path,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct GetDirectoryEntryInfoResponse {
-  // FieldTypes
-    pub error: ::uavcan::protocol::file::Error, //
-    pub entry_type: ::uavcan::protocol::file::EntryType, //
-    pub entry_full_path: ::uavcan::protocol::file::Path, //
-
-}
-
-impl GetDirectoryEntryInfoResponse {
-  pub const ID: u16 = 46;
-  pub const SIGNATURE: u64 = 0x8C46E8AB568BDA79;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == GetDirectoryEntryInfoResponse::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = GetDirectoryEntryInfoResponse::SIGNATURE;
-  }
-
-  pub fn encode(instance: GetDirectoryEntryInfoResponse) -> (Vec<u8>, usize) {
-    let (vec, mut size) = GetDirectoryEntryInfoResponse::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: GetDirectoryEntryInfoResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.error;
-
-    let (b, off) = ::uavcan::protocol::file::Error::encode_internal(data, buffer, offset, 0);
-    offset = off;
-    buffer = b;
-    let data = instance.entry_type;
-
-    let (b, off) = ::uavcan::protocol::file::EntryType::encode_internal(data, buffer, offset, 0);
-    offset = off;
-    buffer = b;
-    let data = instance.entry_full_path;
-
-    let (b, off) = ::uavcan::protocol::file::Path::encode_internal(data, buffer, offset, 0);
-    offset = off;
-    buffer = b;
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<GetDirectoryEntryInfoResponse> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = GetDirectoryEntryInfoResponse::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = GetDirectoryEntryInfoResponse::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<GetDirectoryEntryInfoResponse> {
-    let mut offset = offset;
-
-    let vint_error = match ::uavcan::protocol::file::Error::decode_internal(xfer, offset, false) {
-      Some(s) => s,
-      None => return None,
-    };
-    let vint_entry_type = match ::uavcan::protocol::file::EntryType::decode_internal(xfer, offset, false) {
-      Some(s) => s,
-      None => return None,
-    };
-    let vint_entry_full_path = match ::uavcan::protocol::file::Path::decode_internal(xfer, offset, tao) {
-      Some(s) => s,
-      None => return None,
-    };
-
-    Some(GetDirectoryEntryInfoResponse {
-      error: vint_error,
-      entry_type: vint_entry_type,
-      entry_full_path: vint_entry_full_path,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct EntryType {
-  // FieldTypes
-    pub flags: u8, // bit len 8
-
-}
-
-impl EntryType {
-  pub const SIGNATURE: u64 = 0x6924572FBB2086E5;
-  pub const FLAG_FILE: u8 = 1 as u8;
-  pub const FLAG_DIRECTORY: u8 = 2 as u8;
-  pub const FLAG_SYMLINK: u8 = 4 as u8;
-  pub const FLAG_READABLE: u8 = 8 as u8;
-  pub const FLAG_WRITEABLE: u8 = 16 as u8;
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = EntryType::SIGNATURE;
-  }
-
-  pub fn encode(instance: EntryType) -> (Vec<u8>, usize) {
-    let (vec, mut size) = EntryType::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: EntryType, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.flags;
-
-    let vint_flags = data;
-    canars::encode_scalar_u8(&mut buffer, offset, 8, vint_flags); // 255
-    offset += 8;
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<EntryType> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = EntryType::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = EntryType::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<EntryType> {
-    let mut offset = offset;
-
-    let vint_flags = match xfer.decode_scalar_u8(offset, 8) {
-     Some(s) => s,
-     None => return None,
-    };
-
-    Some(EntryType {
-      flags: vint_flags,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct BeginFirmwareUpdateRequest {
-  // FieldTypes
-    pub source_node_id: u8, // bit len 8
-    pub image_file_remote_path: ::uavcan::protocol::file::Path, //
-
-}
-
-impl BeginFirmwareUpdateRequest {
-  pub const ID: u16 = 40;
-  pub const SIGNATURE: u64 = 0xB7D725DF72724126;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == BeginFirmwareUpdateRequest::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = BeginFirmwareUpdateRequest::SIGNATURE;
-  }
-
-  pub fn encode(instance: BeginFirmwareUpdateRequest) -> (Vec<u8>, usize) {
-    let (vec, mut size) = BeginFirmwareUpdateRequest::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: BeginFirmwareUpdateRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.source_node_id;
-
-    let vint_source_node_id = data;
-    canars::encode_scalar_u8(&mut buffer, offset, 8, vint_source_node_id); // 255
-    offset += 8;
-    let data = instance.image_file_remote_path;
-
-    let (b, off) = ::uavcan::protocol::file::Path::encode_internal(data, buffer, offset, 0);
-    offset = off;
-    buffer = b;
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<BeginFirmwareUpdateRequest> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = BeginFirmwareUpdateRequest::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = BeginFirmwareUpdateRequest::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<BeginFirmwareUpdateRequest> {
-    let mut offset = offset;
-
-    let vint_source_node_id = match xfer.decode_scalar_u8(offset, 8) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_image_file_remote_path = match ::uavcan::protocol::file::Path::decode_internal(xfer, offset, tao) {
-      Some(s) => s,
-      None => return None,
-    };
-
-    Some(BeginFirmwareUpdateRequest {
-      source_node_id: vint_source_node_id,
-      image_file_remote_path: vint_image_file_remote_path,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct BeginFirmwareUpdateResponse {
-  // FieldTypes
-    pub error: u8, // bit len 8
-    pub optional_error_message: Vec<u8>, // Dynamic Array 8bit[127] max items
-
-}
-
-impl BeginFirmwareUpdateResponse {
-  pub const ID: u16 = 40;
-  pub const SIGNATURE: u64 = 0xB7D725DF72724126;
-  pub const ERROR_OK: u8 = 0 as u8;
-  pub const ERROR_INVALID_MODE: u8 = 1 as u8;
-  pub const ERROR_IN_PROGRESS: u8 = 2 as u8;
-  pub const ERROR_UNKNOWN: u8 = 255 as u8;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == BeginFirmwareUpdateResponse::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = BeginFirmwareUpdateResponse::SIGNATURE;
-  }
-
-  pub fn encode(instance: BeginFirmwareUpdateResponse) -> (Vec<u8>, usize) {
-    let (vec, mut size) = BeginFirmwareUpdateResponse::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: BeginFirmwareUpdateResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.error;
-
-    let vint_error = data;
-    canars::encode_scalar_u8(&mut buffer, offset, 8, vint_error); // 255
-    offset += 8;
-    let data = instance.optional_error_message;
-
-    // Dynamic Array (optional_error_message)
-    if root_item == 0 {
-        // - Add array length
-      canars::encode_scalar_u8(&mut buffer, offset, 7, data.len() as u8);
-      offset += 7;
-    }
-
-    // - Add array items
-    for c in &data {
-        canars::encode_scalar_u8(&mut buffer, offset, 8, *c);
-        offset += 8;
-    }
-
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<BeginFirmwareUpdateResponse> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = BeginFirmwareUpdateResponse::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = BeginFirmwareUpdateResponse::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<BeginFirmwareUpdateResponse> {
-    let mut offset = offset;
-
-    let vint_error = match xfer.decode_scalar_u8(offset, 8) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_optional_error_message_len;
-    //  - Last item in struct & Root item & (Array Size > 8 bit), tail array optimization
-    if xfer.get_payload_len() > 0 && tao {
-      //  - Calculate Array length from MSG length
-      vint_optional_error_message_len = ((xfer.get_payload_len() as usize * 8) - *offset) / 8; // 8 bit array item size
-    }
-    else {
-      // - Array length 7 bits
-      vint_optional_error_message_len = match xfer.decode_scalar_u8(offset, 7) {
-       Some(s) => s as usize,
-       None => return None,
-      };
-    }
-    let mut vint_optional_error_message = Vec::new();
-    for _c in 0..vint_optional_error_message_len {
-      let data = match xfer.decode_scalar_u8(offset, 8) {
-        Some(s) => s,
-        None => return None,
-      };
-      vint_optional_error_message.push(data);
-    }
-    //  - Get Array
-
-    Some(BeginFirmwareUpdateResponse {
-      error: vint_error,
-      optional_error_message: vint_optional_error_message,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct ReadRequest {
-  // FieldTypes
-    pub offset: u64, // bit len 40
-    pub path: ::uavcan::protocol::file::Path, //
-
-}
-
-impl ReadRequest {
-  pub const ID: u16 = 48;
-  pub const SIGNATURE: u64 = 0x8DCDCA939F33F678;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == ReadRequest::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = ReadRequest::SIGNATURE;
-  }
-
-  pub fn encode(instance: ReadRequest) -> (Vec<u8>, usize) {
-    let (vec, mut size) = ReadRequest::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: ReadRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.offset;
-
-    let vint_offset = ::saturate_unsigned(data, 1099511627775);
-    canars::encode_scalar_u64(&mut buffer, offset, 40, vint_offset); // 1099511627775
-    offset += 40;
-    let data = instance.path;
-
-    let (b, off) = ::uavcan::protocol::file::Path::encode_internal(data, buffer, offset, 0);
-    offset = off;
-    buffer = b;
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<ReadRequest> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = ReadRequest::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = ReadRequest::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<ReadRequest> {
-    let mut offset = offset;
-
-    let vint_offset = match xfer.decode_scalar_u64(offset, 40) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_path = match ::uavcan::protocol::file::Path::decode_internal(xfer, offset, tao) {
-      Some(s) => s,
-      None => return None,
-    };
-
-    Some(ReadRequest {
-      offset: vint_offset,
-      path: vint_path,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct ReadResponse {
-  // FieldTypes
-    pub error: ::uavcan::protocol::file::Error, //
-    pub data: Vec<u8>, // Dynamic Array 8bit[256] max items
-
-}
-
-impl ReadResponse {
-  pub const ID: u16 = 48;
-  pub const SIGNATURE: u64 = 0x8DCDCA939F33F678;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == ReadResponse::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = ReadResponse::SIGNATURE;
-  }
-
-  pub fn encode(instance: ReadResponse) -> (Vec<u8>, usize) {
-    let (vec, mut size) = ReadResponse::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: ReadResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.error;
-
-    let (b, off) = ::uavcan::protocol::file::Error::encode_internal(data, buffer, offset, 0);
-    offset = off;
-    buffer = b;
-    let data = instance.data;
-
-    // Dynamic Array (data)
-    if root_item == 0 {
-        // - Add array length
-      canars::encode_scalar_u16(&mut buffer, offset, 9, data.len() as u16);
-      offset += 9;
-    }
-
-    // - Add array items
-    for c in &data {
-        canars::encode_scalar_u8(&mut buffer, offset, 8, *c);
-        offset += 8;
-    }
-
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<ReadResponse> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = ReadResponse::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = ReadResponse::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<ReadResponse> {
-    let mut offset = offset;
-
-    let vint_error = match ::uavcan::protocol::file::Error::decode_internal(xfer, offset, false) {
-      Some(s) => s,
-      None => return None,
-    };
-    let vint_data_len;
-    //  - Last item in struct & Root item & (Array Size > 8 bit), tail array optimization
-    if xfer.get_payload_len() > 0 && tao {
-      //  - Calculate Array length from MSG length
-      vint_data_len = ((xfer.get_payload_len() as usize * 8) - *offset) / 8; // 8 bit array item size
-    }
-    else {
-      // - Array length 9 bits
-      vint_data_len = match xfer.decode_scalar_u16(offset, 9) {
-       Some(s) => s as usize,
-       None => return None,
-      };
-    }
-    let mut vint_data = Vec::new();
-    for _c in 0..vint_data_len {
-      let data = match xfer.decode_scalar_u8(offset, 8) {
-        Some(s) => s,
-        None => return None,
-      };
-      vint_data.push(data);
-    }
-    //  - Get Array
-
-    Some(ReadResponse {
-      error: vint_error,
-      data: vint_data,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct WriteRequest {
-  // FieldTypes
-    pub offset: u64, // bit len 40
-    pub path: ::uavcan::protocol::file::Path, //
-    pub data: Vec<u8>, // Dynamic Array 8bit[192] max items
-
-}
-
-impl WriteRequest {
-  pub const ID: u16 = 49;
-  pub const SIGNATURE: u64 = 0x515AA1DC77E58429;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == WriteRequest::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = WriteRequest::SIGNATURE;
-  }
-
-  pub fn encode(instance: WriteRequest) -> (Vec<u8>, usize) {
-    let (vec, mut size) = WriteRequest::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: WriteRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.offset;
-
-    let vint_offset = ::saturate_unsigned(data, 1099511627775);
-    canars::encode_scalar_u64(&mut buffer, offset, 40, vint_offset); // 1099511627775
-    offset += 40;
-    let data = instance.path;
-
-    let (b, off) = ::uavcan::protocol::file::Path::encode_internal(data, buffer, offset, 0);
-    offset = off;
-    buffer = b;
-    let data = instance.data;
-
-    // Dynamic Array (data)
-    if root_item == 0 {
-        // - Add array length
-      canars::encode_scalar_u8(&mut buffer, offset, 8, data.len() as u8);
-      offset += 8;
-    }
-
-    // - Add array items
-    for c in &data {
-        canars::encode_scalar_u8(&mut buffer, offset, 8, *c);
-        offset += 8;
-    }
-
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<WriteRequest> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = WriteRequest::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = WriteRequest::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<WriteRequest> {
-    let mut offset = offset;
-
-    let vint_offset = match xfer.decode_scalar_u64(offset, 40) {
-     Some(s) => s,
-     None => return None,
-    };
-    let vint_path = match ::uavcan::protocol::file::Path::decode_internal(xfer, offset, false) {
-      Some(s) => s,
-      None => return None,
-    };
-    let vint_data_len;
-    //  - Last item in struct & Root item & (Array Size > 8 bit), tail array optimization
-    if xfer.get_payload_len() > 0 && tao {
-      //  - Calculate Array length from MSG length
-      vint_data_len = ((xfer.get_payload_len() as usize * 8) - *offset) / 8; // 8 bit array item size
-    }
-    else {
-      // - Array length 8 bits
-      vint_data_len = match xfer.decode_scalar_u8(offset, 8) {
-       Some(s) => s as usize,
-       None => return None,
-      };
-    }
-    let mut vint_data = Vec::new();
-    for _c in 0..vint_data_len {
-      let data = match xfer.decode_scalar_u8(offset, 8) {
-        Some(s) => s,
-        None => return None,
-      };
-      vint_data.push(data);
-    }
-    //  - Get Array
-
-    Some(WriteRequest {
-      offset: vint_offset,
-      path: vint_path,
-      data: vint_data,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct WriteResponse {
-  // FieldTypes
-    pub error: ::uavcan::protocol::file::Error, //
-
-}
-
-impl WriteResponse {
-  pub const ID: u16 = 49;
-  pub const SIGNATURE: u64 = 0x515AA1DC77E58429;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == WriteResponse::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = WriteResponse::SIGNATURE;
-  }
-
-  pub fn encode(instance: WriteResponse) -> (Vec<u8>, usize) {
-    let (vec, mut size) = WriteResponse::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: WriteResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.error;
-
-    let (b, off) = ::uavcan::protocol::file::Error::encode_internal(data, buffer, offset, 0);
-    offset = off;
-    buffer = b;
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<WriteResponse> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = WriteResponse::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = WriteResponse::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<WriteResponse> {
-    let mut offset = offset;
-
-    let vint_error = match ::uavcan::protocol::file::Error::decode_internal(xfer, offset, tao) {
-      Some(s) => s,
-      None => return None,
-    };
-
-    Some(WriteResponse {
-      error: vint_error,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct Error {
-  // FieldTypes
-    pub value: i16, // bit len 16
-
-}
-
-impl Error {
-  pub const SIGNATURE: u64 = 0xA83071FFEA4FAE15;
-  pub const OK: i16 = 0 as i16;
-  pub const UNKNOWN_ERROR: i16 = 32767 as i16;
-  pub const NOT_FOUND: i16 = 2 as i16;
-  pub const IO_ERROR: i16 = 5 as i16;
-  pub const ACCESS_DENIED: i16 = 13 as i16;
-  pub const IS_DIRECTORY: i16 = 21 as i16;
-  pub const INVALID_VALUE: i16 = 22 as i16;
-  pub const FILE_TOO_LARGE: i16 = 27 as i16;
-  pub const OUT_OF_SPACE: i16 = 28 as i16;
-  pub const NOT_IMPLEMENTED: i16 = 38 as i16;
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = Error::SIGNATURE;
-  }
-
-  pub fn encode(instance: Error) -> (Vec<u8>, usize) {
-    let (vec, mut size) = Error::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: Error, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.value;
-
-    let vint_value = data;
-    canars::encode_scalar_i16(&mut buffer, offset, 16, vint_value); // 32767
-    offset += 16;
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<Error> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = Error::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = Error::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<Error> {
-    let mut offset = offset;
-
-    let vint_value = match xfer.decode_scalar_i16(offset, 16) {
-     Some(s) => s,
-     None => return None,
-    };
-
-    Some(Error {
-      value: vint_value,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct DeleteRequest {
-  // FieldTypes
-    pub path: ::uavcan::protocol::file::Path, //
-
-}
-
-impl DeleteRequest {
-  pub const ID: u16 = 47;
-  pub const SIGNATURE: u64 = 0x78648C99170B47AA;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == DeleteRequest::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = DeleteRequest::SIGNATURE;
-  }
-
-  pub fn encode(instance: DeleteRequest) -> (Vec<u8>, usize) {
-    let (vec, mut size) = DeleteRequest::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: DeleteRequest, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.path;
-
-    let (b, off) = ::uavcan::protocol::file::Path::encode_internal(data, buffer, offset, 0);
-    offset = off;
-    buffer = b;
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<DeleteRequest> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = DeleteRequest::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = DeleteRequest::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<DeleteRequest> {
-    let mut offset = offset;
-
-    let vint_path = match ::uavcan::protocol::file::Path::decode_internal(xfer, offset, tao) {
-      Some(s) => s,
-      None => return None,
-    };
-
-    Some(DeleteRequest {
-      path: vint_path,
-    })
-  }
-
-}
-
-#[derive(Debug, Clone)]
-pub struct DeleteResponse {
-  // FieldTypes
-    pub error: ::uavcan::protocol::file::Error, //
-
-}
-
-impl DeleteResponse {
-  pub const ID: u16 = 47;
-  pub const SIGNATURE: u64 = 0x78648C99170B47AA;
-
-  pub fn check_id(data_type: u16) -> bool {
-    data_type == DeleteResponse::ID
-  }
-
-  pub fn set_signature(signature: &mut u64){
-    *signature = DeleteResponse::SIGNATURE;
-  }
-
-  pub fn encode(instance: DeleteResponse) -> (Vec<u8>, usize) {
-    let (vec, mut size) = DeleteResponse::encode_internal(instance, Vec::new(), 0, 1);
-
-    size = (size + 7 ) / 8;
-    (vec, size)
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn encode_internal(instance: DeleteResponse, mut buffer: Vec<u8>, offset: usize, root_item: u8) -> (Vec<u8>, usize) {
-  let mut offset = offset;
-
-    let data = instance.error;
-
-    let (b, off) = ::uavcan::protocol::file::Error::encode_internal(data, buffer, offset, 0);
-    offset = off;
-    buffer = b;
-    (buffer, offset)
-  }
-
-  pub fn decode(xfer: &::RxTransfer) -> Option<DeleteResponse> {
-    /* Backward compatibility support for removing TAO
-     *  - first try to decode with TAO DISABLED
-     *  - if it fails fall back to TAO ENABLED
-     */
-    let mut offset = 0;
-    let mut r = DeleteResponse::decode_internal(xfer, &mut offset, false);
-    if r.is_none() {
-      offset = 0;
-      r = DeleteResponse::decode_internal(xfer, &mut offset, true);
-    }
-    r
-  }
-
- #[allow(unused_mut)]
- #[allow(unused)]
-  pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<DeleteResponse> {
-    let mut offset = offset;
-
-    let vint_error = match ::uavcan::protocol::file::Error::decode_internal(xfer, offset, tao) {
-      Some(s) => s,
-      None => return None,
-    };
-
-    Some(DeleteResponse {
-      error: vint_error,
     })
   }
 

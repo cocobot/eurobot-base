@@ -511,6 +511,9 @@ uint64_t cocobot_com_process_event(void)
 #ifdef CONFIG_LIBCOCOBOT_POSITION 
   cocobot_position_com_async(_timestamp_us);
 #endif
+ #ifdef CONFIG_LIBCOCOBOT_GAME_STATE 
+  cocobot_game_state_com_async(_timestamp_us);
+#endif
   
   if (_timestamp_us >= _next_1hz_service_at)
   {

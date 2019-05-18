@@ -54,10 +54,16 @@ impl Node<StateManagerInstance> for ComHandler {
         } else if dsdl::uavcan::protocol::file::ReadRequest::check_id(data_type_id) {
             dsdl::uavcan::protocol::file::ReadRequest::set_signature(data_type_signature);
             true
-        } else if dsdl::uavcan::cocobot::Position::check_id(data_type_id) {
+        } 
+        else if dsdl::uavcan::cocobot::Position::check_id(data_type_id) {
             dsdl::uavcan::cocobot::Position::set_signature(data_type_signature);
             true
-        } else if dsdl::uavcan::protocol::debug::LogMessage::check_id(data_type_id) {
+        }
+        else if dsdl::uavcan::cocobot::GameState::check_id(data_type_id) {
+            dsdl::uavcan::cocobot::GameState::set_signature(data_type_signature);
+            true
+        }
+        else if dsdl::uavcan::protocol::debug::LogMessage::check_id(data_type_id) {
             dsdl::uavcan::protocol::debug::LogMessage::set_signature(data_type_signature);
             true
         } else {
@@ -114,6 +120,15 @@ impl Node<StateManagerInstance> for ComHandler {
             state.robots[id].x = position.x.into();
             state.robots[id].y = position.y.into();
             state.robots[id].a = position.a.into();
+        } else if dsdl::uavcan::cocobot::GameState::check_id(xfer.get_data_type_id()) {
+            let position = dsdl::uavcan::cocobot::GameState::decode(xfer).unwrap();
+
+            let state = state_manager.get_state_mut();
+            let id = if xfer.get_source_node_id() < 30 { 0 } else { 1 };
+            state.robots[id].battery = position.battery.into();
+            state.robots[id].time = position.time.into();
+            state.robots[id].score = position.score.into();
+            state.robots[id].color = position.color.into();
         } else {
             error!(
                 "Xfer accepted but not implemented: {:?}",

@@ -52,9 +52,7 @@ void cocobot_game_state_set_userdata(unsigned int id, void * data);
  */
 void * cocobot_game_state_get_userdata(unsigned int id);
 
-void cocobot_game_state_handle_async_com(void);
-
-void cocobot_game_state_display_score(void);
+void cocobot_game_state_com_async(uint64_t timestamp_us);
 
 void cocobot_game_state_add_points_to_score(int _toAdd);
 

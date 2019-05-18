@@ -147,6 +147,11 @@ pub struct RobotInfo {
     pub simu_x: f64,
     pub simu_y: f64,
     pub simu_a: f64,
+
+    pub battery: usize,
+    pub time: usize,
+    pub score: usize,
+    pub color: bool,
 }
 
 impl RobotInfo {
@@ -160,6 +165,11 @@ impl RobotInfo {
             simu_x: 0.0,
             simu_y: 0.0,
             simu_a: 0.0,
+
+            battery: 0,
+            time: 0,
+            score: 0,
+            color: false,
         }
     }
 }
