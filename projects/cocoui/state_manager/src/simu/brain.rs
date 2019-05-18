@@ -173,7 +173,6 @@ impl Brain {
                     }
                 }
                 "CAN" => {
-                    debug!(">> {}", line);
                     let tokens: Vec<&str> = tokens.get(1).unwrap().split(":").collect();
 
                     let mut data: [u8; CANFrame::CAN_FRAME_MAX_DATA_LEN] =

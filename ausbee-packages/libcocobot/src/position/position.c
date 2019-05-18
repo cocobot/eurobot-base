@@ -454,7 +454,6 @@ void cocobot_position_com_async(uint64_t timestamp_us)
     if(buf != NULL) 
     {
       static uint8_t transfer_id;
-      transfer_id += 1;
 
       const int size = uavcan_cocobot_Position_encode(&pos, buf);
       cocobot_com_broadcast(UAVCAN_COCOBOT_POSITION_SIGNATURE,

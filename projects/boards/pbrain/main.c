@@ -21,6 +21,15 @@ void run_homologation(void * arg)
             (int)cocobot_position_get_distance(),
             (int)cocobot_position_get_left_encoder(),
             (int)cocobot_position_get_right_encoder());
+
+    cocobot_com_printf(COM_DEBUG, "x=%d y=%d a=%d d=%d -- l=%ld r=%ld\r\n", 
+            (int)cocobot_position_get_x(),
+            (int)cocobot_position_get_y(),
+            (int)cocobot_position_get_angle(),
+            (int)cocobot_position_get_distance(),
+            (int)cocobot_position_get_left_encoder(),
+            (int)cocobot_position_get_right_encoder());
+
     vTaskDelay(100/portTICK_PERIOD_MS);
   }
 

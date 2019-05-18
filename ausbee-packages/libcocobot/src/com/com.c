@@ -47,6 +47,7 @@ static uint32_t _last_timer_ticks;
 static uint32_t _can_error;
 static uint64_t _timestamp_us;
 static uint64_t _next_1hz_service_at;
+static uint8_t _printf_transfer_id = 0;
 #ifdef CONFIG_OS_USE_FREERTOS
 static SemaphoreHandle_t _mutex;
 #endif
@@ -508,7 +509,7 @@ uint64_t cocobot_com_process_event(void)
 #endif
 
 #ifdef CONFIG_LIBCOCOBOT_POSITION 
- //// cocobot_position_com_async(_timestamp_us);
+  cocobot_position_com_async(_timestamp_us);
 #endif
   
   if (_timestamp_us >= _next_1hz_service_at)
@@ -700,12 +701,9 @@ void cocobot_com_printf(uint8_t level, char * fmt, ...)
     {
       const uint32_t size = uavcan_protocol_debug_LogMessage_encode(&msg, &_internal_buffer[0]);
 
-      ///!\ do not remove static !!!
-      static uint8_t transfer_id;
-
       cocobot_com_broadcast(UAVCAN_PROTOCOL_DEBUG_LOGMESSAGE_SIGNATURE,
                             UAVCAN_PROTOCOL_DEBUG_LOGMESSAGE_ID,
-                            &transfer_id,
+                            &_printf_transfer_id,
                             CANARD_TRANSFER_PRIORITY_LOW,
                             &_internal_buffer[0],
                             size);

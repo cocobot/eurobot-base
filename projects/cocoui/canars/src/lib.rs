@@ -352,6 +352,7 @@ impl PartialEq for CANFrame {
     }
 }
 
+#[derive(Debug)]
 struct RxState {
     buffer: Vec<u8>,
     dtid_tt_snid_dnid: u32,
@@ -404,7 +405,13 @@ impl RxState {
     }
 
     fn transfer_id_incr(&mut self) {
-        self.transfer_id.overflowing_add(1);
+        let (tid, _) = self.transfer_id.overflowing_add(1);
+        if tid < 32 {
+          self.transfer_id = tid;
+        }
+        else {
+          self.transfer_id = 0;
+        }
     }
 
     fn set_next_toggle(&mut self, value: u8) {
@@ -585,7 +592,6 @@ impl<T: Node<U>, U> Instance<T, U> {
                 state.release_state_payload();
                 drop(state);
                 self.rx_states.remove(i);
-                info!("DROP {:?}", i);
             } else {
                 i += 1;
             }
@@ -614,11 +620,6 @@ impl<T: Node<U>, U> Instance<T, U> {
         if transfer_type != TransferType::Broadcast
             && destination_node_id != self.get_local_node_id()
         {
-            warn!(
-                "DEST MISMATCH {}/{}",
-                destination_node_id,
-                self.get_local_node_id()
-            );
             return; // Address mismatch
         }
 
@@ -736,8 +737,9 @@ impl<T: Node<U>, U> Instance<T, U> {
         }
 
         if Instance::<T, U>::transfer_id_from_tail_byte(tail_byte) != rx_state.get_transfer_id() {
-            warn!("unexepected tid");
             return; // unexpected tid
+        }
+        else {
         }
 
         if Instance::<T, U>::is_start_of_transfer(tail_byte)
@@ -790,6 +792,7 @@ impl<T: Node<U>, U> Instance<T, U> {
 
             // Making sure the payload is released even if the application didn't bother with it
             let buffer = rx_state.release_state_payload();
+
             rx_state.prepare_for_next_transfer();
 
             if rx_state.get_calculated_crc() == rx_state.get_payload_crc() {

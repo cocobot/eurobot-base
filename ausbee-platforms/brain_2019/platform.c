@@ -35,6 +35,16 @@ void uprintf(char * fmt, ...)
   }
 }
 
+void HardFault_Handler(void)
+{
+  while(1)
+  {
+    volatile int32_t i;
+    for(i = 0; i < 100000; i += 1);
+    platform_led_toggle(1);
+  }
+}
+
 void platform_init(void)
 {
   //init mutexes
