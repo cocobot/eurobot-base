@@ -206,10 +206,10 @@ void cocobot_position_set_motor_command(float left_motor_speed, float right_moto
   st_right.rpm = right_motor_speed; 
 
   //TEST !!
-  st_left.enable = 1;
-  st_right.enable = 1;
-  st_left.rpm = motor_position[0];
-  st_right.rpm = motor_position[1];
+  //st_left.enable = 1;
+  //st_right.enable = 1;
+  //st_left.rpm = motor_position[0];
+  //st_right.rpm = motor_position[1];
 
   const uint16_t left_size = uavcan_cocobot_SetMotorSpeedRequest_encode(&st_left, &buf_left[0]);
   const uint16_t right_size = uavcan_cocobot_SetMotorSpeedRequest_encode(&st_right, &buf_right[0]);

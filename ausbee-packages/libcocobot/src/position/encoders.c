@@ -60,7 +60,7 @@ void cocobot_encoders_get_motor_position(int32_t motor_position[2])
 #endif
 #elif defined(CONFIG_ENCODER_QUAD)
   motor_position[0] = mcual_timer_get_value(MCUAL_TIMER2);
-  motor_position[1] = mcual_timer_get_value(MCUAL_TIMER5);
+  motor_position[1] = -mcual_timer_get_value(MCUAL_TIMER5);
 #endif
 }
 #endif
