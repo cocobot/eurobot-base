@@ -1,0 +1,20 @@
+uint4 TYPE_D                      = 0
+uint4 TYPE_A                      = 1
+uint4 TYPE_XY                     = 2
+uint4 TYPE_XY_BACKWARD            = 3
+uint4 TYPE_XY_CIRCLE              = 4
+uint4 TYPE_XY_CIRCLE_BACKWARD     = 5
+
+uint4 type
+f32 time
+f32 x
+f32 y
+f32 a
+f32 d
+
+f32 est_start_x
+f32 est_start_y
+f32 est_start_a
+f32 est_end_x
+f32 est_end_y
+f32 est_end_a

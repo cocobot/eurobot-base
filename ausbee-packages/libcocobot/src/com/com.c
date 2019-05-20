@@ -430,7 +430,9 @@ static void cocobot_com_transmit_tx_queue(void)
 void cocobot_com_flush(void)
 {
   cocobot_com_transmit_tx_queue();
-  //TODO: FLUSH CAN
+
+  //TODO: verify if this is working !
+  mcual_can_wait_tx_ended();
 }
 
 uint64_t cocobot_com_process_event(void)

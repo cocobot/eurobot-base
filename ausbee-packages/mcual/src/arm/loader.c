@@ -99,11 +99,11 @@ void mcual_loader_flash_pgm(uint32_t offset, uint8_t * data, uint32_t size)
     value |= (data[i + 3] << 24);
     *ptr = value;
 #else
-    value = data[i + 4];
-    value |= (data[i + 5] << 8);
-    value |= (data[i + 6] << 16);
-    value |= (data[i + 7] << 24);
-    *(ptr + 1) = value;
+    value = data[i + 0];
+    value |= (data[i + 1] << 8);
+    value |= (data[i + 2] << 16);
+    value |= (data[i + 3] << 24);
+    *(ptr) = value;
 #endif
     while(FLASH->SR & FLASH_SR_BSY);
 #if CONFIG_DEVICE_STM32L496xx

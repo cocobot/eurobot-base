@@ -246,21 +246,18 @@ impl StateManager {
 
     pub fn request_read(&mut self, node_id: u8, read: dsdl::uavcan::protocol::file::ReadRequest) {
         info!("FIRMWARE UPDATE: {} -> {:?}", node_id, read);
-        let boards = &self.config.lock().unwrap().com.boards;
+        let config_lock = self.config.lock();
+        let boards = &config_lock.unwrap().com.boards;
         info!("UNLOCK");
+
+        let mut firmware_path = None;
+
         for b in boards {
             debug!("{} {}", node_id, b.id);
             if node_id == b.id {
                 match &b.path {
                     Some(path) => {
-                        warn!("Board {:?}  -> {:?}", node_id, path);
-                        if self.send_read_data(node_id, path, read.offset).is_err() {
-                            self.send(Msg::ReadResponse {
-                                node_id,
-                                error: true,
-                                data: Vec::new(),
-                            });
-                        }
+                        firmware_path = Some(path.clone());
                     }
                     None => {
                         error!("Board {:?} has no loadable firmware", node_id);
@@ -268,6 +265,20 @@ impl StateManager {
                 };
                 break;
             }
+        }
+
+        drop(boards);
+
+        if let Some(path) = firmware_path {
+          warn!("Board {:?}  -> {:?}", node_id, path);
+          if self.send_read_data(node_id, &path, read.offset).is_err() {
+            self.send(Msg::ReadResponse {
+                      node_id,
+                      error: true,
+                      data: Vec::new(),
+                      });
+          }
+
         }
     }
 }

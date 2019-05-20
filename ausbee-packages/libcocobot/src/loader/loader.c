@@ -24,6 +24,7 @@ typedef enum {
 static loader_mode_t _mode;
 static uint8_t _request_id;
 static uint8_t  _src_node_id;
+static uint8_t  _retry;
 static uint64_t _offset;
 static uint8_t _read_transfer_id;
 static uint64_t _timestamp_us;
@@ -36,7 +37,6 @@ static void cocobot_loader_read(void)
   rr.offset = _offset;
   rr.path.path.len = 0;
   rr.path.path.data = NULL;
-
 
   //request flash memory if we have enough RAM
   void * buf = pvPortMalloc(UAVCAN_PROTOCOL_FILE_READ_REQUEST_MAX_SIZE); 
@@ -139,6 +139,7 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
       mcual_loader_erase_pgm();
  
       //start reading
+      _retry = 0;
       cocobot_loader_read();
     }
 
@@ -181,6 +182,7 @@ uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
           {
             //read next bytes
             _offset += UAVCAN_PROTOCOL_FILE_READ_RESPONSE_DATA_MAX_LENGTH;
+            _retry = 0;
             cocobot_loader_read();
             _last_activity_us = _timestamp_us;
           }
@@ -226,11 +228,20 @@ void cocobot_loader_init(void)
 
     if(_mode != LOADER_MODE_IDLE)
     {
-      if(_timestamp_us - _last_activity_us > 5000000UL)
+      if(_timestamp_us - _last_activity_us > 1000000UL)
       {
-        //bootloader has stalled. Abort
-        _mode = LOADER_MODE_IDLE;
-        cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_MAINTENANCE);
+        if(_retry > 5)
+        {
+          //bootloader has stalled. Abort
+          _mode = LOADER_MODE_IDLE;
+          cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_MAINTENANCE);
+        }
+        else
+        {
+          _last_activity_us = _timestamp_us;
+          _retry += 1;
+          cocobot_loader_read();
+        }
       }
     }
     else

@@ -65,6 +65,14 @@ impl MecaWindow {
                     });
                 }
 
+                for i in 0..12 {
+                  let btn : gtk::Button = builder.get_object(&format!("valid_s{}", i)).unwrap();
+                  let entry : gtk::Entry = builder.get_object(&format!("entry_s{}", i)).unwrap();
+                  btn.connect_clicked( move |_| {
+                    error!("valid_s{} = {:?}", i, entry.get_text());
+                  });
+                }
+
                 window.show_all();
                 self.window = Some(window);
             }

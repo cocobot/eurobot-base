@@ -1,0 +1,28 @@
+uint4 STATUS          = 0
+
+uint4 INIT            = 1
+
+uint4 TAKE_DISTRIB    = 2
+uint4 TAKE_ACCELL     = 3
+uint4 TAKE_GOLDENIUM  = 4
+uint4 TAKE_FLOOR      = 5
+
+uint4 REST_EMPTY      = 6
+uint4 REST_NORMAL     = 7
+uint4 REST_GLODNENIUM = 8
+
+uint4 DROP_FLOOR      = 9
+uint4 DROP_BALANCE    = 10
+uint4 DROP_ACCELL     = 11
+
+uint4 req
+uint4 arm
+
+uint8 x
+uint8 y
+uint8 a
+uint8 d
+
+---
+
+bool busy
