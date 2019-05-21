@@ -5,6 +5,26 @@
 
 static cocobot_arm_t arm[4] = {0};
 
+static void arm0_get_current_servo_angles_function(cocobot_joint_pos_t * joint_pos)
+{
+  // TODO: Replace with function to get servo angle
+  // joint_pos->a1_deg = get_servo_angle(servo_id);
+  joint_pos->a1_deg = 0;
+  joint_pos->a2_deg = 10;
+  joint_pos->a3_deg = 20;
+  joint_pos->a4_deg = 30;
+}
+
+static void arm0_update_servo_angles_function(const cocobot_joint_pos_t * joint_pos)
+{
+  // TODO: Replace with function to set servo angle
+  // set_servo_angle(servo_id, joint_pos->a1_deg);
+  printf("TODO: set servo 1 angle to %f\n", joint_pos->a1_deg);
+  printf("TODO: set servo 2 angle to %f\n", joint_pos->a2_deg);
+  printf("TODO: set servo 3 angle to %f\n", joint_pos->a3_deg);
+  printf("TODO: set servo 4 angle to %f\n", joint_pos->a4_deg);
+}
+
 void cocobot_arm_action_init(void)
 {
   cocobot_kinematics_init_DH_parameters(0.0971, 0.0637, 0.150, 0.080, 0.040, -0.0117);
@@ -19,15 +39,8 @@ void cocobot_arm_action_init(void)
                                           0.000, 0.37,
                                            -180,  180);
 
-  // TODO: replace by real current servo angles
-  cocobot_arm_init(&arm[0], 0, 0, 0, 0);
-  cocobot_arm_print_pos(&arm[0]);
-  cocobot_arm_init(&arm[1], 90, 0, 0, 0);
-  cocobot_arm_print_pos(&arm[1]);
-  cocobot_arm_init(&arm[2], 180, 0, 0, 0);
-  cocobot_arm_print_pos(&arm[2]);
-  cocobot_arm_init(&arm[3], 270, 0, 0, 0);
-  cocobot_arm_print_pos(&arm[3]);
+  cocobot_arm_init(&arm[0], &arm0_get_current_servo_angles_function, &arm0_update_servo_angles_function);
+  // TODO: Do the same for arm1, arm2 and arm3
 }
 
 void cocobot_arm_action_prendre_palais_sol(int arm_id, float x, float y)
