@@ -6,4 +6,5 @@ members = [
     "config_manager",
     "dsdl",
     "canars",
+    "lidar",
 ]

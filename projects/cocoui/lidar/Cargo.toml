@@ -1,0 +1,8 @@
+[package]
+name = "lidar"
+version = "0.1.0"
+authors = ["Damien Espitallier <damien.espitallier@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+rppal = "0.11.2"
