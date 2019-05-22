@@ -1,23 +1,27 @@
-use rppal::spi::{Bus, Mode, SlaveSelect, Spi};
-use rppal::gpio::Gpio;
 use std::{thread, time};
-use rppal::uart::{Parity, Uart};
 
 mod score;
+mod xv11;
 
 fn main() {
-	let mut score = score::Score::new();
+    let mut score = score::Score::new();
+    let mut xv11 = xv11::XV11::new();
 
-	let mut uart = Uart::new(115_200, Parity::None, 8, 1).unwrap();
+    xv11::XV11::start(&mut xv11);
 
+    let mut i = 0;
+    loop {
+        let locked_xv = xv11.lock().unwrap();
+        if let Some(v) = locked_xv.get_angle(0) {
+            score.set_score(v as usize);
+        }
+        else {
+            score.set_score(999);
+        }
+        drop(locked_xv);
 
- 	uart.set_read_mode(1, time::Duration::default()).unwrap();
-
-	let mut i = 0;
-	loop {
-		score.set_score(i);
-		thread::sleep(time::Duration::from_millis(100));
-		i = i + 1;
-	}
+        thread::sleep(time::Duration::from_millis(100));
+        i = i + 1;
+    }
 }
 
