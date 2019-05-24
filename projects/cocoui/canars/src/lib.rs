@@ -648,7 +648,8 @@ impl<T: Node<U>, U> Instance<T, U> {
             source_node_id,
             destination_node_id,
         );
-        //debug!(" -> SOURCE {:?}", source_node_id);
+        debug!(" -> SOURCE {:?}", source_node_id);
+        debug!(" -> FRAMe {:?}", frame);
 
         if (frame.get_data_len() - 1) as usize > frame.get_data().len() {
             error!("Frame data len = {}", frame.get_data_len());

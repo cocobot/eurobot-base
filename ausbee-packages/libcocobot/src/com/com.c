@@ -33,7 +33,8 @@ typedef enum
 {
   COCOBOT_COM_SOURCE_LIBCANARD,
   COCOBOT_COM_SOURCE_CAN,
-  COCOBOT_COM_SOURCE_USART,
+  COCOBOT_COM_SOURCE_USART1,
+  COCOBOT_COM_SOURCE_USART2,
   COCOBOT_COM_SOURCE_RF,
 } cocobot_com_source_t;
 
@@ -330,6 +331,39 @@ int16_t cocobot_com_usart_transmit(const CanardCANFrame* const frame)
   return sizeof(cocobot_com_usart_frame_t);
 }
 
+#ifdef PLATFORM_USART_USER2
+int16_t cocobot_com_usart2_transmit(const CanardCANFrame* const frame)
+{
+  unsigned int i;
+  cocobot_com_usart_frame_t uframe;
+
+  uint16_t crc = 0xFFFF;
+
+  uframe.start = COCOBOT_COM_USART_START;
+  uframe.id = frame->id;
+  uframe.len = frame->data_len;
+  for(i = 0; i < 8; i += 1)
+  {
+     uframe.data[i] = frame->data[i];
+  }
+
+  uint8_t * ptr = (uint8_t *)&uframe;
+  for(i = 0; i < sizeof(uframe) - 2; i += 1, ptr += 1)
+  {
+    crc = cocobot_com_crc16_update(crc, *ptr);
+  }
+  uframe.crc = crc;
+
+  ptr = (uint8_t *)&uframe;
+  for(i = 0; i < sizeof(cocobot_com_usart_frame_t); i += 1, ptr += 1)
+  {
+    mcual_usart_send(PLATFORM_USART_USER2, *ptr);
+  }
+
+  return sizeof(cocobot_com_usart_frame_t);
+}
+#endif
+
 int16_t cocobot_com_usart_receive(CanardCANFrame* const frame)
 {
   static cocobot_com_usart_frame_t uframe;
@@ -372,6 +406,51 @@ int16_t cocobot_com_usart_receive(CanardCANFrame* const frame)
     }
   }
 }
+
+#ifdef PLATFORM_USART_USER2
+int16_t cocobot_com_usart2_receive(CanardCANFrame* const frame)
+{
+  static cocobot_com_usart_frame_t uframe;
+
+  while(1)
+  {
+    int16_t byte = mcual_usart_recv_no_wait(PLATFORM_USART_USER2);
+    if(byte < 0)
+    {
+      return 0;
+    }
+
+    unsigned int i;
+    uint8_t * ptr = (uint8_t *)&uframe;
+    for(i = 0; i < sizeof(cocobot_com_usart_frame_t) - 1; i += 1)
+    {
+      *ptr = *(ptr + 1);
+      ptr += 1;
+    }
+    *ptr = byte & 0xFF;
+
+    if(uframe.start == COCOBOT_COM_USART_START)
+    {
+      uint16_t crc = 0xFFFF;
+      uint8_t * ptr = (uint8_t *)&uframe;
+      for(i = 0; i < sizeof(cocobot_com_usart_frame_t) - 2; i += 1, ptr += 1)
+      {
+        crc = cocobot_com_crc16_update(crc, *ptr);
+      }
+      if(crc == uframe.crc)
+      {
+        frame->id = uframe.id;
+        frame->data_len = uframe.len;
+        for(i = 0; i < 8; i += 1)
+        {
+          frame->data[i] = uframe.data[i];
+        }
+        return 1;
+      }
+    }
+  }
+}
+#endif
 #endif
 
 void cocobot_com_retransmit(const CanardCANFrame * rx_frame, cocobot_com_source_t source)
@@ -404,10 +483,17 @@ void cocobot_com_retransmit(const CanardCANFrame * rx_frame, cocobot_com_source_
 #endif
 
 #ifdef CONFIG_LIBCOCOBOT_COM_USART
- if(source != COCOBOT_COM_SOURCE_USART)
+ if(source != COCOBOT_COM_SOURCE_USART1)
  {
    cocobot_com_usart_transmit(rx_frame);
  }
+
+#ifdef PLATFORM_USART_USER2
+ if(source != COCOBOT_COM_SOURCE_USART2)
+ {
+   cocobot_com_usart2_transmit(rx_frame);
+ }
+#endif
 #endif
 
 #ifdef CONFIG_LIBCOCOBOT_COM_RF
@@ -485,7 +571,25 @@ uint64_t cocobot_com_process_event(void)
     }
     else if (rx_res > 0)
     {
-      cocobot_com_retransmit(&rx_frame, COCOBOT_COM_SOURCE_USART);
+      cocobot_com_retransmit(&rx_frame, COCOBOT_COM_SOURCE_USART1);
+      canardHandleRxFrame(&_canard, &rx_frame, _timestamp_us);
+    }
+  }
+#endif
+
+#ifdef PLATFORM_USART_USER2
+  rx_res = 1;
+  while(rx_res > 0)
+  {
+    rx_res = cocobot_com_usart2_receive(&rx_frame);
+    if (rx_res < 0)
+    {
+      // Failure - report
+      _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
+    }
+    else if (rx_res > 0)
+    {
+      cocobot_com_retransmit(&rx_frame, COCOBOT_COM_SOURCE_USART2);
       canardHandleRxFrame(&_canard, &rx_frame, _timestamp_us);
     }
   }

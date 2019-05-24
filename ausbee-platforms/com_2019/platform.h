@@ -48,6 +48,7 @@
 # define PLATFORM_USART_USER          MCUAL_USART2
 #else
 # define PLATFORM_USART_USER          MCUAL_USART1
+# define PLATFORM_USART_USER2         MCUAL_USART2
 #endif
 
 #define PLATFORM_SPI_CS_UNSELECT      0

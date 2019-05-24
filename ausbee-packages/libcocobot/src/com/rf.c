@@ -104,14 +104,6 @@ static SemaphoreHandle_t _irq_sem;
 static QueueHandle_t _tx_queue;
 static QueueHandle_t _rx_queue;
 
-void send(char * str)
-{
-  while(*str)
-  {
-    mcual_usart_send(PLATFORM_USART_DEBUG, *str);
-   str += 1;
-  }
-}
 
 static void cocobot_com_rf_set_led_state(rf_led_state state, int arg)
 {
