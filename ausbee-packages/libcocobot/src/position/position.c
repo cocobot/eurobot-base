@@ -202,6 +202,13 @@ void cocobot_position_set_motor_command(float left_motor_speed, float right_moto
     st_right.enable = 0;
   }
 
+#ifdef COCOBOT_INVERT_LEFT_MOTOR
+  left_motor_speed = -left_motor_speed;
+#endif
+#ifdef COCOBOT_INVERT_RIGHT_MOTOR
+  right_motor_speed = -right_motor_speed;
+#endif
+
   st_left.rpm = left_motor_speed; 
   st_right.rpm = right_motor_speed; 
 
