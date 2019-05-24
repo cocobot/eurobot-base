@@ -4,6 +4,8 @@ use rppal::uart::{Parity, Uart};
 use std::sync::Arc;
 use std::sync::Mutex;
 
+const THRESHOLD : u16 = 0x80;
+
 
 pub struct XV11 {
     values: [Option<u16>; 360]
@@ -57,10 +59,16 @@ impl XV11 {
 
                         for i in 0..4 {
                             let mut val = None; 
-                            if (buffer[4 + i * 4 + 1] & 0x80) == 0 {
+                            if (buffer[4 + i * 4 + 1] & 0xC0) == 0 {
                                 let mut distance = buffer[4 + i * 4] as u16;
                                 distance |= ((buffer[4 + i * 4 + 1] as u16) & 0x3F) << 8;
-                                val = Some(distance);
+
+                                let mut signal = buffer[4 + i * 4 + 2] as u16;
+                                signal |= (buffer[4 + i * 4 + 3] as u16) << 8;
+
+                                if signal > THRESHOLD {
+                                    val = Some(distance);
+                                }
                             }
                             values[idx - 0xA0 + i] = val;
                         }

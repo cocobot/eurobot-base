@@ -29,6 +29,12 @@ id=13
 uid="[42 00 28 00 17 50 46 50 58 39 34 20 00 00 00 00]"
 path="../../boards/canon/Output/canon.hex"
 
+[[boards]]
+name="Lidar XV11"
+id=14
+uid=""
+
+
 
 
 #ID 30->49 secondary robot

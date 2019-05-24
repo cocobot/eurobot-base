@@ -1,27 +1,38 @@
+#[macro_use]
+extern crate log;
+extern crate pretty_env_logger;
+
 use std::{thread, time};
 
 mod score;
 mod xv11;
+mod com;
+
+pub struct ComData {
+    pub score: score::Score,
+    pub start: time::Instant,
+}
 
 fn main() {
-    let mut score = score::Score::new();
-    let mut xv11 = xv11::XV11::new();
+    pretty_env_logger::formatted_builder()
+        .filter_level(log::LevelFilter::Debug)
+        .init();
 
+    info!("Lidar !");
+
+    let data = ComData {
+        score: score::Score::new(),
+        start: time::Instant::now(),
+    };
+
+    let mut xv11 = xv11::XV11::new();
     xv11::XV11::start(&mut xv11);
 
-    let mut i = 0;
-    loop {
-        let locked_xv = xv11.lock().unwrap();
-        if let Some(v) = locked_xv.get_angle(0) {
-            score.set_score(v as usize);
-        }
-        else {
-            score.set_score(999);
-        }
-        drop(locked_xv);
+    let (com, rx_send_can_frame) = com::init(14, data);
+    com::serial::init(com.clone(), rx_send_can_frame);
 
-        thread::sleep(time::Duration::from_millis(100));
-        i = i + 1;
+    loop {
+        thread::sleep(time::Duration::from_millis(1000));
     }
 }
 

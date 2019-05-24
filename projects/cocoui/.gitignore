@@ -2,3 +2,5 @@
 **/*.rs.bk
 *.user.toml
 *.lock
+*.swo
+*.swn

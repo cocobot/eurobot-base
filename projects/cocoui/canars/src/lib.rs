@@ -688,14 +688,12 @@ impl<T: Node<U>, U> Instance<T, U> {
                     }
                 }
             } else {
-                info!("Nobody wants: {}", data_type_id);
                 return; // The application doesn't want this transfer
             }
         } else {
             rx_state = self.find(transfer_descriptor);
 
             if rx_state.is_none() {
-                warn!("CONTINUE TX :(");
                 return;
             }
         }
