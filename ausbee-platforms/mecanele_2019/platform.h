@@ -8,6 +8,7 @@
 #define PLATFORM_MINOR                0
 
 #define PLATFORM_USART_DEBUG          MCUAL_USART1
+#define PLATFORM_USART_USER           MCUAL_USART1
 
 #define PLATFORM_LED0                 (1 << 0)
 
