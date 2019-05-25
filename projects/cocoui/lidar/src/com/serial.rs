@@ -131,6 +131,7 @@ pub fn init(com: Com, tx_can: Receiver<CANFrame>) {
             if let Ok(mut uart) = uart {
                 uart.set_read_mode(1, time::Duration::from_millis(5)).unwrap();
 
+                let encoder = FrameEncoder::new();
                 let mut decoder = FrameDecoder::new();
                 let mut fail = false;
                 while !fail  {
@@ -139,6 +140,14 @@ pub fn init(com: Com, tx_can: Receiver<CANFrame>) {
                         decoder.add_byte(data[0]);
                         while let Some(frame) = decoder.decode() {
                             com.handle_rx_frame(frame.get_can_frame());
+                        }
+                    }
+
+                    while let Ok(frame) = tx_can.try_recv() {
+                        debug!("TX: {:?}", frame);
+                        let enc = encoder.encode(&frame);
+                        if let Err(v) = uart.write(&enc[..]) {
+                            error!("write: {:?}", v);
                         }
                     }
 

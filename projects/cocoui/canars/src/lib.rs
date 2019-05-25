@@ -192,13 +192,17 @@ impl<'a> RxTransfer<'a> {
 }
 
 pub fn encode_scalar_u8(buffer: &mut Vec<u8>, offset: usize, size: usize, value: u8) {
+    warn!("DEBUG: {:?} {:?}", offset, value);
     for i in 0..size {
         let idx = (i + offset) / 8;
         while buffer.len() <= idx {
             buffer.push(0);
         }
-        buffer[idx] |= value & (1 << i);
+        if (value & 1 << i) != 0 {
+            buffer[idx] |= 1 << ((i + offset) % 8);
+        }
     }
+    warn!("FIN: {:?}", buffer);
 }
 
 pub fn encode_scalar_u16(buffer: &mut Vec<u8>, offset: usize, size: usize, value: u16) {
@@ -251,8 +255,13 @@ pub fn encode_scalar_u64(buffer: &mut Vec<u8>, offset: usize, size: usize, value
     }
 }
 
-pub fn encode_scalar_bool(_buffer: &mut Vec<u8>, _offset: usize, _size: usize, _value: bool) {
-    unimplemented!();
+pub fn encode_scalar_bool(buffer: &mut Vec<u8>, offset: usize, size: usize, value: bool) {
+    if value {
+        encode_scalar_u8(buffer, offset, size, 1);
+    }
+    else {
+        encode_scalar_u8(buffer, offset, size, 0);
+    }
 }
 
 pub trait Node<U> {
@@ -483,6 +492,10 @@ impl<T: Node<U>, U> Instance<T, U> {
             rx_states: Vec::new(),
             queue: VecDeque::new(),
         }
+    }
+
+    pub fn get_handler(&mut self) -> &mut T {
+        &mut self.handler
     }
 
     pub fn pop_tx_queue(&mut self) -> Option<CANFrame> {

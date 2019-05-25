@@ -1,5 +1,6 @@
 extern crate dsdl;
 
+pub mod msg;
 pub mod serial;
 
 use crossbeam_channel::unbounded;
@@ -10,6 +11,7 @@ use std::thread;
 use std::time;
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
+use std::time::Duration;
 
 use canars::CANFrame;
 use canars::Instance;
@@ -21,11 +23,21 @@ use crate::ComData;
 const MAX_X_ROBOT : f32 = 600.0;
 const MAX_Y_ROBOT : f32 = 400.0;
 
-pub struct ComHandler {}
+pub struct ComHandler {
+    com: Option<Com>
+}
 
 impl ComHandler {
     fn new() -> ComHandler {
-        ComHandler {}
+        ComHandler {
+            com: None,
+        }
+    }
+}
+
+impl ComHandler {
+    pub fn set_com(&mut self, com: Com) {
+        self.com = Some(com);
     }
 }
 
@@ -36,7 +48,7 @@ impl Node<ComData> for ComHandler {
         data_type_signature: &mut u64,
         data_type_id: u16,
         _transfer_type: TransferType,
-        source_node_id: u8,
+        _source_node_id: u8,
     ) -> bool {
         //Indicate canars if trame is useful or not
         if dsdl::uavcan::cocobot::GameState::check_id(data_type_id) {
@@ -66,8 +78,7 @@ impl Node<ComData> for ComHandler {
             debug!("{:?}", gstate);
         } 
         else if dsdl::uavcan::cocobot::CollisionRequest::check_id(xfer.get_data_type_id()) {
-            let col = dsdl::uavcan::cocobot::CollisionRequest::decode(xfer).unwrap();
-            //debug!("{:?}", col);
+            let _col = dsdl::uavcan::cocobot::CollisionRequest::decode(xfer).unwrap();
             
             let mut alert_front_left = false;
             let mut alert_front_right = false;
@@ -117,29 +128,19 @@ impl Node<ComData> for ComHandler {
 
                     if x_neg_alert && y_neg_alert {
                         alert_back_right = true;
-
-                        warn!("{} {} {}", i, x_robot, y_robot);
-
                     }
                 }
             }
 
-            if alert_front_left {
-                warn!("FRONT LEFT !");
+            if let Some(com) = &self.com {
+                com.message( msg::Msg::CollisionResponse { 
+                    node_id: xfer.get_source_node_id(), 
+                    alert_back_left,
+                    alert_back_right,
+                    alert_front_left,
+                    alert_front_right,
+                });
             }
-
-            if alert_front_right {
-                warn!("FRONT RIGHT !");
-            }
-
-            if alert_back_left {
-                warn!("BACK LEFT !");
-            }
-
-            if alert_back_right {
-                warn!("BACK RIGHT !");
-            }
-
         } else {
             error!(
                 "Xfer accepted but not implemented: {:?}",
@@ -153,17 +154,20 @@ impl Node<ComData> for ComHandler {
 pub struct Com {
     receive_can_frame: Sender<(u64, CANFrame)>,
     send_can_frame: Sender<CANFrame>,
+    send_msg: Sender<msg::Msg>,
 }
 
 impl Com {
     fn new(
         receive_can_frame: Sender<(u64, CANFrame)>,
         send_can_frame: Sender<CANFrame>,
+        send_msg: Sender<msg::Msg>,
     ) -> Com {
         //Allocation for com structure
         Com {
             receive_can_frame,
             send_can_frame,
+            send_msg,
         }
     }
 
@@ -172,6 +176,15 @@ impl Com {
             Ok(_) => {}
             Err(e) => {
                 error!("send_can_frame: {:?}", e);
+            }
+        }
+    }
+
+    pub fn message(&self, msg: msg::Msg) {
+        match self.send_msg.send(msg) {
+            Ok(_) => {}
+            Err(e) => {
+                error!("send_msg: {:?}", e);
             }
         }
     }
@@ -200,9 +213,10 @@ pub fn init(node_id: u8, data: ComData) -> (Com, Receiver<CANFrame>) {
     //create channels for communication
     let (tx_send_can_frame, rx_send_can_frame) = unbounded();
     let (tx_receive_can_frame, rx_receive_can_frame) = unbounded();
+    let (tx_send_msg, rx_send_msg) = unbounded();
 
     //Com initialisation
-    let com = Com::new(tx_receive_can_frame, tx_send_can_frame);
+    let com = Com::new(tx_receive_can_frame, tx_send_can_frame, tx_send_msg);
 
     //handle cleanup and send messages
     let node_th1 = node.clone();
@@ -218,6 +232,19 @@ pub fn init(node_id: u8, data: ComData) -> (Com, Receiver<CANFrame>) {
         let mut next_clean_up = get_timestamp();
         loop {
             let timestamp = get_timestamp();
+            
+            //compute max waiting time before next cleanup
+            let delta = if next_clean_up > timestamp {
+                next_clean_up - timestamp
+            } else {
+                0
+            };
+            
+            //receive new message to send
+            if let Ok(msg) = rx_send_msg.recv_timeout(Duration::from_millis(delta)) {
+                let mut node = node_th1.lock().unwrap();
+                msg.send(&mut node);
+            }
 
             //cleanup transfert
             if timestamp > next_clean_up {
@@ -252,6 +279,8 @@ pub fn init(node_id: u8, data: ComData) -> (Com, Receiver<CANFrame>) {
 
         thread::sleep(time::Duration::from_millis(20));
     });
+
+    node.lock().unwrap().get_handler().set_com(com.clone());
 
     (com, rx_send_can_frame)
 }
