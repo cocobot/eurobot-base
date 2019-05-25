@@ -157,21 +157,17 @@ uint32_t uavcan_cocobot_CollisionResponse_encode_internal(uavcan_cocobot_Collisi
   uint32_t offset,
   uint8_t CANARD_MAYBE_UNUSED(root_item))
 {
-    source->left_front = CANARD_INTERNAL_SATURATE_UNSIGNED(source->left_front, 1)
-    canardEncodeScalar(msg_buf, offset, 1, (void*)&source->left_front); // 1
-    offset += 1;
+    canardEncodeScalar(msg_buf, offset, 8, (void*)&source->left_front); // 255
+    offset += 8;
 
-    source->right_front = CANARD_INTERNAL_SATURATE_UNSIGNED(source->right_front, 1)
-    canardEncodeScalar(msg_buf, offset, 1, (void*)&source->right_front); // 1
-    offset += 1;
+    canardEncodeScalar(msg_buf, offset, 8, (void*)&source->right_front); // 255
+    offset += 8;
 
-    source->left_back = CANARD_INTERNAL_SATURATE_UNSIGNED(source->left_back, 1)
-    canardEncodeScalar(msg_buf, offset, 1, (void*)&source->left_back); // 1
-    offset += 1;
+    canardEncodeScalar(msg_buf, offset, 8, (void*)&source->left_back); // 255
+    offset += 8;
 
-    source->right_back = CANARD_INTERNAL_SATURATE_UNSIGNED(source->right_back, 1)
-    canardEncodeScalar(msg_buf, offset, 1, (void*)&source->right_back); // 1
-    offset += 1;
+    canardEncodeScalar(msg_buf, offset, 8, (void*)&source->right_back); // 255
+    offset += 8;
 
     return offset;
 }
@@ -211,33 +207,33 @@ int32_t uavcan_cocobot_CollisionResponse_decode_internal(
 {
     int32_t ret = 0;
 
-    ret = canardDecodeScalar(transfer, (uint32_t)offset, 1, false, (void*)&dest->left_front);
-    if (ret != 1)
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 8, false, (void*)&dest->left_front);
+    if (ret != 8)
     {
         goto uavcan_cocobot_CollisionResponse_error_exit;
     }
-    offset += 1;
+    offset += 8;
 
-    ret = canardDecodeScalar(transfer, (uint32_t)offset, 1, false, (void*)&dest->right_front);
-    if (ret != 1)
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 8, false, (void*)&dest->right_front);
+    if (ret != 8)
     {
         goto uavcan_cocobot_CollisionResponse_error_exit;
     }
-    offset += 1;
+    offset += 8;
 
-    ret = canardDecodeScalar(transfer, (uint32_t)offset, 1, false, (void*)&dest->left_back);
-    if (ret != 1)
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 8, false, (void*)&dest->left_back);
+    if (ret != 8)
     {
         goto uavcan_cocobot_CollisionResponse_error_exit;
     }
-    offset += 1;
+    offset += 8;
 
-    ret = canardDecodeScalar(transfer, (uint32_t)offset, 1, false, (void*)&dest->right_back);
-    if (ret != 1)
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 8, false, (void*)&dest->right_back);
+    if (ret != 8)
     {
         goto uavcan_cocobot_CollisionResponse_error_exit;
     }
-    offset += 1;
+    offset += 8;
     return offset;
 
 uavcan_cocobot_CollisionResponse_error_exit:

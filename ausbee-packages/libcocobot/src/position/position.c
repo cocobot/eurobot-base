@@ -35,6 +35,7 @@ static float last_right_sp = 0;
 static float left_motor_alpha = (((float)CONFIG_LIBCOCOBOT_LEFT_MOTOR_ALPHA) / 1000.0f);
 static float right_motor_alpha = (((float)CONFIG_LIBCOCOBOT_RIGHT_MOTOR_ALPHA) / 1000.0f);
 static uint64_t _next_10hz_service_at;
+static uint8_t _request_send_motor = 0;
 
 #ifdef COCOBOT_CAN_MOTOR
 static uavcan_cocobot_SetMotorSpeedRequest st_left;
@@ -102,6 +103,7 @@ void cocobot_position_init(unsigned int task_priority)
   mutex = xSemaphoreCreateMutex();
 
   _next_10hz_service_at = 0;
+  _request_send_motor = 0;
 
   //Be sure that position manager have valid values before continuing the initialization process.
   //Need to run twice in order to intialize speed values
@@ -191,7 +193,7 @@ int32_t cocobot_position_get_right_encoder(void)
 void cocobot_position_set_motor_command(float left_motor_speed, float right_motor_speed)
 {
 #ifdef COCOBOT_CAN_MOTOR
-  if(cocobot_asserv_get_state() == COCOBOT_ASSERV_ENABLE)
+  if((cocobot_asserv_get_state() == COCOBOT_ASSERV_ENABLE) && !cocobot_opponent_detection_is_in_alert())
   {
     st_left.enable = 1;
     st_right.enable = 1;
@@ -209,35 +211,11 @@ void cocobot_position_set_motor_command(float left_motor_speed, float right_moto
   right_motor_speed = -right_motor_speed;
 #endif
 
+  xSemaphoreTake(mutex, portMAX_DELAY);
   st_left.rpm = left_motor_speed; 
   st_right.rpm = right_motor_speed; 
-
-  //TEST !!
-  //st_left.enable = 1;
-  //st_right.enable = 1;
-  //st_left.rpm = motor_position[0];
-  //st_right.rpm = motor_position[1];
-
-  const uint16_t left_size = uavcan_cocobot_SetMotorSpeedRequest_encode(&st_left, &buf_left[0]);
-  const uint16_t right_size = uavcan_cocobot_SetMotorSpeedRequest_encode(&st_right, &buf_right[0]);
-
-  cocobot_com_request_or_respond(COCOBOT_LEFT_MOTOR_NODE_ID,
-                        UAVCAN_COCOBOT_SETMOTORSPEED_SIGNATURE,
-                        UAVCAN_COCOBOT_SETMOTORSPEED_ID,
-                        &transfer_id_left,
-                        CANARD_TRANSFER_PRIORITY_HIGH,
-                        CanardRequest,
-                        &buf_left[0],
-                        left_size);
-
-  cocobot_com_request_or_respond(COCOBOT_RIGHT_MOTOR_NODE_ID,
-                        UAVCAN_COCOBOT_SETMOTORSPEED_SIGNATURE,
-                        UAVCAN_COCOBOT_SETMOTORSPEED_ID,
-                        &transfer_id_right,
-                        CANARD_TRANSFER_PRIORITY_HIGH,
-                        CanardRequest,
-                        &buf_right[0],
-                        right_size);
+  _request_send_motor = 1;
+  xSemaphoreGive(mutex);
 #else
   if(left_motor_speed > 0xffff)
   {
@@ -417,6 +395,35 @@ void cocobot_position_set_angle(float angle)
 
 void cocobot_position_com_async(uint64_t timestamp_us)
 {
+  if(_request_send_motor)
+  {
+    xSemaphoreTake(mutex, portMAX_DELAY);
+    _request_send_motor = 0;
+
+    const uint16_t left_size = uavcan_cocobot_SetMotorSpeedRequest_encode(&st_left, &buf_left[0]);
+
+    cocobot_com_request_or_respond(COCOBOT_LEFT_MOTOR_NODE_ID,
+                                   UAVCAN_COCOBOT_SETMOTORSPEED_SIGNATURE,
+                                   UAVCAN_COCOBOT_SETMOTORSPEED_ID,
+                                   &transfer_id_left,
+                                   CANARD_TRANSFER_PRIORITY_HIGH,
+                                   CanardRequest,
+                                   &buf_left[0],
+                                   left_size);
+
+    const uint16_t right_size = uavcan_cocobot_SetMotorSpeedRequest_encode(&st_right, &buf_right[0]);
+
+    cocobot_com_request_or_respond(COCOBOT_RIGHT_MOTOR_NODE_ID,
+                                   UAVCAN_COCOBOT_SETMOTORSPEED_SIGNATURE,
+                                   UAVCAN_COCOBOT_SETMOTORSPEED_ID,
+                                   &transfer_id_right,
+                                   CANARD_TRANSFER_PRIORITY_HIGH,
+                                   CanardRequest,
+                                   &buf_right[0],
+                                   right_size);
+    xSemaphoreGive(mutex);
+  }
+
   if (timestamp_us >= _next_10hz_service_at)
   {
     _next_10hz_service_at = timestamp_us + 100000;

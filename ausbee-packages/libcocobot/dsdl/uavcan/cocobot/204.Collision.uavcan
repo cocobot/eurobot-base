@@ -4,7 +4,7 @@ float32 a
 
 ---
 
-bool left_front
-bool right_front
-bool left_back
-bool right_back
+uint8 left_front
+uint8 right_front
+uint8 left_back
+uint8 right_back

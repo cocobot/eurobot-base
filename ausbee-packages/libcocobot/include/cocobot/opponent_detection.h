@@ -1,6 +1,8 @@
 #ifndef OPPONENT_DETECTION_H
 #define OPPONENT_DETECTION_H
 
+#include <canard.h>
+
 #define COCOBOT_OPPONENT_DETECTION_DEACTIVATED  0
 #define COCOBOT_OPPONENT_DETECTION_ACTIVATED    1
 
@@ -25,6 +27,16 @@ void cocobot_opponent_detection_init(unsigned int task_priority);
 void cocobot_opponent_detection_set_enable(int id, int status);
 
 int cocobot_opponent_detection_is_in_alert(void);
+
+void cocobot_opponent_detection_com_async(uint64_t timestamp_us);
+
+uint8_t cocobot_opponent_detection_should_accept_transfer(uint64_t* out_data_type_signature,
+                                              uint16_t data_type_id,
+                                              CanardTransferType transfer_type,
+                                              uint8_t source_node_id);
+
+uint8_t cocobot_opponent_detection_on_transfer_received(CanardRxTransfer* transfer);
+
 
 /**
  * Set an obstacle on map if detected
