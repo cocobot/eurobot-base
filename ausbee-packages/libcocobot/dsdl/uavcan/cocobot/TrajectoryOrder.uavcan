@@ -5,16 +5,16 @@ uint4 TYPE_XY_BACKWARD            = 3
 uint4 TYPE_XY_CIRCLE              = 4
 uint4 TYPE_XY_CIRCLE_BACKWARD     = 5
 
-uint4 type
-f32 time
-f32 x
-f32 y
-f32 a
-f32 d
+uint4 order_type
+float32 time
+float32 x
+float32 y
+float32 a
+float32 d
 
-f32 est_start_x
-f32 est_start_y
-f32 est_start_a
-f32 est_end_x
-f32 est_end_y
-f32 est_end_a
+float32 est_start_x
+float32 est_start_y
+float32 est_start_a
+float32 est_end_x
+float32 est_end_y
+float32 est_end_a
