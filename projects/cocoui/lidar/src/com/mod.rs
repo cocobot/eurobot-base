@@ -18,6 +18,9 @@ use canars::RxTransfer;
 use canars::TransferType;
 use crate::ComData;
 
+const MAX_X_ROBOT : f32 = 600.0;
+const MAX_Y_ROBOT : f32 = 400.0;
+
 pub struct ComHandler {}
 
 impl ComHandler {
@@ -40,6 +43,11 @@ impl Node<ComData> for ComHandler {
             dsdl::uavcan::cocobot::GameState::set_signature(data_type_signature);
             true
         }
+        else if dsdl::uavcan::cocobot::CollisionRequest::check_id(data_type_id) {
+            dsdl::uavcan::cocobot::CollisionRequest::set_signature(data_type_signature);
+            true
+        }
+ 
         else {
             false
         }
@@ -55,6 +63,83 @@ impl Node<ComData> for ComHandler {
             else {
                 state.score.set_score(gstate.score as usize);
             }
+            debug!("{:?}", gstate);
+        } 
+        else if dsdl::uavcan::cocobot::CollisionRequest::check_id(xfer.get_data_type_id()) {
+            let col = dsdl::uavcan::cocobot::CollisionRequest::decode(xfer).unwrap();
+            //debug!("{:?}", col);
+            
+            let mut alert_front_left = false;
+            let mut alert_front_right = false;
+            let mut alert_back_left = false;
+            let mut alert_back_right = false;
+
+            let lidar = state.xv11.lock().unwrap();
+
+            for i in 0..360 {
+                if let Some(distance) = lidar.get_angle(i) {
+                    let distance = distance as f32;
+                    let x_robot = distance * f32::cos((i as f32) * std::f32::consts::PI / 180.0);
+                    let y_robot = distance * f32::sin((i as f32) * std::f32::consts::PI / 180.0);
+
+                    let mut x_pos_alert = false;
+                    let mut y_pos_alert = false;
+                    let mut x_neg_alert = false;
+                    let mut y_neg_alert = false;
+
+                    if x_robot >= 0.0 && x_robot < MAX_X_ROBOT {
+                        x_pos_alert = true;
+                    }
+
+                    if x_robot <= 0.0 && x_robot > -MAX_X_ROBOT {
+                        x_neg_alert = true;
+                    }
+
+                    if y_robot >= 0.0 && y_robot < MAX_Y_ROBOT {
+                        y_pos_alert = true;
+                    }
+
+                    if y_robot <= 0.0 && y_robot > -MAX_Y_ROBOT {
+                        y_neg_alert = true;
+                    }
+
+                    if x_pos_alert && y_pos_alert {
+                        alert_front_left = true;
+                    }
+
+                    if x_pos_alert && y_neg_alert {
+                        alert_front_right = true;
+                    }
+
+                    if x_neg_alert && y_pos_alert {
+                        alert_back_left = true;
+                    }
+
+                    if x_neg_alert && y_neg_alert {
+                        alert_back_right = true;
+
+                        warn!("{} {} {}", i, x_robot, y_robot);
+
+                    }
+                }
+            }
+
+            if alert_front_left {
+                warn!("FRONT LEFT !");
+            }
+
+            if alert_front_right {
+                warn!("FRONT RIGHT !");
+            }
+
+            if alert_back_left {
+                warn!("BACK LEFT !");
+            }
+
+            if alert_back_right {
+                warn!("BACK RIGHT !");
+            }
+
         } else {
             error!(
                 "Xfer accepted but not implemented: {:?}",

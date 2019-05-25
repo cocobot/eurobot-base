@@ -3,6 +3,8 @@ extern crate log;
 extern crate pretty_env_logger;
 
 use std::{thread, time};
+use std::sync::Arc;
+use std::sync::Mutex;
 
 mod score;
 mod xv11;
@@ -11,6 +13,7 @@ mod com;
 pub struct ComData {
     pub score: score::Score,
     pub start: time::Instant,
+    pub xv11: Arc<Mutex<xv11::XV11>>,
 }
 
 fn main() {
@@ -20,12 +23,14 @@ fn main() {
 
     info!("Lidar !");
 
+    let mut xv11 = xv11::XV11::new();
+
     let data = ComData {
         score: score::Score::new(),
         start: time::Instant::now(),
+        xv11: xv11.clone(),
     };
 
-    let mut xv11 = xv11::XV11::new();
     xv11::XV11::start(&mut xv11);
 
     let (com, rx_send_can_frame) = com::init(14, data);

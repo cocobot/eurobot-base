@@ -22,11 +22,13 @@ impl XV11 {
     }
 
     fn set_values(&mut self, array: [Option<u16>; 360]) {
-        self.values = array;
+        for i in 0..360 {
+            self.values[i] = array[i];
+        }
     }
 
     pub fn get_angle(&self, angle: usize) -> Option<u16> {
-        self.values[angle % 360]
+        self.values[(angle + 90) % 360]
     }
 
     pub fn start(instance: &mut Arc<Mutex<XV11>>) {
@@ -70,8 +72,9 @@ impl XV11 {
                                     val = Some(distance);
                                 }
                             }
-                            values[idx - 0xA0 + i] = val;
+                            values[(idx - 0xA0) * 4 + i] = val;
                         }
+
 
                         buffer.drain(0..21);
 
