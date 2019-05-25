@@ -3,6 +3,7 @@
 #include <platform.h>
 #include <cocobot.h>
 #include <stdio.h>
+#include "cocobot_arm_action.h"
 
 void blink(void)
 {
@@ -20,6 +21,8 @@ int main(void)
 
   cocobot_com_init();
   cocobot_com_run();
+
+  cocobot_arm_action_init();
 
   vTaskStartScheduler();
 
