@@ -4,6 +4,7 @@ use super::defs;
 
 pub type ConfigManagerInstance = Arc<Mutex<ConfigManager>>;
 
+#[derive(Debug, Clone)]
 pub struct ConfigManager {
     pub simulation: bool,
     pub com: defs::com::Config,

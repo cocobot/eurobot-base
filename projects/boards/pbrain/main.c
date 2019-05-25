@@ -11,6 +11,14 @@ void run_homologation(void * arg)
 {
   (void)arg;
 
+  cocobot_game_state_wait_for_starter_removed();
+
+  cocobot_trajectory_goto_xy(500, 0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  cocobot_trajectory_goto_xy(500, 500, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  cocobot_trajectory_goto_xy(0, 500, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  cocobot_trajectory_goto_xy(0, 0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  cocobot_trajectory_wait();
+
   while(1)
   {
     //do nothing !
@@ -32,8 +40,6 @@ void run_homologation(void * arg)
 
     vTaskDelay(100/portTICK_PERIOD_MS);
   }
-
-  cocobot_game_state_wait_for_starter_removed();
 
   //panneau domotique
   cocobot_game_state_add_points_to_score(5);
@@ -227,6 +233,10 @@ int main(void)
       cocobot_position_set_angle(180);
       break;
   }
+
+      cocobot_position_set_x(0);
+      cocobot_position_set_y(0);
+      cocobot_position_set_angle(0);
 
   xTaskCreate(run_homologation, "strat", 600, NULL, 2, NULL );
 

@@ -18,7 +18,7 @@ macro_rules! config {
                 }
             }
 
-            #[derive(Debug)]
+            #[derive(Debug, Clone)]
             pub struct Config {
                 $(pub $attr_name : $attr_type ),*
             }
@@ -56,7 +56,7 @@ macro_rules! config {
     }
 }
 
-#[derive(Deserialize,Debug)]
+#[derive(Deserialize,Debug,Clone)]
 pub struct Board {
     pub id: u8,
     pub uid: String,
@@ -72,7 +72,7 @@ config!(com {
 });
 
 
-#[derive(Deserialize,Debug)]
+#[derive(Deserialize,Debug,Clone)]
 pub struct FieldBorder {
     pub color: Vec<f64>,
     pub rect: Vec<f64>,
@@ -89,7 +89,7 @@ config!(field {
 });
 
 
-#[derive(Deserialize,Debug)]
+#[derive(Deserialize,Debug,Clone)]
 pub struct Robot {
     pub shape: Vec<[f64; 2]>,
     pub fill: Vec<f64>,

@@ -532,7 +532,7 @@ fn update() {
             ui.robots[0].info_a.as_mut().unwrap().set_text(&format!("a: {:.0}", state_cpy2.robots[0].a));
             ui.robots[0].info_score.as_mut().unwrap().set_text(&format!("score: {:.0}", state_cpy2.robots[0].score));
             ui.robots[0].info_elapsed_time.as_mut().unwrap().set_text(&format!("time: {:.0}", state_cpy2.robots[0].time));
-            ui.robots[0].info_battery.as_mut().unwrap().set_text(&format!("battery: {:.0}", state_cpy2.robots[0].battery));
+            ui.robots[0].info_battery.as_mut().unwrap().set_text(&format!("battery: {:.2}", (state_cpy2.robots[0].battery as f32) / 1000.0));
         });
         gtk::Continue(true)
     });

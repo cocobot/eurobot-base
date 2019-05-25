@@ -17,6 +17,7 @@ use crate::com::msg::Msg;
 use crate::com::msg::QValue;
 use crate::com::Com;
 use crate::config_manager::config::ConfigManagerInstance;
+use crate::config_manager::config::ConfigManager;
 
 use crate::hex_slice::AsHex;
 
@@ -39,12 +40,13 @@ pub type StateManagerInstance = Arc<Mutex<StateManager>>;
 
 pub struct StateManager {
     state: State,
-    config: ConfigManagerInstance,
+    config: ConfigManager,
     com: Option<Com>,
 }
 
 impl StateManager {
     pub fn new(config: ConfigManagerInstance) -> StateManagerInstance {
+        let config = config.lock().unwrap().clone();
         let sm = Arc::new(Mutex::new(StateManager {
             state: State::new(),
             config,
@@ -68,10 +70,10 @@ impl StateManager {
             istate.set_com_instance(com.clone());
             let cnf = istate.config.clone();
             drop(istate);
-            let auto_assign_id = cnf.lock().unwrap().com.auto_assign_id;
+            let auto_assign_id = cnf.com.auto_assign_id;
             loop {
                 {
-                    let boards = &cnf.lock().unwrap().com.boards;
+                    let boards = &cnf.com.boards;
                     let mut istate = state.lock().unwrap();
                     let st = istate.get_state_mut();
 
@@ -245,29 +247,30 @@ impl StateManager {
     }
 
     pub fn request_read(&mut self, node_id: u8, read: dsdl::uavcan::protocol::file::ReadRequest) {
-        info!("FIRMWARE UPDATE: {} -> {:?}", node_id, read);
-        let config_lock = self.config.lock();
-        let boards = &config_lock.unwrap().com.boards;
-        info!("UNLOCK");
-
         let mut firmware_path = None;
+        {
+          info!("FIRMWARE UPDATE: {} -> {:?}", node_id, read);
+          let boards = &self.config.com.boards;
+          info!("UNLOCK");
 
-        for b in boards {
+
+          for b in boards {
             debug!("{} {}", node_id, b.id);
             if node_id == b.id {
-                match &b.path {
-                    Some(path) => {
-                        firmware_path = Some(path.clone());
-                    }
-                    None => {
-                        error!("Board {:?} has no loadable firmware", node_id);
-                    }
-                };
-                break;
+              match &b.path {
+                Some(path) => {
+                  firmware_path = Some(path.clone());
+                }
+                None => {
+                  error!("Board {:?} has no loadable firmware", node_id);
+                }
+              };
+              break;
             }
-        }
+          }
 
-        drop(boards);
+          drop(boards);
+        }
 
         if let Some(path) = firmware_path {
           warn!("Board {:?}  -> {:?}", node_id, path);

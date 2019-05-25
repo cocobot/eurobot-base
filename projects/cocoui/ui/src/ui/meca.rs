@@ -28,6 +28,12 @@ impl MecaWindow {
         self.principal = principal;
     }
 
+    fn set_servo(state: StateManagerInstance, id: usize, value: &str) {
+      let state = state.lock().unwrap();
+      state.command("PLOP");
+      warn!("valid_s{} = {:?}", id, value);
+    }
+
     fn show(&mut self) {
         match self.window {
             Some(ref mut w) => w.present(),
@@ -68,9 +74,13 @@ impl MecaWindow {
                 for i in 0..12 {
                   let btn : gtk::Button = builder.get_object(&format!("valid_s{}", i)).unwrap();
                   let entry : gtk::Entry = builder.get_object(&format!("entry_s{}", i)).unwrap();
-                  btn.connect_clicked( move |_| {
-                    error!("valid_s{} = {:?}", i, entry.get_text());
-                  });
+                  //if let Some(state) = self.state {
+                  //  let state_cpy = state.clone();
+                  //  drop(state);
+                  //  //btn.connect_clicked( move |_| {
+                  //  //  MecaWindow::set_servo(state_cpy, i, entry.get_text().unwrap().as_str());
+                  //  //});
+                  //}
                 }
 
                 window.show_all();
