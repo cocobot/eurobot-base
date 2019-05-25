@@ -6197,7 +6197,7 @@ pub struct CollisionRequest {
 
 impl CollisionRequest {
   pub const ID: u16 = 204;
-  pub const SIGNATURE: u64 = 0xC4FB6742FFEBD2DA;
+  pub const SIGNATURE: u64 = 0x12DFAC8D2D2CC627;
 
   pub fn check_id(data_type: u16) -> bool {
     data_type == CollisionRequest::ID
@@ -6281,16 +6281,16 @@ impl CollisionRequest {
 #[derive(Debug, Clone)]
 pub struct CollisionResponse {
   // FieldTypes
-    pub left_front: bool, // bit len 1
-    pub right_front: bool, // bit len 1
-    pub left_back: bool, // bit len 1
-    pub right_back: bool, // bit len 1
+    pub left_front: u8, // bit len 8
+    pub right_front: u8, // bit len 8
+    pub left_back: u8, // bit len 8
+    pub right_back: u8, // bit len 8
 
 }
 
 impl CollisionResponse {
   pub const ID: u16 = 204;
-  pub const SIGNATURE: u64 = 0xC4FB6742FFEBD2DA;
+  pub const SIGNATURE: u64 = 0x12DFAC8D2D2CC627;
 
   pub fn check_id(data_type: u16) -> bool {
     data_type == CollisionResponse::ID
@@ -6314,24 +6314,24 @@ impl CollisionResponse {
 
     let data = instance.left_front;
 
-    let vint_left_front = ::saturate_unsigned(data, true);
-    canars::encode_scalar_bool(&mut buffer, offset, 1, vint_left_front); // 1
-    offset += 1;
+    let vint_left_front = data;
+    canars::encode_scalar_u8(&mut buffer, offset, 8, vint_left_front); // 255
+    offset += 8;
     let data = instance.right_front;
 
-    let vint_right_front = ::saturate_unsigned(data, true);
-    canars::encode_scalar_bool(&mut buffer, offset, 1, vint_right_front); // 1
-    offset += 1;
+    let vint_right_front = data;
+    canars::encode_scalar_u8(&mut buffer, offset, 8, vint_right_front); // 255
+    offset += 8;
     let data = instance.left_back;
 
-    let vint_left_back = ::saturate_unsigned(data, true);
-    canars::encode_scalar_bool(&mut buffer, offset, 1, vint_left_back); // 1
-    offset += 1;
+    let vint_left_back = data;
+    canars::encode_scalar_u8(&mut buffer, offset, 8, vint_left_back); // 255
+    offset += 8;
     let data = instance.right_back;
 
-    let vint_right_back = ::saturate_unsigned(data, true);
-    canars::encode_scalar_bool(&mut buffer, offset, 1, vint_right_back); // 1
-    offset += 1;
+    let vint_right_back = data;
+    canars::encode_scalar_u8(&mut buffer, offset, 8, vint_right_back); // 255
+    offset += 8;
     (buffer, offset)
   }
 
@@ -6354,19 +6354,19 @@ impl CollisionResponse {
   pub fn decode_internal(xfer: &::RxTransfer, offset: &mut usize, tao: bool) -> Option<CollisionResponse> {
     let mut offset = offset;
 
-    let vint_left_front = match xfer.decode_scalar_bool(offset, 1) {
+    let vint_left_front = match xfer.decode_scalar_u8(offset, 8) {
      Some(s) => s,
      None => return None,
     };
-    let vint_right_front = match xfer.decode_scalar_bool(offset, 1) {
+    let vint_right_front = match xfer.decode_scalar_u8(offset, 8) {
      Some(s) => s,
      None => return None,
     };
-    let vint_left_back = match xfer.decode_scalar_bool(offset, 1) {
+    let vint_left_back = match xfer.decode_scalar_u8(offset, 8) {
      Some(s) => s,
      None => return None,
     };
-    let vint_right_back = match xfer.decode_scalar_bool(offset, 1) {
+    let vint_right_back = match xfer.decode_scalar_u8(offset, 8) {
      Some(s) => s,
      None => return None,
     };
