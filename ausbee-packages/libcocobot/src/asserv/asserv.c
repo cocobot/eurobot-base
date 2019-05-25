@@ -118,7 +118,6 @@ void cocobot_asserv_compute(void)
     cocobot_asserv_pid_set_feedback(&_pid_dist, cocobot_position_get_distance());
     cocobot_asserv_pid_set_feedback(&_pid_angu, cocobot_position_get_angle());
 
-
     
     if(_no_angle)
     {

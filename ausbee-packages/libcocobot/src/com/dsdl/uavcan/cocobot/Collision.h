@@ -24,10 +24,10 @@ float32 a
 
 ---
 
-bool left_front
-bool right_front
-bool left_back
-bool right_back
+uint8 left_front
+uint8 right_front
+uint8 left_back
+uint8 right_back
 ******************************************************************************/
 
 /********************* DSDL signature source definition ***********************
@@ -36,15 +36,15 @@ saturated float32 x
 saturated float32 y
 saturated float32 a
 ---
-saturated bool left_front
-saturated bool right_front
-saturated bool left_back
-saturated bool right_back
+saturated uint8 left_front
+saturated uint8 right_front
+saturated uint8 left_back
+saturated uint8 right_back
 ******************************************************************************/
 
 #define UAVCAN_COCOBOT_COLLISION_ID                        204
 #define UAVCAN_COCOBOT_COLLISION_NAME                      "uavcan.cocobot.Collision"
-#define UAVCAN_COCOBOT_COLLISION_SIGNATURE                 (0xC4FB6742FFEBD2DAULL)
+#define UAVCAN_COCOBOT_COLLISION_SIGNATURE                 (0x12DFAC8D2D2CC627ULL)
 
 #define UAVCAN_COCOBOT_COLLISION_REQUEST_MAX_SIZE          ((96 + 7)/8)
 
@@ -71,17 +71,17 @@ uint32_t uavcan_cocobot_CollisionRequest_encode_internal(uavcan_cocobot_Collisio
 extern
 int32_t uavcan_cocobot_CollisionRequest_decode_internal(const CanardRxTransfer* transfer, uint16_t payload_len, uavcan_cocobot_CollisionRequest* dest, uint8_t** dyn_arr_buf, int32_t offset);
 
-#define UAVCAN_COCOBOT_COLLISION_RESPONSE_MAX_SIZE         ((4 + 7)/8)
+#define UAVCAN_COCOBOT_COLLISION_RESPONSE_MAX_SIZE         ((32 + 7)/8)
 
 // Constants
 
 typedef struct
 {
     // FieldTypes
-    bool       left_front;                    // bit len 1
-    bool       right_front;                   // bit len 1
-    bool       left_back;                     // bit len 1
-    bool       right_back;                    // bit len 1
+    uint8_t    left_front;                    // bit len 8
+    uint8_t    right_front;                   // bit len 8
+    uint8_t    left_back;                     // bit len 8
+    uint8_t    right_back;                    // bit len 8
 
 } uavcan_cocobot_CollisionResponse;
 
