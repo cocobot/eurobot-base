@@ -20,14 +20,20 @@ simu="../../boards/pbrain/Output/pbrain.sim"
 [[boards]]
 name="Canon P/G"
 id=12
-uid="[42 00 28 00 17 50 46 50 58 39 34 20 00 00 00 00]"
+uid=""
 path="../../boards/canon/Output/canon.hex"
 
 [[boards]]
 name="Canon P/D"
 id=13
-uid="[42 00 28 00 17 50 46 50 58 39 34 20 00 00 00 00]"
+uid=""
 path="../../boards/canon/Output/canon.hex"
+
+[[boards]]
+name="Mecanele"
+id=15
+uid=""
+path="../../boards/mecanele/Output/mecanele.bin"
 
 
 

@@ -4,6 +4,16 @@
 #include <cocobot.h>
 #include <stdio.h>
 
+void blink(void)
+{
+    while(1)
+    {
+        platform_led_toggle(PLATFORM_LED0);
+        vTaskDelay(100/portTICK_PERIOD_MS);
+    }
+}
+
+
 int main(void) 
 {
   platform_init();
