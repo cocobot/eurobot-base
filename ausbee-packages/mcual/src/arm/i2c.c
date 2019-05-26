@@ -242,7 +242,7 @@
 #include <stm32f4xx.h>
 #include <string.h>
 
-#ifdef CONFIG_MCUAL_USART_USE_FREERTOS_QUEUES
+#ifdef CONFIG_MCUAL_I2C_USE_FREERTOS 
 #include <FreeRTOS.h>
 #include <queue.h>
 #include <event_groups.h>
