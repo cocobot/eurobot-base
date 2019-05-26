@@ -211,6 +211,36 @@ void mcual_timer_init(mcual_timer_t timer, int32_t freq_Hz)
   reg->CR1 = TIM_CR1_CEN;
 }
 
+void mcual_timer_init_servo(mcual_timer_t timer)
+{
+  TIM_TypeDef * reg = mcual_timer_get_register(timer);
+
+  mcual_clock_id_t clock = mcual_timer_get_clock(timer);
+
+  mcual_timer_set_clock(timer);
+
+#ifdef CONFIG_DEVICE_STM32L496xx
+  reg->PSC = (mcual_clock_get_frequency_Hz(clock) / 1000000) - 1;
+#else
+  reg->PSC = (mcual_clock_get_frequency_Hz(clock) * 2 / 1000000) - 1;
+#endif
+  //50Hz
+  reg->ARR = 19999;
+
+  //Only on update
+  reg->CR1 = TIM_CR1_ARPE;
+  reg->EGR = TIM_EGR_UG;
+
+  //default, nothing is activated, counter value is reset
+  reg->CCMR1 = 0;
+  reg->CCMR2 = 0;
+  reg->CCER = 0;
+  reg->CNT = 0;
+
+  //activate
+  reg->CR1 |= TIM_CR1_CEN;
+}
+
 //For 32 bits timers (TIM2/TIM5)
 void mcual_timer_init_encoder(mcual_timer_t timer)
 {
@@ -229,7 +259,7 @@ void mcual_timer_init_encoder(mcual_timer_t timer)
 
   //No input filter, Polarity is not inverted
 
-  //To avoid overflow, set it to the middle
+  //Reset counter
   reg->CNT = 0;
 
   //Start the timer
