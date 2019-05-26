@@ -124,12 +124,18 @@ void cocobot_kinematics_compute_inverse(const cocobot_cartesian_pos_t * current_
 
 void cocobot_kinematics_print_joint_pos(const cocobot_joint_pos_t * joint_pos)
 {
+  (void)joint_pos;
+#if 0
     printf("a1_deg=%.3f, a2_deg=%.3f, a3_deg=%.3f, a4_deg=%.3f\n", joint_pos->a1_deg, joint_pos->a2_deg, joint_pos->a3_deg, joint_pos->a4_deg);
+#endif
 }
 
 void cocobot_kinematics_print_cartesian_pos(const cocobot_cartesian_pos_t * cartesian_pos)
 {
+  (void)cartesian_pos;
+#if 0
     printf("x=%.3f, y=%.3f, z=%.3f, alpha_deg=%.3f\n", cartesian_pos->x, cartesian_pos->y, cartesian_pos->z, cartesian_pos->alpha_deg);
+#endif
 }
 
 #endif

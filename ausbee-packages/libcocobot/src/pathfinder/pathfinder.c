@@ -36,7 +36,7 @@ uint16_t cocobot_pathfinder_execute(int16_t starting_point_x, int16_t starting_p
     //Reset the opponent table list
     memset(&g_opponent_robot, 0, sizeof(opponent_table_s));
     //Ask to the opponent_detection module if it sees something
-    cocobot_opponent_detection_set_on_map();
+    //TODO:: cocobot_opponent_detection_set_on_map();
     //Set on the map other robots
     cocobot_pathfinder_set_other_robot();
 

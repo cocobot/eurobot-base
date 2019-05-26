@@ -47,6 +47,12 @@ pub enum Msg {
         error: bool,
         data: Vec<u8>,
     },
+    Servo {
+        node_id: u8,
+        mode: u8,
+        servo_id: u8,
+        value: u16,
+    },
 }
 
 impl Msg {
@@ -116,6 +122,23 @@ impl Msg {
                     *node_id,
                     BeginFirmwareUpdateRequest::SIGNATURE,
                     BeginFirmwareUpdateRequest::ID as u8,
+                    &mut transfer_id,
+                    canars::TRANSFER_PRIORITY_LOWEST,
+                    RequestResponse::Request,
+                    &pkt[..],
+                );
+            }
+            Msg::Servo { node_id, mode, servo_id, value } => {
+                use crate::com::dsdl::uavcan::cocobot::ServoCmdRequest;
+                let (pkt, _) = ServoCmdRequest::encode(ServoCmdRequest {
+                    mode: *mode,
+                    servo_id: *servo_id,
+                    value: *value,
+                });
+                node.request_or_respond(
+                    *node_id,
+                    ServoCmdRequest::SIGNATURE,
+                    ServoCmdRequest::ID as u8,
                     &mut transfer_id,
                     canars::TRANSFER_PRIORITY_LOWEST,
                     RequestResponse::Request,

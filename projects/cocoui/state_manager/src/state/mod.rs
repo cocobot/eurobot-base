@@ -208,6 +208,22 @@ impl StateManager {
                         warn!("bad pgm format '{}'", cmd);
                     }
                 }
+                "meca" => {
+                    if split.len() > 1 {
+                        let node_id = split[1].to_string().parse::<u8>().unwrap();
+                        let mode = split[1].to_string().parse::<u8>().unwrap();
+                        let servo_id = split[1].to_string().parse::<u8>().unwrap();
+                        let value = split[1].to_string().parse::<u16>().unwrap();
+                        self.send(Msg::Servo { 
+                          node_id,
+                          mode,
+                          servo_id,
+                          value,
+                        });
+                    } else {
+                        warn!("bad meca format '{}'", cmd);
+                    }
+                }
                 "restart" => {
                     if split.len() > 1 {
                         let id = split[1].to_string().parse::<u8>();
