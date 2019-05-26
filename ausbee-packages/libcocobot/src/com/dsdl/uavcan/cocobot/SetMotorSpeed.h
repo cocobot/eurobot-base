@@ -18,30 +18,30 @@ extern "C"
 #endif
 
 /******************************* Source text **********************************
-bool enable
+uint8 enable
 float32 rpm
 ---
 ******************************************************************************/
 
 /********************* DSDL signature source definition ***********************
 uavcan.cocobot.SetMotorSpeed
-saturated bool enable
+saturated uint8 enable
 saturated float32 rpm
 ---
 ******************************************************************************/
 
 #define UAVCAN_COCOBOT_SETMOTORSPEED_ID                    202
 #define UAVCAN_COCOBOT_SETMOTORSPEED_NAME                  "uavcan.cocobot.SetMotorSpeed"
-#define UAVCAN_COCOBOT_SETMOTORSPEED_SIGNATURE             (0x8AC3FA85A1E8D9B2ULL)
+#define UAVCAN_COCOBOT_SETMOTORSPEED_SIGNATURE             (0x7ECF8548E62213DULL)
 
-#define UAVCAN_COCOBOT_SETMOTORSPEED_REQUEST_MAX_SIZE      ((33 + 7)/8)
+#define UAVCAN_COCOBOT_SETMOTORSPEED_REQUEST_MAX_SIZE      ((40 + 7)/8)
 
 // Constants
 
 typedef struct
 {
     // FieldTypes
-    bool       enable;                        // bit len 1
+    uint8_t    enable;                        // bit len 8
     float      rpm;                           // float32 Saturate
 
 } uavcan_cocobot_SetMotorSpeedRequest;

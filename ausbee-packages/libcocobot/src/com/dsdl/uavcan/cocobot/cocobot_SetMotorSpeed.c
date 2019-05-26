@@ -35,9 +35,8 @@ uint32_t uavcan_cocobot_SetMotorSpeedRequest_encode_internal(uavcan_cocobot_SetM
   uint32_t offset,
   uint8_t CANARD_MAYBE_UNUSED(root_item))
 {
-    source->enable = CANARD_INTERNAL_SATURATE_UNSIGNED(source->enable, 1)
-    canardEncodeScalar(msg_buf, offset, 1, (void*)&source->enable); // 1
-    offset += 1;
+    canardEncodeScalar(msg_buf, offset, 8, (void*)&source->enable); // 255
+    offset += 8;
 
     canardEncodeScalar(msg_buf, offset, 32, (void*)&source->rpm); // 2147483647
     offset += 32;
@@ -80,12 +79,12 @@ int32_t uavcan_cocobot_SetMotorSpeedRequest_decode_internal(
 {
     int32_t ret = 0;
 
-    ret = canardDecodeScalar(transfer, (uint32_t)offset, 1, false, (void*)&dest->enable);
-    if (ret != 1)
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 8, false, (void*)&dest->enable);
+    if (ret != 8)
     {
         goto uavcan_cocobot_SetMotorSpeedRequest_error_exit;
     }
-    offset += 1;
+    offset += 8;
 
     ret = canardDecodeScalar(transfer, (uint32_t)offset, 32, false, (void*)&dest->rpm);
     if (ret != 32)

@@ -75,9 +75,9 @@ void platform_init(void)
   mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN10, 7);
   mcual_gpio_set_function(MCUAL_GPIOD, MCUAL_GPIO_PIN5, 7);
   mcual_gpio_set_function(MCUAL_GPIOD, MCUAL_GPIO_PIN6, 7);
-  mcual_usart_init(PLATFORM_USART_DEBUG, 115200);
-  mcual_usart_init(PLATFORM_USART_USER, 115200);
-  mcual_usart_init(PLATFORM_USART_USER2, 115200);
+  mcual_usart_init(PLATFORM_USART_DEBUG, 921600);
+  mcual_usart_init(PLATFORM_USART_USER, 921600);
+  mcual_usart_init(PLATFORM_USART_USER2, 921600);
 #endif
   
 #ifdef CONFIG_PLATFORM_COM_2019_USB
@@ -87,7 +87,7 @@ void platform_init(void)
 #ifdef CONFIG_MCUAL_USART
   mcual_gpio_set_function(MCUAL_GPIOD, MCUAL_GPIO_PIN5, 7);
   mcual_gpio_set_function(MCUAL_GPIOD, MCUAL_GPIO_PIN6, 7);
-  mcual_usart_init(PLATFORM_USART_USER, 115200);
+  mcual_usart_init(PLATFORM_USART_USER, 921600);
 #endif
 #endif
 

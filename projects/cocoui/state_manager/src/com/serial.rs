@@ -225,7 +225,7 @@ fn find_serial_port(com: Com, opened_serial_port: &mut Arc<Mutex<Vec<Box<SerialM
                 Ok(mut list) => {
                     if !list.iter().any(|x| x.name() == p.port_name) {
                         let mut settings: SerialPortSettings = Default::default();
-                        settings.baud_rate = 115200;
+                        settings.baud_rate = 921600;
 
                         match serialport::open_with_settings(&p.port_name, &settings) {
                             Ok(port) => {

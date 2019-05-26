@@ -676,7 +676,7 @@ void cocobot_com_init(void)
   canardInit(&_canard, _canard_memory_pool, sizeof(_canard_memory_pool), cocobot_com_on_transfer_received, cocobot_com_should_accept_transfert, NULL);
 
 #ifdef CONFIG_LIBCOCOBOT_COM_USART
-  mcual_usart_init(PLATFORM_USART_USER, 115200);
+  mcual_usart_init(PLATFORM_USART_USER, 921600);
 #endif
 
 #ifdef CONFIG_LIBCOCOBOT_COM_RF
@@ -692,7 +692,7 @@ void cocobot_com_init(void)
 #ifdef CONFIG_LIBCOCOBOT_COM_CAN
   //RCC->APB1ENR |= RCC_APB1ENR_CAN1EN;
 	mcual_can_timings canbus_timings;
-	mcual_can_compute_timings(mcual_clock_get_frequency_Hz(MCUAL_CLOCK_PERIPHERAL_1), 100000, &canbus_timings);
+	mcual_can_compute_timings(mcual_clock_get_frequency_Hz(MCUAL_CLOCK_PERIPHERAL_1), 1000000, &canbus_timings);
 
 	mcual_can_init(&canbus_timings, mcualCanIfaceModeNormal);
 #endif
@@ -715,7 +715,7 @@ static void cocobot_com_thread(void * arg)
   //RCC->APB1ENR |= RCC_APB1ENR_CAN1EN;
 	mcual_can_timings canbus_timings;
 #ifndef AUSBEE_SIM
-	mcual_can_compute_timings(mcual_clock_get_frequency_Hz(MCUAL_CLOCK_PERIPHERAL_1), 100000, &canbus_timings);
+	mcual_can_compute_timings(mcual_clock_get_frequency_Hz(MCUAL_CLOCK_PERIPHERAL_1), 1000000, &canbus_timings);
 #endif
 
 	mcual_can_init(&canbus_timings, mcualCanIfaceModeNormal);

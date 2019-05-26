@@ -90,7 +90,7 @@ void platform_init(void)
 #ifdef CONFIG_MCUAL_USART
   mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN9, 7);
   mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN10, 7);
-  mcual_usart_init(PLATFORM_USART_DEBUG, 115200);
+  mcual_usart_init(PLATFORM_USART_DEBUG, 921600);
 #endif
   
   //init adc
