@@ -127,7 +127,7 @@ impl FrameEncoder {
 pub fn init(com: Com, tx_can: Receiver<CANFrame>) {
     thread::spawn(move || {
         loop {
-            let uart = Uart::with_path("/dev/canars", 115_200, Parity::None, 8, 1);
+            let uart = Uart::with_path("/dev/canars", 921_600, Parity::None, 8, 1);
             if let Ok(mut uart) = uart {
                 uart.set_read_mode(1, time::Duration::from_millis(5)).unwrap();
 
