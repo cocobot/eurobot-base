@@ -192,7 +192,6 @@ impl<'a> RxTransfer<'a> {
 }
 
 pub fn encode_scalar_u8(buffer: &mut Vec<u8>, offset: usize, size: usize, value: u8) {
-    warn!("DEBUG: {:?} {:?}", offset, value);
     for i in 0..size {
         let idx = (i + offset) / 8;
         while buffer.len() <= idx {
@@ -202,12 +201,12 @@ pub fn encode_scalar_u8(buffer: &mut Vec<u8>, offset: usize, size: usize, value:
             buffer[idx] |= 1 << ((i + offset) % 8);
         }
     }
-    warn!("FIN: {:?}", buffer);
 }
 
 pub fn encode_scalar_u16(buffer: &mut Vec<u8>, offset: usize, size: usize, value: u16) {
     let mut size = size;
     let mut value = value;
+    let mut offset = offset;
     while size > 0 {
         let mut to_write = size;
         if to_write > 8 {
@@ -216,6 +215,7 @@ pub fn encode_scalar_u16(buffer: &mut Vec<u8>, offset: usize, size: usize, value
         encode_scalar_u8(buffer, offset, to_write, (value & 0xFF) as u8);
         size -= to_write;
         value >>= to_write;
+        offset += to_write;
     }
 }
 

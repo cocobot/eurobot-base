@@ -135,6 +135,7 @@ impl Msg {
                     servo_id: *servo_id,
                     value: *value,
                 });
+                debug!("SendCMD {}, {} {} {}", node_id, mode, servo_id, value);
                 node.request_or_respond(
                     *node_id,
                     ServoCmdRequest::SIGNATURE,

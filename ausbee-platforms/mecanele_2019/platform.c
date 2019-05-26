@@ -51,13 +51,13 @@ void platform_init(void)
   //init gpio
   mcual_gpio_init(MCUAL_GPIOB, 
                   MCUAL_GPIO_PIN10 | MCUAL_GPIO_PIN11 | MCUAL_GPIO_PIN12 | MCUAL_GPIO_PIN13 | MCUAL_GPIO_PIN15,
-                  MCUAL_GPIO_INPUT);
+                  MCUAL_GPIO_OUTPUT);
   mcual_gpio_init(MCUAL_GPIOE, 
                   MCUAL_GPIO_PIN13 | MCUAL_GPIO_PIN14 | MCUAL_GPIO_PIN15,
-                  MCUAL_GPIO_INPUT);
+                  MCUAL_GPIO_OUTPUT);
   mcual_gpio_init(MCUAL_GPIOD, 
                   MCUAL_GPIO_PIN10 | MCUAL_GPIO_PIN11,
-                  MCUAL_GPIO_INPUT);
+                  MCUAL_GPIO_OUTPUT);
   platform_gpio_clear(0xFFFFFFFF);
   
   //init uart dbg pins
@@ -66,7 +66,7 @@ void platform_init(void)
 #ifdef CONFIG_MCUAL_USART
   mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN9, 7);
   mcual_gpio_set_function(MCUAL_GPIOA, MCUAL_GPIO_PIN10, 7);
-  mcual_usart_init(PLATFORM_USART_DEBUG, 115200);
+  mcual_usart_init(PLATFORM_USART_DEBUG, 921600);
 #endif
   
   //init adc

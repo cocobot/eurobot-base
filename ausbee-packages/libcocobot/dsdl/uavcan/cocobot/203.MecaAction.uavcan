@@ -15,8 +15,8 @@ uint4 DROP_FLOOR      = 9
 uint4 DROP_BALANCE    = 10
 uint4 DROP_ACCELL     = 11
 
-uint4 req
-uint4 arm
+uint8 req
+uint8 arm
 
 uint8 x
 uint8 y

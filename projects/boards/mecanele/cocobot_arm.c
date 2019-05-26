@@ -67,10 +67,10 @@ static void arm_update_servo_angles_function(const cocobot_joint_pos_t * joint_p
 {
   // TODO: Replace with function to set servo angle
   // set_servo_angle(servo_id, joint_pos->a1_deg);
-  printf("TODO: set servo 1 angle to %f\n", joint_pos->a1_deg);
-  printf("TODO: set servo 2 angle to %f\n", joint_pos->a2_deg);
-  printf("TODO: set servo 3 angle to %f\n", joint_pos->a3_deg);
-  printf("TODO: set servo 4 angle to %f\n", joint_pos->a4_deg);
+  cocobot_com_printf(COM_DEBUG, "TODO: set servo 1 angle to %f\n", (double) joint_pos->a1_deg);
+  cocobot_com_printf(COM_DEBUG, "TODO: set servo 2 angle to %f\n", (double) joint_pos->a2_deg);
+  cocobot_com_printf(COM_DEBUG, "TODO: set servo 3 angle to %f\n", (double) joint_pos->a3_deg);
+  cocobot_com_printf(COM_DEBUG, "TODO: set servo 4 angle to %f\n", (double) joint_pos->a4_deg);
 }
 
 void cocobot_arm_test_and_print(void)

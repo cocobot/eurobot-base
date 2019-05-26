@@ -30,7 +30,7 @@ impl MecaWindow {
 
     fn set_servo(&self, id: usize, value: &str) {
       if let Some(state) = &self.state {
-        let cmd = format!("meca 10 0 {} {}", id, value);
+        let cmd = format!("meca 15 0 {} {}", id, value);
         state.lock().unwrap().command(&cmd);
       }
     }

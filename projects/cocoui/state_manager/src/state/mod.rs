@@ -209,11 +209,11 @@ impl StateManager {
                     }
                 }
                 "meca" => {
-                    if split.len() > 1 {
+                    if split.len() > 4 {
                         let node_id = split[1].to_string().parse::<u8>().unwrap();
-                        let mode = split[1].to_string().parse::<u8>().unwrap();
-                        let servo_id = split[1].to_string().parse::<u8>().unwrap();
-                        let value = split[1].to_string().parse::<u16>().unwrap();
+                        let mode = split[2].to_string().parse::<u8>().unwrap();
+                        let servo_id = split[3].to_string().parse::<u8>().unwrap();
+                        let value = split[4].to_string().parse::<u16>().unwrap();
                         self.send(Msg::Servo { 
                           node_id,
                           mode,

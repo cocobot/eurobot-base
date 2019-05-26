@@ -35,8 +35,8 @@ uint4 DROP_FLOOR      = 9
 uint4 DROP_BALANCE    = 10
 uint4 DROP_ACCELL     = 11
 
-uint4 req
-uint4 arm
+uint8 req
+uint8 arm
 
 uint8 x
 uint8 y
@@ -50,8 +50,8 @@ bool busy
 
 /********************* DSDL signature source definition ***********************
 uavcan.cocobot.MecaAction
-saturated uint4 req
-saturated uint4 arm
+saturated uint8 req
+saturated uint8 arm
 saturated uint8 x
 saturated uint8 y
 saturated uint8 a
@@ -62,9 +62,9 @@ saturated bool busy
 
 #define UAVCAN_COCOBOT_MECAACTION_ID                       203
 #define UAVCAN_COCOBOT_MECAACTION_NAME                     "uavcan.cocobot.MecaAction"
-#define UAVCAN_COCOBOT_MECAACTION_SIGNATURE                (0x22EF977686C40612ULL)
+#define UAVCAN_COCOBOT_MECAACTION_SIGNATURE                (0xEF46276F070B375FULL)
 
-#define UAVCAN_COCOBOT_MECAACTION_REQUEST_MAX_SIZE         ((40 + 7)/8)
+#define UAVCAN_COCOBOT_MECAACTION_REQUEST_MAX_SIZE         ((48 + 7)/8)
 
 // Constants
 #define UAVCAN_COCOBOT_MECAACTION_REQUEST_STATUS                              0 // 0
@@ -83,8 +83,8 @@ saturated bool busy
 typedef struct
 {
     // FieldTypes
-    uint8_t    req;                           // bit len 4
-    uint8_t    arm;                           // bit len 4
+    uint8_t    req;                           // bit len 8
+    uint8_t    arm;                           // bit len 8
     uint8_t    x;                             // bit len 8
     uint8_t    y;                             // bit len 8
     uint8_t    a;                             // bit len 8

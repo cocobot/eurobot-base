@@ -35,13 +35,11 @@ uint32_t uavcan_cocobot_MecaActionRequest_encode_internal(uavcan_cocobot_MecaAct
   uint32_t offset,
   uint8_t CANARD_MAYBE_UNUSED(root_item))
 {
-    source->req = CANARD_INTERNAL_SATURATE_UNSIGNED(source->req, 15)
-    canardEncodeScalar(msg_buf, offset, 4, (void*)&source->req); // 15
-    offset += 4;
+    canardEncodeScalar(msg_buf, offset, 8, (void*)&source->req); // 255
+    offset += 8;
 
-    source->arm = CANARD_INTERNAL_SATURATE_UNSIGNED(source->arm, 15)
-    canardEncodeScalar(msg_buf, offset, 4, (void*)&source->arm); // 15
-    offset += 4;
+    canardEncodeScalar(msg_buf, offset, 8, (void*)&source->arm); // 255
+    offset += 8;
 
     canardEncodeScalar(msg_buf, offset, 8, (void*)&source->x); // 255
     offset += 8;
@@ -93,19 +91,19 @@ int32_t uavcan_cocobot_MecaActionRequest_decode_internal(
 {
     int32_t ret = 0;
 
-    ret = canardDecodeScalar(transfer, (uint32_t)offset, 4, false, (void*)&dest->req);
-    if (ret != 4)
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 8, false, (void*)&dest->req);
+    if (ret != 8)
     {
         goto uavcan_cocobot_MecaActionRequest_error_exit;
     }
-    offset += 4;
+    offset += 8;
 
-    ret = canardDecodeScalar(transfer, (uint32_t)offset, 4, false, (void*)&dest->arm);
-    if (ret != 4)
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 8, false, (void*)&dest->arm);
+    if (ret != 8)
     {
         goto uavcan_cocobot_MecaActionRequest_error_exit;
     }
-    offset += 4;
+    offset += 8;
 
     ret = canardDecodeScalar(transfer, (uint32_t)offset, 8, false, (void*)&dest->x);
     if (ret != 8)
