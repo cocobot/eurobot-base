@@ -7,14 +7,14 @@
 #define PUMP_1  PLATFORM_GPIO_PUMP2
 #define PUMP_2  PLATFORM_GPIO_PUMP1
 #define EMPTY_SOL_1  PLATFORM_GPIO_VALVE1
-#define EMPTY_SOL_2  PLATFORM_GPIO_VALVE5
+#define EMPTY_SOL_2  PLATFORM_GPIO_VALVE8
 
 uint8_t _sucker_status[4];
 uint32_t _sucker_id[4] = {
-  PLATFORM_GPIO_VALVE1,
+  PLATFORM_GPIO_VALVE4,
   PLATFORM_GPIO_VALVE2,
-  PLATFORM_GPIO_VALVE1,
-  PLATFORM_GPIO_VALVE1,
+  PLATFORM_GPIO_VALVE5,
+  PLATFORM_GPIO_VALVE6,
 };
 
 static void pump_check(uint8_t id)
@@ -42,19 +42,25 @@ static void pump_check(uint8_t id)
     }
   }
 
-  vTaskDelay(150/portTICK_PERIOD_MS);
+  vTaskDelay(100/portTICK_PERIOD_MS);
 
   platform_gpio_set(_sucker_id[id]);
 
-  vTaskDelay(850/portTICK_PERIOD_MS);
+  vTaskDelay(800/portTICK_PERIOD_MS);
+
   platform_gpio_clear(_sucker_id[id]);
+
+  vTaskDelay(100/portTICK_PERIOD_MS);
+
   if(id < 2)
   {
     platform_gpio_clear(PUMP_1);
+    platform_gpio_clear(EMPTY_SOL_1);
   }
   else
   {
     platform_gpio_clear(PUMP_2);
+    platform_gpio_clear(EMPTY_SOL_2);
   }
 }
 

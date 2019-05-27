@@ -135,7 +135,7 @@ void platform_gpio_set(uint32_t gpio)
 {
   if(gpio & PLATFORM_GPIO_PUMP1)
   {
-    mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN10);
+    mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN11);
   }
   if(gpio & PLATFORM_GPIO_PUMP2)
   {
@@ -143,7 +143,7 @@ void platform_gpio_set(uint32_t gpio)
   }
   if(gpio & PLATFORM_GPIO_VALVE1)
   {
-    mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN11);
+    mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN10);
   }
   if(gpio & PLATFORM_GPIO_VALVE2)
   {
@@ -179,7 +179,7 @@ void platform_gpio_clear(uint32_t gpio)
 {
   if(gpio & PLATFORM_GPIO_PUMP1)
   {
-    mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN10);
+    mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN11);
   }
   if(gpio & PLATFORM_GPIO_PUMP2)
   {
@@ -187,7 +187,7 @@ void platform_gpio_clear(uint32_t gpio)
   }
   if(gpio & PLATFORM_GPIO_VALVE1)
   {
-    mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN11);
+    mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN10);
   }
   if(gpio & PLATFORM_GPIO_VALVE2)
   {
@@ -223,7 +223,7 @@ void platform_gpio_toggle(uint32_t gpio)
 {
   if(gpio & PLATFORM_GPIO_PUMP1)
   {
-    mcual_gpio_toggle(MCUAL_GPIOD, MCUAL_GPIO_PIN10);
+    mcual_gpio_toggle(MCUAL_GPIOD, MCUAL_GPIO_PIN11);
   }
   if(gpio & PLATFORM_GPIO_PUMP2)
   {
@@ -231,7 +231,7 @@ void platform_gpio_toggle(uint32_t gpio)
   }
   if(gpio & PLATFORM_GPIO_VALVE1)
   {
-    mcual_gpio_toggle(MCUAL_GPIOD, MCUAL_GPIO_PIN11);
+    mcual_gpio_toggle(MCUAL_GPIOD, MCUAL_GPIO_PIN10);
   }
   if(gpio & PLATFORM_GPIO_VALVE2)
   {
