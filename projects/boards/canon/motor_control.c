@@ -15,7 +15,7 @@
 #define MOTOR_CONTROL_SERVO_REFRES_US 10000
 #define MOTOR_CONTROL_POLES 8
 #define MOTOR_CONTROL_GEAR 5
-
+#define MOTOR_CONTROL_QUAD_FACTOR 10
 
 /*debug*/
 #define MOTOR_CONTROL_DEBUG_EN 1
@@ -38,7 +38,7 @@ static float _max_acc = 1000000.0;
 static float _max_speed = 2000000.0;
 static volatile float _speed_cons = 0.0;
 static volatile uint64_t _time;
-
+static volatile int _enable = 0;
 /*flags*/
 static volatile int _quad_limit = 0;
 static volatile int _speed_limit = 0;
@@ -189,14 +189,16 @@ void motor_control_set_config(float imax, float max_speed_rpm){
 void motor_control_set_setpoint(uint8_t enable, float rpm){
 	int i;
 
+	_enable = enable;
+
 	if (enable){
 		_speed_cons = rpm;
 	}
 	else {
 		_speed_cons = 0.0;
 		for (i = 0; i < 3; i++){
-			platform_gpio_clear(_Driver_pins->en);
-			platform_set_duty_cycle(_Driver_pins->pwm,0);
+			platform_gpio_clear(_Driver_pins[i].en);
+			platform_set_duty_cycle(_Driver_pins[i].pwm,0);
 		}
 
 	}
@@ -265,12 +267,13 @@ static void _motor_control_update_callback(void){
 
 	static uint64_t oldtime = 0;
 
-	phase = _motor_control_get_hall();
-
+	while ((phase = _motor_control_get_hall()) == -1);
+/*
 	if (phase == -1){ //something wrong
 		__enable_irq();
 		return;
 	}
+*/
 
 	dphase = phase - old_phase;
 	old_phase = phase;
@@ -330,14 +333,23 @@ static void _motor_control_update_callback(void){
 static inline float _quadramp(float target_speed, uint64_t dt){
 	static float current_speed = 0.0;
 	float acc = (target_speed - current_speed) / (float)dt;	
+	float max_acc;
 
 	print("quad %d",(int)acc);
 
+	//increase quadramp if stop required
+	if (_enable) {
+			max_acc = _max_acc;
+	}
+	else{
+			max_acc = _max_acc *  MOTOR_CONTROL_QUAD_FACTOR ;
+	}
+	
 	if (dt == 0){ //just to be shure
 		return current_speed;
 	}
 
-	if ((acc > -_max_acc) && (acc < _max_acc)){//acceleration below limmit
+	if ((acc > -max_acc) && (acc < max_acc)){//acceleration below limmit
 		_quad_limit = 0;
 		current_speed = target_speed;
 		return target_speed;
@@ -345,10 +357,10 @@ static inline float _quadramp(float target_speed, uint64_t dt){
 	else{ //quadramp limit
 		_quad_limit = 1;
 		if (acc > 0){ //increse speed
-			current_speed += _max_acc * (float)dt;
+			current_speed += max_acc * (float)dt;
 		}
 		else{ //decrease speed
-			current_speed -= _max_acc * (float)dt;
+			current_speed -= max_acc * (float)dt;
 		}
 		return current_speed;
 	}
