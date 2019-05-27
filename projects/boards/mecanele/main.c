@@ -6,21 +6,29 @@
 #include "cocobot_arm_action.h"
 #include "pcm9685.h"
 #include "servo.h"
+#include "pump.h"
+#include "uavcan/cocobot/Pump.h"
 #include "uavcan/cocobot/ServoCmd.h"
 #include "uavcan/cocobot/MecaAction.h"
 
 static void thread(void * arg)
 {
   (void)arg;
+  pump_init();
   cocobot_arm_action_init();
 
   while(1)
   {
-    platform_gpio_set(0xFFFFFFFF);
-    vTaskDelay(2000/portTICK_PERIOD_MS);
+    //int i;
+    //for(i =0; i < 10; i += 1)
+    //{
+    //  platform_gpio_set(1 << i);
+    //  vTaskDelay(100/portTICK_PERIOD_MS);
+    //  platform_gpio_clear(1 << i);
+    //  vTaskDelay(100/portTICK_PERIOD_MS);
+    //}
 
-    platform_gpio_clear(0xFFFFFFFF);
-    vTaskDelay(2000/portTICK_PERIOD_MS);
+    vTaskDelay(100/portTICK_PERIOD_MS);
   } 
 }
 
@@ -48,6 +56,14 @@ uint8_t com_should_accept_transfer(uint64_t* out_data_type_signature,
 		return true;
 	}
 
+  if ((transfer_type == CanardTransferTypeRequest) &&
+			(data_type_id == UAVCAN_COCOBOT_PUMP_ID)
+		 )
+	{
+		*out_data_type_signature = UAVCAN_COCOBOT_PUMP_SIGNATURE;
+		return true;
+	}
+
 	return false;
 }
 
@@ -62,6 +78,10 @@ uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
       {
         servo_set_pwm(data.servo_id, data.value);
       }
+);
+
+	IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_PUMP, uavcan_cocobot_PumpRequest,
+      pump_set_state(data.pump_id, data.action);
 );
 
 	IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_MECAACTION, uavcan_cocobot_MecaActionRequest,
@@ -109,6 +129,10 @@ uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
 
         case UAVCAN_COCOBOT_MECAACTION_REQUEST_DROP_ACCELL:
           cocobot_arm_action_depose_accelerateur_particules(data.arm, data.a, data.d);
+          break;
+
+        case UAVCAN_COCOBOT_MECAACTION_REQUEST_DIRECT_ARM:
+          cocobot_arm_action_move_arm(data.arm, ((float)data.x) / 1000.0f, ((float)data.y) / 1000.0f, ((float)data.z) / 1000.0f, data.a);
           break;
       }
   );

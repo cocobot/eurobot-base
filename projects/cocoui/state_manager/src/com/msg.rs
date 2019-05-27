@@ -53,6 +53,22 @@ pub enum Msg {
         servo_id: u8,
         value: u16,
     },
+    Pump {
+        node_id: u8,
+        pump_id: u8,
+        action: u8,
+    },
+    Meca {
+        node_id: u8,
+        req: u8,
+        arm: u8,
+        x: u8,
+        y: u8,
+        z: u8,
+        d: u8,
+        a: u8,
+    },
+
 }
 
 impl Msg {
@@ -146,6 +162,44 @@ impl Msg {
                     &pkt[..],
                 );
             }
+            Msg::Pump { node_id, pump_id, action } => {
+                use crate::com::dsdl::uavcan::cocobot::PumpRequest;
+                let (pkt, _) = PumpRequest::encode(PumpRequest {
+                    pump_id: *pump_id,
+                    action: *action,
+                });
+                node.request_or_respond(
+                    *node_id,
+                    PumpRequest::SIGNATURE,
+                    PumpRequest::ID as u8,
+                    &mut transfer_id,
+                    canars::TRANSFER_PRIORITY_LOWEST,
+                    RequestResponse::Request,
+                    &pkt[..],
+                );
+            }
+            Msg::Meca { node_id, req, arm, x, y, z, d, a } => {
+                use crate::com::dsdl::uavcan::cocobot::MecaActionRequest;
+                let (pkt, _) = MecaActionRequest::encode(MecaActionRequest {
+                    req: *req,
+                    arm: *arm,
+                    x: *x,
+                    y: *y,
+                    z: *z,
+                    d: *d,
+                    a: *a,
+                });
+                node.request_or_respond(
+                    *node_id,
+                    MecaActionRequest::SIGNATURE,
+                    MecaActionRequest::ID as u8,
+                    &mut transfer_id,
+                    canars::TRANSFER_PRIORITY_LOWEST,
+                    RequestResponse::Request,
+                    &pkt[..],
+                );
+            }
+
             Msg::ReadResponse {
                 node_id,
                 error,

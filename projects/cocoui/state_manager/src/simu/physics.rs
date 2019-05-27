@@ -11,8 +11,7 @@ use crate::simu::physics::ncollide2d::shape::{ConvexPolygon, ShapeHandle};
 use crate::simu::physics::nphysics2d::object::ColliderDesc;
 use crate::simu::physics::nphysics2d::object::RigidBodyDesc;
 use crate::simu::physics::nphysics2d::world::World;
-use crate::simu::physics::nphysics2d::math::{Force, ForceType};
-use crate::simu::physics::nphysics2d::object::Body;
+//use crate::simu::physics::nphysics2d::object::Body;
 use crate::state::StateManagerInstance;
 use config_manager::config::ConfigManagerInstance;
 use crossbeam_channel::Receiver;
@@ -114,7 +113,7 @@ impl Physics {
                     let body = world.rigid_body_mut(*robots.get(i).unwrap()).unwrap();
 
                     let pos = body.position().translation.vector;
-                    if let Some((x, y, a)) = b.simu_position {
+                    if let Some((_x, _y, a)) = b.simu_position {
                         let dir = body.position().rotation.transform_vector(&Vector2::x());
                         let distance = body.velocity().linear.dot(&dir) * ts;
                         let angle = body.position().rotation.scaled_axis()[0] - a;
@@ -152,7 +151,7 @@ impl Physics {
                     }
 
                     if let Some(a) = b.force_a {
-                        let mut pos = body.position().clone();
+                        let pos = body.position().clone();
                         body.set_position(Isometry2::new(pos.translation.vector, (a as f32) * std::f32::consts::PI / 180.0));
                         b.force_a = None;
                         b.simu_position = None;
@@ -162,7 +161,7 @@ impl Physics {
 
                 //update velocity changes
                 for (i, b) in locked_instance.brains.iter().enumerate() {
-                    let mut b = b.lock().unwrap();
+                    let b = b.lock().unwrap();
                     let body = world.rigid_body_mut(*robots.get(i).unwrap()).unwrap();
 
                     body.set_linear_velocity(body.position().rotation.transform_vector(&Vector2::x()) * b.speed_d / ts * 2.0);

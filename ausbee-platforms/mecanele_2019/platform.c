@@ -5,6 +5,7 @@
 # include <task.h>
 #endif
 #include <stdio.h>
+#include <cocobot.h>
 #include "platform.h"
 #include "pcm9685.h"
 
@@ -298,8 +299,8 @@ uint8_t platform_i2c_transmit(mcual_i2c_id_t id, uint8_t addr, uint8_t * txbuf, 
 
 void platform_servo_set_value(uint32_t servo_id, uint32_t value)
 {
-#ifdef AUSBEE_SIM
-  printf("# platform_servo_set_value %lu %lu\n", servo_id, value);
-#endif
+//#ifdef AUSBEE_SIM
+  cocobot_com_printf(COM_DEBUG, "platform_servo_set_value %lu %lu\n", servo_id, value);
+//#endif
   pcm9685_set_channel(servo_id, 0, value);
 }

@@ -208,12 +208,25 @@ impl StateManager {
                         warn!("bad pgm format '{}'", cmd);
                     }
                 }
-                "meca" => {
+                "servo" => {
                     if split.len() > 4 {
-                        let node_id = split[1].to_string().parse::<u8>().unwrap();
-                        let mode = split[2].to_string().parse::<u8>().unwrap();
-                        let servo_id = split[3].to_string().parse::<u8>().unwrap();
-                        let value = split[4].to_string().parse::<u16>().unwrap();
+                        let node_id = match split[1].to_string().parse::<u8>() {
+                        Ok(v) => v,
+                        Err(_) => return,
+                        };
+                        let mode = match split[2].to_string().parse::<u8>() {
+                        Ok(v) => v,
+                        Err(_) => return,
+                        };
+                        let servo_id = match split[3].to_string().parse::<u8>() {
+                        Ok(v) => v,
+                        Err(_) => return,
+                        };
+                        let value = match split[4].to_string().parse::<u16>() {
+                        Ok(v) => v,
+                        Err(_) => return,
+                        };
+
                         self.send(Msg::Servo { 
                           node_id,
                           mode,
@@ -222,6 +235,30 @@ impl StateManager {
                         });
                     } else {
                         warn!("bad meca format '{}'", cmd);
+                    }
+                }
+                "pump" => {
+                    if split.len() > 3 {
+                        let node_id = match split[1].to_string().parse::<u8>() {
+                        Ok(v) => v,
+                        Err(_) => return,
+                        };
+                        let pump_id = match split[2].to_string().parse::<u8>() {
+                        Ok(v) => v,
+                        Err(_) => return,
+                        };
+                        let action = match split[3].to_string().parse::<u8>() {
+                        Ok(v) => v,
+                        Err(_) => return,
+                        };
+
+                        self.send(Msg::Pump { 
+                          node_id,
+                          pump_id,
+                          action,
+                        });
+                    } else {
+                        warn!("bad pump format '{}'", cmd);
                     }
                 }
                 "restart" => {

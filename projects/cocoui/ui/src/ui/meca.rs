@@ -31,8 +31,14 @@ impl MecaWindow {
     fn set_servo(&self, id: usize, value: &str, deg: bool) {
       if let Some(state) = &self.state {
         let mode = if deg { 1 } else { 0 };
-        let cmd = format!("meca 15 {} {} {}", mode, id, value);
+        let cmd = format!("servo 15 {} {} {}", mode, id, value);
         state.lock().unwrap().command(&cmd);
+      }
+    }
+
+    fn cmd(&self, cmd: &str) {
+      if let Some(state) = &self.state {
+        state.lock().unwrap().command(cmd);
       }
     }
 
@@ -77,10 +83,64 @@ impl MecaWindow {
                   let btn : gtk::Button = builder.get_object(&format!("valid_s{}", i)).unwrap();
                   let entry : gtk::Entry = builder.get_object(&format!("entry_s{}", i)).unwrap();
                   let check : gtk::CheckButton = builder.get_object(&format!("servo_angle")).unwrap();
+                  let check2 = check.clone();
+                  let entry2 = entry.clone();
+                  let entry3 = entry.clone();
                   btn.connect_clicked( move |_| {
                         PMECA.with(|meca| {
                           let meca = meca.borrow();
                           meca.set_servo(i, entry.get_text().unwrap().as_str(), check.get_active());
+                        });
+                  });
+                  entry2.connect_activate( move |_| {
+                        PMECA.with(|meca| {
+                          let meca = meca.borrow();
+                          meca.set_servo(i, entry3.get_text().unwrap().as_str(), check2.get_active());
+                        });
+                  });
+                }
+
+                let x : gtk::Entry = builder.get_object("entry_x").unwrap();
+                let y : gtk::Entry = builder.get_object("entry_y").unwrap();
+                let z : gtk::Entry = builder.get_object("entry_z").unwrap();
+                let d : gtk::Entry = builder.get_object("entry_d").unwrap();
+                let a : gtk::Entry = builder.get_object("entry_a").unwrap();
+                let arm : gtk::Entry = builder.get_object("entry_arm").unwrap();
+                {
+                  let x = x.clone();
+                  let y = y.clone();
+                  let z = z.clone();
+                  let a = a.clone();
+                  let arm = arm.clone();
+                  let btn : gtk::Button = builder.get_object("btn_arm").unwrap();
+                  btn.connect_clicked( move |_| {
+                    PMECA.with(|meca| {
+                          let meca = meca.borrow();
+                          meca.cmd(&format!("meca 15 12 {} {} {} {} {} {}",
+                            arm.get_text().unwrap().as_str(), 
+                            x.get_text().unwrap().as_str(), 
+                            y.get_text().unwrap().as_str(), 
+                            z.get_text().unwrap().as_str(), 0, 
+                            a.get_text().unwrap().as_str()
+                          ));
+                     });
+                  });
+                }
+
+                for i in 0..4 {
+                  let btn : gtk::Button = builder.get_object(&format!("btn_pompe_on_{}", i)).unwrap();
+                  btn.connect_clicked( move |_| {
+                        PMECA.with(|meca| {
+                          let meca = meca.borrow();
+                          meca.cmd(&format!("pump 15 {} 1", i));
+                        });
+                  });
+
+                  let btn : gtk::Button = builder.get_object(&format!("btn_pompe_off_{}", i)).unwrap();
+                  btn.connect_clicked( move |_| {
+                        PMECA.with(|meca| {
+                          let meca = meca.borrow();
+                          meca.cmd(&format!("pump 15 {} 0", i));
                         });
                   });
                 }

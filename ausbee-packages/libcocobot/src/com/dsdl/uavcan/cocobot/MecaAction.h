@@ -35,11 +35,14 @@ uint4 DROP_FLOOR      = 9
 uint4 DROP_BALANCE    = 10
 uint4 DROP_ACCELL     = 11
 
+uint4 DIRECT_ARM      = 12
+
 uint8 req
 uint8 arm
 
 uint8 x
 uint8 y
+uint8 z
 uint8 a
 uint8 d
 
@@ -54,6 +57,7 @@ saturated uint8 req
 saturated uint8 arm
 saturated uint8 x
 saturated uint8 y
+saturated uint8 z
 saturated uint8 a
 saturated uint8 d
 ---
@@ -62,9 +66,9 @@ saturated bool busy
 
 #define UAVCAN_COCOBOT_MECAACTION_ID                       203
 #define UAVCAN_COCOBOT_MECAACTION_NAME                     "uavcan.cocobot.MecaAction"
-#define UAVCAN_COCOBOT_MECAACTION_SIGNATURE                (0xEF46276F070B375FULL)
+#define UAVCAN_COCOBOT_MECAACTION_SIGNATURE                (0xFCBB395F3B99DCA5ULL)
 
-#define UAVCAN_COCOBOT_MECAACTION_REQUEST_MAX_SIZE         ((48 + 7)/8)
+#define UAVCAN_COCOBOT_MECAACTION_REQUEST_MAX_SIZE         ((56 + 7)/8)
 
 // Constants
 #define UAVCAN_COCOBOT_MECAACTION_REQUEST_STATUS                              0 // 0
@@ -79,6 +83,7 @@ saturated bool busy
 #define UAVCAN_COCOBOT_MECAACTION_REQUEST_DROP_FLOOR                          9 // 9
 #define UAVCAN_COCOBOT_MECAACTION_REQUEST_DROP_BALANCE                       10 // 10
 #define UAVCAN_COCOBOT_MECAACTION_REQUEST_DROP_ACCELL                        11 // 11
+#define UAVCAN_COCOBOT_MECAACTION_REQUEST_DIRECT_ARM                         12 // 12
 
 typedef struct
 {
@@ -87,6 +92,7 @@ typedef struct
     uint8_t    arm;                           // bit len 8
     uint8_t    x;                             // bit len 8
     uint8_t    y;                             // bit len 8
+    uint8_t    z;                             // bit len 8
     uint8_t    a;                             // bit len 8
     uint8_t    d;                             // bit len 8
 
