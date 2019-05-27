@@ -28,9 +28,10 @@ impl MecaWindow {
         self.principal = principal;
     }
 
-    fn set_servo(&self, id: usize, value: &str) {
+    fn set_servo(&self, id: usize, value: &str, deg: bool) {
       if let Some(state) = &self.state {
-        let cmd = format!("meca 15 0 {} {}", id, value);
+        let mode = if deg { 1 } else { 0 };
+        let cmd = format!("meca 15 {} {} {}", mode, id, value);
         state.lock().unwrap().command(&cmd);
       }
     }
@@ -75,10 +76,11 @@ impl MecaWindow {
                 for i in 0..12 {
                   let btn : gtk::Button = builder.get_object(&format!("valid_s{}", i)).unwrap();
                   let entry : gtk::Entry = builder.get_object(&format!("entry_s{}", i)).unwrap();
+                  let check : gtk::CheckButton = builder.get_object(&format!("servo_angle")).unwrap();
                   btn.connect_clicked( move |_| {
                         PMECA.with(|meca| {
                           let meca = meca.borrow();
-                          meca.set_servo(i, entry.get_text().unwrap().as_str());
+                          meca.set_servo(i, entry.get_text().unwrap().as_str(), check.get_active());
                         });
                   });
                 }

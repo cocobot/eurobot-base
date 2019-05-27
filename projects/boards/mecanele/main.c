@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "cocobot_arm_action.h"
 #include "pcm9685.h"
+#include "servo.h"
 #include "uavcan/cocobot/ServoCmd.h"
 #include "uavcan/cocobot/MecaAction.h"
 
@@ -53,7 +54,14 @@ uint8_t com_should_accept_transfer(uint64_t* out_data_type_signature,
 uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
 {
 	IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_SERVOCMD, uavcan_cocobot_ServoCmdRequest,
-      platform_servo_set_value(data.servo_id, data.value);
+      if(data.mode)
+      {
+        servo_set_angle(data.servo_id, data.value);
+      }
+      else
+      {
+        servo_set_pwm(data.servo_id, data.value);
+      }
 );
 
 	IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_MECAACTION, uavcan_cocobot_MecaActionRequest,
@@ -103,7 +111,7 @@ uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
           cocobot_arm_action_depose_accelerateur_particules(data.arm, data.a, data.d);
           break;
       }
-);
+  );
 
 	return 0;
 }
@@ -118,8 +126,7 @@ int main(void)
 
   cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_OPERATIONAL);
 
-
-  xTaskCreate(thread, "thread", 1024, NULL, 1, NULL);
+  xTaskCreate(thread, "thread", 1024, NULL, 3, NULL);
   vTaskStartScheduler();
 
   return 0;
