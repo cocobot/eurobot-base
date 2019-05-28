@@ -14,7 +14,7 @@
 #define COMEX_WAVE_PWM 1
 
 
-static volatile int enable = 0.0;
+static volatile int _enable = 0.0;
 
 static void _run_palm_tree(void * arg){
 	static uint16_t val = COMEX_DISABLE_PALM_VAL;
@@ -23,7 +23,7 @@ static void _run_palm_tree(void * arg){
 	(void) arg;
 
 	for (;;){
-		if (enable){
+		if (_enable){
 			if (!osc){
 				if (val < COMEX_ENABLE_PALM_VAL){
 					val += COMEX_PALM_INCR;
@@ -47,12 +47,12 @@ static void _run_palm_tree(void * arg){
 	}
 	return;
 }
-
-static vois _run_wave(void * arg){
+/*
+static void _run_wave(void * arg){
 	(void) arg;
 	
 }
-
+*/
 
 
 // arg  550 .. 2450
@@ -92,9 +92,12 @@ int main(void)
 
 	xTaskCreate(blink, "blink", 1024, NULL, 1, NULL);
 	xTaskCreate(servo, "servo", 1024, NULL, 1, NULL);
+	xTaskCreate(_run_palm_tree,"palm", 1024, NULL, 1, NULL);
 
 	vTaskStartScheduler();
 	vTaskSwitchContext();
+
+	_enable = 1;
 
 	return 0;
 }
