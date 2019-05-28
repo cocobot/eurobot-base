@@ -33,7 +33,7 @@ impl Physics {
         config: ConfigManagerInstance,
         tx_can: Receiver<CANFrame>,
         state: StateManagerInstance,
-    ) -> PhysicsInstance {
+        ) -> PhysicsInstance {
         let phys = Physics {
             config: config,
             tx_can,
@@ -104,6 +104,54 @@ impl Physics {
 
             drop(config);
 
+            loop {
+                let locked_instance = instance.lock().unwrap();
+                for (_i, b) in locked_instance.brains.iter().enumerate() {
+                    let mut b = b.lock().unwrap();
+                    let distance = (b.speed_d) * b.tick_per_meter / 1000.0;
+                    let angle = (b.speed_a) * b.tick_per_180deg / std::f32::consts::PI;
+
+                    b.timers[5].adder += (distance + angle) / 2.0;
+                    b.timers[2].adder += (distance - angle) / 2.0;
+
+                    b.step(1000 / 60);
+                }
+                drop(locked_instance);
+
+
+                let mut waiting_tx = Vec::new();
+                let locked_instance = instance.lock().unwrap();
+                while let Ok(frame) = locked_instance
+                    .tx_can
+                        .recv_timeout(Duration::from_millis(0))
+                        {
+                            waiting_tx.push(frame);
+                        }
+                drop(locked_instance);
+
+                let mut waiting_tx = Vec::new();
+                let locked_instance = instance.lock().unwrap();
+                while let Ok(frame) = locked_instance
+                    .tx_can
+                        .recv_timeout(Duration::from_millis(0))
+                        {
+                            waiting_tx.push(frame);
+                        }
+                drop(locked_instance);
+
+                let locked_instance = instance.lock().unwrap();
+                for b in locked_instance.brains.iter() {
+                    let mut b = b.lock().unwrap();
+                    for tx in waiting_tx.iter() {
+                        b.can_tx(&tx);
+                    }
+                }
+                drop(locked_instance);
+
+
+                thread::sleep(delay);
+
+            }
             loop {
                 let ts = world.timestep();
 
@@ -190,10 +238,10 @@ impl Physics {
                 let locked_instance = instance.lock().unwrap();
                 while let Ok(frame) = locked_instance
                     .tx_can
-                    .recv_timeout(Duration::from_millis(0))
-                {
-                    waiting_tx.push(frame);
-                }
+                        .recv_timeout(Duration::from_millis(0))
+                        {
+                            waiting_tx.push(frame);
+                        }
                 drop(locked_instance);
 
                 let locked_instance = instance.lock().unwrap();

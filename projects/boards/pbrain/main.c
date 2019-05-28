@@ -234,9 +234,9 @@ int main(void)
       break;
   }
 
-      //cocobot_position_set_x(0);
-      //cocobot_position_set_y(0);
-      //cocobot_position_set_angle(0);
+  cocobot_position_set_x(0);
+  cocobot_position_set_y(0);
+  cocobot_position_set_angle(0);
 
   xTaskCreate(run_homologation, "strat", 600, NULL, 2, NULL );
 

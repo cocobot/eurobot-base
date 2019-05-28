@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.22.1 -->
+<!-- Generated with glade 3.20.0 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkWindow" id="cartes">
@@ -8,16 +8,10 @@
     <child>
       <placeholder/>
     </child>
-    <child>
-      <placeholder/>
-    </child>
   </object>
   <object class="GtkApplicationWindow" id="mainWindow">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">CocoUI</property>
-    <child type="titlebar">
-      <placeholder/>
-    </child>
     <child>
       <object class="GtkBox" id="body">
         <property name="name">0</property>
@@ -229,6 +223,7 @@
                                         <property name="can_focus">False</property>
                                         <property name="halign">start</property>
                                         <property name="label" translatable="yes">x : ?</property>
+                                        <property name="width_chars">15</property>
                                       </object>
                                       <packing>
                                         <property name="left_attach">0</property>
@@ -241,6 +236,7 @@
                                         <property name="can_focus">False</property>
                                         <property name="halign">start</property>
                                         <property name="label" translatable="yes">y : ?</property>
+                                        <property name="width_chars">15</property>
                                       </object>
                                       <packing>
                                         <property name="left_attach">1</property>
@@ -253,6 +249,7 @@
                                         <property name="can_focus">False</property>
                                         <property name="halign">start</property>
                                         <property name="label" translatable="yes">a : ?</property>
+                                        <property name="width_chars">10</property>
                                       </object>
                                       <packing>
                                         <property name="left_attach">2</property>
@@ -265,6 +262,7 @@
                                         <property name="can_focus">False</property>
                                         <property name="halign">start</property>
                                         <property name="label" translatable="yes">score : ?</property>
+                                        <property name="width_chars">15</property>
                                       </object>
                                       <packing>
                                         <property name="left_attach">0</property>
@@ -277,6 +275,7 @@
                                         <property name="can_focus">False</property>
                                         <property name="halign">start</property>
                                         <property name="label" translatable="yes">temps : ?</property>
+                                        <property name="width_chars">15</property>
                                       </object>
                                       <packing>
                                         <property name="left_attach">1</property>
@@ -533,13 +532,13 @@
         </child>
       </object>
     </child>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
   </object>
   <object class="GtkWindow" id="motors">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Cartes</property>
-    <child>
-      <placeholder/>
-    </child>
     <child>
       <object class="GtkPaned">
         <property name="visible">True</property>
