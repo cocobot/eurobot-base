@@ -1,5 +1,6 @@
 #include <cocobot.h>
 #include <stdio.h>
+#include "servo.h"
 #include "cocobot_arm.h"
 #include "cocobot_arm_action.h"
 
@@ -7,22 +8,66 @@ static cocobot_arm_t arm[4] = {0};
 
 static void arm0_get_current_servo_angles_function(cocobot_joint_pos_t * joint_pos)
 {
-  // TODO: Replace with function to get servo angle
-  // joint_pos->a1_deg = get_servo_angle(servo_id);
-  joint_pos->a1_deg = 0;
-  joint_pos->a2_deg = 10;
-  joint_pos->a3_deg = 20;
-  joint_pos->a4_deg = 30;
+  joint_pos->a1_deg = servo_get_angle(12);
+  joint_pos->a2_deg = servo_get_angle(0);
+  joint_pos->a3_deg = servo_get_angle(1);
+  joint_pos->a4_deg = servo_get_angle(2);
+}
+
+static void arm1_get_current_servo_angles_function(cocobot_joint_pos_t * joint_pos)
+{
+  joint_pos->a1_deg = servo_get_angle(12);
+  joint_pos->a2_deg = servo_get_angle(3);
+  joint_pos->a3_deg = servo_get_angle(4);
+  joint_pos->a4_deg = servo_get_angle(5);
+}
+
+static void arm2_get_current_servo_angles_function(cocobot_joint_pos_t * joint_pos)
+{
+  joint_pos->a1_deg = servo_get_angle(12);
+  joint_pos->a2_deg = servo_get_angle(6);
+  joint_pos->a3_deg = servo_get_angle(7);
+  joint_pos->a4_deg = servo_get_angle(8);
+}
+
+static void arm3_get_current_servo_angles_function(cocobot_joint_pos_t * joint_pos)
+{
+  joint_pos->a1_deg = servo_get_angle(12);
+  joint_pos->a2_deg = servo_get_angle(9);
+  joint_pos->a3_deg = servo_get_angle(10);
+  joint_pos->a4_deg = servo_get_angle(11);
 }
 
 static void arm0_update_servo_angles_function(const cocobot_joint_pos_t * joint_pos)
 {
-  // TODO: Replace with function to set servo angle
-  // set_servo_angle(servo_id, joint_pos->a1_deg);
-  cocobot_com_printf(COM_DEBUG, "TODO: set servo 1 angle to %f\n", (double) joint_pos->a1_deg);
-  cocobot_com_printf(COM_DEBUG, "TODO: set servo 2 angle to %f\n", (double) joint_pos->a2_deg);
-  cocobot_com_printf(COM_DEBUG, "TODO: set servo 3 angle to %f\n", (double) joint_pos->a3_deg);
-  cocobot_com_printf(COM_DEBUG, "TODO: set servo 4 angle to %f\n", (double) joint_pos->a4_deg);
+  servo_set_angle(12, joint_pos->a1_deg); 
+  servo_set_angle(0, joint_pos->a1_deg); 
+  servo_set_angle(1, joint_pos->a1_deg); 
+  servo_set_angle(2, joint_pos->a1_deg); 
+}
+
+static void arm1_update_servo_angles_function(const cocobot_joint_pos_t * joint_pos)
+{
+  servo_set_angle(12, joint_pos->a1_deg); 
+  servo_set_angle(3, joint_pos->a1_deg); 
+  servo_set_angle(4, joint_pos->a1_deg); 
+  servo_set_angle(5, joint_pos->a1_deg); 
+}
+
+static void arm2_update_servo_angles_function(const cocobot_joint_pos_t * joint_pos)
+{
+  servo_set_angle(12, joint_pos->a1_deg); 
+  servo_set_angle(6, joint_pos->a1_deg); 
+  servo_set_angle(7, joint_pos->a1_deg); 
+  servo_set_angle(8, joint_pos->a1_deg); 
+}
+
+static void arm3_update_servo_angles_function(const cocobot_joint_pos_t * joint_pos)
+{
+  servo_set_angle(12, joint_pos->a1_deg); 
+  servo_set_angle(9, joint_pos->a1_deg); 
+  servo_set_angle(10, joint_pos->a1_deg); 
+  servo_set_angle(11, joint_pos->a1_deg); 
 }
 
 void cocobot_arm_action_init(void)
@@ -40,7 +85,9 @@ void cocobot_arm_action_init(void)
                                            -180,  180);
 
   cocobot_arm_init(&arm[0], &arm0_get_current_servo_angles_function, &arm0_update_servo_angles_function);
-  // TODO: Do the same for arm1, arm2 and arm3
+  cocobot_arm_init(&arm[1], &arm1_get_current_servo_angles_function, &arm1_update_servo_angles_function);
+  cocobot_arm_init(&arm[2], &arm2_get_current_servo_angles_function, &arm2_update_servo_angles_function);
+  cocobot_arm_init(&arm[3], &arm3_get_current_servo_angles_function, &arm3_update_servo_angles_function);
 }
 
 void cocobot_arm_action_prendre_palais_sol(int arm_id, float x, float y)
@@ -166,6 +213,18 @@ void cocobot_arm_action_depose_case(int arm_id, float angle)
   {
     // TODO: à régler !
     //cocobot_arm_move_arti(arm[arm_id], a1_deg, a2_deg, a3_deg, a4_deg);
+  }
+  else
+  {
+    printf("Wrong arm_id: %d should be between 0 and 3.\n", arm_id);
+  }
+}
+
+void cocobot_arm_action_move_arm(int arm_id, float x, float y, float z, float a)
+{
+  if (arm_id >= 0 && arm_id <= 3)
+  {
+    cocobot_arm_move_cartesian(&arm[arm_id], x, y, z, a);
   }
   else
   {

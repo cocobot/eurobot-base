@@ -10,7 +10,7 @@ use std::{thread, time};
 
 use self::serialport::SerialPort;
 use self::serialport::SerialPortSettings;
-use self::serialport::SerialPortType;
+//use self::serialport::SerialPortType;
 
 use canars::CANFrame;
 use crossbeam_channel::Receiver;

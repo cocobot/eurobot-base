@@ -12,16 +12,16 @@
 
 #define PLATFORM_LED0                 (1 << 0)
 
-#define PLATFORM_GPIO_PUMP1           (1 << 0)
-#define PLATFORM_GPIO_PUMP2           (1 << 1)
-#define PLATFORM_GPIO_VALVE1          (1 << 2)
-#define PLATFORM_GPIO_VALVE2          (1 << 3)
-#define PLATFORM_GPIO_VALVE3          (1 << 4)
-#define PLATFORM_GPIO_VALVE4          (1 << 5)
-#define PLATFORM_GPIO_VALVE5          (1 << 7)
-#define PLATFORM_GPIO_VALVE6          (1 << 8)
-#define PLATFORM_GPIO_VALVE7          (1 << 9)
-#define PLATFORM_GPIO_VALVE8          (1 << 10)
+#define PLATFORM_GPIO_PUMP1           (1UL << 0)
+#define PLATFORM_GPIO_PUMP2           (1UL << 1)
+#define PLATFORM_GPIO_VALVE1          (1UL << 2)
+#define PLATFORM_GPIO_VALVE2          (1UL << 3)
+#define PLATFORM_GPIO_VALVE3          (1UL << 4)
+#define PLATFORM_GPIO_VALVE4          (1UL << 5)
+#define PLATFORM_GPIO_VALVE5          (1UL << 6)
+#define PLATFORM_GPIO_VALVE6          (1UL << 7)
+#define PLATFORM_GPIO_VALVE7          (1UL << 8)
+#define PLATFORM_GPIO_VALVE8          (1UL << 9)
 
 #define PLATFORM_ADC_ARM_1             MCUAL_ADC6
 #define PLATFORM_ADC_ARM_2             MCUAL_ADC7

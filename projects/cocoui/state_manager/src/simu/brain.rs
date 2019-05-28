@@ -166,8 +166,9 @@ impl Brain {
                             let d = tokens.get(1).unwrap().to_owned().parse::<f32>().unwrap();
                             let a = tokens.get(2).unwrap().to_owned().parse::<f32>().unwrap();
 
-                            self.speed_d = d / self.tick_per_meter / 250.0;
-                            self.speed_a = a / self.tick_per_180deg / 250.0;
+                            self.speed_d = d / self.tick_per_meter / 500.0;
+                            self.speed_a = a / self.tick_per_180deg / 500.0;
+                            debug!("{} {}", self.speed_d, self.speed_a);
                         },
                         _ => warn!("Unexpected POS command: '{}'", cmd),
                     }

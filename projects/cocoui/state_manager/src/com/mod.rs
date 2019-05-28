@@ -80,8 +80,11 @@ impl Node<StateManagerInstance> for ComHandler {
             let status = dsdl::uavcan::protocol::NodeStatus::decode(xfer).unwrap();
             state_manager.set_node_status(xfer.get_source_node_id(), status);
         } else if dsdl::uavcan::protocol::GetNodeInfoResponse::check_id(xfer.get_data_type_id()) {
-            let node_info = dsdl::uavcan::protocol::GetNodeInfoResponse::decode(xfer).unwrap();
-            state_manager.set_node_info(xfer.get_source_node_id(), node_info);
+            match dsdl::uavcan::protocol::GetNodeInfoResponse::decode(xfer) {
+              Some(value) => {state_manager.set_node_info(xfer.get_source_node_id(), value);
+              }
+              _ => {},
+            };
         } else if dsdl::uavcan::protocol::file::BeginFirmwareUpdateResponse::check_id(
             xfer.get_data_type_id(),
         ) {

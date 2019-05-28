@@ -14,5 +14,6 @@ void cocobot_arm_action_prise_bluenium(int arm_id, float angle);
 void cocobot_arm_action_depose_balance(int arm_id, float angle);
 void cocobot_arm_action_depose_accelerateur_particules(int arm_id, float angle, float distance);
 void cocobot_arm_action_depose_case(int arm_id, float angle);
+void cocobot_arm_action_move_arm(int arm_id, float x, float y, float z, float a);
 
 #endif /* COCOBOT_ARM_ACTION_H */

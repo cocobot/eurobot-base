@@ -5,6 +5,7 @@
 # include <task.h>
 #endif
 #include <stdio.h>
+#include <cocobot.h>
 #include "platform.h"
 #include "pcm9685.h"
 
@@ -134,7 +135,7 @@ void platform_gpio_set(uint32_t gpio)
 {
   if(gpio & PLATFORM_GPIO_PUMP1)
   {
-    mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN10);
+    mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN11);
   }
   if(gpio & PLATFORM_GPIO_PUMP2)
   {
@@ -142,7 +143,7 @@ void platform_gpio_set(uint32_t gpio)
   }
   if(gpio & PLATFORM_GPIO_VALVE1)
   {
-    mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN11);
+    mcual_gpio_set(MCUAL_GPIOD, MCUAL_GPIO_PIN10);
   }
   if(gpio & PLATFORM_GPIO_VALVE2)
   {
@@ -178,7 +179,7 @@ void platform_gpio_clear(uint32_t gpio)
 {
   if(gpio & PLATFORM_GPIO_PUMP1)
   {
-    mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN10);
+    mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN11);
   }
   if(gpio & PLATFORM_GPIO_PUMP2)
   {
@@ -186,7 +187,7 @@ void platform_gpio_clear(uint32_t gpio)
   }
   if(gpio & PLATFORM_GPIO_VALVE1)
   {
-    mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN11);
+    mcual_gpio_clear(MCUAL_GPIOD, MCUAL_GPIO_PIN10);
   }
   if(gpio & PLATFORM_GPIO_VALVE2)
   {
@@ -222,7 +223,7 @@ void platform_gpio_toggle(uint32_t gpio)
 {
   if(gpio & PLATFORM_GPIO_PUMP1)
   {
-    mcual_gpio_toggle(MCUAL_GPIOD, MCUAL_GPIO_PIN10);
+    mcual_gpio_toggle(MCUAL_GPIOD, MCUAL_GPIO_PIN11);
   }
   if(gpio & PLATFORM_GPIO_PUMP2)
   {
@@ -230,7 +231,7 @@ void platform_gpio_toggle(uint32_t gpio)
   }
   if(gpio & PLATFORM_GPIO_VALVE1)
   {
-    mcual_gpio_toggle(MCUAL_GPIOD, MCUAL_GPIO_PIN11);
+    mcual_gpio_toggle(MCUAL_GPIOD, MCUAL_GPIO_PIN10);
   }
   if(gpio & PLATFORM_GPIO_VALVE2)
   {
@@ -298,8 +299,8 @@ uint8_t platform_i2c_transmit(mcual_i2c_id_t id, uint8_t addr, uint8_t * txbuf, 
 
 void platform_servo_set_value(uint32_t servo_id, uint32_t value)
 {
-#ifdef AUSBEE_SIM
-  printf("# platform_servo_set_value %lu %lu\n", servo_id, value);
-#endif
+//#ifdef AUSBEE_SIM
+  cocobot_com_printf(COM_DEBUG, "platform_servo_set_value %lu %lu\n", servo_id, value);
+//#endif
   pcm9685_set_channel(servo_id, 0, value);
 }

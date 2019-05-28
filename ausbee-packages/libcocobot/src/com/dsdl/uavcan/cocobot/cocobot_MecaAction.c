@@ -47,6 +47,9 @@ uint32_t uavcan_cocobot_MecaActionRequest_encode_internal(uavcan_cocobot_MecaAct
     canardEncodeScalar(msg_buf, offset, 8, (void*)&source->y); // 255
     offset += 8;
 
+    canardEncodeScalar(msg_buf, offset, 8, (void*)&source->z); // 255
+    offset += 8;
+
     canardEncodeScalar(msg_buf, offset, 8, (void*)&source->a); // 255
     offset += 8;
 
@@ -113,6 +116,13 @@ int32_t uavcan_cocobot_MecaActionRequest_decode_internal(
     offset += 8;
 
     ret = canardDecodeScalar(transfer, (uint32_t)offset, 8, false, (void*)&dest->y);
+    if (ret != 8)
+    {
+        goto uavcan_cocobot_MecaActionRequest_error_exit;
+    }
+    offset += 8;
+
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 8, false, (void*)&dest->z);
     if (ret != 8)
     {
         goto uavcan_cocobot_MecaActionRequest_error_exit;
