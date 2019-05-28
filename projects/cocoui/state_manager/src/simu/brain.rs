@@ -38,10 +38,9 @@ impl Timer {
             self.count = cnt;
         }
         else {
-            // error!("# {}", iadder);
-            // let iadder : u64 = -iadder as u64;
-            // let (cnt, _) = self.count.overflowing_sub((iadder & 0xFFFFFFFF) as u32);
-            // self.count = cnt;
+            let iadder : u64 = -iadder as u64;
+            let (cnt, _) = self.count.overflowing_sub((iadder & 0xFFFFFFFF) as u32);
+            self.count = cnt;
         }
 
         self.adder -= iadder as f32; 
@@ -166,9 +165,8 @@ impl Brain {
                             let d = tokens.get(1).unwrap().to_owned().parse::<f32>().unwrap();
                             let a = tokens.get(2).unwrap().to_owned().parse::<f32>().unwrap();
 
-                            self.speed_d = d / self.tick_per_meter / 500.0;
-                            self.speed_a = a / self.tick_per_180deg / 500.0;
-                            debug!("{} {}", self.speed_d, self.speed_a);
+                            self.speed_d = d / self.tick_per_meter  * 10.0;
+                            self.speed_a = a / self.tick_per_180deg / 100.0;
                         },
                         _ => warn!("Unexpected POS command: '{}'", cmd),
                     }
