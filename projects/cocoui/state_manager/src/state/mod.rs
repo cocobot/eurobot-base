@@ -234,6 +234,55 @@ impl StateManager {
                           value,
                         });
                     } else {
+                        warn!("bad servo format '{}'", cmd);
+                    }
+                }
+                "meca" => {
+                    if split.len() > 8 {
+                        let node_id = match split[1].to_string().parse::<u8>() {
+                        Ok(v) => v,
+                        Err(_) => return,
+                        };
+                        let req = match split[2].to_string().parse::<u8>() {
+                        Ok(v) => v,
+                        Err(_) => return,
+                        };
+                        let arm = match split[3].to_string().parse::<u8>() {
+                        Ok(v) => v,
+                        Err(_) => return,
+                        };
+                        let x = match split[4].to_string().parse::<u8>() {
+                        Ok(v) => v,
+                        Err(_) => return,
+                        };
+                        let y = match split[5].to_string().parse::<u8>() {
+                        Ok(v) => v,
+                        Err(_) => return,
+                        };
+                        let z = match split[6].to_string().parse::<u8>() {
+                        Ok(v) => v,
+                        Err(_) => return,
+                        };
+                        let d = match split[7].to_string().parse::<u8>() {
+                        Ok(v) => v,
+                        Err(_) => return,
+                        };
+                        let a = match split[8].to_string().parse::<u8>() {
+                        Ok(v) => v,
+                        Err(_) => return,
+                        };
+
+                        self.send(Msg::Meca { 
+                          node_id,
+                          req,
+                          arm,
+                          x,
+                          y,
+                          z,
+                          d,
+                          a,
+                        });
+                    } else {
                         warn!("bad meca format '{}'", cmd);
                     }
                 }

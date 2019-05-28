@@ -105,7 +105,7 @@ impl Brain {
         let bytes = line.as_bytes();
         if bytes[0] != '>' as u8 {
             //print debug from simulator in console
-            debug!("{}", line.trim());
+            /////debug!("{}", line.trim());
         } else {
             let split = line[1..].trim().split("/");
             let tokens: Vec<&str> = split.collect();

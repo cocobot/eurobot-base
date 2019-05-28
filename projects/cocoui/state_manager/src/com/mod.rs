@@ -163,8 +163,11 @@ impl Com {
     }
 
     pub fn send_can_frame(&self, frame: CANFrame) {
+        info!("TX SEND {:?}", frame);
         match self.send_can_frame.send(frame) {
-            Ok(_) => {}
+            Ok(_) => {
+                info!("OK !");
+            }
             Err(e) => {
                 error!("send_can_frame: {:?}", e);
             }

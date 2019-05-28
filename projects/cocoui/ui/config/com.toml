@@ -16,7 +16,6 @@ id=11
 uid="[2C 00 24 00 18 51 35 33 34 39 30 32 00 00 00 00]"
 path="../../boards/pbrain/Output/pbrain.bin"
 simu="../../boards/pbrain/Output/pbrain.sim"
-#simu="../../boards/mecanele/Output/mecanele.sim"
 
 [[boards]]
 name="Canon P/G"
@@ -40,6 +39,7 @@ name="Mecanele"
 id=15
 uid=""
 path="../../boards/mecanele/Output/mecanele.bin"
+simu="../../boards/mecanele/Output/mecanele.sim"
 
 
 

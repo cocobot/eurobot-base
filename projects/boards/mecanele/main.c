@@ -85,6 +85,7 @@ uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
 );
 
 	IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_MECAACTION, uavcan_cocobot_MecaActionRequest,
+      cocobot_com_printf(COM_DEBUG, "TEST");
       switch(data.req)
       {
         case UAVCAN_COCOBOT_MECAACTION_REQUEST_STATUS:
