@@ -41,33 +41,33 @@ static void arm3_get_current_servo_angles_function(cocobot_joint_pos_t * joint_p
 static void arm0_update_servo_angles_function(const cocobot_joint_pos_t * joint_pos)
 {
   servo_set_angle(12, joint_pos->a1_deg); 
-  servo_set_angle(0, joint_pos->a1_deg); 
-  servo_set_angle(1, joint_pos->a1_deg); 
-  servo_set_angle(2, joint_pos->a1_deg); 
+  servo_set_angle(0,  joint_pos->a2_deg);
+  servo_set_angle(1,  joint_pos->a3_deg);
+  servo_set_angle(2,  joint_pos->a4_deg);
 }
 
 static void arm1_update_servo_angles_function(const cocobot_joint_pos_t * joint_pos)
 {
   servo_set_angle(12, joint_pos->a1_deg); 
-  servo_set_angle(3, joint_pos->a1_deg); 
-  servo_set_angle(4, joint_pos->a1_deg); 
-  servo_set_angle(5, joint_pos->a1_deg); 
+  servo_set_angle(3,  joint_pos->a2_deg);
+  servo_set_angle(4,  joint_pos->a3_deg);
+  servo_set_angle(5,  joint_pos->a4_deg);
 }
 
 static void arm2_update_servo_angles_function(const cocobot_joint_pos_t * joint_pos)
 {
   servo_set_angle(12, joint_pos->a1_deg); 
-  servo_set_angle(6, joint_pos->a1_deg); 
-  servo_set_angle(7, joint_pos->a1_deg); 
-  servo_set_angle(8, joint_pos->a1_deg); 
+  servo_set_angle(6,  joint_pos->a2_deg);
+  servo_set_angle(7,  joint_pos->a3_deg);
+  servo_set_angle(8,  joint_pos->a4_deg);
 }
 
 static void arm3_update_servo_angles_function(const cocobot_joint_pos_t * joint_pos)
 {
   servo_set_angle(12, joint_pos->a1_deg); 
-  servo_set_angle(9, joint_pos->a1_deg); 
-  servo_set_angle(10, joint_pos->a1_deg); 
-  servo_set_angle(11, joint_pos->a1_deg); 
+  servo_set_angle(9,  joint_pos->a2_deg);
+  servo_set_angle(10, joint_pos->a3_deg);
+  servo_set_angle(11, joint_pos->a4_deg);
 }
 
 void cocobot_arm_action_init(void)
