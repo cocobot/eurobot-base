@@ -119,10 +119,12 @@ static void pump_thread(void * arg)
           {
             case 0:
               platform_gpio_set(PUMP_1);
+              platform_gpio_clear(EMPTY_SOL_1);
               break;
 
             case 1:
               platform_gpio_set(PUMP_2);
+              platform_gpio_clear(EMPTY_SOL_2);
               break;
           }
           vTaskDelay(100/portTICK_PERIOD_MS);
@@ -136,6 +138,17 @@ static void pump_thread(void * arg)
           //stop sucker
           platform_gpio_clear(_sucker_id[id]);
           vTaskDelay(100/portTICK_PERIOD_MS);
+
+          if(id < 2)
+          {
+            platform_gpio_clear(PUMP_1);
+            platform_gpio_clear(EMPTY_SOL_1);
+          }
+          else
+          {
+            platform_gpio_clear(PUMP_2);
+            platform_gpio_clear(EMPTY_SOL_2);
+          }
         }
       } 
 
@@ -146,10 +159,12 @@ static void pump_thread(void * arg)
           if(id < 2)
           {
             platform_gpio_set(PUMP_1);
+            platform_gpio_clear(EMPTY_SOL_1);
           }
           else
           {
             platform_gpio_set(PUMP_2);
+            platform_gpio_clear(EMPTY_SOL_2);
           }
           vTaskDelay(100/portTICK_PERIOD_MS);
           platform_gpio_set(_sucker_id[id + i]);
