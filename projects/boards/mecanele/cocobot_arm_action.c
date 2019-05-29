@@ -84,10 +84,17 @@ void cocobot_arm_action_init(void)
                                           0.000, 0.37,
                                            -180,  180);
 
+  // Front arm
   cocobot_arm_init(&arm[0], &arm0_get_current_servo_angles_function, &arm0_update_servo_angles_function);
+  // Left arm
   cocobot_arm_init(&arm[1], &arm1_get_current_servo_angles_function, &arm1_update_servo_angles_function);
+  cocobot_arm_set_direction(&arm[1], 90);
+  // Back arm
   cocobot_arm_init(&arm[2], &arm2_get_current_servo_angles_function, &arm2_update_servo_angles_function);
+  cocobot_arm_set_direction(&arm[2], 180);
+  // Right arm
   cocobot_arm_init(&arm[3], &arm3_get_current_servo_angles_function, &arm3_update_servo_angles_function);
+  cocobot_arm_set_direction(&arm[3], -90);
 }
 
 void cocobot_arm_action_prendre_palais_sol(int arm_id, float x, float y)
