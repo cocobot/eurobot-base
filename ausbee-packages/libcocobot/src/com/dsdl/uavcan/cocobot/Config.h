@@ -18,6 +18,8 @@ extern "C"
 #endif
 
 /******************************* Source text **********************************
+uint8 dummy
+
 ---
 
 uint8 config
@@ -25,19 +27,24 @@ uint8 config
 
 /********************* DSDL signature source definition ***********************
 uavcan.cocobot.Config
+saturated uint8 dummy
 ---
 saturated uint8 config
 ******************************************************************************/
 
 #define UAVCAN_COCOBOT_CONFIG_ID                           207
 #define UAVCAN_COCOBOT_CONFIG_NAME                         "uavcan.cocobot.Config"
-#define UAVCAN_COCOBOT_CONFIG_SIGNATURE                    (0x366915E38F78CD13ULL)
+#define UAVCAN_COCOBOT_CONFIG_SIGNATURE                    (0x23874A836E6AFFFCULL)
 
-#define UAVCAN_COCOBOT_CONFIG_REQUEST_MAX_SIZE             ((0 + 7)/8)
+#define UAVCAN_COCOBOT_CONFIG_REQUEST_MAX_SIZE             ((8 + 7)/8)
+
+// Constants
 
 typedef struct
 {
-    uint8_t empty;
+    // FieldTypes
+    uint8_t    dummy;                         // bit len 8
+
 } uavcan_cocobot_ConfigRequest;
 
 extern

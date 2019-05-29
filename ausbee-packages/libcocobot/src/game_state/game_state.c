@@ -178,21 +178,27 @@ void cocobot_game_state_com_async(uint64_t timestamp_us)
   {
     _next_100ms_service_at = timestamp_us + 100000;
 
-    uavcan_cocobot_ConfigRequest conf;
-
-    void * buf = pvPortMalloc(UAVCAN_COCOBOT_CONFIG_REQUEST_MAX_SIZE + 1); 
-    if(buf != NULL) 
+    if(!_config_ready)
     {
-      static uint8_t transfer_id;
+      uavcan_cocobot_ConfigRequest conf;
 
-      const int size = uavcan_cocobot_ConfigRequest_encode(&conf, buf);
-      cocobot_com_broadcast(UAVCAN_COCOBOT_CONFIG_SIGNATURE,
-                            UAVCAN_COCOBOT_CONFIG_ID,
-                            &transfer_id,
-                            CANARD_TRANSFER_PRIORITY_LOW,
-                            buf,
-                            (uint16_t)size);
-      vPortFree(buf);
+      void * buf = pvPortMalloc(UAVCAN_COCOBOT_CONFIG_REQUEST_MAX_SIZE); 
+      if(buf != NULL) 
+      {
+        static uint8_t transfer_id;
+
+        const int size = uavcan_cocobot_ConfigRequest_encode(&conf, buf);
+        cocobot_com_request_or_respond(
+                                       COCOBOT_COM_NODE_ID,
+                                       UAVCAN_COCOBOT_CONFIG_SIGNATURE,
+                                       UAVCAN_COCOBOT_CONFIG_ID,
+                                       &transfer_id,
+                                       CANARD_TRANSFER_PRIORITY_LOW,
+                                       CanardRequest,
+                                       buf,
+                                       (uint16_t)size);
+        vPortFree(buf);
+      }
     }
   }
 }

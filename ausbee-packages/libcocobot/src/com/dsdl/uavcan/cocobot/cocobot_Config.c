@@ -22,34 +22,106 @@
 # define CANARD_MAYBE_UNUSED(x) x
 #endif
 
-uint32_t uavcan_cocobot_ConfigRequest_encode_internal(uavcan_cocobot_ConfigRequest* CANARD_MAYBE_UNUSED(source),
-  void* CANARD_MAYBE_UNUSED(msg_buf),
+/**
+  * @brief uavcan_cocobot_ConfigRequest_encode_internal
+  * @param source : pointer to source data struct
+  * @param msg_buf: pointer to msg storage
+  * @param offset: bit offset to msg storage
+  * @param root_item: for detecting if TAO should be used
+  * @retval returns offset
+  */
+uint32_t uavcan_cocobot_ConfigRequest_encode_internal(uavcan_cocobot_ConfigRequest* source,
+  void* msg_buf,
   uint32_t offset,
   uint8_t CANARD_MAYBE_UNUSED(root_item))
 {
+    canardEncodeScalar(msg_buf, offset, 8, (void*)&source->dummy); // 255
+    offset += 8;
+
     return offset;
 }
 
-uint32_t uavcan_cocobot_ConfigRequest_encode(uavcan_cocobot_ConfigRequest* CANARD_MAYBE_UNUSED(source), void* CANARD_MAYBE_UNUSED(msg_buf))
+/**
+  * @brief uavcan_cocobot_ConfigRequest_encode
+  * @param source : Pointer to source data struct
+  * @param msg_buf: Pointer to msg storage
+  * @retval returns message length as bytes
+  */
+uint32_t uavcan_cocobot_ConfigRequest_encode(uavcan_cocobot_ConfigRequest* source, void* msg_buf)
 {
-    return 0;
+    uint32_t offset = 0;
+
+    offset = uavcan_cocobot_ConfigRequest_encode_internal(source, msg_buf, offset, 1);
+
+    return (offset + 7 ) / 8;
 }
 
-int32_t uavcan_cocobot_ConfigRequest_decode_internal(const CanardRxTransfer* CANARD_MAYBE_UNUSED(transfer),
+/**
+  * @brief uavcan_cocobot_ConfigRequest_decode_internal
+  * @param transfer: Pointer to CanardRxTransfer transfer
+  * @param payload_len: Payload message length
+  * @param dest: Pointer to destination struct
+  * @param dyn_arr_buf: NULL or Pointer to memory storage to be used for dynamic arrays
+  *                     uavcan_cocobot_ConfigRequest dyn memory will point to dyn_arr_buf memory.
+  *                     NULL will ignore dynamic arrays decoding.
+  * @param offset: Call with 0, bit offset to msg storage
+  * @retval offset or ERROR value if < 0
+  */
+int32_t uavcan_cocobot_ConfigRequest_decode_internal(
+  const CanardRxTransfer* transfer,
   uint16_t CANARD_MAYBE_UNUSED(payload_len),
-  uavcan_cocobot_ConfigRequest* CANARD_MAYBE_UNUSED(dest),
+  uavcan_cocobot_ConfigRequest* dest,
   uint8_t** CANARD_MAYBE_UNUSED(dyn_arr_buf),
   int32_t offset)
 {
+    int32_t ret = 0;
+
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 8, false, (void*)&dest->dummy);
+    if (ret != 8)
+    {
+        goto uavcan_cocobot_ConfigRequest_error_exit;
+    }
+    offset += 8;
     return offset;
+
+uavcan_cocobot_ConfigRequest_error_exit:
+    if (ret < 0)
+    {
+        return ret;
+    }
+    else
+    {
+        return -CANARD_ERROR_INTERNAL;
+    }
 }
 
-int32_t uavcan_cocobot_ConfigRequest_decode(const CanardRxTransfer* CANARD_MAYBE_UNUSED(transfer),
-  uint16_t CANARD_MAYBE_UNUSED(payload_len),
-  uavcan_cocobot_ConfigRequest* CANARD_MAYBE_UNUSED(dest),
-  uint8_t** CANARD_MAYBE_UNUSED(dyn_arr_buf))
+/**
+  * @brief uavcan_cocobot_ConfigRequest_decode
+  * @param transfer: Pointer to CanardRxTransfer transfer
+  * @param payload_len: Payload message length
+  * @param dest: Pointer to destination struct
+  * @param dyn_arr_buf: NULL or Pointer to memory storage to be used for dynamic arrays
+  *                     uavcan_cocobot_ConfigRequest dyn memory will point to dyn_arr_buf memory.
+  *                     NULL will ignore dynamic arrays decoding.
+  * @retval offset or ERROR value if < 0
+  */
+int32_t uavcan_cocobot_ConfigRequest_decode(const CanardRxTransfer* transfer,
+  uint16_t payload_len,
+  uavcan_cocobot_ConfigRequest* dest,
+  uint8_t** dyn_arr_buf)
 {
-    return 0;
+    const int32_t offset = 0;
+    int32_t ret = 0;
+
+    // Clear the destination struct
+    for (uint32_t c = 0; c < sizeof(uavcan_cocobot_ConfigRequest); c++)
+    {
+        ((uint8_t*)dest)[c] = 0x00;
+    }
+
+    ret = uavcan_cocobot_ConfigRequest_decode_internal(transfer, payload_len, dest, dyn_arr_buf, offset);
+
+    return ret;
 }
 
 /**

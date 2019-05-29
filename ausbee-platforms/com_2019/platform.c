@@ -411,8 +411,38 @@ uint32_t platform_gpio_get(uint32_t gpio)
 {
   uint32_t value = 0;
 
-  (void)gpio;
-
+  if(gpio & PLATFORM_GPIO_SW_1)
+  {
+    value |= mcual_gpio_get(MCUAL_GPIOC, MCUAL_GPIO_PIN4) ? PLATFORM_GPIO_SW_1 : 0;
+  }
+  if(gpio & PLATFORM_GPIO_SW_2)
+  {
+    value |= mcual_gpio_get(MCUAL_GPIOA, MCUAL_GPIO_PIN7) ? PLATFORM_GPIO_SW_2 : 0;
+  }
+  if(gpio & PLATFORM_GPIO_SW_3)
+  {
+    value |= mcual_gpio_get(MCUAL_GPIOA, MCUAL_GPIO_PIN6) ? PLATFORM_GPIO_SW_3 : 0;
+  }
+  if(gpio & PLATFORM_GPIO_SW_4)
+  {
+    value |= mcual_gpio_get(MCUAL_GPIOA, MCUAL_GPIO_PIN4) ? PLATFORM_GPIO_SW_4 : 0;
+  }
+  if(gpio & PLATFORM_GPIO_SW_5)
+  {
+    value |= mcual_gpio_get(MCUAL_GPIOA, MCUAL_GPIO_PIN3) ? PLATFORM_GPIO_SW_5 : 0;
+  }  
+  if(gpio & PLATFORM_GPIO_SW_6)
+  {
+    value |= mcual_gpio_get(MCUAL_GPIOA, MCUAL_GPIO_PIN2) ? PLATFORM_GPIO_SW_6 : 0;
+  } 
+  if(gpio & PLATFORM_GPIO_SW_7)
+  {
+    value |= mcual_gpio_get(MCUAL_GPIOA, MCUAL_GPIO_PIN1) ? PLATFORM_GPIO_SW_7 : 0;
+  }
+  if(gpio & PLATFORM_GPIO_SW_8)
+  {
+    value |= mcual_gpio_get(MCUAL_GPIOA, MCUAL_GPIO_PIN0) ? PLATFORM_GPIO_SW_8 : 0;
+  }
   return value;
 }
 

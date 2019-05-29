@@ -37,17 +37,20 @@ uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
         static uint8_t transfer_id;
 
         const int size = uavcan_cocobot_ConfigResponse_encode(&config, buf);
-        cocobot_com_broadcast(UAVCAN_COCOBOT_CONFIG_SIGNATURE,
-                              UAVCAN_COCOBOT_CONFIG_ID,
-                              &transfer_id,
-                              CANARD_TRANSFER_PRIORITY_LOW,
-                              buf,
-                              (uint16_t)size);
+        cocobot_com_request_or_respond(transfer->source_node_id,
+                                       UAVCAN_COCOBOT_CONFIG_SIGNATURE,
+                                       UAVCAN_COCOBOT_CONFIG_ID,
+                                       &transfer_id,
+                                       CANARD_TRANSFER_PRIORITY_LOW,
+                                       CanardResponse,
+                                       buf,
+                                       (uint16_t)size);
         vPortFree(buf);
 
         if(config.config & (1 << 0))
         {
           platform_led_set(PLATFORM_LED_RED_1);
+          platform_led_clear(PLATFORM_LED_GREEN_1);
         }
         else
         {
