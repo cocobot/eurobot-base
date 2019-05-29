@@ -13,30 +13,86 @@ void run_homologation(void * arg)
   cocobot_game_state_wait_for_configuration();
   
   //set initial position
+
   switch(cocobot_game_state_get_color())
   {
     case COCOBOT_GAME_STATE_COLOR_NEG:
-      cocobot_position_set_x(-1225 - 60);
-      cocobot_position_set_y(600);
-      cocobot_position_set_angle(0);
+      cocobot_position_set_x(-1350);
+      cocobot_position_set_y(550);
+      cocobot_position_set_angle(90);
       cocobot_game_state_add_points_to_score(1);
       break;
 
     case COCOBOT_GAME_STATE_COLOR_POS:
-      cocobot_position_set_x(1225 + 60);
-      cocobot_position_set_y(600);
-      cocobot_position_set_angle(180);
+      cocobot_position_set_x(1350);
+      cocobot_position_set_y(550);
+      cocobot_position_set_angle(90);
       cocobot_game_state_add_points_to_score(999);
       break;
   }
 
-  cocobot_game_state_wait_for_starter_removed();
-
-  cocobot_trajectory_goto_xy(500, 0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  cocobot_trajectory_goto_xy(500, 500, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  cocobot_trajectory_goto_xy(0, 500, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  cocobot_trajectory_goto_xy(0, 0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  //sort de la zone vers l'experience
+  cocobot_trajectory_goto_d(150, 5000);
   cocobot_trajectory_wait();
+
+  //tourne face a l'autre equipe
+  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+  {
+      cocobot_trajectory_goto_a(0, 5000);
+  }
+  else
+  {
+      cocobot_trajectory_goto_a(180, 5000);
+  }
+
+  cocobot_trajectory_wait();
+
+  //Avance de 20cm
+  cocobot_trajectory_goto_d(300, 5000);
+  cocobot_trajectory_wait();
+
+  //tourne face à la balance
+  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+  {
+      cocobot_trajectory_goto_a(-90, 5000);
+  }
+  else
+  {
+      cocobot_trajectory_goto_a(-90, 5000);
+  }
+  cocobot_trajectory_wait();
+
+  //Avance de 20cm
+  cocobot_trajectory_goto_d(200, 5000);
+  cocobot_trajectory_wait();
+
+  //tourne face à la balance
+  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+  {
+      cocobot_trajectory_goto_a(180, 5000);
+  }
+  else
+  {
+      cocobot_trajectory_goto_a(0, 5000);
+  }
+  cocobot_trajectory_wait();
+
+  //Avance de 30cm
+  cocobot_trajectory_goto_d(300, 5000);
+  cocobot_trajectory_wait();
+
+  
+
+  //cocobot_trajectory_goto_xy(500, 0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  //cocobot_trajectory_goto_xy(500, 500, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  //cocobot_trajectory_goto_xy(0, 500, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  //cocobot_trajectory_goto_xy(0, 0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  //cocobot_trajectory_wait();
+
+  while(1)
+  {
+    vTaskDelay(100/portTICK_PERIOD_MS);
+  }
 
   while(1)
   {
@@ -60,162 +116,6 @@ void run_homologation(void * arg)
     vTaskDelay(100/portTICK_PERIOD_MS);
   }
 
-  //panneau domotique
-  cocobot_game_state_add_points_to_score(5);
-  float x = 325;
-  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
-  {
-    x = -x;
-  }
-  float y = 800;
-  cocobot_trajectory_goto_xy(x, y, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  cocobot_trajectory_wait();
-
-  cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  cocobot_trajectory_wait();
-
-
-  while(1)
-  {
-    cocobot_trajectory_goto_d(-20, 1000);
-    if(cocobot_trajectory_wait() != COCOBOT_TRAJECTORY_SUCCESS)
-    {
-      break;
-    }
-  }
-
-  cocobot_game_state_add_points_to_score(25);
-
-
-
-  int i = 0;
-  for(i = 0; i < 3; i += 1)
-  {
-    cocobot_trajectory_goto_a(-95, 1000);
-    cocobot_trajectory_wait();
-    cocobot_trajectory_goto_a(-85, 1000);
-    cocobot_trajectory_wait();
-  }
-  cocobot_trajectory_goto_a(-90, 2000);
-  cocobot_trajectory_wait();
-
-  vTaskDelay(1000 / portTICK_PERIOD_MS);
-
-  //try 3
-  cocobot_trajectory_goto_d(10, 5000);
-  cocobot_trajectory_wait();
-  cocobot_trajectory_goto_a(-90, 2000);
-  cocobot_trajectory_wait();
-
-
-  while(1)
-  {
-    cocobot_trajectory_goto_d(-20, 1000);
-    if(cocobot_trajectory_wait() != COCOBOT_TRAJECTORY_SUCCESS)
-    {
-      break;
-    }
-  }
-
-  cocobot_trajectory_goto_a(-90, 2000);
-  cocobot_trajectory_wait();
-  cocobot_asserv_set_angle_activation(0);
-  cocobot_trajectory_goto_d(-20, 1500);
-  cocobot_asserv_set_angle_activation(1);
-
-
-
-  cocobot_trajectory_goto_d(20, 2000);
-
-  vTaskDelay(1000 / portTICK_PERIOD_MS);
-
-  while(1)
-  {
-    cocobot_trajectory_goto_d(-20, 1000);
-    if(cocobot_trajectory_wait() != COCOBOT_TRAJECTORY_SUCCESS)
-    {
-      break;
-    }
-  }
-
-
-  cocobot_trajectory_goto_d(100, 5000);
-  cocobot_trajectory_wait();
-
-
-  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
-  {
-    cocobot_trajectory_goto_a(180, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  }
-  else
-  {
-    cocobot_trajectory_goto_a(0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  }
-  cocobot_trajectory_wait();
-
-  cocobot_trajectory_goto_d(150, 5000);
-  cocobot_trajectory_wait();
-
-  cocobot_game_state_add_points_to_score(3);
-
-  cocobot_trajectory_goto_d(-150, 5000);
-  cocobot_trajectory_wait();
-
-
-  cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  cocobot_trajectory_wait();
-
-  cocobot_trajectory_goto_d(100, 5000);
-  cocobot_trajectory_wait();
-
-
-
-  //cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_0);
-  //cocobot_pathfinder_conf_remove_game_element(CUBE_CROSS_1);
-
-  // strat_domotique_register();
-  //cocobot_action_scheduler_start();
-
-  vTaskDelay(100 / portTICK_PERIOD_MS);
-
-  while(cocobot_game_state_get_elapsed_time() < 75000)
-  {
-    vTaskDelay(100 / portTICK_PERIOD_MS);
-  }
-
-
-  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
-  {
-    cocobot_trajectory_goto_a(180 + 35, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  }
-  else
-  {
-    cocobot_trajectory_goto_a(-35, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  }
-  cocobot_trajectory_wait();
-
-  cocobot_trajectory_goto_d(400, 5000);
-  cocobot_trajectory_wait();
-
-  cocobot_trajectory_goto_a(90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  cocobot_trajectory_wait();
-
-
-  cocobot_trajectory_goto_d(250, 5000);
-  cocobot_trajectory_wait();
-  cocobot_game_state_add_points_to_score(2); //
-  while(1)
-  {
-    cocobot_trajectory_goto_d(10, 1000);
-    if(cocobot_trajectory_wait() != COCOBOT_TRAJECTORY_SUCCESS)
-    {
-      break;
-    }
-  }
-  cocobot_trajectory_goto_d(-20, 1000);
-  cocobot_trajectory_wait();
-
-
   while(1)
     vTaskDelay(100/portTICK_PERIOD_MS);
 }
@@ -237,7 +137,7 @@ int main(void)
 
   cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_OPERATIONAL);
 
-
+  //set initial position
   cocobot_position_set_x(0);
   cocobot_position_set_y(0);
   cocobot_position_set_angle(0);
