@@ -258,7 +258,7 @@ void cocobot_arm_action_test_and_print(void)
   cocobot_arm_action_print_pos(0);
   printf("\n-------------------- Move arm 1 arti (0, 0, 0, 0):\n");
   cocobot_arm_move_arti(&arm[1], 0, 0, 0, 0);
-  cocobot_arm_action_print_pos(0);
+  cocobot_arm_action_print_pos(1);
   printf("\n-------------------- Move arm 0 cart (0.3334, -0.012, 0.097, 0)\n");
   cocobot_arm_action_move_arm(0, 0.3334, -0.012, 0.097, 0);
   cocobot_arm_action_print_pos(0);
@@ -271,4 +271,22 @@ void cocobot_arm_action_test_and_print(void)
   printf("\n-------------------- Move arm 1 cart  (0.23, -0.023, 0.13, -42)\n");
   cocobot_arm_action_move_arm(1, 0.23, -0.023, 0.13, -42);
   cocobot_arm_action_print_pos(1);
+}
+
+void cocobot_arm_action_test_multiple_move_arm(void)
+{
+  printf("========== TEST PRINT ==========\n\n");
+  printf("\n-------------------- Move arm 0 arti (0, 0, 0, 0):\n");
+  cocobot_arm_move_arti(&arm[0], 0, 0, 0, 0);
+  //cocobot_arm_action_print_pos(0);
+  printf("\n-------------------- Move arm 0 cart  (0.23, -0.023, 0.13, -42)\n");
+  cocobot_arm_action_move_arm(0, 0.23, -0.023, 0.13, -42);
+  //cocobot_arm_action_print_pos(0);
+  printf("\n-------------------- Move arm 0 cart  (0.23, -0.023, 0.13, -42)\n");
+  cocobot_arm_action_move_arm(0, 0.23, -0.023, 0.13, -42);
+  //cocobot_arm_action_print_pos(0);
+  printf("\n-------------------- Move arm 0 cart  (0.23, -0.023, 0.13, -42)\n");
+  cocobot_arm_action_move_arm(0, 0.23, -0.023, 0.13, -42);
+  //cocobot_arm_action_print_pos(0);
+  printf("\n\n==========END TEST PRINT ==========\n\n");
 }
