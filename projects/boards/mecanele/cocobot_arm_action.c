@@ -238,3 +238,37 @@ void cocobot_arm_action_move_arm(int arm_id, float x, float y, float z, float a)
     printf("Wrong arm_id: %d should be between 0 and 3.\n", arm_id);
   }
 }
+
+void cocobot_arm_action_print_pos(int arm_id)
+{
+  if (arm_id >= 0 && arm_id <= 3)
+  {
+    cocobot_arm_print_pos(&arm[arm_id]);
+  }
+  else
+  {
+    printf("Wrong arm_id: %d should be between 0 and 3.\n", arm_id);
+  }
+}
+
+void cocobot_arm_action_test_and_print(void)
+{
+  printf("\n-------------------- Move arm 0 arti (0, 0, 0, 0):\n");
+  cocobot_arm_move_arti(&arm[0], 0, 0, 0, 0);
+  cocobot_arm_action_print_pos(0);
+  printf("\n-------------------- Move arm 1 arti (0, 0, 0, 0):\n");
+  cocobot_arm_move_arti(&arm[1], 0, 0, 0, 0);
+  cocobot_arm_action_print_pos(0);
+  printf("\n-------------------- Move arm 0 cart (0.3334, -0.012, 0.097, 0)\n");
+  cocobot_arm_action_move_arm(0, 0.3334, -0.012, 0.097, 0);
+  cocobot_arm_action_print_pos(0);
+  printf("\n-------------------- Move arm 1 cart (0.3334, -0.012, 0.097, 0)\n");
+  cocobot_arm_action_move_arm(1, 0.3334, -0.012, 0.097, 0);
+  cocobot_arm_action_print_pos(1);
+  printf("\n-------------------- Move arm 0 cart  (0.23, -0.023, 0.13, -42)\n");
+  cocobot_arm_action_move_arm(0, 0.23, -0.023, 0.13, -42);
+  cocobot_arm_action_print_pos(0);
+  printf("\n-------------------- Move arm 1 cart  (0.23, -0.023, 0.13, -42)\n");
+  cocobot_arm_action_move_arm(1, 0.23, -0.023, 0.13, -42);
+  cocobot_arm_action_print_pos(1);
+}

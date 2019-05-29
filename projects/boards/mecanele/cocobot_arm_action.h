@@ -15,5 +15,7 @@ void cocobot_arm_action_depose_balance(int arm_id, float angle);
 void cocobot_arm_action_depose_accelerateur_particules(int arm_id, float angle, float distance);
 void cocobot_arm_action_depose_case(int arm_id, float angle);
 void cocobot_arm_action_move_arm(int arm_id, float x, float y, float z, float a);
+void cocobot_arm_action_print_pos(int arm_id);
+void cocobot_arm_action_test_and_print(void);
 
 #endif /* COCOBOT_ARM_ACTION_H */
