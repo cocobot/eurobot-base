@@ -37,7 +37,6 @@ uint8_t com_should_accept_transfer(uint64_t* out_data_type_signature,
 		uint8_t source_node_id)
 {
 	(void)source_node_id;
-		return false;
 
 	//accept servo setpoint cmd
 	if ((transfer_type == CanardTransferTypeRequest) &&

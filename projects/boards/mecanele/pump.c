@@ -141,7 +141,7 @@ static void pump_thread(void * arg)
 
       for(i = 0; i < 2; i += 1)
       {
-        if(_sucker_status[id + 1])
+        if(_sucker_status[id + i])
         {
           if(id < 2)
           {
@@ -152,9 +152,9 @@ static void pump_thread(void * arg)
             platform_gpio_set(PUMP_2);
           }
           vTaskDelay(100/portTICK_PERIOD_MS);
-          platform_gpio_set(_sucker_id[id + 1]);
+          platform_gpio_set(_sucker_id[id + i]);
           vTaskDelay(800/portTICK_PERIOD_MS);
-          platform_gpio_clear(_sucker_id[id + 1]);
+          platform_gpio_clear(_sucker_id[id + i]);
           vTaskDelay(100/portTICK_PERIOD_MS);
           if(id < 2)
           {
@@ -178,9 +178,9 @@ static void pump_thread(void * arg)
             platform_gpio_set(EMPTY_SOL_2);
           }
           vTaskDelay(100/portTICK_PERIOD_MS);
-          platform_gpio_set(_sucker_id[id + 1]);
+          platform_gpio_set(_sucker_id[id + i]);
           vTaskDelay(400/portTICK_PERIOD_MS);
-          platform_gpio_clear(_sucker_id[id + 1]);
+          platform_gpio_clear(_sucker_id[id + i]);
           vTaskDelay(100/portTICK_PERIOD_MS);
           if(id < 2)
           {
