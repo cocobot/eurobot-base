@@ -39,12 +39,40 @@ name="Mecanele"
 id=15
 uid=""
 path="../../boards/mecanele/Output/mecanele.bin"
-simu="../../boards/mecanele/Output/mecanele.sim"
+#simu="../../boards/mecanele/Output/mecanele.sim"
 
 
 
 #ID 30->49 secondary robot
+[[boards]]
+name="Scom"
+id=30
+uid="[2B 00 20 00 18 51 35 33 34 39 30 32 00 00 00 00]"
 
+[[boards]]
+name="Sbrain"
+id=31
+uid="[2C 00 24 00 18 51 35 33 34 39 30 32 00 00 00 00]"
+path="../../boards/sbrain/Output/sbrain.bin"
+simu="../../boards/sbrain/Output/sbrain.sim"
+
+[[boards]]
+name="Canon S/G"
+id=32
+uid=""
+path="../../boards/canon/Output/canon.hex"
+
+[[boards]]
+name="Canon S/D"
+id=33
+uid=""
+path="../../boards/canon/Output/canon.hex"
+
+[[boards]]
+name="Mecanele"
+id=35
+uid=""
+path="../../boards/smecanele/Output/mecanele.bin"
 
 #ID 50->59 beacons, funny action
 
