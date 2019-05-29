@@ -6,10 +6,29 @@
 
 extern cocobot_pathfinder_table_init_s initTable [];
 
-
 void run_homologation(void * arg)
 {
   (void)arg;
+
+  cocobot_game_state_wait_for_configuration();
+  
+  //set initial position
+  switch(cocobot_game_state_get_color())
+  {
+    case COCOBOT_GAME_STATE_COLOR_NEG:
+      cocobot_position_set_x(-1225 - 60);
+      cocobot_position_set_y(600);
+      cocobot_position_set_angle(0);
+      cocobot_game_state_add_points_to_score(1);
+      break;
+
+    case COCOBOT_GAME_STATE_COLOR_POS:
+      cocobot_position_set_x(1225 + 60);
+      cocobot_position_set_y(600);
+      cocobot_position_set_angle(180);
+      cocobot_game_state_add_points_to_score(999);
+      break;
+  }
 
   cocobot_game_state_wait_for_starter_removed();
 
@@ -218,21 +237,6 @@ int main(void)
 
   cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_OPERATIONAL);
 
-  //set initial position
-  switch(cocobot_game_state_get_color())
-  {
-    case COCOBOT_GAME_STATE_COLOR_NEG:
-      cocobot_position_set_x(-1225 - 60);
-      cocobot_position_set_y(600);
-      cocobot_position_set_angle(0);
-      break;
-
-    case COCOBOT_GAME_STATE_COLOR_POS:
-      cocobot_position_set_x(1225 + 60);
-      cocobot_position_set_y(600);
-      cocobot_position_set_angle(180);
-      break;
-  }
 
   cocobot_position_set_x(0);
   cocobot_position_set_y(0);
