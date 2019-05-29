@@ -74,6 +74,11 @@ static void cocobot_com_fill_status(uavcan_protocol_NodeStatus * ns)
   ns->vendor_specific_status_code = 0;
 }
 
+__attribute((weak)) void com_async(uint64_t timestamp_us)
+{
+  (void)timestamp_us;
+}
+
 static void cocobot_com_on_transfer_received(CanardInstance* ins,
                                              CanardRxTransfer* transfer)
 {
@@ -657,6 +662,10 @@ uint64_t cocobot_com_process_event(void)
  #ifdef CONFIG_LIBCOCOBOT_GAME_STATE 
   cocobot_game_state_com_async(_timestamp_us);
 #endif
+#ifdef CONFIG_LIBCOCOBOT_COM_USER_HANDLER
+  com_async(_timestamp_us);
+#endif
+
   
   if (_timestamp_us >= _next_1hz_service_at)
   {

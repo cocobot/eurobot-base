@@ -3,6 +3,7 @@
 #include <platform.h>
 #include <cocobot.h>
 #include <stdio.h>
+#include "meca.h"
 
 extern cocobot_pathfinder_table_init_s initTable [];
 
@@ -32,6 +33,8 @@ void run_homologation(void * arg)
   }
     
   cocobot_game_state_wait_for_starter_removed();
+
+  meca_action(0, MECA_TAKE_FLOOR);
 
   //sort de la zone vers l'experience
   cocobot_trajectory_goto_d(150, COCOBOT_TRAJECTORY_UNLIMITED_TIME);

@@ -163,13 +163,11 @@ impl MecaWindow {
                   });
                 }
                 {
-                  let arm = arm.clone();
                   let btn : gtk::Button = builder.get_object("btn_init").unwrap();
                   btn.connect_clicked( move |_| {
                     PMECA.with(|meca| {
                           let meca = meca.borrow();
-                          meca.cmd(&format!("meca 15 1 {} 0 0 0 0 0",
-                            arm.get_text().unwrap().as_str()
+                          meca.cmd(&format!("meca 15 1 0 0 0 0 0 0"
                           ));
                      });
                   });
