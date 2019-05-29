@@ -9,7 +9,7 @@
 #define EMPTY_SOL_1  PLATFORM_GPIO_VALVE1
 #define EMPTY_SOL_2  PLATFORM_GPIO_VALVE8
 
-uint8_t _sucker_status[4];
+uint8_t volatile _sucker_status[4];
 uint32_t _sucker_id[4] = {
   PLATFORM_GPIO_VALVE4,
   PLATFORM_GPIO_VALVE2,
@@ -17,6 +17,7 @@ uint32_t _sucker_id[4] = {
   PLATFORM_GPIO_VALVE6,
 };
 
+/*
 static void pump_check(uint8_t id)
 {
   if(_sucker_status[id])
@@ -63,6 +64,7 @@ static void pump_check(uint8_t id)
     platform_gpio_clear(EMPTY_SOL_2);
   }
 }
+*/
 
 static void pump_thread(void * arg)
 {
@@ -79,21 +81,121 @@ static void pump_thread(void * arg)
     vTaskDelay(500/portTICK_PERIOD_MS);
   }
 
+  int id = 0;
+  if(p2)
+  {
+    id += 2;
+  }
+
   while(1)
   {
-    int i;
-    for(i = 0; i < 2; i += 1)
+    if(!_sucker_status[id] && !_sucker_status[id + 1])
     {
-      if(p2)
+      //no pump, empty suckers
+      switch(p2)
       {
-        pump_check(i + 0);
+        case 0:
+          platform_gpio_clear(PUMP_1);
+          platform_gpio_set(EMPTY_SOL_1);
+          break;
+
+        case 1:
+          platform_gpio_clear(PUMP_2);
+          platform_gpio_set(EMPTY_SOL_2);
+          break;
       }
-      else
+
+      vTaskDelay(100/portTICK_PERIOD_MS);
+    }
+    else
+    {
+      int i;
+      for(i = 0; i < 2; i += 1)
       {
-        pump_check(i + 2);
+        if(_sucker_status[id + i] == 2)
+        {
+          //start pump
+          switch(p2)
+          {
+            case 0:
+              platform_gpio_set(PUMP_1);
+              break;
+
+            case 1:
+              platform_gpio_set(PUMP_2);
+              break;
+          }
+          vTaskDelay(100/portTICK_PERIOD_MS);
+
+          //start pumping
+          platform_gpio_set(_sucker_id[id + i]);
+          vTaskDelay(500/portTICK_PERIOD_MS);
+          _sucker_status[id + i] = 1;
+          vTaskDelay(500/portTICK_PERIOD_MS);
+
+          //stop sucker
+          platform_gpio_clear(_sucker_id[id]);
+          vTaskDelay(100/portTICK_PERIOD_MS);
+        }
+      } 
+
+      for(i = 0; i < 2; i += 1)
+      {
+        if(_sucker_status[id + 1])
+        {
+          if(id < 2)
+          {
+            platform_gpio_set(PUMP_1);
+          }
+          else
+          {
+            platform_gpio_set(PUMP_2);
+          }
+          vTaskDelay(100/portTICK_PERIOD_MS);
+          platform_gpio_set(_sucker_id[id + 1]);
+          vTaskDelay(800/portTICK_PERIOD_MS);
+          platform_gpio_clear(_sucker_id[id + 1]);
+          vTaskDelay(100/portTICK_PERIOD_MS);
+          if(id < 2)
+          {
+            platform_gpio_clear(PUMP_1);
+            platform_gpio_clear(EMPTY_SOL_1);
+          }
+          else
+          {
+            platform_gpio_clear(PUMP_2);
+            platform_gpio_clear(EMPTY_SOL_2);
+          }
+        }
+        else
+        {
+          if(id < 2)
+          {
+            platform_gpio_set(EMPTY_SOL_1);
+          }
+          else
+          {
+            platform_gpio_set(EMPTY_SOL_2);
+          }
+          vTaskDelay(100/portTICK_PERIOD_MS);
+          platform_gpio_set(_sucker_id[id + 1]);
+          vTaskDelay(400/portTICK_PERIOD_MS);
+          platform_gpio_clear(_sucker_id[id + 1]);
+          vTaskDelay(100/portTICK_PERIOD_MS);
+          if(id < 2)
+          {
+            platform_gpio_clear(PUMP_1);
+            platform_gpio_clear(EMPTY_SOL_1);
+          }
+          else
+          {
+            platform_gpio_clear(PUMP_2);
+            platform_gpio_clear(EMPTY_SOL_2);
+          }
+        }
       }
     }
-  } 
+  }
 }
 
 void pump_init(void)

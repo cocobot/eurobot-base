@@ -15,7 +15,6 @@ static void thread(void * arg)
 {
   (void)arg;
   pump_init();
-  cocobot_arm_action_init();
 
   while(1)
   {
@@ -38,6 +37,7 @@ uint8_t com_should_accept_transfer(uint64_t* out_data_type_signature,
 		uint8_t source_node_id)
 {
 	(void)source_node_id;
+		return false;
 
 	//accept servo setpoint cmd
 	if ((transfer_type == CanardTransferTypeRequest) &&
@@ -81,11 +81,10 @@ uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
 );
 
 	IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_PUMP, uavcan_cocobot_PumpRequest,
-      pump_set_state(data.pump_id, data.action);
+      pump_set_state(data.pump_id, data.action ? 2 : 0);
 );
 
 	IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_MECAACTION, uavcan_cocobot_MecaActionRequest,
-      cocobot_com_printf(COM_DEBUG, "TEST");
       switch(data.req)
       {
         case UAVCAN_COCOBOT_MECAACTION_REQUEST_STATUS:
