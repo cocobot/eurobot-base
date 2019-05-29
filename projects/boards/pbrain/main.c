@@ -30,55 +30,57 @@ void run_homologation(void * arg)
       cocobot_game_state_add_points_to_score(999);
       break;
   }
+    
+  cocobot_game_state_wait_for_starter_removed();
 
   //sort de la zone vers l'experience
-  cocobot_trajectory_goto_d(150, 5000);
+  cocobot_trajectory_goto_d(150, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   cocobot_trajectory_wait();
 
   //tourne face a l'autre equipe
   if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
   {
-      cocobot_trajectory_goto_a(0, 5000);
+      cocobot_trajectory_goto_a(0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   }
   else
   {
-      cocobot_trajectory_goto_a(180, 5000);
+      cocobot_trajectory_goto_a(180, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   }
 
   cocobot_trajectory_wait();
 
   //Avance de 20cm
-  cocobot_trajectory_goto_d(300, 5000);
+  cocobot_trajectory_goto_d(300, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   cocobot_trajectory_wait();
 
   //tourne face à la balance
   if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
   {
-      cocobot_trajectory_goto_a(-90, 5000);
+      cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   }
   else
   {
-      cocobot_trajectory_goto_a(-90, 5000);
+      cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   }
   cocobot_trajectory_wait();
 
   //Avance de 20cm
-  cocobot_trajectory_goto_d(200, 5000);
+  cocobot_trajectory_goto_d(200, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   cocobot_trajectory_wait();
 
   //tourne face à la balance
   if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
   {
-      cocobot_trajectory_goto_a(180, 5000);
+      cocobot_trajectory_goto_a(180, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   }
   else
   {
-      cocobot_trajectory_goto_a(0, 5000);
+      cocobot_trajectory_goto_a(0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   }
   cocobot_trajectory_wait();
 
   //Avance de 30cm
-  cocobot_trajectory_goto_d(300, 5000);
+  cocobot_trajectory_goto_d(300, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   cocobot_trajectory_wait();
 
   

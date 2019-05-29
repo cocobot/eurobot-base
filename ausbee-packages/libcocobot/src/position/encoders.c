@@ -61,11 +61,11 @@ void cocobot_encoders_get_motor_position(int32_t motor_position[2])
 #elif defined(CONFIG_ENCODER_QUAD)
 
 #ifdef AUSBEE_SIM
-  motor_position[0] = mcual_timer_get_value(MCUAL_TIMER2);
-  motor_position[1] = mcual_timer_get_value(MCUAL_TIMER5);
+  motor_position[0] = mcual_timer_get_value(MCUAL_TIMER5);
+  motor_position[1] = mcual_timer_get_value(MCUAL_TIMER2);
 #else
-  motor_position[0] = mcual_timer_get_value(MCUAL_TIMER2);
-  motor_position[1] = -mcual_timer_get_value(MCUAL_TIMER5);
+  motor_position[0] = -mcual_timer_get_value(MCUAL_TIMER5);
+  motor_position[1] = mcual_timer_get_value(MCUAL_TIMER2);
 #endif
 
 #endif
