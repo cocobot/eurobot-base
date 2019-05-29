@@ -9,11 +9,18 @@ void cocobot_arm_init(cocobot_arm_t * arm_ref,
   arm_ref->get_current_servo_angles_function = get_current_servo_angles_function;
   arm_ref->update_servo_angles_function = update_servo_angles_function;
 
+  arm_ref->arm_direction_deg = 0;
+
   // Set arm_ref->current_joint_pos to current servo angles
   (*(arm_ref->get_current_servo_angles_function))(&(arm_ref->current_joint_pos));
 
   // Update cartesian position
   cocobot_kinematics_compute_forward(&(arm_ref->current_joint_pos), &(arm_ref->current_cartesian_pos));
+}
+
+void cocobot_arm_set_direction(cocobot_arm_t * arm_ref, float direction_deg)
+{
+  arm_ref->arm_direction_deg = direction_deg;
 }
 
 void cocobot_arm_move_arti(cocobot_arm_t * arm_ref, float a1_deg, float a2_deg, float a3_deg, float a4_deg)
@@ -23,11 +30,14 @@ void cocobot_arm_move_arti(cocobot_arm_t * arm_ref, float a1_deg, float a2_deg, 
   arm_ref->current_joint_pos.a3_deg = a3_deg;
   arm_ref->current_joint_pos.a4_deg = a4_deg;
 
-  // Send command to update servo angles
-  (*(arm_ref->update_servo_angles_function))(&(arm_ref->current_joint_pos));
-
   // Update cartesian position
   cocobot_kinematics_compute_forward(&(arm_ref->current_joint_pos), &(arm_ref->current_cartesian_pos));
+
+  // Correction de l'orientation du plateau tournant en fonction du bras choisi
+  arm_ref->current_joint_pos.a1_deg = arm_ref->current_joint_pos.a1_deg - arm_ref->arm_direction_deg;
+
+  // Send command to update servo angles
+  (*(arm_ref->update_servo_angles_function))(&(arm_ref->current_joint_pos));
 }
 
 void cocobot_arm_move_cartesian(cocobot_arm_t * arm_ref, float x, float y, float z, float alpha_deg)
@@ -39,6 +49,9 @@ void cocobot_arm_move_cartesian(cocobot_arm_t * arm_ref, float x, float y, float
 
   // Update joint position
   cocobot_kinematics_compute_inverse(&(arm_ref->current_cartesian_pos), &(arm_ref->current_joint_pos));
+
+  // Correction de l'orientation du plateau tournant en fonction du bras choisi
+  arm_ref->current_joint_pos.a1_deg = arm_ref->current_joint_pos.a1_deg - arm_ref->arm_direction_deg;
 
   // Send command to update servo angles
   (*(arm_ref->update_servo_angles_function))(&(arm_ref->current_joint_pos));

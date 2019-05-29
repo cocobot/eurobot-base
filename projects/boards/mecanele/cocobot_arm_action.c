@@ -41,33 +41,33 @@ static void arm3_get_current_servo_angles_function(cocobot_joint_pos_t * joint_p
 static void arm0_update_servo_angles_function(const cocobot_joint_pos_t * joint_pos)
 {
   servo_set_angle(12, joint_pos->a1_deg); 
-  servo_set_angle(0, joint_pos->a1_deg); 
-  servo_set_angle(1, joint_pos->a1_deg); 
-  servo_set_angle(2, joint_pos->a1_deg); 
+  servo_set_angle(0,  joint_pos->a2_deg);
+  servo_set_angle(1,  joint_pos->a3_deg);
+  servo_set_angle(2,  joint_pos->a4_deg);
 }
 
 static void arm1_update_servo_angles_function(const cocobot_joint_pos_t * joint_pos)
 {
   servo_set_angle(12, joint_pos->a1_deg); 
-  servo_set_angle(3, joint_pos->a1_deg); 
-  servo_set_angle(4, joint_pos->a1_deg); 
-  servo_set_angle(5, joint_pos->a1_deg); 
+  servo_set_angle(3,  joint_pos->a2_deg);
+  servo_set_angle(4,  joint_pos->a3_deg);
+  servo_set_angle(5,  joint_pos->a4_deg);
 }
 
 static void arm2_update_servo_angles_function(const cocobot_joint_pos_t * joint_pos)
 {
   servo_set_angle(12, joint_pos->a1_deg); 
-  servo_set_angle(6, joint_pos->a1_deg); 
-  servo_set_angle(7, joint_pos->a1_deg); 
-  servo_set_angle(8, joint_pos->a1_deg); 
+  servo_set_angle(6,  joint_pos->a2_deg);
+  servo_set_angle(7,  joint_pos->a3_deg);
+  servo_set_angle(8,  joint_pos->a4_deg);
 }
 
 static void arm3_update_servo_angles_function(const cocobot_joint_pos_t * joint_pos)
 {
   servo_set_angle(12, joint_pos->a1_deg); 
-  servo_set_angle(9, joint_pos->a1_deg); 
-  servo_set_angle(10, joint_pos->a1_deg); 
-  servo_set_angle(11, joint_pos->a1_deg); 
+  servo_set_angle(9,  joint_pos->a2_deg);
+  servo_set_angle(10, joint_pos->a3_deg);
+  servo_set_angle(11, joint_pos->a4_deg);
 }
 
 void cocobot_arm_action_init(void)
@@ -84,10 +84,17 @@ void cocobot_arm_action_init(void)
                                           0.000, 0.37,
                                            -180,  180);
 
+  // Front arm
   cocobot_arm_init(&arm[0], &arm0_get_current_servo_angles_function, &arm0_update_servo_angles_function);
+  // Left arm
   cocobot_arm_init(&arm[1], &arm1_get_current_servo_angles_function, &arm1_update_servo_angles_function);
+  cocobot_arm_set_direction(&arm[1], 90);
+  // Back arm
   cocobot_arm_init(&arm[2], &arm2_get_current_servo_angles_function, &arm2_update_servo_angles_function);
+  cocobot_arm_set_direction(&arm[2], 180);
+  // Right arm
   cocobot_arm_init(&arm[3], &arm3_get_current_servo_angles_function, &arm3_update_servo_angles_function);
+  cocobot_arm_set_direction(&arm[3], -90);
 }
 
 void cocobot_arm_action_prendre_palais_sol(int arm_id, float x, float y)
@@ -230,4 +237,56 @@ void cocobot_arm_action_move_arm(int arm_id, float x, float y, float z, float a)
   {
     printf("Wrong arm_id: %d should be between 0 and 3.\n", arm_id);
   }
+}
+
+void cocobot_arm_action_print_pos(int arm_id)
+{
+  if (arm_id >= 0 && arm_id <= 3)
+  {
+    cocobot_arm_print_pos(&arm[arm_id]);
+  }
+  else
+  {
+    printf("Wrong arm_id: %d should be between 0 and 3.\n", arm_id);
+  }
+}
+
+void cocobot_arm_action_test_and_print(void)
+{
+  printf("\n-------------------- Move arm 0 arti (0, 0, 0, 0):\n");
+  cocobot_arm_move_arti(&arm[0], 0, 0, 0, 0);
+  cocobot_arm_action_print_pos(0);
+  printf("\n-------------------- Move arm 1 arti (0, 0, 0, 0):\n");
+  cocobot_arm_move_arti(&arm[1], 0, 0, 0, 0);
+  cocobot_arm_action_print_pos(1);
+  printf("\n-------------------- Move arm 0 cart (0.3334, -0.012, 0.097, 0)\n");
+  cocobot_arm_action_move_arm(0, 0.3334, -0.012, 0.097, 0);
+  cocobot_arm_action_print_pos(0);
+  printf("\n-------------------- Move arm 1 cart (0.3334, -0.012, 0.097, 0)\n");
+  cocobot_arm_action_move_arm(1, 0.3334, -0.012, 0.097, 0);
+  cocobot_arm_action_print_pos(1);
+  printf("\n-------------------- Move arm 0 cart  (0.23, -0.023, 0.13, -42)\n");
+  cocobot_arm_action_move_arm(0, 0.23, -0.023, 0.13, -42);
+  cocobot_arm_action_print_pos(0);
+  printf("\n-------------------- Move arm 1 cart  (0.23, -0.023, 0.13, -42)\n");
+  cocobot_arm_action_move_arm(1, 0.23, -0.023, 0.13, -42);
+  cocobot_arm_action_print_pos(1);
+}
+
+void cocobot_arm_action_test_multiple_move_arm(void)
+{
+  printf("========== TEST PRINT ==========\n\n");
+  printf("\n-------------------- Move arm 0 arti (0, 0, 0, 0):\n");
+  cocobot_arm_move_arti(&arm[0], 0, 0, 0, 0);
+  //cocobot_arm_action_print_pos(0);
+  printf("\n-------------------- Move arm 0 cart  (0.23, -0.023, 0.13, -42)\n");
+  cocobot_arm_action_move_arm(0, 0.23, -0.023, 0.13, -42);
+  //cocobot_arm_action_print_pos(0);
+  printf("\n-------------------- Move arm 0 cart  (0.23, -0.023, 0.13, -42)\n");
+  cocobot_arm_action_move_arm(0, 0.23, -0.023, 0.13, -42);
+  //cocobot_arm_action_print_pos(0);
+  printf("\n-------------------- Move arm 0 cart  (0.23, -0.023, 0.13, -42)\n");
+  cocobot_arm_action_move_arm(0, 0.23, -0.023, 0.13, -42);
+  //cocobot_arm_action_print_pos(0);
+  printf("\n\n==========END TEST PRINT ==========\n\n");
 }
