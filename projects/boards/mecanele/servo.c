@@ -3,6 +3,7 @@
 #include <math.h>
 #include "servo.h"
 #include "cocobot_config.h"
+#include "cocobot.h"
 
 typedef struct 
 {
@@ -52,8 +53,8 @@ float servo_get_angle(unsigned int servo_id)
 
 void servo_set_angle(unsigned int servo_id, float angle)
 {
-  float current_sp = _servos[servo_id].setpoint_pwm;
-
+  float current_sp = angle;
+  
   if(isnan(angle))
   {
     _servos[servo_id].setpoint_pwm = 0;
