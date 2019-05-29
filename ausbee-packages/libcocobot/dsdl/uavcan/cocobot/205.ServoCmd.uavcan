@@ -1,6 +1,6 @@
 uint8 mode
 uint8 servo_id
-uint16 value
+int16 value
 
 ---
 

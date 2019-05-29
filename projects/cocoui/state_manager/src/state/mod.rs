@@ -222,7 +222,7 @@ impl StateManager {
                         Ok(v) => v,
                         Err(_) => return,
                         };
-                        let value = match split[4].to_string().parse::<u16>() {
+                        let value = match split[4].to_string().parse::<i16>() {
                         Ok(v) => v,
                         Err(_) => return,
                         };

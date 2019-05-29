@@ -38,12 +38,12 @@ impl XV11 {
         
         thread::spawn(move || {
             loop {
-                match TcpStream::connect("192.168.0.1:2112") {
+                match TcpStream::connect("169.254.100.240:2111") {
                     Ok(mut stream) => {
                         println!("Successfully connected to server");
 
                         //start measurements
-                        let msg = b"\x02sEN LMDscandata 1!\x03";
+                        let msg = b"\x02sRN LMDscandata\x03";
                         stream.write(msg).unwrap();
 
                         let mut buffer : Vec<u8> = Vec::new();
