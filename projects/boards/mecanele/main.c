@@ -42,6 +42,27 @@ static void thread(void * arg)
           cocobot_arm_action_repos_normal(_arm);
           break;
 
+        case UAVCAN_COCOBOT_MECAACTION_REQUEST_TAKE_ACCELL:
+          cocobot_arm_action_prise_bluenium(_arm, 0);
+#if 0
+          pump_set_state(_arm, 2);
+          while(pump_get_state(_arm) != 1)
+          {
+            vTaskDelay(100/portTICK_PERIOD_MS);
+          }
+          cocobot_arm_action_repos_normal(_arm);
+#endif
+          break;
+
+        case UAVCAN_COCOBOT_MECAACTION_REQUEST_DROP_ACCELL:
+          cocobot_arm_action_depose_accelerateur_particules(_arm, 0, 0);
+#if 0
+          pump_set_state(_arm, 0);
+          vTaskDelay(1000/portTICK_PERIOD_MS);
+          cocobot_arm_action_repos_vide(_arm);
+#endif
+          break;
+
         case UAVCAN_COCOBOT_MECAACTION_REQUEST_REST_EMPTY:
           cocobot_arm_action_repos_vide(_arm);
           break;

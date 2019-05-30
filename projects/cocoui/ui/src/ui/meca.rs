@@ -172,6 +172,30 @@ impl MecaWindow {
                      });
                   });
                 }
+                {
+                  let arm = arm.clone();
+                  let btn : gtk::Button = builder.get_object("btn_tk_accel").unwrap();
+                  btn.connect_clicked( move |_| {
+                    PMECA.with(|meca| {
+                          let meca = meca.borrow();
+                          meca.cmd(&format!("meca 15 3 {} 0 0 0 0 0",
+                            arm.get_text().unwrap().as_str() 
+                          ));
+                     });
+                  });
+                }
+                {
+                  let arm = arm.clone();
+                  let btn : gtk::Button = builder.get_object("btn_pos_accel").unwrap();
+                  btn.connect_clicked( move |_| {
+                    PMECA.with(|meca| {
+                          let meca = meca.borrow();
+                          meca.cmd(&format!("meca 15 11 {} 0 0 0 0 0",
+                            arm.get_text().unwrap().as_str() 
+                          ));
+                     });
+                  });
+                }
 
                 for i in 0..4 {
                   let btn : gtk::Button = builder.get_object(&format!("btn_pompe_on_{}", i)).unwrap();
