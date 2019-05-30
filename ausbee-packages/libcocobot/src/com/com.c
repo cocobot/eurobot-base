@@ -74,11 +74,6 @@ static void cocobot_com_fill_status(uavcan_protocol_NodeStatus * ns)
   ns->vendor_specific_status_code = 0;
 }
 
-__attribute((weak)) void com_async(uint64_t timestamp_us)
-{
-  (void)timestamp_us;
-}
-
 static void cocobot_com_on_transfer_received(CanardInstance* ins,
                                              CanardRxTransfer* transfer)
 {

@@ -113,6 +113,10 @@ uint8_t com_should_accept_transfer(uint64_t* out_data_type_signature,
 	return false;
 }
 
+void com_async(uint64_t timestamp_us)
+{
+}
+
 uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
 {
 	IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_SERVOCMD, uavcan_cocobot_ServoCmdRequest,

@@ -4,7 +4,7 @@
 #include <semphr.h>
 #include "uavcan/cocobot/MecaAction.h"
 
-volatile uint8_t _meca_busy = 0;
+static volatile uint8_t _meca_busy = 0;
 static uint64_t _next_10hz_service_at = 0;
 static volatile uint8_t _req = 0;
 static volatile uint8_t _req_needed = 0;

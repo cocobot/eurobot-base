@@ -37,6 +37,7 @@ uint8_t com_should_accept_transfer(uint64_t* out_data_type_signature,
                                    CanardTransferType transfer_type,
                                    uint8_t source_node_id);
 uint8_t com_on_transfer_received(CanardRxTransfer* transfer);
+void com_async(uint64_t timestamp_us);
 
 void cocobot_com_printf(uint8_t level, char * fmt, ...);
 
