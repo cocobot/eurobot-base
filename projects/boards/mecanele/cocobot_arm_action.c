@@ -6,6 +6,7 @@
 
 static cocobot_arm_t arm[4] = {0};
 
+#if 0
 static void arm0_get_current_servo_angles_function(cocobot_joint_pos_t * joint_pos)
 {
   joint_pos->a1_deg = servo_get_angle(12);
@@ -69,38 +70,55 @@ static void arm3_update_servo_angles_function(const cocobot_joint_pos_t * joint_
   servo_set_angle(10, joint_pos->a3_deg);
   servo_set_angle(11, joint_pos->a4_deg);
 }
-
+#endif
 void cocobot_arm_action_init(void)
 {
-  cocobot_kinematics_init_DH_parameters(0.0971, 0.0637, 0.150, 0.080, 0.040, -0.0117);
+  //cocobot_kinematics_init_DH_parameters(0.0971, 0.0637, 0.150, 0.080, 0.040, -0.0117);
 
-  cocobot_kinematics_set_angle_limits(-180, 180,
-                                      - 90,  90,
-                                      -160, 160,
-                                      - 90,  90);
+  //cocobot_kinematics_set_angle_limits(-180, 180,
+  //                                    - 90,  90,
+  //                                    -160, 160,
+  //                                    - 90,  90);
 
-  cocobot_kinematics_set_cartesian_limits(0.000, 0.3337,
-                                         -0.370, 0.37,
-                                          0.000, 0.37,
-                                           -180,  180);
+  //cocobot_kinematics_set_cartesian_limits(0.000, 0.3337,
+  //                                       -0.370, 0.37,
+  //                                        0.000, 0.37,
+  //                                         -180,  180);
 
-  // Front arm
-  cocobot_arm_init(&arm[0], &arm0_get_current_servo_angles_function, &arm0_update_servo_angles_function);
-  // Left arm
-  cocobot_arm_init(&arm[1], &arm1_get_current_servo_angles_function, &arm1_update_servo_angles_function);
-  cocobot_arm_set_direction(&arm[1], 90);
-  // Back arm
-  cocobot_arm_init(&arm[2], &arm2_get_current_servo_angles_function, &arm2_update_servo_angles_function);
-  cocobot_arm_set_direction(&arm[2], 180);
-  // Right arm
-  cocobot_arm_init(&arm[3], &arm3_get_current_servo_angles_function, &arm3_update_servo_angles_function);
-  cocobot_arm_set_direction(&arm[3], -90);
+  //// Front arm
+  //cocobot_arm_init(&arm[0], &arm0_get_current_servo_angles_function, &arm0_update_servo_angles_function);
+  //// Left arm
+  //cocobot_arm_init(&arm[1], &arm1_get_current_servo_angles_function, &arm1_update_servo_angles_function);
+  //cocobot_arm_set_direction(&arm[1], 90);
+  //// Back arm
+  //cocobot_arm_init(&arm[2], &arm2_get_current_servo_angles_function, &arm2_update_servo_angles_function);
+  //cocobot_arm_set_direction(&arm[2], 180);
+  //// Right arm
+  //cocobot_arm_init(&arm[3], &arm3_get_current_servo_angles_function, &arm3_update_servo_angles_function);
+  //cocobot_arm_set_direction(&arm[3], -90);
+  
+  for(int i = 0; i <= 3; i++)
+  {
+      cocobot_arm_action_repos_vide(i);
+  }
 }
 
 void cocobot_arm_action_prendre_palais_sol(int arm_id, float x, float y)
 {
   if (arm_id >= 0 && arm_id <= 3)
   {
+    if((arm_id == 1) || (arm_id == 3))
+    {
+        servo_set_angle(arm_id*3 + 2, 0);
+        servo_set_angle(arm_id*3 + 1, -110);
+        servo_set_angle(arm_id*3, 10);
+    }
+    else
+    {
+        servo_set_angle(arm_id*3 + 2, 8);
+        servo_set_angle(arm_id*3 + 1, -120);
+        servo_set_angle(arm_id*3, 10);
+    }
     // TODO: à régler !
     //cocobot_arm_move_cartesian(arm[arm_id], x, y, z, alpha_deg);
   }
@@ -110,6 +128,12 @@ void cocobot_arm_action_prendre_palais_sol(int arm_id, float x, float y)
   }
 }
 
+void cocobot_arm_action_repos_vide(int arm_id)
+{
+    servo_set_angle(arm_id*3, 60);
+    servo_set_angle(arm_id*3 + 1, -140);
+    servo_set_angle(arm_id*3 + 2, 0);
+}
 void cocobot_arm_action_pos_stockage_palais(int arm_id)
 {
   if (arm_id >= 0 && arm_id <= 3)

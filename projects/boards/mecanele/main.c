@@ -18,6 +18,7 @@ static uint8_t _arm = 0;
 static void thread(void * arg)
 {
   (void)arg;
+  cocobot_arm_action_init();
   pump_init();
   cocobot_arm_action_init();
 
