@@ -33,6 +33,11 @@ void run_homologation(void * arg)
     
   cocobot_game_state_wait_for_starter_removed();
 
+  while(1)
+  {
+    vTaskDelay(100/portTICK_PERIOD_MS);
+  }
+
   //sort de la zone vers l'experience
   cocobot_trajectory_goto_d(150, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   cocobot_trajectory_wait();

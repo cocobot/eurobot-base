@@ -211,6 +211,26 @@ void mcual_gpio_set_output_type(mcual_gpio_port_t port, mcual_gpio_pin_t pin, mc
   }
 }
 
+void mcual_gpio_set_pull_resistor(mcual_gpio_port_t port, mcual_gpio_pin_t pin, mcual_gpio_pull_resistor_t pull)
+{
+  GPIO_TypeDef * reg = mcual_gpio_get_register(port);
+  int i;
+  for(i = 0; i < 16; i += 1)
+  {
+    if(pin & (1 << i))
+    {
+      if(pull == MCUAL_GPIO_PULL_UP_RESISTOR)
+      {
+        reg->PUPDR |= (1 << i * 2);
+      }
+      else
+      {
+        reg->PUPDR &= ~(0x03 << i * 2);
+      }
+    }
+  }
+}
+
 static int mcual_gpio_get_irq_id(mcual_gpio_pin_t pin)
 {
   switch(pin)
