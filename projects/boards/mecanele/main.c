@@ -14,6 +14,7 @@
 static void thread(void * arg)
 {
   (void)arg;
+  cocobot_arm_action_init();
   pump_init();
 
   while(1)
