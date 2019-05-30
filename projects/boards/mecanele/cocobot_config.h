@@ -42,11 +42,11 @@
   {\
     {\
       .angle_deg = 0,\
-      .setpoint_pwm = 175,\
+      .setpoint_pwm = 200,\
     },\
     {\
       .angle_deg = 90,\
-      .setpoint_pwm = 390,\
+      .setpoint_pwm = 410,\
     }\
   },\
   [4] = \
