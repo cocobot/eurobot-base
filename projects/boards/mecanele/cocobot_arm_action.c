@@ -3,6 +3,8 @@
 #include "servo.h"
 #include "cocobot_arm.h"
 #include "cocobot_arm_action.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 static cocobot_arm_t arm[4] = {0};
 
@@ -105,35 +107,62 @@ void cocobot_arm_action_init(void)
 
 void cocobot_arm_action_prendre_palais_sol(int arm_id, float x, float y)
 {
-  if (arm_id >= 0 && arm_id <= 3)
-  {
-    if((arm_id == 1) || (arm_id == 3))
+    if(arm_id == 0)
     {
-        servo_set_angle(arm_id*3 + 2, 0);
-        servo_set_angle(arm_id*3 + 1, -110);
-        servo_set_angle(arm_id*3, 10);
+        servo_set_angle(2, 5);
+        servo_set_angle(1, -110);
+        servo_set_angle(0, 10);
+       return; 
     }
-    else
+    if(arm_id == 2)
     {
-        servo_set_angle(arm_id*3 + 2, 8);
-        servo_set_angle(arm_id*3 + 1, -120);
-        servo_set_angle(arm_id*3, 10);
+        servo_set_angle(8, 5);
+        servo_set_angle(7, -110);
+        servo_set_angle(6, 10);
+       return; 
     }
-    // TODO: à régler !
-    //cocobot_arm_move_cartesian(arm[arm_id], x, y, z, alpha_deg);
-  }
-  else
-  {
-    printf("Wrong arm_id: %d should be between 0 and 3.\n", arm_id);
-  }
+if(arm_id == 3)
+    {
+        servo_set_angle(9, 30);
+        servo_set_angle(11, -65);
+        servo_set_angle(10, -20);
+
+        vTaskDelay(500/portTICK_PERIOD_MS);
+        servo_set_angle(9, -15);
+       return; 
+    }
+if(arm_id == 1)
+    {
+        servo_set_angle(3, 15);
+        servo_set_angle(4, -110);
+        servo_set_angle(5, 10);
+       return; 
+    }
+vTaskDelay(200/portTICK_PERIOD_MS);
+        servo_set_pwm(arm_id*3 + 2, 0);
 }
 
 void cocobot_arm_action_repos_vide(int arm_id)
 {
-    servo_set_angle(arm_id*3, 60);
+    if(arm_id == 3)
+    {
+servo_set_angle(arm_id*3, 80);
+    vTaskDelay(100/portTICK_PERIOD_MS);
     servo_set_angle(arm_id*3 + 1, -140);
+    vTaskDelay(100/portTICK_PERIOD_MS);
     servo_set_angle(arm_id*3 + 2, 0);
+    vTaskDelay(100/portTICK_PERIOD_MS);
+    return;
+    }
+    servo_set_angle(arm_id*3, 80);
+    vTaskDelay(100/portTICK_PERIOD_MS);
+    servo_set_angle(arm_id*3 + 1, -150);
+    vTaskDelay(100/portTICK_PERIOD_MS);
+    servo_set_angle(arm_id*3 + 2, 0);
+    vTaskDelay(100/portTICK_PERIOD_MS);
 }
+
+
 
 void cocobot_arm_action_repos_normal(int arm_id)
 {
@@ -207,15 +236,12 @@ void cocobot_arm_action_repos_goldenium(int arm_id)
 
 void cocobot_arm_action_prise_bluenium(int arm_id, float angle)
 {
-  if (arm_id >= 0 && arm_id <= 3)
-  {
-    // TODO: à régler !
-    //cocobot_arm_move_arti(arm[arm_id], a1_deg, a2_deg, a3_deg, a4_deg);
-  }
-  else
-  {
-    printf("Wrong arm_id: %d should be between 0 and 3.\n", arm_id);
-  }
+    servo_set_angle(7, -70);
+    servo_set_angle(8, 20);
+
+    vTaskDelay(500/portTICK_PERIOD_MS);
+
+    servo_set_angle(6, 50);
 }
 
 void cocobot_arm_action_depose_balance(int arm_id, float angle)
@@ -248,6 +274,9 @@ void cocobot_arm_action_depose_case(int arm_id, float angle)
 {
   if (arm_id >= 0 && arm_id <= 3)
   {
+      servo_set_angle(arm_id*3, 50);
+      servo_set_angle(arm_id*3 + 1, -80);
+      servo_set_angle(arm_id*3 + 2, -30);
     // TODO: à régler !
     //cocobot_arm_move_arti(arm[arm_id], a1_deg, a2_deg, a3_deg, a4_deg);
   }

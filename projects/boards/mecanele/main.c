@@ -14,6 +14,7 @@
 static volatile uint8_t _meca_busy = 0;
 static volatile uint8_t _req = 0;
 static volatile uint8_t _arm = 0;
+static volatile uint8_t _arg = 0;
 
 static void thread(void * arg)
 {
@@ -43,15 +44,20 @@ static void thread(void * arg)
           break;
 
         case UAVCAN_COCOBOT_MECAACTION_REQUEST_TAKE_ACCELL:
-          cocobot_arm_action_prise_bluenium(_arm, 0);
-#if 0
-          pump_set_state(_arm, 2);
-          while(pump_get_state(_arm) != 1)
+          if(arg == 0)
           {
-            vTaskDelay(100/portTICK_PERIOD_MS);
+              cocobot_arm_action_prise_bluenium(_arm, 0);
+              pump_set_state(_arm, 2);
           }
-          cocobot_arm_action_repos_normal(_arm);
-#endif
+          else
+          {
+              pump_set_state(_arm, 2);
+              while(pump_get_state(_arm) != 1)
+              {
+                  vTaskDelay(100/portTICK_PERIOD_MS);
+              }
+              cocobot_arm_action_repos_normal(_arm);
+          }
           break;
 
         case UAVCAN_COCOBOT_MECAACTION_REQUEST_DROP_ACCELL:
@@ -64,6 +70,13 @@ static void thread(void * arg)
           break;
 
         case UAVCAN_COCOBOT_MECAACTION_REQUEST_REST_EMPTY:
+          cocobot_arm_action_repos_vide(_arm);
+          break;
+
+        case UAVCAN_COCOBOT_MECAACTION_REQUEST_DROP_FLOOR:
+          cocobot_arm_action_depose_case(_arm, 0);
+          pump_set_state(_arm, 0);
+          vTaskDelay(2000/portTICK_PERIOD_MS);
           cocobot_arm_action_repos_vide(_arm);
           break;
 
@@ -139,6 +152,7 @@ uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
       {
         _arm = data.arm;
         _req = data.req;
+        _arg = data.a;
         _meca_busy = 1;
       }
  
