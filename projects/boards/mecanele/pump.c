@@ -229,3 +229,8 @@ void pump_set_state(uint8_t pump_id, uint8_t action)
 {
   _sucker_status[pump_id] = action;
 }
+
+uint8_t pump_get_state(uint8_t pump_id)
+{
+  return _sucker_status[pump_id];
+}
