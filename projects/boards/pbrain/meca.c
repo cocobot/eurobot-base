@@ -9,6 +9,7 @@ static uint64_t _next_10hz_service_at = 0;
 static volatile uint8_t _req = 0;
 static volatile uint8_t _req_needed = 0;
 static volatile uint8_t _arm = 0;
+static volatile uint8_t _arg = 0;
 static SemaphoreHandle_t _mutex;
 
 uint8_t com_should_accept_transfer(uint64_t* out_data_type_signature,
@@ -57,7 +58,7 @@ void com_async(uint64_t timestamp_us)
     action.x = 0;
     action.y = 0;
     action.z = 0;
-    action.a = 0;
+    action.a = _arg;
     action.d = 0;
 
     _req = 0;
@@ -89,14 +90,15 @@ void com_async(uint64_t timestamp_us)
   }
 }
 
-void meca_action(uint8_t arm_id, uint8_t req)
+void meca_action(uint8_t arm_id, uint16_t req)
 {
 
   xSemaphoreTake(_mutex, portMAX_DELAY);
   _arm = arm_id;
-  _req = req;
+  _req = req & 0xFF;
   _meca_busy = 1;
   _req_needed = 1;
+  _arg = req >> 8;
   xSemaphoreGive(_mutex);
 
   while(_meca_busy)
