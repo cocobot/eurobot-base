@@ -1,0 +1,4 @@
+#!/bin/bash
+make 
+stm32flash -w Output/comex.hex -g 0 -v /dev/ttyUSB0
+#minicom -D /dev/ttyUSB0 

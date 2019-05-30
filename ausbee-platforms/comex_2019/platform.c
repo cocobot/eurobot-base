@@ -389,7 +389,7 @@ void platform_servo_set_value(uint32_t servo, uint32_t pos)
     {
         pos = 550;
     }
-    else if(pos > 2450)
+    else if(pos > 6000)
     {
         pos = 2450;
     }
