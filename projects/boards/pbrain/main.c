@@ -139,6 +139,7 @@ int main(void)
   cocobot_game_state_init(NULL);
   cocobot_pathfinder_init(initTable);
   cocobot_action_scheduler_use_pathfinder(1);
+  meca_init();
 
   cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_OPERATIONAL);
 

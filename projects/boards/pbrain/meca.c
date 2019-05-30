@@ -1,12 +1,15 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <cocobot.h>
+#include <semphr.h>
 #include "uavcan/cocobot/MecaAction.h"
 
 volatile uint8_t _meca_busy = 0;
 static uint64_t _next_10hz_service_at = 0;
 static volatile uint8_t _req = 0;
+static volatile uint8_t _req_needed = 0;
 static volatile uint8_t _arm = 0;
+static SemaphoreHandle_t _mutex;
 
 uint8_t com_should_accept_transfer(uint64_t* out_data_type_signature,
 		uint16_t data_type_id,
@@ -38,12 +41,17 @@ uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
 
 void com_async(uint64_t timestamp_us)
 {
-  if ((timestamp_us >= _next_10hz_service_at) && _meca_busy)
+  if (
+      ((timestamp_us >= _next_10hz_service_at) && _meca_busy)
+      ||
+      (_req_needed)
+     )
   {
     _next_10hz_service_at = timestamp_us + 100000;
 
     uavcan_cocobot_MecaActionRequest action;
 
+    xSemaphoreTake(_mutex, portMAX_DELAY);
     action.req = _req;
     action.arm = _arm;
     action.x = 0;
@@ -51,6 +59,15 @@ void com_async(uint64_t timestamp_us)
     action.z = 0;
     action.a = 0;
     action.d = 0;
+
+    _req = 0;
+    if(_req_needed)
+    {
+      _req_needed = 0;
+      _meca_busy = 1;
+    }
+    xSemaphoreGive(_mutex);
+
 
     void * buf = pvPortMalloc(UAVCAN_COCOBOT_MECAACTION_REQUEST_MAX_SIZE); 
     if(buf != NULL) 
@@ -74,12 +91,21 @@ void com_async(uint64_t timestamp_us)
 
 void meca_action(uint8_t arm_id, uint8_t req)
 {
+
+  xSemaphoreTake(_mutex, portMAX_DELAY);
   _arm = arm_id;
   _req = req;
   _meca_busy = 1;
+  _req_needed = 1;
+  xSemaphoreGive(_mutex);
 
   while(_meca_busy)
   {
     vTaskDelay(100/portTICK_PERIOD_MS);
   }
+}
+
+void meca_init(void)
+{
+  _mutex = xSemaphoreCreateMutex();
 }

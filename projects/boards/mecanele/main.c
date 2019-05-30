@@ -11,9 +11,9 @@
 #include "uavcan/cocobot/ServoCmd.h"
 #include "uavcan/cocobot/MecaAction.h"
 
-static uint8_t _meca_busy = 0;
-static uint8_t _req = 0;
-static uint8_t _arm = 0;
+static volatile uint8_t _meca_busy = 0;
+static volatile uint8_t _req = 0;
+static volatile uint8_t _arm = 0;
 
 static void thread(void * arg)
 {
