@@ -126,6 +126,76 @@ impl MecaWindow {
                      });
                   });
                 }
+                {
+                  let arm = arm.clone();
+                  let btn : gtk::Button = builder.get_object("btn_prendre_sol").unwrap();
+                  btn.connect_clicked( move |_| {
+                    PMECA.with(|meca| {
+                          let meca = meca.borrow();
+                          meca.cmd(&format!("meca 15 5 {} 0 0 0 0 0",
+                            arm.get_text().unwrap().as_str() 
+                          ));
+                     });
+                  });
+                }
+                {
+                  let arm = arm.clone();
+                  let btn : gtk::Button = builder.get_object("btn_repos_normal").unwrap();
+                  btn.connect_clicked( move |_| {
+                    PMECA.with(|meca| {
+                          let meca = meca.borrow();
+                          meca.cmd(&format!("meca 15 7 {} 0 0 0 0 0",
+                            arm.get_text().unwrap().as_str()
+                          ));
+                     });
+                  });
+                }
+                {
+                  let arm = arm.clone();
+                  let btn : gtk::Button = builder.get_object("btn_repos_vide").unwrap();
+                  btn.connect_clicked( move |_| {
+                    PMECA.with(|meca| {
+                          let meca = meca.borrow();
+                          meca.cmd(&format!("meca 15 6 {} 0 0 0 0 0",
+                            arm.get_text().unwrap().as_str()
+                          ));
+                     });
+                  });
+                }
+                {
+                  let btn : gtk::Button = builder.get_object("btn_init").unwrap();
+                  btn.connect_clicked( move |_| {
+                    PMECA.with(|meca| {
+                          let meca = meca.borrow();
+                          meca.cmd(&format!("meca 15 1 0 0 0 0 0 0"
+                          ));
+                     });
+                  });
+                }
+                {
+                  let arm = arm.clone();
+                  let btn : gtk::Button = builder.get_object("btn_tk_accel").unwrap();
+                  btn.connect_clicked( move |_| {
+                    PMECA.with(|meca| {
+                          let meca = meca.borrow();
+                          meca.cmd(&format!("meca 15 3 {} 0 0 0 0 0",
+                            arm.get_text().unwrap().as_str() 
+                          ));
+                     });
+                  });
+                }
+                {
+                  let arm = arm.clone();
+                  let btn : gtk::Button = builder.get_object("btn_pos_accel").unwrap();
+                  btn.connect_clicked( move |_| {
+                    PMECA.with(|meca| {
+                          let meca = meca.borrow();
+                          meca.cmd(&format!("meca 15 11 {} 0 0 0 0 0",
+                            arm.get_text().unwrap().as_str() 
+                          ));
+                     });
+                  });
+                }
 
                 for i in 0..4 {
                   let btn : gtk::Button = builder.get_object(&format!("btn_pompe_on_{}", i)).unwrap();

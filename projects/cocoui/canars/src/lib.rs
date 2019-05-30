@@ -228,7 +228,10 @@ pub fn encode_scalar_f32(_buffer: &mut Vec<u8>, _offset: usize, _size: usize, _v
 }
 
 pub fn encode_scalar_i16(buffer: &mut Vec<u8>, offset: usize, size: usize, value: i16) {
-    encode_scalar_u16(buffer, offset, size, value as u16);
+    let mut uvalue = 0 as u16;
+    uvalue |= (value & 0xFF) as u16;
+    uvalue |= (((value >> 8) & 0xFF) as u16) << 8;
+    encode_scalar_u16(buffer, offset, size, uvalue);
 }
 
 pub fn encode_scalar_i32(_buffer: &mut Vec<u8>, _offset: usize, _size: usize, _value: i32) {

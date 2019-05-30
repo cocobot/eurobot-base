@@ -218,7 +218,12 @@ static void cocobot_com_on_transfer_received(CanardInstance* ins,
   }
 #endif
 
-
+#ifdef CONFIG_LIBCOCOBOT_GAME_STATE
+  if(cocobot_game_state_on_transfer_received(transfer))
+  {
+    return;
+  }
+#endif
 
 #ifdef CONFIG_LIBCOCOBOT_COM_USER_HANDLER
   if(com_on_transfer_received(transfer))
@@ -284,6 +289,17 @@ static bool cocobot_com_should_accept_transfert(const CanardInstance* ins,
                                               source_node_id);
   }
 #endif
+
+#ifdef CONFIG_LIBCOCOBOT_GAME_STATE
+  if(r == false)
+  {
+    r = cocobot_game_state_should_accept_transfer(out_data_type_signature,
+                                              data_type_id,
+                                              transfer_type,
+                                              source_node_id);
+  }
+#endif
+
 
 #ifdef CONFIG_LIBCOCOBOT_COM_USER_HANDLER
   if(r == false)
@@ -641,6 +657,10 @@ uint64_t cocobot_com_process_event(void)
  #ifdef CONFIG_LIBCOCOBOT_GAME_STATE 
   cocobot_game_state_com_async(_timestamp_us);
 #endif
+#ifdef CONFIG_LIBCOCOBOT_COM_USER_HANDLER
+  com_async(_timestamp_us);
+#endif
+
   
   if (_timestamp_us >= _next_1hz_service_at)
   {

@@ -1235,7 +1235,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton" id="btn_tk_distri1">
+                          <object class="GtkButton" id="btn_tk_accel">
                             <property name="label" translatable="yes">Prendre Accel.</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
@@ -1267,7 +1267,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton" id="btn_tk_distri3">
+                          <object class="GtkButton" id="btn_prendre_sol">
                             <property name="label" translatable="yes">Prendre Sol</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
@@ -1299,7 +1299,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton" id="btn_tk_distri5">
+                          <object class="GtkButton" id="btn_pos_accel">
                             <property name="label" translatable="yes">Pose Accel.</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
@@ -1331,7 +1331,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton" id="btn_tk_distri7">
+                          <object class="GtkButton" id="btn_repos_vide">
                             <property name="label" translatable="yes">Repos vide</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
@@ -1347,7 +1347,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton" id="btn_tk_distri8">
+                          <object class="GtkButton" id="btn_repos_normal">
                             <property name="label" translatable="yes">Repos normal</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>

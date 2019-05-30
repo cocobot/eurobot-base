@@ -51,7 +51,7 @@ pub enum Msg {
         node_id: u8,
         mode: u8,
         servo_id: u8,
-        value: u16,
+        value: i16,
     },
     Pump {
         node_id: u8,

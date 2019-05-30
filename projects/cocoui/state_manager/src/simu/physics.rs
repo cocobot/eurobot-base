@@ -123,7 +123,7 @@ impl Physics {
                 let locked_instance = instance.lock().unwrap();
                 while let Ok(frame) = locked_instance
                     .tx_can
-                        .recv_timeout(Duration::from_millis(0))
+                        .try_recv()
                         {
                             waiting_tx.push(frame);
                         }
@@ -131,12 +131,18 @@ impl Physics {
 
                 let mut waiting_tx = Vec::new();
                 let locked_instance = instance.lock().unwrap();
-                while let Ok(frame) = locked_instance
+                loop {
+                    match  locked_instance
                     .tx_can
-                        .recv_timeout(Duration::from_millis(1))
+                        .try_recv()
                         {
-                            waiting_tx.push(frame);
+                            Ok(frame) => {
+                                debug!("TEXST: {:?}", frame);
+                                waiting_tx.push(frame);
+                            },
+                            Err(_) => {},
                         }
+                }
                 drop(locked_instance);
 
                 let locked_instance = instance.lock().unwrap();

@@ -533,6 +533,14 @@ fn update() {
             ui.robots[0].info_score.as_mut().unwrap().set_text(&format!("score: {:.0}", state_cpy2.robots[0].score));
             ui.robots[0].info_elapsed_time.as_mut().unwrap().set_text(&format!("time: {:.0}", state_cpy2.robots[0].time / 1000));
             ui.robots[0].info_battery.as_mut().unwrap().set_text(&format!("battery: {:.2}", (state_cpy2.robots[0].battery as f32) / 1000.0));
+
+            ui.robots[1].info_x.as_mut().unwrap().set_text(&format!("x: {:.0}", state_cpy2.robots[1].x));
+            ui.robots[1].info_y.as_mut().unwrap().set_text(&format!("y: {:.0}", state_cpy2.robots[1].y));
+            ui.robots[1].info_a.as_mut().unwrap().set_text(&format!("a: {:.0}", state_cpy2.robots[1].a));
+            ui.robots[1].info_score.as_mut().unwrap().set_text(&format!("score: {:.0}", state_cpy2.robots[1].score));
+            ui.robots[1].info_elapsed_time.as_mut().unwrap().set_text(&format!("time: {:.0}", state_cpy2.robots[1].time / 1000));
+            ui.robots[1].info_battery.as_mut().unwrap().set_text(&format!("battery: {:.2}", (state_cpy2.robots[1].battery as f32) / 1000.0));
+
         });
         gtk::Continue(true)
     });
@@ -565,7 +573,7 @@ pub fn create_shortcuts(window: gtk::Window) {
                     let ui = ui.borrow();
 
                     let state = ui.state.as_ref().unwrap().lock().unwrap();
-                    state.command("pgm 12");
+                    state.command("pgm 31");
                 });
             }
             gdk::enums::key::R => {
@@ -630,6 +638,20 @@ pub fn init(config: ConfigManagerInstance, state: StateManagerInstance) {
         ui.robots[0].info_elapsed_time = Some(lbl);
         let lbl : gtk::Label = builder.get_object("pr_info_battery").unwrap();
         ui.robots[0].info_battery = Some(lbl);
+
+        let lbl : gtk::Label = builder.get_object("sr_info_x").unwrap();
+        ui.robots[1].info_x = Some(lbl);
+        let lbl : gtk::Label = builder.get_object("sr_info_y").unwrap();
+        ui.robots[1].info_y = Some(lbl);
+        let lbl : gtk::Label = builder.get_object("sr_info_a").unwrap();
+        ui.robots[1].info_a = Some(lbl);
+        let lbl : gtk::Label = builder.get_object("sr_info_score").unwrap();
+        ui.robots[1].info_score = Some(lbl);
+        let lbl : gtk::Label = builder.get_object("sr_info_elapsed_time").unwrap();
+        ui.robots[1].info_elapsed_time = Some(lbl);
+        let lbl : gtk::Label = builder.get_object("sr_info_battery").unwrap();
+        ui.robots[1].info_battery = Some(lbl);
+
 
         let btn : gtk::Button = builder.get_object("pmotor").unwrap();
         btn.connect_clicked( |_| {

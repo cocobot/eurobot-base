@@ -11,24 +11,70 @@
 #include "uavcan/cocobot/ServoCmd.h"
 #include "uavcan/cocobot/MecaAction.h"
 
+static volatile uint8_t _meca_busy = 0;
+static volatile uint8_t _req = 0;
+static volatile uint8_t _arm = 0;
+
 static void thread(void * arg)
 {
   (void)arg;
+  cocobot_arm_action_init();
   pump_init();
   cocobot_arm_action_init();
 
   while(1)
   {
-    //int i;
-    //for(i =0; i < 10; i += 1)
-    //{
-    //  platform_gpio_set(1 << i);
-    //  vTaskDelay(100/portTICK_PERIOD_MS);
-    //  platform_gpio_clear(1 << i);
-    //  vTaskDelay(100/portTICK_PERIOD_MS);
-    //}
+    if(_meca_busy)
+    {
+      switch(_req)
+      {
+        case UAVCAN_COCOBOT_MECAACTION_REQUEST_INIT:
+          cocobot_arm_action_init();
+          break;
 
-    vTaskDelay(100/portTICK_PERIOD_MS);
+        case UAVCAN_COCOBOT_MECAACTION_REQUEST_TAKE_FLOOR:
+          cocobot_arm_action_prendre_palais_sol(_arm, 0, 0);
+          pump_set_state(_arm, 2);
+          while(pump_get_state(_arm) != 1)
+          {
+            vTaskDelay(100/portTICK_PERIOD_MS);
+          }
+          cocobot_arm_action_repos_normal(_arm);
+          break;
+
+        case UAVCAN_COCOBOT_MECAACTION_REQUEST_TAKE_ACCELL:
+          cocobot_arm_action_prise_bluenium(_arm, 0);
+#if 0
+          pump_set_state(_arm, 2);
+          while(pump_get_state(_arm) != 1)
+          {
+            vTaskDelay(100/portTICK_PERIOD_MS);
+          }
+          cocobot_arm_action_repos_normal(_arm);
+#endif
+          break;
+
+        case UAVCAN_COCOBOT_MECAACTION_REQUEST_DROP_ACCELL:
+          cocobot_arm_action_depose_accelerateur_particules(_arm, 0, 0);
+#if 0
+          pump_set_state(_arm, 0);
+          vTaskDelay(1000/portTICK_PERIOD_MS);
+          cocobot_arm_action_repos_vide(_arm);
+#endif
+          break;
+
+        case UAVCAN_COCOBOT_MECAACTION_REQUEST_REST_EMPTY:
+          cocobot_arm_action_repos_vide(_arm);
+          break;
+
+        case UAVCAN_COCOBOT_MECAACTION_REQUEST_REST_NORMAL:
+          cocobot_arm_action_repos_normal(_arm);
+          break;
+      }
+
+      _meca_busy = 0;
+    }
+    vTaskDelay(10/portTICK_PERIOD_MS);
   } 
 }
 
@@ -67,6 +113,10 @@ uint8_t com_should_accept_transfer(uint64_t* out_data_type_signature,
 	return false;
 }
 
+void com_async(uint64_t timestamp_us)
+{
+}
+
 uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
 {
 	IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_SERVOCMD, uavcan_cocobot_ServoCmdRequest,
@@ -81,60 +131,36 @@ uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
 );
 
 	IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_PUMP, uavcan_cocobot_PumpRequest,
-      pump_set_state(data.pump_id, data.action);
+      pump_set_state(data.pump_id, data.action ? 2 : 0);
 );
 
 	IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_MECAACTION, uavcan_cocobot_MecaActionRequest,
-      cocobot_com_printf(COM_DEBUG, "TEST");
-      switch(data.req)
+      if(data.req != UAVCAN_COCOBOT_MECAACTION_REQUEST_STATUS)
       {
-        case UAVCAN_COCOBOT_MECAACTION_REQUEST_STATUS:
-          break;
+        _arm = data.arm;
+        _req = data.req;
+        _meca_busy = 1;
+      }
+ 
+      uavcan_cocobot_MecaActionResponse action;
 
-        case UAVCAN_COCOBOT_MECAACTION_REQUEST_INIT:
-          cocobot_arm_action_init();
-          break;
+      action.busy = _meca_busy;
 
-        case UAVCAN_COCOBOT_MECAACTION_REQUEST_TAKE_DISTRIB:
-          cocobot_arm_action_prise_distributeur(data.arm, data.a);
-          break;
+      void * buf = pvPortMalloc(UAVCAN_COCOBOT_MECAACTION_RESPONSE_MAX_SIZE); 
+      if(buf != NULL) 
+      {
+        static uint8_t transfer_id;
 
-        case UAVCAN_COCOBOT_MECAACTION_REQUEST_TAKE_ACCELL:
-          cocobot_arm_action_prise_bluenium(data.arm, data.a);
-          break;
-
-        case UAVCAN_COCOBOT_MECAACTION_REQUEST_TAKE_GOLDENIUM:
-          cocobot_arm_action_prise_goldenium(data.arm, data.a);
-          break;
-
-        case UAVCAN_COCOBOT_MECAACTION_REQUEST_TAKE_FLOOR:
-          cocobot_arm_action_prendre_palais_sol(data.arm, data.x, data.y);
-
-        case UAVCAN_COCOBOT_MECAACTION_REQUEST_REST_EMPTY:
-          break;
-
-        case UAVCAN_COCOBOT_MECAACTION_REQUEST_REST_NORMAL:
-          break;
-
-        case UAVCAN_COCOBOT_MECAACTION_REQUEST_REST_GLODNENIUM:
-          cocobot_arm_action_repos_goldenium(data.arm);
-          break;
-
-        case UAVCAN_COCOBOT_MECAACTION_REQUEST_DROP_FLOOR:
-          cocobot_arm_action_depose_case(data.arm, data.a);
-          break;
-
-        case UAVCAN_COCOBOT_MECAACTION_REQUEST_DROP_BALANCE:
-          cocobot_arm_action_depose_balance(data.arm, data.a);
-          break;
-
-        case UAVCAN_COCOBOT_MECAACTION_REQUEST_DROP_ACCELL:
-          cocobot_arm_action_depose_accelerateur_particules(data.arm, data.a, data.d);
-          break;
-
-        case UAVCAN_COCOBOT_MECAACTION_REQUEST_DIRECT_ARM:
-          cocobot_arm_action_move_arm(data.arm, ((float)data.x) / 1000.0f, ((float)data.y) / 1000.0f, ((float)data.z) / 1000.0f, data.a);
-          break;
+        const int size = uavcan_cocobot_MecaActionResponse_encode(&action, buf);
+        cocobot_com_request_or_respond(transfer->source_node_id,
+                                       UAVCAN_COCOBOT_MECAACTION_SIGNATURE,
+                                       UAVCAN_COCOBOT_MECAACTION_ID,
+                                       &transfer_id,
+                                       CANARD_TRANSFER_PRIORITY_LOW,
+                                       CanardResponse,
+                                       buf,
+                                       (uint16_t)size);
+        vPortFree(buf);
       }
   );
 

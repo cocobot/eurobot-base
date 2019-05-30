@@ -41,7 +41,7 @@ uint32_t uavcan_cocobot_ServoCmdRequest_encode_internal(uavcan_cocobot_ServoCmdR
     canardEncodeScalar(msg_buf, offset, 8, (void*)&source->servo_id); // 255
     offset += 8;
 
-    canardEncodeScalar(msg_buf, offset, 16, (void*)&source->value); // 65535
+    canardEncodeScalar(msg_buf, offset, 16, (void*)&source->value); // 32767
     offset += 16;
 
     return offset;
@@ -96,7 +96,7 @@ int32_t uavcan_cocobot_ServoCmdRequest_decode_internal(
     }
     offset += 8;
 
-    ret = canardDecodeScalar(transfer, (uint32_t)offset, 16, false, (void*)&dest->value);
+    ret = canardDecodeScalar(transfer, (uint32_t)offset, 16, true, (void*)&dest->value);
     if (ret != 16)
     {
         goto uavcan_cocobot_ServoCmdRequest_error_exit;

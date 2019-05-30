@@ -20,7 +20,7 @@ extern "C"
 /******************************* Source text **********************************
 uint8 mode
 uint8 servo_id
-uint16 value
+int16 value
 
 ---
 ******************************************************************************/
@@ -29,13 +29,13 @@ uint16 value
 uavcan.cocobot.ServoCmd
 saturated uint8 mode
 saturated uint8 servo_id
-saturated uint16 value
+saturated int16 value
 ---
 ******************************************************************************/
 
 #define UAVCAN_COCOBOT_SERVOCMD_ID                         205
 #define UAVCAN_COCOBOT_SERVOCMD_NAME                       "uavcan.cocobot.ServoCmd"
-#define UAVCAN_COCOBOT_SERVOCMD_SIGNATURE                  (0xAB2A4886FE0EDC35ULL)
+#define UAVCAN_COCOBOT_SERVOCMD_SIGNATURE                  (0x434E067A57A687A9ULL)
 
 #define UAVCAN_COCOBOT_SERVOCMD_REQUEST_MAX_SIZE           ((32 + 7)/8)
 
@@ -46,7 +46,7 @@ typedef struct
     // FieldTypes
     uint8_t    mode;                          // bit len 8
     uint8_t    servo_id;                      // bit len 8
-    uint16_t   value;                         // bit len 16
+    int16_t    value;                         // bit len 16
 
 } uavcan_cocobot_ServoCmdRequest;
 

@@ -11,6 +11,7 @@
 #endif
 #include <platform.h>
 #include "uavcan/cocobot/GameState.h"
+#include "uavcan/cocobot/Config.h"
 
 #define USER_DATA_SIZE 16
 #define SCORE_DIGIT 3
@@ -23,6 +24,9 @@ static uint8_t _starter_removed;
 static TickType_t _start_time = 0;
 static int _score = 0;
 static uint64_t _next_1hz_service_at;
+static uint64_t _next_100ms_service_at;
+static volatile uint8_t _config_ready = 0;
+static uint8_t _config  = 0;
 
 void cocobot_game_state_add_points_to_score(int _toAdd)
 {
@@ -58,21 +62,17 @@ void cocobot_game_state_init(cocobot_game_state_funny_action_t funny_action)
 
   _starter_removed = 0;
   _next_1hz_service_at = 0;
+  _next_100ms_service_at = 0;
+
+  _config_ready = 0;
 
 #ifdef AUSBEE_SIM
   //random color in simu
   srand(time(NULL));
   _color = COCOBOT_GAME_STATE_COLOR_NEG;
   _color = rand() % 2; 
-#else
-  if(platform_gpio_get(PLATFORM_GPIO_COLOR))
-  {
-    _color = COCOBOT_GAME_STATE_COLOR_POS;
-  }
-  else
-  {
-    _color = COCOBOT_GAME_STATE_COLOR_NEG;
-  }
+#else 
+  _color = COCOBOT_GAME_STATE_COLOR_NEG;
 #endif
 
   //create timer for the game duration
@@ -104,8 +104,24 @@ void cocobot_game_state_wait_for_starter_removed(void)
   cocobot_asserv_set_state(COCOBOT_ASSERV_ENABLE);
 }
 
+void cocobot_game_state_wait_for_configuration(void)
+{
+  while(!_config_ready)
+  {
+    vTaskDelay(100 / portTICK_PERIOD_MS); 
+  }
+}
+
 cocobot_game_state_color_t cocobot_game_state_get_color(void)
 {
+  if(_config & (1 << 0))
+  {
+    _color = COCOBOT_GAME_STATE_COLOR_POS;
+  }
+  else
+  {
+    _color = COCOBOT_GAME_STATE_COLOR_NEG;
+  }
   return _color;
 }
 
@@ -157,5 +173,59 @@ void cocobot_game_state_com_async(uint64_t timestamp_us)
       vPortFree(buf);
     }
   }
+
+  if (timestamp_us >= _next_100ms_service_at)
+  {
+    _next_100ms_service_at = timestamp_us + 100000;
+
+    if(!_config_ready)
+    {
+      uavcan_cocobot_ConfigRequest conf;
+
+      void * buf = pvPortMalloc(UAVCAN_COCOBOT_CONFIG_REQUEST_MAX_SIZE); 
+      if(buf != NULL) 
+      {
+        static uint8_t transfer_id;
+
+        const int size = uavcan_cocobot_ConfigRequest_encode(&conf, buf);
+        cocobot_com_request_or_respond(
+                                       COCOBOT_COM_NODE_ID,
+                                       UAVCAN_COCOBOT_CONFIG_SIGNATURE,
+                                       UAVCAN_COCOBOT_CONFIG_ID,
+                                       &transfer_id,
+                                       CANARD_TRANSFER_PRIORITY_LOW,
+                                       CanardRequest,
+                                       buf,
+                                       (uint16_t)size);
+        vPortFree(buf);
+      }
+    }
+  }
+}
+
+uint8_t cocobot_game_state_should_accept_transfer(uint64_t* out_data_type_signature,
+                                              uint16_t data_type_id,
+                                              CanardTransferType transfer_type,
+                                              uint8_t source_node_id)
+{
+  if ((transfer_type == CanardTransferTypeResponse) &&
+      (data_type_id == UAVCAN_COCOBOT_CONFIG_ID) &&
+      (source_node_id == COCOBOT_COM_NODE_ID))
+  {
+    *out_data_type_signature = UAVCAN_COCOBOT_CONFIG_SIGNATURE;
+    return true;
+  }
+
+  return false;
+}
+
+uint8_t cocobot_game_state_on_transfer_received(CanardRxTransfer* transfer)
+{
+	IF_RESPONSE_RECEIVED(UAVCAN_COCOBOT_CONFIG, uavcan_cocobot_ConfigResponse,
+      _config = data.config;
+      _config_ready = 1;
+);
+
+  return 0;
 }
 #endif
