@@ -4,6 +4,12 @@
 #include <task.h>
 #include <cocobot.h>
 #include "uavcan/cocobot/Config.h"
+#include "uavcan/cocobot/GameState.h"
+
+void com_async(uint64_t timestamp_us)
+{
+  (void)timestamp_us;
+}
 
 uint8_t com_should_accept_transfer(uint64_t* out_data_type_signature,
 		uint16_t data_type_id,
@@ -17,6 +23,14 @@ uint8_t com_should_accept_transfer(uint64_t* out_data_type_signature,
 		 )
 	{
 		*out_data_type_signature = UAVCAN_COCOBOT_CONFIG_SIGNATURE;
+		return true;
+	}
+
+	if ((transfer_type == CanardTransferTypeBroadcast) &&
+			(data_type_id == UAVCAN_COCOBOT_GAMESTATE_ID)
+		 )
+	{
+		*out_data_type_signature = UAVCAN_COCOBOT_GAMESTATE_SIGNATURE;
 		return true;
 	}
 
@@ -58,6 +72,52 @@ uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
           platform_led_set(PLATFORM_LED_GREEN_1);
         }
       }
+  );
+
+  IF_BROADCAST_RECEIVED(UAVCAN_COCOBOT_GAMESTATE, uavcan_cocobot_GameState,
+    int time = data.time / 1000;
+
+    int target = 0;
+    if(CONFIG_LIBCOCOBOT_COM_ID < 20)
+    {
+      target = 1;
+    }
+
+    if(time != 0)
+    {
+      if((time % 2) == target)
+      {
+        platform_led_clear(PLATFORM_LED_RED_2);
+        platform_led_set(PLATFORM_LED_GREEN_2);
+
+        static CanardCANFrame frame;
+        frame.id = 0xC0C0B07;
+        frame.data[0] = time;
+        frame.data[1] = CONFIG_LIBCOCOBOT_COM_ID;
+
+        //Ultra moche
+        extern int16_t cocobot_com_rf_transmit(const CanardCANFrame* const frame, uint64_t timestamp_us);
+        cocobot_com_rf_transmit(&frame, 0);
+      }
+      else
+      {
+        platform_led_clear(PLATFORM_LED_GREEN_2);
+      }
+    }
+    else
+    {
+      platform_led_toggle(PLATFORM_LED_RED_2);
+      platform_led_toggle(PLATFORM_LED_GREEN_2);
+
+      static CanardCANFrame frame;
+      frame.id = 0xC0C0B07;
+      frame.data[0] = time;
+      frame.data[1] = CONFIG_LIBCOCOBOT_COM_ID;
+
+      //Ultra moche
+      extern int16_t cocobot_com_rf_transmit(const CanardCANFrame* const frame, uint64_t timestamp_us);
+      cocobot_com_rf_transmit(&frame, 0);
+    }
   );
 
 	return 0;

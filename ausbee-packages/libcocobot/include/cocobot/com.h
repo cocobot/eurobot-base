@@ -95,6 +95,33 @@ void cocobot_com_printf(uint8_t level, char * fmt, ...);
     return 1;\
   }\
 
+#define IF_BROADCAST_RECEIVED(NAME, name, action)\
+  if ((transfer->transfer_type == CanardTransferTypeBroadcast) && \
+      (transfer->data_type_id == NAME ## _ID)\
+     )\
+  {\
+    name data;\
+    void * dynbuf = NULL;\
+\
+    dynbuf = pvPortMalloc(NAME ## _MAX_SIZE);\
+    if(dynbuf != NULL)\
+    {\
+      uint8_t * pdynbuf = dynbuf;\
+      if(name ## _decode(transfer, transfer->payload_len, &data, &pdynbuf) >= 0)\
+      {\
+        cocobot_com_release_rx_transfer_payload(transfer);\
+        {\
+          action;\
+        }\
+      }\
+    }\
+    if(dynbuf != NULL)\
+    {\
+      vPortFree(dynbuf);\
+    }\
+    return 1;\
+  }\
+
 
 #define IF_SMPLREQ_RECEIVED(NAME, name, action)\
   if ((transfer->transfer_type == CanardTransferTypeResponse) && \

@@ -78,7 +78,7 @@ impl Node<ComData> for ComHandler {
             debug!("{:?}", gstate);
         } 
         else if dsdl::uavcan::cocobot::CollisionRequest::check_id(xfer.get_data_type_id()) {
-            let _col = dsdl::uavcan::cocobot::CollisionRequest::decode(xfer).unwrap();
+            let col = dsdl::uavcan::cocobot::CollisionRequest::decode(xfer).unwrap();
             
             let mut alert_front_left = false;
             let mut alert_front_right = false;
@@ -92,6 +92,24 @@ impl Node<ComData> for ComHandler {
                     let distance = distance as f32;
                     let x_robot = distance * f32::cos((i as f32) * std::f32::consts::PI / 180.0);
                     let y_robot = distance * f32::sin((i as f32) * std::f32::consts::PI / 180.0);
+
+                    let rangle = col.a * std::f32::consts::PI / 180.0:
+                    let x_table = x_robot * f32::cos(rangle) - y_robot * f32::sin(rangle) + col.x;
+                    let y_table = y_robot * f32::cos(rangle) + x_robot * f32::sin(rangle) + col.y;
+
+                    if x_table > 1500 - 100 {
+                        continue;
+                    }
+                    if x_table < -(1500 - 100) {
+                        continue;
+                    }
+
+                    if y_table > 1000 - 100 {
+                        continue;
+                    }
+                    if y_table < -(543 - 100) {
+                        continue;
+                    }
 
                     let mut x_pos_alert = false;
                     let mut y_pos_alert = false;

@@ -531,12 +531,12 @@ void cocobot_com_retransmit(const CanardCANFrame * rx_frame, cocobot_com_source_
 #endif
 #endif
 
-#ifdef CONFIG_LIBCOCOBOT_COM_RF
- if(source != COCOBOT_COM_SOURCE_RF)
- {
-   cocobot_com_rf_transmit(rx_frame, _timestamp_us);
- }
-#endif
+//#ifdef CONFIG_LIBCOCOBOT_COM_RF
+// if(source != COCOBOT_COM_SOURCE_RF)
+// {
+//   cocobot_com_rf_transmit(rx_frame, _timestamp_us);
+// }
+//#endif
 }
 
 static void cocobot_com_transmit_tx_queue(void)
@@ -630,23 +630,23 @@ uint64_t cocobot_com_process_event(void)
   }
 #endif
 
-#ifdef CONFIG_LIBCOCOBOT_COM_RF
-  rx_res = 1;
-  while(rx_res > 0)
-  {
-    rx_res = cocobot_com_rf_receive(&rx_frame, _timestamp_us);
-    if (rx_res < 0)
-    {
-      // Failure - report
-      _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
-    }
-    else if (rx_res > 0)
-    {
-      cocobot_com_retransmit(&rx_frame, COCOBOT_COM_SOURCE_RF);
-      canardHandleRxFrame(&_canard, &rx_frame, _timestamp_us);
-    }
-  }
-#endif
+//#ifdef CONFIG_LIBCOCOBOT_COM_RF
+//  rx_res = 1;
+//  while(rx_res > 0)
+//  {
+//    rx_res = cocobot_com_rf_receive(&rx_frame, _timestamp_us);
+//    if (rx_res < 0)
+//    {
+//      // Failure - report
+//      _health = UAVCAN_PROTOCOL_NODESTATUS_HEALTH_WARNING;
+//    }
+//    else if (rx_res > 0)
+//    {
+//      cocobot_com_retransmit(&rx_frame, COCOBOT_COM_SOURCE_RF);
+//      canardHandleRxFrame(&_canard, &rx_frame, _timestamp_us);
+//    }
+//  }
+//#endif
 
 #ifdef CONFIG_LIBCOCOBOT_POSITION 
   cocobot_position_com_async(_timestamp_us);
