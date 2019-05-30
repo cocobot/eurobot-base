@@ -134,6 +134,12 @@ void cocobot_arm_action_repos_vide(int arm_id)
     servo_set_angle(arm_id*3 + 1, -140);
     servo_set_angle(arm_id*3 + 2, 0);
 }
+
+void cocobot_arm_action_repos_normal(int arm_id)
+{
+  cocobot_arm_action_repos_vide(arm_id);
+}
+
 void cocobot_arm_action_pos_stockage_palais(int arm_id)
 {
   if (arm_id >= 0 && arm_id <= 3)
