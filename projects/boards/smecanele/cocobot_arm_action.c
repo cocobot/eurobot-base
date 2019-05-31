@@ -5,6 +5,7 @@
 #include "cocobot_arm_action.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "pump.h"
 
 static cocobot_arm_t arm[4] = {0};
 
@@ -21,15 +22,15 @@ void cocobot_arm_action_repos_vide(int arm_id)
   switch(arm_id)
   {
     case 0:
-      servo_set_angle(0, 0);
-      servo_set_angle(1, 0);
-      servo_set_angle(2, 0);
+      servo_set_angle(0, 80);
+      servo_set_angle(1, -140);
+      servo_set_angle(2, -20);
       break;
 
     case 1:
-      servo_set_angle(3, 0);
-      servo_set_angle(4, 0);
-      servo_set_angle(5, 0);
+      servo_set_angle(3, 85);
+      servo_set_angle(4, -140);
+      servo_set_angle(5, -20);
       break;
   }
 }
@@ -39,15 +40,15 @@ void cocobot_arm_action_repos_normal(int arm_id)
   switch(arm_id)
   {
     case 0:
-      servo_set_angle(0, 0);
-      servo_set_angle(1, 0);
-      servo_set_angle(2, 0);
+      servo_set_angle(0, 70);
+      servo_set_angle(1, -120);
+      servo_set_pwm(2, 0);
       break;
 
     case 1:
-      servo_set_angle(3, 0);
-      servo_set_angle(4, 0);
-      servo_set_angle(5, 0);
+      servo_set_angle(3, 70);
+      servo_set_angle(4, -120);
+      servo_set_pwm(5, 0);
       break;
   }
 }
@@ -57,9 +58,18 @@ void cocobot_arm_action_prise_distributeur(int arm_id, float angle)
   switch(arm_id)
   {
     case 0:
-      servo_set_angle(0, 0);
-      servo_set_angle(1, 0);
-      servo_set_angle(2, 0);
+      servo_set_angle(0, 40);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      servo_set_angle(2, 65);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      servo_set_angle(1, -110);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      servo_set_angle(1, -100);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      servo_set_angle(1, -110);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      servo_set_angle(1, -100);
+      vTaskDelay(250/portTICK_PERIOD_MS);
       break;
 
     case 1:
@@ -75,9 +85,18 @@ void cocobot_arm_action_depose_balance(int arm_id, float angle)
   switch(arm_id)
   {
     case 0:
-      servo_set_angle(0, 0);
-      servo_set_angle(1, 0);
-      servo_set_angle(2, 0);
+      servo_set_angle(0, 80);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      servo_set_angle(1, -130);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      servo_set_angle(2, 70);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      servo_set_angle(1, -100);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      servo_set_angle(0, 65);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      pump_set_state(arm_id, 0);
+      vTaskDelay(1500/portTICK_PERIOD_MS);
       break;
 
     case 1:
