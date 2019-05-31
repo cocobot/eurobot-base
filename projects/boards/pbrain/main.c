@@ -5,7 +5,18 @@
 #include <stdio.h>
 #include "meca.h"
 
+#define DEMI_LARGEUR_ROBOT      150
+#define DEMI_LONGUEUR_ARR_ROBOT 107
+#define MARGE_PRISE_BRAS        100
+#define MARGE_DEPOSE_BRAS       100
+
+
 extern cocobot_pathfinder_table_init_s initTable [];
+
+static void stop_meca()
+{
+    meca_action(0, MECA_RELEASE);
+}
 
 static void cocobot_callage_backward()
 {
@@ -272,12 +283,26 @@ void run_strat(void * arg)
         cocobot_trajectory_goto_xy_backward(-710, 690, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
         cocobot_trajectory_goto_a(0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
         cocobot_trajectory_wait();
-        meca_action(3, MECA_TAKE_GOLD);
+        meca_action(1, MECA_TAKE_GOLD);
         cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
         cocobot_trajectory_wait();
     }
 
     cocobot_game_state_add_points_to_score(20);
+
+    //bring back golden
+    if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+    {
+    }
+    else
+    {
+        cocobot_trajectory_goto_xy(0, 215, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_trajectory_goto_xy_backward(272, -600 + DEMI_LARGEUR_ROBOT + MARGE_DEPOSE_BRAS, 4000);
+        cocobot_trajectory_wait();
+
+    }
+
+
 
 
     //if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
@@ -343,6 +368,7 @@ int main(void)
     cocobot_trajectory_init(4);
     cocobot_opponent_detection_init(3);
     cocobot_game_state_init(NULL);
+    cocobot_game_state_init(stop_meca);
     cocobot_pathfinder_init(initTable);
     cocobot_action_scheduler_use_pathfinder(1);
     meca_init();

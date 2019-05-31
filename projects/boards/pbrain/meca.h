@@ -8,6 +8,7 @@
 #define MECA_TAKE_FLOOR 5
 #define MECA_TAKE_ACCEL 3
 #define MECA_TAKE_GOLD 4
+#define MECA_RELEASE 12
 #define MECA_TAKE_ACCEL_END   (0x103)
 #define MECA_PUSH_ACCEL       (0x203)
 
