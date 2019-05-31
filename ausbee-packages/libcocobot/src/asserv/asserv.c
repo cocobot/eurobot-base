@@ -71,11 +71,30 @@ void cocobot_asserv_set_angle_activation(uint8_t angle)
    _no_angle = !angle;
 }
 
+void cocobot_asserv_big_accel_d(void)
+{
+  cocobot_asserv_ramp_set_max_accel(&_ramp_dist, CONFIG_LIBCOCOBOT_DIST_RAMP_MAX_ACCEL / 100.0f);
+}
+
 void cocobot_asserv_slow(void)
 {
 
-  cocobot_asserv_ramp_set_max_speed(&_ramp_dist, CONFIG_LIBCOCOBOT_DIST_RAMP_MAX_SPEED / 2000.0f);
-  cocobot_asserv_ramp_set_max_speed(&_ramp_angu, CONFIG_LIBCOCOBOT_ANGU_RAMP_MAX_SPEED / 4000.0f);
+  cocobot_asserv_ramp_set_max_speed(&_ramp_dist, CONFIG_LIBCOCOBOT_DIST_RAMP_MAX_SPEED / 10000.0f);
+  cocobot_asserv_ramp_set_max_speed(&_ramp_angu, CONFIG_LIBCOCOBOT_ANGU_RAMP_MAX_SPEED / 10000.0f);
+
+  cocobot_asserv_ramp_reset(&_ramp_dist, cocobot_position_get_distance());
+  cocobot_asserv_ramp_reset(&_ramp_angu, cocobot_position_get_angle());
+}
+
+void cocobot_asserv_normal(void)
+{
+  cocobot_asserv_ramp_set_max_speed(&_ramp_dist, CONFIG_LIBCOCOBOT_DIST_RAMP_MAX_SPEED / 1000.0f);
+  cocobot_asserv_ramp_set_max_speed(&_ramp_angu, CONFIG_LIBCOCOBOT_ANGU_RAMP_MAX_SPEED / 1000.0f);
+  cocobot_asserv_ramp_set_max_accel(&_ramp_dist, CONFIG_LIBCOCOBOT_DIST_RAMP_MAX_ACCEL / 1000.0f);
+  cocobot_asserv_ramp_set_max_accel(&_ramp_angu, CONFIG_LIBCOCOBOT_ANGU_RAMP_MAX_ACCEL / 1000.0f);
+
+  cocobot_asserv_ramp_reset(&_ramp_dist, cocobot_position_get_distance());
+  cocobot_asserv_ramp_reset(&_ramp_angu, cocobot_position_get_angle());
 }
 
 float cocobot_asserv_get_linear_speed(void)
