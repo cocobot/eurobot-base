@@ -94,6 +94,24 @@ static void thread(void * arg)
         case UAVCAN_COCOBOT_MECAACTION_REQUEST_REST_EMPTY:
           cocobot_arm_action_repos_vide(_arm);
           break;
+        case UAVCAN_COCOBOT_MECAACTION_REQUEST_DIRECT_ARM:
+          pump_set_state(0, 0);
+          pump_set_state(1, 0);
+          pump_set_state(2, 0);
+          pump_set_state(3, 0);
+          servo_set_pwm(0, 0);
+          servo_set_pwm(1, 0);
+          servo_set_pwm(2, 0);
+          servo_set_pwm(3, 0);
+          servo_set_pwm(4, 0);
+          servo_set_pwm(5, 0);
+          servo_set_pwm(6, 0);
+          servo_set_pwm(7, 0);
+          servo_set_pwm(8, 0);
+          servo_set_pwm(9, 0);
+          servo_set_pwm(10, 0);
+          servo_set_pwm(11, 0);
+          break;
 
         case UAVCAN_COCOBOT_MECAACTION_REQUEST_DROP_FLOOR:
           cocobot_arm_action_depose_case(_arm, 0);
