@@ -193,7 +193,7 @@ int32_t cocobot_position_get_right_encoder(void)
 void cocobot_position_set_motor_command(float left_motor_speed, float right_motor_speed)
 {
 #ifdef COCOBOT_CAN_MOTOR
-  if((cocobot_asserv_get_state() == COCOBOT_ASSERV_ENABLE) && !cocobot_opponent_detection_is_in_alert())
+  if((cocobot_asserv_get_state() == COCOBOT_ASSERV_ENABLE))
   {
     st_left.enable = 1;
     st_right.enable = 1;

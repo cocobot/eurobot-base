@@ -663,6 +663,11 @@ pub fn init(config: ConfigManagerInstance, state: StateManagerInstance) {
             meca::show(true);
         });
 
+        let btn : gtk::Button = builder.get_object("smeca").unwrap();
+        btn.connect_clicked( |_| {
+            meca::show(false);
+        });
+
         update_elm!(ui.field, |x: &mut gtk::DrawingArea| x
             .connect_draw(draw_field));
     });

@@ -114,17 +114,15 @@ void cocobot_game_state_wait_for_configuration(void)
 
 cocobot_game_state_color_t cocobot_game_state_get_color(void)
 {
-    return COCOBOT_GAME_STATE_COLOR_POS;
-    //return COCOBOT_GAME_STATE_COLOR_NEG;
-  //if(_config & (1 << 0))
-  //{
-  //  _color = COCOBOT_GAME_STATE_COLOR_POS;
-  //}
-  //else
-  //{
-  //  _color = COCOBOT_GAME_STATE_COLOR_NEG;
-  //}
-  //return _color;
+  if(_config & (1 << 0))
+  {
+    _color = COCOBOT_GAME_STATE_COLOR_POS;
+  }
+  else
+  {
+    _color = COCOBOT_GAME_STATE_COLOR_NEG;
+  }
+  return _color;
 }
 
 int32_t cocobot_game_state_get_elapsed_time(void)

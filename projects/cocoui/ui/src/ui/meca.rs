@@ -31,7 +31,11 @@ impl MecaWindow {
     fn set_servo(&self, id: usize, value: &str, deg: bool) {
       if let Some(state) = &self.state {
         let mode = if deg { 1 } else { 0 };
-        let cmd = format!("servo 15 {} {} {}", mode, id, value);
+        let cmd = if self.principal {
+            format!("servo 15 {} {} {}", mode, id, value)
+        } else {
+            format!("servo 35 {} {} {}", mode, id, value)
+        };
         state.lock().unwrap().command(&cmd);
       }
     }
@@ -86,17 +90,34 @@ impl MecaWindow {
                   let check2 = check.clone();
                   let entry2 = entry.clone();
                   let entry3 = entry.clone();
+                  let pmeca = self.principal;
                   btn.connect_clicked( move |_| {
+                      if pmeca {
                         PMECA.with(|meca| {
                           let meca = meca.borrow();
                           meca.set_servo(i, entry.get_text().unwrap().as_str(), check.get_active());
                         });
+                      }
+                      else {
+                        SMECA.with(|meca| {
+                          let meca = meca.borrow();
+                          meca.set_servo(i, entry.get_text().unwrap().as_str(), check.get_active());
+                        });
+                      }
                   });
                   entry2.connect_activate( move |_| {
+                      if pmeca {
                         PMECA.with(|meca| {
                           let meca = meca.borrow();
                           meca.set_servo(i, entry3.get_text().unwrap().as_str(), check2.get_active());
                         });
+                      }
+                      else {
+                        SMECA.with(|meca| {
+                          let meca = meca.borrow();
+                          meca.set_servo(i, entry3.get_text().unwrap().as_str(), check2.get_active());
+                        });
+                      }
                   });
                 }
 
@@ -199,19 +220,36 @@ impl MecaWindow {
 
                 for i in 0..4 {
                   let btn : gtk::Button = builder.get_object(&format!("btn_pompe_on_{}", i)).unwrap();
+                  let pmeca = self.principal;
                   btn.connect_clicked( move |_| {
+                      if pmeca {
                         PMECA.with(|meca| {
                           let meca = meca.borrow();
                           meca.cmd(&format!("pump 15 {} 1", i));
                         });
+                      }
+                      else {
+                        SMECA.with(|meca| {
+                          let meca = meca.borrow();
+                          meca.cmd(&format!("pump 35 {} 1", i));
+                        });
+                      }
                   });
 
                   let btn : gtk::Button = builder.get_object(&format!("btn_pompe_off_{}", i)).unwrap();
                   btn.connect_clicked( move |_| {
+                      if pmeca { 
                         PMECA.with(|meca| {
                           let meca = meca.borrow();
                           meca.cmd(&format!("pump 15 {} 0", i));
                         });
+                      }
+                      else {
+                          SMECA.with(|meca| {
+                              let meca = meca.borrow();
+                          meca.cmd(&format!("pump 35 {} 0", i));
+                        });
+                      }
                   });
                 }
 

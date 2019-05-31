@@ -53,8 +53,7 @@ uid="[2B 00 20 00 18 51 35 33 34 39 30 32 00 00 00 00]"
 name="Sbrain"
 id=31
 uid="[2C 00 24 00 18 51 35 33 34 39 30 32 00 00 00 00]"
-path="../../boards/sbrain/Output/sbrain.bin"
-simu="../../boards/sbrain/Output/sbrain.sim"
+path="/home/damien/prog/projects/boards/sbrain/Output/sbrain.bin"
 
 [[boards]]
 name="Canon S/G"
