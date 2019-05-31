@@ -71,7 +71,7 @@ path="../../boards/canon/Output/canon.hex"
 name="Mecanele"
 id=35
 uid=""
-path="../../boards/smecanele/Output/mecanele.bin"
+path="../../boards/smecanele/Output/smecanele.bin"
 
 #ID 50->59 beacons, funny action
 

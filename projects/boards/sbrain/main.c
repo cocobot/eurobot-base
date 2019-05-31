@@ -10,12 +10,29 @@
 
 extern cocobot_pathfinder_table_init_s initTable [];
 
+void stop(void)
+{
+  cocobot_trajectory_wait();
+  cocobot_asserv_set_state(COCOBOT_ASSERV_DISABLE);
+  while(1)
+  {
+    vTaskDelay(100/portTICK_PERIOD_MS);
+  }
+}
+
+void depose_balance(void)
+{
+  //on se place a la fin du distributeur
+  cocobot_trajectory_goto_xy_backward(450 -(600), -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
+  cocobot_trajectory_wait();
+}
+
 void run_homologation(void * arg)
 {
   (void)arg;
 
   cocobot_game_state_wait_for_configuration();
-  
+
   //set initial position
 
   switch(cocobot_game_state_get_color())
@@ -34,7 +51,7 @@ void run_homologation(void * arg)
   }
 
   vTaskDelay(500 / portTICK_PERIOD_MS); 
-    
+
   cocobot_game_state_wait_for_starter_removed();
   cocobot_game_state_add_points_to_score(1);
 
@@ -46,11 +63,11 @@ void run_homologation(void * arg)
   //tourne face a l'autre equipe
   if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
   {
-      cocobot_trajectory_goto_a(0, 4000);
+    cocobot_trajectory_goto_a(0, 4000);
   }
   else
   {
-      cocobot_trajectory_goto_a(180, 4000);
+    cocobot_trajectory_goto_a(180, 4000);
   }
 
   cocobot_trajectory_wait();
@@ -64,11 +81,11 @@ void run_homologation(void * arg)
   //tourne face à la balance
   if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
   {
-      cocobot_trajectory_goto_a(-90, 4000);
+    cocobot_trajectory_goto_a(-90, 4000);
   }
   else
   {
-      cocobot_trajectory_goto_a(-90, 4000);
+    cocobot_trajectory_goto_a(-90, 4000);
   }
   cocobot_trajectory_wait();
   cocobot_game_state_add_points_to_score(1);
@@ -81,11 +98,11 @@ void run_homologation(void * arg)
   //tourne face à la balance
   if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
   {
-      cocobot_trajectory_goto_a(180, 4000);
+    cocobot_trajectory_goto_a(180, 4000);
   }
   else
   {
-      cocobot_trajectory_goto_a(0, 4000);
+    cocobot_trajectory_goto_a(0, 4000);
   }
   cocobot_trajectory_wait();
   cocobot_game_state_add_points_to_score(1);
@@ -95,7 +112,7 @@ void run_homologation(void * arg)
   cocobot_trajectory_wait();
   cocobot_game_state_add_points_to_score(1);
 
-  
+
 
   //cocobot_trajectory_goto_xy(500, 0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   //cocobot_trajectory_goto_xy(500, 500, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
@@ -120,12 +137,12 @@ void run_homologation(void * arg)
             (int)cocobot_position_get_right_encoder());
 
     cocobot_com_printf(COM_DEBUG, "x=%d y=%d a=%d d=%d -- l=%ld r=%ld\r\n", 
-            (int)cocobot_position_get_x(),
-            (int)cocobot_position_get_y(),
-            (int)cocobot_position_get_angle(),
-            (int)cocobot_position_get_distance(),
-            (int)cocobot_position_get_left_encoder(),
-            (int)cocobot_position_get_right_encoder());
+                       (int)cocobot_position_get_x(),
+                       (int)cocobot_position_get_y(),
+                       (int)cocobot_position_get_angle(),
+                       (int)cocobot_position_get_distance(),
+                       (int)cocobot_position_get_left_encoder(),
+                       (int)cocobot_position_get_right_encoder());
 
     vTaskDelay(100/portTICK_PERIOD_MS);
   }
@@ -186,7 +203,7 @@ void run_strategy(void * arg)
   //ici on est dans la zone de départ.
   //on laisse libre le mouvement du robot
   cocobot_asserv_set_state(COCOBOT_ASSERV_DISABLE);
-  
+
 
   //La tirette !
   cocobot_game_state_wait_for_starter_removed();
@@ -214,12 +231,12 @@ void run_strategy(void * arg)
   switch(cocobot_game_state_get_color())
   {
     case COCOBOT_GAME_STATE_COLOR_NEG:
-      cocobot_trajectory_goto_xy(-450 + 50 + 300, -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
+      cocobot_trajectory_goto_xy_backward(-450 + 50 + 300, -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
       cocobot_trajectory_goto_a(180, 4000);
       break;
 
     case COCOBOT_GAME_STATE_COLOR_POS:
-      cocobot_trajectory_goto_xy(450 -(50 + 300), -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
+      cocobot_trajectory_goto_xy_backward(450 -(50 + 300), -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
       cocobot_trajectory_goto_a(0, 4000);
       break;
   }
@@ -227,7 +244,13 @@ void run_strategy(void * arg)
 
   //prise !
   //
-  vTaskDelay(3000 / portTICK_PERIOD_MS);
+  stop();
+
+
+  //on va le poser dans la balance
+  depose_balance();
+
+
 
 
 
@@ -239,7 +262,7 @@ void run_strategy(void * arg)
   }
 
 }
- 
+
 int main(void) 
 {
   platform_init();
@@ -262,8 +285,10 @@ int main(void)
   cocobot_position_set_y(0);
   cocobot_position_set_angle(0);
 
-  //xTaskCreate(run_homologation, "strat", 600, NULL, 2, NULL );
-  xTaskCreate(run_strategy, "strat", 600, NULL, 2, NULL );
+  (void)run_homologation;
+
+  xTaskCreate(run_homologation, "strat", 600, NULL, 2, NULL );
+  //xTaskCreate(run_strategy, "strat", 600, NULL, 2, NULL );
 
   vTaskStartScheduler();
 

@@ -576,6 +576,16 @@ pub fn create_shortcuts(window: gtk::Window) {
                     state.command("pgm 31");
                 });
             }
+            gdk::enums::key::L => {
+                debug!("KEY L");
+                UII.with(|ui| {
+                    let ui = ui.borrow();
+
+                    let state = ui.state.as_ref().unwrap().lock().unwrap();
+                    state.command("pgm 35");
+                });
+            }
+
             gdk::enums::key::R => {
                 debug!("KEY R");
                 UII.with(|ui| {

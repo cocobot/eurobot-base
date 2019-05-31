@@ -29,21 +29,21 @@ impl MecaWindow {
     }
 
     fn set_servo(&self, id: usize, value: &str, deg: bool) {
-      if let Some(state) = &self.state {
-        let mode = if deg { 1 } else { 0 };
-        let cmd = if self.principal {
-            format!("servo 15 {} {} {}", mode, id, value)
-        } else {
-            format!("servo 35 {} {} {}", mode, id, value)
-        };
-        state.lock().unwrap().command(&cmd);
-      }
+        if let Some(state) = &self.state {
+            let mode = if deg { 1 } else { 0 };
+            let cmd = if self.principal {
+                format!("servo 15 {} {} {}", mode, id, value)
+            } else {
+                format!("servo 35 {} {} {}", mode, id, value)
+            };
+            state.lock().unwrap().command(&cmd);
+        }
     }
 
     fn cmd(&self, cmd: &str) {
-      if let Some(state) = &self.state {
-        state.lock().unwrap().command(cmd);
-      }
+        if let Some(state) = &self.state {
+            state.lock().unwrap().command(cmd);
+        }
     }
 
     fn show(&mut self) {
@@ -70,7 +70,7 @@ impl MecaWindow {
                             let mut boards = boards.borrow_mut();
                             boards.delete_event();
                         });
-                    Inhibit(false)
+                        Inhibit(false)
                     });
                 }
                 else {
@@ -84,41 +84,41 @@ impl MecaWindow {
                 }
 
                 for i in 0..12 {
-                  let btn : gtk::Button = builder.get_object(&format!("valid_s{}", i)).unwrap();
-                  let entry : gtk::Entry = builder.get_object(&format!("entry_s{}", i)).unwrap();
-                  let check : gtk::CheckButton = builder.get_object(&format!("servo_angle")).unwrap();
-                  let check2 = check.clone();
-                  let entry2 = entry.clone();
-                  let entry3 = entry.clone();
-                  let pmeca = self.principal;
-                  btn.connect_clicked( move |_| {
-                      if pmeca {
-                        PMECA.with(|meca| {
-                          let meca = meca.borrow();
-                          meca.set_servo(i, entry.get_text().unwrap().as_str(), check.get_active());
-                        });
-                      }
-                      else {
-                        SMECA.with(|meca| {
-                          let meca = meca.borrow();
-                          meca.set_servo(i, entry.get_text().unwrap().as_str(), check.get_active());
-                        });
-                      }
-                  });
-                  entry2.connect_activate( move |_| {
-                      if pmeca {
-                        PMECA.with(|meca| {
-                          let meca = meca.borrow();
-                          meca.set_servo(i, entry3.get_text().unwrap().as_str(), check2.get_active());
-                        });
-                      }
-                      else {
-                        SMECA.with(|meca| {
-                          let meca = meca.borrow();
-                          meca.set_servo(i, entry3.get_text().unwrap().as_str(), check2.get_active());
-                        });
-                      }
-                  });
+                    let btn : gtk::Button = builder.get_object(&format!("valid_s{}", i)).unwrap();
+                    let entry : gtk::Entry = builder.get_object(&format!("entry_s{}", i)).unwrap();
+                    let check : gtk::CheckButton = builder.get_object(&format!("servo_angle")).unwrap();
+                    let check2 = check.clone();
+                    let entry2 = entry.clone();
+                    let entry3 = entry.clone();
+                    let pmeca = self.principal;
+                    btn.connect_clicked( move |_| {
+                        if pmeca {
+                            PMECA.with(|meca| {
+                                let meca = meca.borrow();
+                                meca.set_servo(i, entry.get_text().unwrap().as_str(), check.get_active());
+                            });
+                        }
+                        else {
+                            SMECA.with(|meca| {
+                                let meca = meca.borrow();
+                                meca.set_servo(i, entry.get_text().unwrap().as_str(), check.get_active());
+                            });
+                        }
+                    });
+                    entry2.connect_activate( move |_| {
+                        if pmeca {
+                            PMECA.with(|meca| {
+                                let meca = meca.borrow();
+                                meca.set_servo(i, entry3.get_text().unwrap().as_str(), check2.get_active());
+                            });
+                        }
+                        else {
+                            SMECA.with(|meca| {
+                                let meca = meca.borrow();
+                                meca.set_servo(i, entry3.get_text().unwrap().as_str(), check2.get_active());
+                            });
+                        }
+                    });
                 }
 
                 let x : gtk::Entry = builder.get_object("entry_x").unwrap();
@@ -127,130 +127,206 @@ impl MecaWindow {
                 let d : gtk::Entry = builder.get_object("entry_d").unwrap();
                 let a : gtk::Entry = builder.get_object("entry_a").unwrap();
                 let arm : gtk::Entry = builder.get_object("entry_arm").unwrap();
+                let pmeca = self.principal;
                 {
-                  let x = x.clone();
-                  let y = y.clone();
-                  let z = z.clone();
-                  let a = a.clone();
-                  let arm = arm.clone();
-                  let btn : gtk::Button = builder.get_object("btn_arm").unwrap();
-                  btn.connect_clicked( move |_| {
-                    PMECA.with(|meca| {
-                          let meca = meca.borrow();
-                          meca.cmd(&format!("meca 15 12 {} {} {} {} {} {}",
-                            arm.get_text().unwrap().as_str(), 
-                            x.get_text().unwrap().as_str(), 
-                            y.get_text().unwrap().as_str(), 
-                            z.get_text().unwrap().as_str(), 0, 
-                            a.get_text().unwrap().as_str()
-                          ));
-                     });
-                  });
+                    let x = x.clone();
+                    let y = y.clone();
+                    let z = z.clone();
+                    let a = a.clone();
+                    let arm = arm.clone();
+                    let btn : gtk::Button = builder.get_object("btn_arm").unwrap();
+                    btn.connect_clicked( move |_| {
+                        if pmeca {
+                            PMECA.with(|meca| {
+                                let meca = meca.borrow();
+                                meca.cmd(&format!("meca 15 12 {} {} {} {} {} {}",
+                                                  arm.get_text().unwrap().as_str(), 
+                                                  x.get_text().unwrap().as_str(), 
+                                                  y.get_text().unwrap().as_str(), 
+                                                  z.get_text().unwrap().as_str(), 0, 
+                                                  a.get_text().unwrap().as_str()
+                                ));
+                            });
+                        }
+                        else {
+                            SMECA.with(|meca| {
+                                let meca = meca.borrow();
+                                meca.cmd(&format!("meca 35 12 {} {} {} {} {} {}",
+                                                  arm.get_text().unwrap().as_str(), 
+                                                  x.get_text().unwrap().as_str(), 
+                                                  y.get_text().unwrap().as_str(), 
+                                                  z.get_text().unwrap().as_str(), 0, 
+                                                  a.get_text().unwrap().as_str()
+                                ));
+                            });
+                        }
+                    });
                 }
                 {
-                  let arm = arm.clone();
-                  let btn : gtk::Button = builder.get_object("btn_prendre_sol").unwrap();
-                  btn.connect_clicked( move |_| {
-                    PMECA.with(|meca| {
-                          let meca = meca.borrow();
-                          meca.cmd(&format!("meca 15 5 {} 0 0 0 0 0",
-                            arm.get_text().unwrap().as_str() 
-                          ));
-                     });
-                  });
+                    let arm = arm.clone();
+                    let btn : gtk::Button = builder.get_object("btn_prendre_sol").unwrap();
+                    btn.connect_clicked( move |_| {
+                        PMECA.with(|meca| {
+                            let meca = meca.borrow();
+                            meca.cmd(&format!("meca 15 5 {} 0 0 0 0 0",
+                                              arm.get_text().unwrap().as_str() 
+                            ));
+                        });
+                    });
                 }
                 {
-                  let arm = arm.clone();
-                  let btn : gtk::Button = builder.get_object("btn_repos_normal").unwrap();
-                  btn.connect_clicked( move |_| {
-                    PMECA.with(|meca| {
-                          let meca = meca.borrow();
-                          meca.cmd(&format!("meca 15 7 {} 0 0 0 0 0",
-                            arm.get_text().unwrap().as_str()
-                          ));
-                     });
-                  });
+                    let arm = arm.clone();
+                    let btn : gtk::Button = builder.get_object("btn_repos_normal").unwrap();
+                    btn.connect_clicked( move |_| {
+                        if pmeca {
+                            PMECA.with(|meca| {
+                                let meca = meca.borrow();
+                                meca.cmd(&format!("meca 15 7 {} 0 0 0 0 0",
+                                                  arm.get_text().unwrap().as_str()
+                                ));
+                            });
+                        } else {
+                            SMECA.with(|meca| {
+                                let meca = meca.borrow();
+                                meca.cmd(&format!("meca 35 7 {} 0 0 0 0 0",
+                                                  arm.get_text().unwrap().as_str()
+                                ));
+                            });
+                        }
+                    });
                 }
                 {
-                  let arm = arm.clone();
-                  let btn : gtk::Button = builder.get_object("btn_repos_vide").unwrap();
-                  btn.connect_clicked( move |_| {
-                    PMECA.with(|meca| {
-                          let meca = meca.borrow();
-                          meca.cmd(&format!("meca 15 6 {} 0 0 0 0 0",
-                            arm.get_text().unwrap().as_str()
-                          ));
-                     });
-                  });
+                    let arm = arm.clone();
+                    let btn : gtk::Button = builder.get_object("btn_repos_vide").unwrap();
+                    btn.connect_clicked( move |_| {
+                        if pmeca {
+                            PMECA.with(|meca| {
+                                let meca = meca.borrow();
+                                meca.cmd(&format!("meca 15 6 {} 0 0 0 0 0",
+                                                  arm.get_text().unwrap().as_str()
+                                ));
+                            });
+                        } else {
+                            SMECA.with(|meca| {
+                                let meca = meca.borrow();
+                                meca.cmd(&format!("meca 35 6 {} 0 0 0 0 0",
+                                                  arm.get_text().unwrap().as_str()
+                                ));
+                            });
+                        }
+                    });
                 }
                 {
-                  let btn : gtk::Button = builder.get_object("btn_init").unwrap();
-                  btn.connect_clicked( move |_| {
-                    PMECA.with(|meca| {
-                          let meca = meca.borrow();
-                          meca.cmd(&format!("meca 15 1 0 0 0 0 0 0"
-                          ));
-                     });
-                  });
+                    let btn : gtk::Button = builder.get_object("btn_init").unwrap();
+                    btn.connect_clicked( move |_| {
+                        if pmeca {
+                            PMECA.with(|meca| {
+                                let meca = meca.borrow();
+                                meca.cmd(&format!("meca 15 1 0 0 0 0 0 0"
+                                ));
+                            });
+                        } 
+                        else {
+                            SMECA.with(|meca| {
+                                let meca = meca.borrow();
+                                meca.cmd(&format!("meca 35 1 0 0 0 0 0 0"
+                                ));
+                            });
+                        }
+                    });
                 }
                 {
-                  let arm = arm.clone();
-                  let btn : gtk::Button = builder.get_object("btn_tk_accel").unwrap();
-                  btn.connect_clicked( move |_| {
-                    PMECA.with(|meca| {
-                          let meca = meca.borrow();
-                          meca.cmd(&format!("meca 15 3 {} 0 0 0 0 0",
-                            arm.get_text().unwrap().as_str() 
-                          ));
-                     });
-                  });
+                    let arm = arm.clone();
+                    let btn : gtk::Button = builder.get_object("btn_tk_accel").unwrap();
+                    btn.connect_clicked( move |_| {
+                        PMECA.with(|meca| {
+                            let meca = meca.borrow();
+                            meca.cmd(&format!("meca 15 3 {} 0 0 0 0 0",
+                                              arm.get_text().unwrap().as_str() 
+                            ));
+                        });
+                    });
                 }
                 {
-                  let arm = arm.clone();
-                  let btn : gtk::Button = builder.get_object("btn_pos_accel").unwrap();
-                  btn.connect_clicked( move |_| {
-                    PMECA.with(|meca| {
-                          let meca = meca.borrow();
-                          meca.cmd(&format!("meca 15 11 {} 0 0 0 0 0",
-                            arm.get_text().unwrap().as_str() 
-                          ));
-                     });
-                  });
+                    let arm = arm.clone();
+                    let btn : gtk::Button = builder.get_object("btn_tk_distri").unwrap();
+                    btn.connect_clicked( move |_| {
+                        SMECA.with(|meca| {
+                            let meca = meca.borrow();
+                            meca.cmd(&format!("meca 35 2 {} 0 0 0 0 0",
+                                              arm.get_text().unwrap().as_str() 
+                            ));
+                        });
+                    });
+                }
+                {
+                    let arm = arm.clone();
+                    let btn : gtk::Button = builder.get_object("btn_pose_bal").unwrap();
+                    btn.connect_clicked( move |_| {
+                        if pmeca {
+                            PMECA.with(|meca| {
+                                let meca = meca.borrow();
+                                meca.cmd(&format!("meca 15 10 {} 0 0 0 0 0",
+                                                  arm.get_text().unwrap().as_str() 
+                                ));
+                            });
+                        }
+                        else {
+                            SMECA.with(|meca| {
+                                let meca = meca.borrow();
+                                meca.cmd(&format!("meca 35 10 {} 0 0 0 0 0",
+                                                  arm.get_text().unwrap().as_str() 
+                                ));
+                            });
+                        }
+                    });
+                }
+                {
+                    let arm = arm.clone();
+                    let btn : gtk::Button = builder.get_object("btn_pos_accel").unwrap();
+                    btn.connect_clicked( move |_| {
+                        PMECA.with(|meca| {
+                            let meca = meca.borrow();
+                            meca.cmd(&format!("meca 15 11 {} 0 0 0 0 0",
+                                              arm.get_text().unwrap().as_str() 
+                            ));
+                        });
+                    });
                 }
 
                 for i in 0..4 {
-                  let btn : gtk::Button = builder.get_object(&format!("btn_pompe_on_{}", i)).unwrap();
-                  let pmeca = self.principal;
-                  btn.connect_clicked( move |_| {
-                      if pmeca {
-                        PMECA.with(|meca| {
-                          let meca = meca.borrow();
-                          meca.cmd(&format!("pump 15 {} 1", i));
-                        });
-                      }
-                      else {
-                        SMECA.with(|meca| {
-                          let meca = meca.borrow();
-                          meca.cmd(&format!("pump 35 {} 1", i));
-                        });
-                      }
-                  });
+                    let btn : gtk::Button = builder.get_object(&format!("btn_pompe_on_{}", i)).unwrap();
+                    let pmeca = self.principal;
+                    btn.connect_clicked( move |_| {
+                        if pmeca {
+                            PMECA.with(|meca| {
+                                let meca = meca.borrow();
+                                meca.cmd(&format!("pump 15 {} 1", i));
+                            });
+                        }
+                        else {
+                            SMECA.with(|meca| {
+                                let meca = meca.borrow();
+                                meca.cmd(&format!("pump 35 {} 1", i));
+                            });
+                        }
+                    });
 
-                  let btn : gtk::Button = builder.get_object(&format!("btn_pompe_off_{}", i)).unwrap();
-                  btn.connect_clicked( move |_| {
-                      if pmeca { 
-                        PMECA.with(|meca| {
-                          let meca = meca.borrow();
-                          meca.cmd(&format!("pump 15 {} 0", i));
-                        });
-                      }
-                      else {
-                          SMECA.with(|meca| {
-                              let meca = meca.borrow();
-                          meca.cmd(&format!("pump 35 {} 0", i));
-                        });
-                      }
-                  });
+                    let btn : gtk::Button = builder.get_object(&format!("btn_pompe_off_{}", i)).unwrap();
+                    btn.connect_clicked( move |_| {
+                        if pmeca { 
+                            PMECA.with(|meca| {
+                                let meca = meca.borrow();
+                                meca.cmd(&format!("pump 15 {} 0", i));
+                            });
+                        }
+                        else {
+                            SMECA.with(|meca| {
+                                let meca = meca.borrow();
+                                meca.cmd(&format!("pump 35 {} 0", i));
+                            });
+                        }
+                    });
                 }
 
                 window.show_all();

@@ -1283,7 +1283,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton" id="btn_tk_distri4">
+                          <object class="GtkButton" id="btn_pose_bal">
                             <property name="label" translatable="yes">Pose Balance</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
