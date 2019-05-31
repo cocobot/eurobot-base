@@ -6,11 +6,13 @@ void cocobot_arm_action_init(void);
 // arm_id value should be between 0 and 3
 void cocobot_arm_action_prendre_palais_sol(int arm_id, float x, float y);
 void cocobot_arm_action_pos_stockage_palais(int arm_id);
+void cocobot_arm_action_open_accelerateur(int arm_id, float angle);
 void cocobot_arm_action_prise_distributeur(int arm_id, float angle);
 void cocobot_arm_action_orientation(int arm_id, int side);
 void cocobot_arm_action_prise_goldenium(int arm_id, float angle);
 void cocobot_arm_action_repos_goldenium(int arm_id);
 void cocobot_arm_action_repos_vide(int arm_id);
+void cocobot_arm_action_prise_sol_second_try(int arm_id, float x, float y);
 void cocobot_arm_action_repos_normal(int arm_id);
 void cocobot_arm_action_prise_bluenium(int arm_id, float angle);
 void cocobot_arm_action_depose_balance(int arm_id, float angle);

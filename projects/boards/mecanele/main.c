@@ -40,14 +40,26 @@ static void thread(void * arg)
           {
             vTaskDelay(100/portTICK_PERIOD_MS);
           }
+          pump_set_state(_arm, 2);
+          cocobot_arm_action_prise_sol_second_try(_arm, 0, 0);
+          while(pump_get_state(_arm) != 1)
+          {
+            vTaskDelay(100/portTICK_PERIOD_MS);
+          }
+
           cocobot_arm_action_repos_normal(_arm);
           break;
 
         case UAVCAN_COCOBOT_MECAACTION_REQUEST_TAKE_ACCELL:
-          if(arg == 0)
+          if(_arg == 0)
           {
               cocobot_arm_action_prise_bluenium(_arm, 0);
               pump_set_state(_arm, 2);
+          }
+          else if(_arg == 2)
+          {
+              cocobot_arm_action_open_accelerateur(_arm, 0);
+              vTaskDelay(100/portTICK_PERIOD_MS);
           }
           else
           {
