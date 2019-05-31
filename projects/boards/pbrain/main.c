@@ -20,8 +20,6 @@ static void cocobot_callage_backward()
     }
     while(result == COCOBOT_TRAJECTORY_SUCCESS); 
 
-    //angle is back
-    cocobot_asserv_set_angle_activation(1);
 }
 
 void stop(void)
@@ -209,40 +207,61 @@ void run_strat(void * arg)
     //Activation de l'accelerateur
     if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
     {
-        cocobot_trajectory_goto_xy(186, 700, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_trajectory_goto_xy(300, 700, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
         cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
         cocobot_trajectory_wait();
         meca_action(2, MECA_PUSH_ACCEL);
         cocobot_callage_backward();
         cocobot_position_set_angle(-90);
         cocobot_position_set_y(870);
-        cocobot_trajectory_goto_xy(300, 700, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-        meca_action(3, MECA_PUSH_ACCEL);
+        cocobot_trajectory_goto_d(100, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
         cocobot_trajectory_wait();
+        //angle is back
+        cocobot_asserv_set_angle_activation(1);
+        cocobot_trajectory_goto_xy(230, 740, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_trajectory_wait();
+        meca_action(2, MECA_REST_EMPTY);
+        meca_action(3, MECA_PUSH_ACCEL);
         cocobot_trajectory_goto_a(180, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-        cocobot_trajectory_goto_xy_backward(600, 700, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_trajectory_goto_xy_backward(500, 740, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
     }
     else
     {
-        cocobot_trajectory_goto_xy(100, 400, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-        cocobot_trajectory_goto_xy(-86, 740, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-        meca_action(3, MECA_PUSH_ACCEL);
+        cocobot_trajectory_goto_xy(-300, 700, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_trajectory_wait();
+        meca_action(2, MECA_PUSH_ACCEL);
+        cocobot_callage_backward();
+        cocobot_position_set_angle(-90);
+        cocobot_position_set_y(870);
+        cocobot_trajectory_goto_d(100, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_trajectory_wait();
+        //angle is back
+        cocobot_asserv_set_angle_activation(1);
+        cocobot_trajectory_goto_xy(-230, 740, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_trajectory_wait();
+        meca_action(2, MECA_REST_EMPTY);
+        meca_action(1, MECA_PUSH_ACCEL);
+        cocobot_trajectory_goto_a(0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_trajectory_goto_xy_backward(-500, 740, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
     }
 
     cocobot_trajectory_wait();
-
-    if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
-    {
-        cocobot_trajectory_goto_a(0, 2000);
-        cocobot_trajectory_goto_xy(386, 740, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-    }
-    else
-    {
-        cocobot_trajectory_goto_a(180, 2000);
-        cocobot_trajectory_goto_xy(-386, 740, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-    }
-
     cocobot_game_state_add_points_to_score(20);
+
+    //if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+    //{
+    //    cocobot_trajectory_goto_a(0, 2000);
+    //    cocobot_trajectory_goto_xy(386, 740, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+    //}
+    //else
+    //{
+    //    cocobot_trajectory_goto_a(180, 2000);
+    //    cocobot_trajectory_goto_xy(-386, 740, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+    //}
+
 
 
 
