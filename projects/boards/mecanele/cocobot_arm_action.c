@@ -111,7 +111,7 @@ void cocobot_arm_action_prendre_palais_sol(int arm_id, float x, float y)
     {
         servo_set_angle(2, 5);
         servo_set_angle(1, -110);
-        servo_set_angle(0, 10);
+        servo_set_angle(0, 5);
         return; 
     }
     if(arm_id == 2)
@@ -229,15 +229,18 @@ void cocobot_arm_action_open_accelerateur(int arm_id, float angle)
         servo_set_angle(10, -55);
         servo_set_angle(11, 0);
     }
+    if(arm_id == 2)
+    {
+        servo_set_angle(6, 80);
+        servo_set_angle(7, -60);
+        servo_set_angle(8, -20);
+    }
     else if(arm_id == 1)
     {
-        //TBD
         servo_set_angle(3, 54);
         servo_set_angle(4, -55);
         servo_set_angle(5, 0);
     }
-        // TODO: à régler !
-        //cocobot_arm_move_arti(arm[arm_id], a1_deg, a2_deg, a3_deg, a4_deg);
     }
     else
     {

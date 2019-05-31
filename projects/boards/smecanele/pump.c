@@ -4,10 +4,10 @@
 #include <cocobot.h>
 #include <platform.h>
 
-#define PUMP_1  PLATFORM_GPIO_PUMP1
+#define PUMP_1  PLATFORM_GPIO_VALVE7
 #define PUMP_2  PLATFORM_GPIO_PUMP2
-#define EMPTY_SOL_1  PLATFORM_GPIO_VALVE1
-#define EMPTY_SOL_2  PLATFORM_GPIO_VALVE2
+#define EMPTY_SOL_1  PLATFORM_GPIO_VALVE8
+#define EMPTY_SOL_2  PLATFORM_GPIO_VALVE5
 
 uint8_t volatile _sucker_status[4];
 
@@ -29,7 +29,7 @@ static void pump_thread(void * arg)
       case 2:
         platform_gpio_set(PUMP_1);
         platform_gpio_clear(EMPTY_SOL_1);
-        _sucker_status[0] = 0;
+        _sucker_status[0] = 1;
         break;
     }
 
@@ -46,7 +46,7 @@ static void pump_thread(void * arg)
       case 2:
         platform_gpio_set(PUMP_2);
         platform_gpio_clear(EMPTY_SOL_2);
-        _sucker_status[1] = 0;
+        _sucker_status[1] = 1;
         break;
     }
 
