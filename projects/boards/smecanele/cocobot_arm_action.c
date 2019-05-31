@@ -110,15 +110,15 @@ void cocobot_arm_action_depose_balance(int arm_id, float angle)
       break;
 
     case 1:
-servo_set_angle(0, 80);
+servo_set_angle(3, 80);
       vTaskDelay(250/portTICK_PERIOD_MS);
-      servo_set_angle(1, -130);
+      servo_set_angle(4, -130);
       vTaskDelay(250/portTICK_PERIOD_MS);
-      servo_set_angle(2, 70);
+      servo_set_angle(5, 70);
       vTaskDelay(250/portTICK_PERIOD_MS);
-      servo_set_angle(1, -100);
+      servo_set_angle(4, -100);
       vTaskDelay(250/portTICK_PERIOD_MS);
-      servo_set_angle(0, 65);
+      servo_set_angle(3, 65);
       vTaskDelay(250/portTICK_PERIOD_MS);
       pump_set_state(arm_id, 0);
       vTaskDelay(1500/portTICK_PERIOD_MS);
