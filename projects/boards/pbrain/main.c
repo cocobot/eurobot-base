@@ -18,7 +18,97 @@ void stop(void)
   }
 }
 
+void run_homologation_pmi(void * arg)
+{
+  (void)arg;
+  cocobot_game_state_wait_for_configuration();
+  cocobot_game_state_wait_for_starter_removed();
+  cocobot_trajectory_goto_d(300, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  cocobot_trajectory_wait();
+  while(1)
+  {
+      vTaskDelay(100/portTICK_PERIOD_MS);
+  }
+}
+
 void run_homologation(void * arg)
+{
+  (void)arg;
+  cocobot_game_state_wait_for_configuration();
+
+  switch(cocobot_game_state_get_color())
+  {
+    case COCOBOT_GAME_STATE_COLOR_NEG:
+      cocobot_position_set_x(-1180);
+      cocobot_position_set_y(550);
+      cocobot_position_set_angle(0);
+      break;
+
+    case COCOBOT_GAME_STATE_COLOR_POS:
+      cocobot_position_set_x(1180);
+      cocobot_position_set_y(550);
+      cocobot_position_set_angle(180);
+      break;
+  }
+
+  cocobot_game_state_wait_for_starter_removed();
+  //sort de la zone vers l'experience
+  cocobot_trajectory_goto_d(150, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  cocobot_trajectory_wait();
+
+  //tourne face a l'autre equipe
+  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+  {
+      cocobot_trajectory_goto_a(0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  }
+  else
+  {
+      cocobot_trajectory_goto_a(180, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  }
+
+  cocobot_trajectory_wait();
+
+  //Avance de 20cm
+  cocobot_trajectory_goto_d(300, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  cocobot_trajectory_wait();
+
+  //tourne face à la balance
+  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+  {
+      cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  }
+  else
+  {
+      cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  }
+  cocobot_trajectory_wait();
+
+  //Avance de 20cm
+  cocobot_trajectory_goto_d(200, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  cocobot_trajectory_wait();
+
+  //tourne face à la balance
+  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+  {
+      cocobot_trajectory_goto_a(180, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  }
+  else
+  {
+      cocobot_trajectory_goto_a(0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  }
+  cocobot_trajectory_wait();
+
+  //Avance de 30cm
+  cocobot_trajectory_goto_d(300, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  cocobot_trajectory_wait();
+    
+  while(1)
+  {
+      vTaskDelay(100/portTICK_PERIOD_MS);
+  }
+}
+
+void run_strat(void * arg)
 {
   (void)arg;
 
@@ -48,14 +138,6 @@ void run_homologation(void * arg)
   //electron
   cocobot_game_state_add_points_to_score(35);
 
-  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
-  {
-      cocobot_trajectory_goto_a(10, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  }
-  else
-  {
-      cocobot_trajectory_goto_a(190, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  }
   //saisir truc au sol
   meca_action(0, MECA_TAKE_FLOOR);
 
@@ -106,8 +188,41 @@ meca_action(3, MECA_TAKE_FLOOR);
   }
   cocobot_game_state_add_points_to_score(1 + 6 + 6);
 
+  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+  {
+      //TBD
+      cocobot_trajectory_goto_xy(-100, 400, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+      cocobot_trajectory_goto_xy(86, 740, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+      meca_action(1, MECA_PUSH_ACCEL);
+  }
+  else
+  {
+      cocobot_trajectory_goto_xy(100, 400, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+      cocobot_trajectory_goto_xy(-86, 740, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+      meca_action(3, MECA_PUSH_ACCEL);
+      //open arm 3 60 -55 0
+  }
+
+  cocobot_trajectory_wait();
+
+  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+  {
+      //TBD
+      cocobot_trajectory_goto_a(0, 2000);
+      cocobot_trajectory_goto_xy(386, 740, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  }
+  else
+  {
+      cocobot_trajectory_goto_a(180, 2000);
+      cocobot_trajectory_goto_xy(-386, 740, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+  }
+
+  cocobot_game_state_add_points_to_score(20);
+
     while(1)
+    {
         vTaskDelay(100/portTICK_PERIOD_MS);
+    }
 
   cocobot_trajectory_goto_xy_backward(200, 687, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
@@ -126,68 +241,6 @@ meca_action(3, MECA_TAKE_FLOOR);
   cocobot_trajectory_goto_xy(-154, -290, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
   cocobot_trajectory_wait();
 
-
-
-#if 0
-  meca_action(1, MECA_TAKE_FLOOR);
-
-  //sort de la zone vers l'experience
-  cocobot_trajectory_goto_d(150, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  cocobot_trajectory_wait();
-
-  //tourne face a l'autre equipe
-  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
-  {
-      cocobot_trajectory_goto_a(0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  }
-  else
-  {
-      cocobot_trajectory_goto_a(180, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  }
-
-  cocobot_trajectory_wait();
-
-  //Avance de 20cm
-  cocobot_trajectory_goto_d(300, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  cocobot_trajectory_wait();
-
-  //tourne face à la balance
-  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
-  {
-      cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  }
-  else
-  {
-      cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  }
-  cocobot_trajectory_wait();
-
-  //Avance de 20cm
-  cocobot_trajectory_goto_d(200, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  cocobot_trajectory_wait();
-
-  //tourne face à la balance
-  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
-  {
-      cocobot_trajectory_goto_a(180, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  }
-  else
-  {
-      cocobot_trajectory_goto_a(0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  }
-  cocobot_trajectory_wait();
-
-  //Avance de 30cm
-  cocobot_trajectory_goto_d(300, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  cocobot_trajectory_wait();
-#endif
-  
-
-  //cocobot_trajectory_goto_xy(500, 0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  //cocobot_trajectory_goto_xy(500, 500, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  //cocobot_trajectory_goto_xy(0, 500, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  //cocobot_trajectory_goto_xy(0, 0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  //cocobot_trajectory_wait();
 
   while(1)
   {
@@ -243,7 +296,9 @@ int main(void)
   cocobot_position_set_y(0);
   cocobot_position_set_angle(0);
 
-  xTaskCreate(run_homologation, "strat", 600, NULL, 2, NULL );
+  //xTaskCreate(run_strat, "strat", 600, NULL, 2, NULL );
+  //xTaskCreate(run_homologation, "homolo", 600, NULL, 2, NULL );
+  xTaskCreate(run_homologation_pmi, "homolo_pmi", 600, NULL, 2, NULL );
 
   vTaskStartScheduler();
 
