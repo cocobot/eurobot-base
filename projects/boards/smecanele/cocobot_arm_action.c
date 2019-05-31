@@ -73,9 +73,19 @@ void cocobot_arm_action_prise_distributeur(int arm_id, float angle)
       break;
 
     case 1:
-      servo_set_angle(3, 0);
-      servo_set_angle(4, 0);
-      servo_set_angle(5, 0);
+      servo_set_angle(3, 35);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      servo_set_angle(5, 60);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      servo_set_angle(4, -110);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      servo_set_angle(4, -100);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      servo_set_angle(4, -110);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      servo_set_angle(4, -100);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+   
       break;
   }
 }
@@ -100,9 +110,19 @@ void cocobot_arm_action_depose_balance(int arm_id, float angle)
       break;
 
     case 1:
-      servo_set_angle(3, 0);
-      servo_set_angle(4, 0);
-      servo_set_angle(5, 0);
+servo_set_angle(0, 80);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      servo_set_angle(1, -130);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      servo_set_angle(2, 70);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      servo_set_angle(1, -100);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      servo_set_angle(0, 65);
+      vTaskDelay(250/portTICK_PERIOD_MS);
+      pump_set_state(arm_id, 0);
+      vTaskDelay(1500/portTICK_PERIOD_MS);
+ 
       break;
   }
 }

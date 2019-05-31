@@ -9,102 +9,36 @@
   {\
     {\
       .angle_deg = 0,\
-      .setpoint_pwm = 210,\
+      .setpoint_pwm = 155,\
     },\
     {\
       .angle_deg = 90,\
-      .setpoint_pwm = 420,\
+      .setpoint_pwm = 360,\
     }\
   },\
   [1] = \
   {\
     {\
-      .angle_deg = 0,\
-      .setpoint_pwm = 150,\
+      .angle_deg = -100,\
+      .setpoint_pwm = 200,\
     },\
     {\
-      .angle_deg = -90,\
-      .setpoint_pwm = 370,\
+      .angle_deg = -150,\
+      .setpoint_pwm = 330,\
     }\
   },\
   [2] =\
   {\
     {\
       .angle_deg = 0,\
-      .setpoint_pwm = 375,\
+      .setpoint_pwm = 180,\
     },\
     {\
       .angle_deg = 90,\
-      .setpoint_pwm = 200,\
+      .setpoint_pwm = 390,\
     }\
   },\
   [3] = \
-  {\
-    {\
-      .angle_deg = 0,\
-      .setpoint_pwm = 200,\
-    },\
-    {\
-      .angle_deg = 90,\
-      .setpoint_pwm = 410,\
-    }\
-  },\
-  [4] = \
-  {\
-    {\
-      .angle_deg = 0,\
-      .setpoint_pwm = 190,\
-    },\
-    {\
-      .angle_deg = -90,\
-      .setpoint_pwm = 405,\
-    }\
-  },\
-  [5] =\
-  {\
-    {\
-      .angle_deg = 0,\
-      .setpoint_pwm = 375,\
-    },\
-    {\
-      .angle_deg = 90,\
-      .setpoint_pwm = 160,\
-    }\
-  },\
-  [6] = \
-  {\
-    {\
-      .angle_deg = 0,\
-      .setpoint_pwm = 185,\
-    },\
-    {\
-      .angle_deg = 90,\
-      .setpoint_pwm = 400,\
-    }\
-  },\
-  [7] = \
-  {\
-    {\
-      .angle_deg = 0,\
-      .setpoint_pwm = 185,\
-    },\
-    {\
-      .angle_deg = -90,\
-      .setpoint_pwm = 400,\
-    }\
-  },\
-  [8] =\
-  {\
-    {\
-      .angle_deg = 0,\
-      .setpoint_pwm = 325,\
-    },\
-    {\
-      .angle_deg = 90,\
-      .setpoint_pwm = 140,\
-    }\
-  },\
-  [9] = \
   {\
     {\
       .angle_deg = 0,\
@@ -112,29 +46,29 @@
     },\
     {\
       .angle_deg = 90,\
-      .setpoint_pwm = 405,\
+      .setpoint_pwm = 385,\
     }\
   },\
-  [10] = \
+  [4] = \
   {\
     {\
-      .angle_deg = 0,\
-      .setpoint_pwm = 190,\
+      .angle_deg = -100,\
+      .setpoint_pwm = 180,\
     },\
     {\
-      .angle_deg = -90,\
-      .setpoint_pwm = 415,\
+      .angle_deg = -150,\
+      .setpoint_pwm = 310,\
     }\
   },\
-  [11] =\
+  [5] =\
   {\
     {\
       .angle_deg = 0,\
-      .setpoint_pwm = 335,\
+      .setpoint_pwm = 250,\
     },\
     {\
       .angle_deg = 90,\
-      .setpoint_pwm = 150,\
+      .setpoint_pwm = 460,\
     }\
   },\
 }
