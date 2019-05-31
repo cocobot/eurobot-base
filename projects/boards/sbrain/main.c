@@ -22,6 +22,11 @@ void stop(void)
   }
 }
 
+void stop_meca(void)
+{
+  meca_action(0, MECA_STOP);
+}
+
 /*
 static void cocobot_callage_backward()
 {
@@ -168,7 +173,7 @@ void sortie_balance(void)
   cocobot_trajectory_wait();
 }
 
-void prise_et_depose_6(uint8_t numero)
+void prise_et_depose_6(uint8_t numero, uint8_t mode)
 {
   switch(cocobot_game_state_get_color())
   {
@@ -207,39 +212,42 @@ void prise_et_depose_6(uint8_t numero)
   cocobot_trajectory_wait();
   cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_FORWARD);
 
-  //prise
-  switch(cocobot_game_state_get_color())
+  if(mode == 0)
   {
-    case COCOBOT_GAME_STATE_COLOR_NEG:
-      meca_action(0, MECA_TAKE_DISTRIB);
-      break;
+    //prise
+    switch(cocobot_game_state_get_color())
+    {
+      case COCOBOT_GAME_STATE_COLOR_NEG:
+        meca_action(0, MECA_TAKE_DISTRIB);
+        break;
 
-    case COCOBOT_GAME_STATE_COLOR_POS:
-      meca_action(1, MECA_TAKE_DISTRIB);
-      break;
+      case COCOBOT_GAME_STATE_COLOR_POS:
+        meca_action(1, MECA_TAKE_DISTRIB);
+        break;
+    }
+
+    //on va le poser dans la balance
+    depose_balance();
+    switch(numero)
+    {
+      case 0:
+      case 2:
+      case 4:
+        cocobot_game_state_add_points_to_score(4); 
+        break;
+
+      case 1:
+      case 5:
+        cocobot_game_state_add_points_to_score(8); 
+        break;
+
+      case 3:
+        cocobot_game_state_add_points_to_score(12); 
+        break;
+    }
+
+    sortie_balance();
   }
-  
-  //on va le poser dans la balance
-  depose_balance();
-  switch(numero)
-  {
-    case 0:
-    case 2:
-    case 4:
-      cocobot_game_state_add_points_to_score(4); 
-      break;
-
-    case 1:
-    case 5:
-      cocobot_game_state_add_points_to_score(8); 
-      break;
-
-    case 3:
-      cocobot_game_state_add_points_to_score(12); 
-      break;
-  }
-
-  sortie_balance();
 }
 
 
@@ -471,9 +479,9 @@ void run_strategy(void * arg)
   cocobot_trajectory_wait();
 
   //on prend le bleu
-  prise_et_depose_6(3);
-  prise_et_depose_6(5);
-  prise_et_depose_6(1);
+  prise_et_depose_6(3, 0);
+  prise_et_depose_6(5, 0);
+  prise_et_depose_6(1, 0);
 
   //on va vers le pack de 3
   switch(cocobot_game_state_get_color())
@@ -565,6 +573,39 @@ void run_strategy(void * arg)
 
   depose_balance_double();
 
+
+  //On prend un rouge
+  prise_et_depose_6(4, 1);
+  switch(cocobot_game_state_get_color())
+  {
+    case COCOBOT_GAME_STATE_COLOR_NEG:
+      meca_action(0, MECA_TAKE_DISTRIB);
+      break;
+
+    case COCOBOT_GAME_STATE_COLOR_POS:
+      meca_action(1, MECA_TAKE_DISTRIB);
+      break;
+  }
+
+  //Puis un second
+  prise_et_depose_6(4, 1);
+  switch(cocobot_game_state_get_color())
+  {
+    case COCOBOT_GAME_STATE_COLOR_NEG:
+      cocobot_trajectory_goto_a(0, 5000);
+      cocobot_trajectory_wait();
+      meca_action(1, MECA_TAKE_DISTRIB);
+      break;
+
+    case COCOBOT_GAME_STATE_COLOR_POS:
+      cocobot_trajectory_goto_a(180, 5000);
+      cocobot_trajectory_wait();
+      meca_action(0, MECA_TAKE_DISTRIB);
+      break;
+  }
+
+
+
   //fin !
   while(1)
   {
@@ -584,7 +625,7 @@ int main(void)
   cocobot_asserv_init();
   cocobot_trajectory_init(4);
   cocobot_opponent_detection_init(3);
-  cocobot_game_state_init(NULL);
+  cocobot_game_state_init(stop_meca);
   cocobot_pathfinder_init(initTable);
   cocobot_action_scheduler_use_pathfinder(1);
   meca_init();

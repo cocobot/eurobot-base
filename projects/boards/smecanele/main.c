@@ -57,6 +57,18 @@ static void thread(void * arg)
           pump_set_state(_arm, 0);
           vTaskDelay(1000 / portTICK_PERIOD_MS); 
           break;
+
+        case 5: //REUSE TAKE FLOOR
+          pump_set_state(0, 0);
+          pump_set_state(1, 0);
+          servo_set_pwm(0, 0);
+          servo_set_pwm(1, 0);
+          servo_set_pwm(2, 0);
+          servo_set_pwm(3, 0);
+          servo_set_pwm(4, 0);
+          servo_set_pwm(5, 0);
+          break;
+
       }
 
       _meca_busy = 0;
