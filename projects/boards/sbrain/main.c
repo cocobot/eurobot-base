@@ -87,7 +87,6 @@ void depose_balance(void)
   cocobot_trajectory_wait();
   cocobot_asserv_normal();
 
-  stop();
   switch(cocobot_game_state_get_color())
   {
     case COCOBOT_GAME_STATE_COLOR_NEG:
