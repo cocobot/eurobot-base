@@ -5,13 +5,20 @@
 #include <stdio.h>
 #include "meca.h"
 
+//options
+#define USE_STOP                0
+#define PRISE_DOUBLE            0
+#define PRISE_DOUBLE_D3         0
+
 #define DEMI_LARGEUR_ROBOT      150
 #define DEMI_LONGUEUR_ARR_ROBOT 107
 #define MARGE_PRISE_BRAS        100
 #define MARGE_DEPOSE_BRAS       100
+#define OFFSET_VIOLET           -30
 
 extern cocobot_pathfinder_table_init_s initTable [];
 
+#if USE_STOP
 void stop(void)
 {
   cocobot_trajectory_wait();
@@ -21,6 +28,7 @@ void stop(void)
     vTaskDelay(100/portTICK_PERIOD_MS);
   }
 }
+#endif
 
 void stop_meca(void)
 {
@@ -75,7 +83,7 @@ void depose_balance(void)
 
     case COCOBOT_GAME_STATE_COLOR_POS:
       cocobot_trajectory_goto_xy_backward(1050 -(50 + 600), -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
-      cocobot_trajectory_goto_xy_backward(272, -600 + DEMI_LARGEUR_ROBOT + MARGE_DEPOSE_BRAS, 4000);
+      cocobot_trajectory_goto_xy_backward(272, -600 + DEMI_LARGEUR_ROBOT + MARGE_DEPOSE_BRAS - 20, 4000);
       cocobot_trajectory_goto_a(0, 5000);
       break;
   }
@@ -177,11 +185,11 @@ void sortie_balance(void)
   switch(cocobot_game_state_get_color())
   {
     case COCOBOT_GAME_STATE_COLOR_NEG:
-      cocobot_trajectory_goto_xy_backward(-1050 + 50 + 600, -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
+      cocobot_trajectory_goto_xy_forward(-1050 + 50 + 600, -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
       break;
 
     case COCOBOT_GAME_STATE_COLOR_POS:
-      cocobot_trajectory_goto_xy_backward(1050 -(50 + 600), -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
+      cocobot_trajectory_goto_xy_forward(1050 -(50 + 600), -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
       break;
   }
 
@@ -194,42 +202,38 @@ void prise_et_depose_6(uint8_t numero, uint8_t mode)
   {
     case COCOBOT_GAME_STATE_COLOR_NEG:
       {
-      float target_x = -1050 + 50 + numero * 100;
-      if(target_x > cocobot_position_get_x())
-      {
-        cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_BACKWARD);
-      }
-      else
-      {
-        cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_FORWARD);
-      }
-      cocobot_trajectory_goto_xy(target_x, -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
-      cocobot_trajectory_goto_a(180, 4000);
+        float target_x = -1050 + 50 + numero * 100;
+        if(numero == 3)
+        {
+          cocobot_trajectory_goto_xy(target_x, -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
+        }
+        else
+        {
+          cocobot_trajectory_goto_xy_backward(target_x, -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
+        }
+        cocobot_trajectory_goto_a(180, 4000);
       }
       break;
 
     case COCOBOT_GAME_STATE_COLOR_POS:
       {
         float target_x = 1050 - (50 + numero * 100);
-        if(target_x > cocobot_position_get_x())
+        if(numero == 3)
         {
-          cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_BACKWARD);
+          cocobot_trajectory_goto_xy_backward(target_x - OFFSET_VIOLET, -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
         }
         else
         {
-          cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_FORWARD);
+          cocobot_trajectory_goto_xy_forward(target_x - OFFSET_VIOLET, -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
         }
-        cocobot_trajectory_goto_xy(target_x, -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
         cocobot_trajectory_goto_a(0, 4000);
       }
       break;
   }
   cocobot_trajectory_wait();
-  cocobot_trajetory_set_xy_default(COCOBOT_TRAJECTORY_FORWARD);
 
   if(mode == 0)
   {
-    //stop();
     //prise
     switch(cocobot_game_state_get_color())
     {
@@ -266,130 +270,67 @@ void prise_et_depose_6(uint8_t numero, uint8_t mode)
   }
 }
 
-
-void run_homologation(void * arg)
+void prise_double_et_depose_6(uint8_t numero1, uint8_t numero2)
 {
-  (void)arg;
+  prise_et_depose_6(numero1, 1);
+  
+  //prise
+    switch(cocobot_game_state_get_color())
+    {
+      case COCOBOT_GAME_STATE_COLOR_NEG:
+        meca_action(0, MECA_TAKE_DISTRIB);
+        break;
 
-  cocobot_game_state_wait_for_configuration();
+      case COCOBOT_GAME_STATE_COLOR_POS:
+        meca_action(1, MECA_TAKE_DISTRIB);
+        break;
+    }
 
-  //set initial position
+    //second
+    switch(cocobot_game_state_get_color())
+    {
+      case COCOBOT_GAME_STATE_COLOR_NEG:
+        {
+          float target_x = -1050 + 50 + numero2 * 100;
+          if(numero2 == 3)
+          {
+            cocobot_trajectory_goto_xy_backward(target_x, -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
+          }
+          else
+          {
+            cocobot_trajectory_goto_xy(target_x, -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
+          }
+          cocobot_trajectory_goto_a(180, 4000);
+        }
+        break;
 
-  switch(cocobot_game_state_get_color())
-  {
-    case COCOBOT_GAME_STATE_COLOR_NEG:
-      cocobot_position_set_x(-1350);
-      cocobot_position_set_y(550);
-      cocobot_position_set_angle(90);
-      break;
-
-    case COCOBOT_GAME_STATE_COLOR_POS:
-      cocobot_position_set_x(1350);
-      cocobot_position_set_y(550);
-      cocobot_position_set_angle(90);
-      break;
-  }
-
-  vTaskDelay(500 / portTICK_PERIOD_MS); 
-
-  cocobot_game_state_wait_for_starter_removed();
-  cocobot_game_state_add_points_to_score(1);
-
-
-  //sort de la zone vers l'experience
-  cocobot_trajectory_goto_d(150, 4000);
+      case COCOBOT_GAME_STATE_COLOR_POS:
+        {
+          float target_x = 1050 - (50 + numero2 * 100);
+          if(numero2 == 3)
+          {
+            cocobot_trajectory_goto_xy(target_x - OFFSET_VIOLET, -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
+          }
+          else
+          {
+            cocobot_trajectory_goto_xy_backward(target_x - OFFSET_VIOLET, -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
+          }
+          cocobot_trajectory_goto_a(0, 4000);
+        }
+        break;
+    }
   cocobot_trajectory_wait();
-  cocobot_game_state_add_points_to_score(1);
 
-  //tourne face a l'autre equipe
-  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
-  {
-    cocobot_trajectory_goto_a(0, 4000);
-  }
-  else
-  {
-    cocobot_trajectory_goto_a(180, 4000);
-  }
+switch(cocobot_game_state_get_color())
+    {
+      case COCOBOT_GAME_STATE_COLOR_NEG:
+        meca_action(1, MECA_TAKE_DISTRIB);
+        break;
 
-  cocobot_trajectory_wait();
-  cocobot_game_state_add_points_to_score(1);
-
-  //Avance de 20cm
-  cocobot_trajectory_goto_d(300, 4000);
-  cocobot_trajectory_wait();
-  cocobot_game_state_add_points_to_score(1);
-
-  //tourne face à la balance
-  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
-  {
-    cocobot_trajectory_goto_a(-90, 4000);
-  }
-  else
-  {
-    cocobot_trajectory_goto_a(-90, 4000);
-  }
-  cocobot_trajectory_wait();
-  cocobot_game_state_add_points_to_score(1);
-
-  //Avance de 20cm
-  cocobot_trajectory_goto_d(200, 4000);
-  cocobot_trajectory_wait();
-  cocobot_game_state_add_points_to_score(1);
-
-  //tourne face à la balance
-  if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
-  {
-    cocobot_trajectory_goto_a(180, 4000);
-  }
-  else
-  {
-    cocobot_trajectory_goto_a(0, 4000);
-  }
-  cocobot_trajectory_wait();
-  cocobot_game_state_add_points_to_score(1);
-
-  //Avance de 30cm
-  cocobot_trajectory_goto_d(300, 4000);
-  cocobot_trajectory_wait();
-  cocobot_game_state_add_points_to_score(1);
-
-
-
-  //cocobot_trajectory_goto_xy(500, 0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  //cocobot_trajectory_goto_xy(500, 500, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  //cocobot_trajectory_goto_xy(0, 500, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  //cocobot_trajectory_goto_xy(0, 0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
-  //cocobot_trajectory_wait();
-
-  while(1)
-  {
-    vTaskDelay(100/portTICK_PERIOD_MS);
-  }
-
-  while(1)
-  {
-    //do nothing !
-    uprintf("x=%d y=%d a=%d d=%d -- l=%ld r=%ld\r\n", 
-            (int)cocobot_position_get_x(),
-            (int)cocobot_position_get_y(),
-            (int)cocobot_position_get_angle(),
-            (int)cocobot_position_get_distance(),
-            (int)cocobot_position_get_left_encoder(),
-            (int)cocobot_position_get_right_encoder());
-
-    cocobot_com_printf(COM_DEBUG, "x=%d y=%d a=%d d=%d -- l=%ld r=%ld\r\n", 
-                       (int)cocobot_position_get_x(),
-                       (int)cocobot_position_get_y(),
-                       (int)cocobot_position_get_angle(),
-                       (int)cocobot_position_get_distance(),
-                       (int)cocobot_position_get_left_encoder(),
-                       (int)cocobot_position_get_right_encoder());
-
-    vTaskDelay(100/portTICK_PERIOD_MS);
-  }
-
-  while(1)
-    vTaskDelay(100/portTICK_PERIOD_MS);
+      case COCOBOT_GAME_STATE_COLOR_POS:
+        meca_action(0, MECA_TAKE_DISTRIB);
+        break;
+    }
 }
 
 void run_strategy(void * arg)
@@ -397,6 +338,10 @@ void run_strategy(void * arg)
   (void)arg;
   cocobot_game_state_wait_for_configuration();
   cocobot_trajectory_set_opponent_detection(0);
+
+#if USE_STOP
+  cocobot_game_state_add_points_to_score(800);
+#endif
 
   //set initial position
   switch(cocobot_game_state_get_color())
@@ -480,21 +425,25 @@ void run_strategy(void * arg)
   switch(cocobot_game_state_get_color())
   {
     case COCOBOT_GAME_STATE_COLOR_NEG:
-      cocobot_trajectory_goto_xy_backward(-1050 + 50 + 300, -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
+      //Utile ? cocobot_trajectory_goto_xy_backward(-1050 + 50 + 300, -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
       cocobot_trajectory_goto_a(180, 4000);
       break;
 
     case COCOBOT_GAME_STATE_COLOR_POS:
-      cocobot_trajectory_goto_xy_backward(1050 -(50 + 300), -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
+      //Utile ? cocobot_trajectory_goto_xy_backward(1050 -(50 + 300), -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
       cocobot_trajectory_goto_a(0, 4000);
       break;
   }
   cocobot_trajectory_wait();
 
-  //on prend le bleu
+#if PRISE_DOUBLE
+  prise_double_et_depose_6(3, 5);
+#else
+  //on prend le bleu/vert/vert
   prise_et_depose_6(3, 0);
   prise_et_depose_6(5, 0);
   prise_et_depose_6(1, 0);
+#endif
 
   //on va vers le pack de 3
   switch(cocobot_game_state_get_color())
@@ -522,9 +471,11 @@ void run_strategy(void * arg)
   cocobot_trajectory_wait();
 
   //petit callage opportun
+  cocobot_asserv_slow();
   cocobot_trajectory_goto_d(-100, 4000);
   cocobot_trajectory_goto_d(-100, 2000);
   cocobot_trajectory_wait();
+  cocobot_asserv_normal();
 
   //stabilisation de la position
   vTaskDelay(500 / portTICK_PERIOD_MS); 
@@ -534,6 +485,7 @@ void run_strategy(void * arg)
   //on se degage
   cocobot_trajectory_goto_d(200, 4000);
 
+#if PRISE_DOUBLE_D3
   //on se place pour le vert
   switch(cocobot_game_state_get_color())
   {
@@ -558,7 +510,7 @@ void run_strategy(void * arg)
       break;
 
     case COCOBOT_GAME_STATE_COLOR_POS:
-      cocobot_trajectory_goto_xy(1425 -(50), y_3_offset + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
+      cocobot_trajectory_goto_xy(1425 -(50) - OFFSET_VIOLET, y_3_offset + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
       break;
   }
 
@@ -572,6 +524,59 @@ void run_strategy(void * arg)
   cocobot_trajectory_goto_d(100, 5000);
   cocobot_trajectory_wait();
   
+  int offset = 90;
+  //on retourne vers la balance
+  switch(cocobot_game_state_get_color())
+  {
+    case COCOBOT_GAME_STATE_COLOR_NEG:
+      cocobot_trajectory_goto_xy_backward(-1425 + 50 + 100 - offset, -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
+      break;
+
+    case COCOBOT_GAME_STATE_COLOR_POS:
+      cocobot_trajectory_goto_xy_backward(1425 -(50 + 100 + offset), -543 + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
+      break;
+  }
+
+
+  cocobot_trajectory_wait();
+  cocobot_trajectory_goto_d(offset, 4000);
+  cocobot_trajectory_wait();
+
+  depose_balance_double();
+#else
+  //on se place pour le vert
+  switch(cocobot_game_state_get_color())
+  {
+    case COCOBOT_GAME_STATE_COLOR_NEG:
+      cocobot_trajectory_goto_xy_backward(-1425 + 50 + 100, y_3_offset + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
+      break;
+
+    case COCOBOT_GAME_STATE_COLOR_POS:
+      cocobot_trajectory_goto_xy_backward(1425 -(50 + 100), y_3_offset + DEMI_LARGEUR_ROBOT + MARGE_PRISE_BRAS, 10000);
+      break;
+  }
+  cocobot_trajectory_goto_a(0, 5000);
+  cocobot_trajectory_wait();
+
+  //FEINTE: on prend le bleu
+  cocobot_trajectory_goto_d(-100, 5000);
+  cocobot_trajectory_wait();
+
+  //prise bleu
+  switch(cocobot_game_state_get_color())
+  {
+    case COCOBOT_GAME_STATE_COLOR_NEG:
+      meca_action(0, MECA_TAKE_DISTRIB);
+      break;
+
+    case COCOBOT_GAME_STATE_COLOR_POS:
+      meca_action(1, MECA_TAKE_DISTRIB);
+      break;
+  }
+
+  cocobot_trajectory_goto_d(100, 5000);
+  cocobot_trajectory_wait();
+
   //on retourne vers la balance
   switch(cocobot_game_state_get_color())
   {
@@ -584,7 +589,12 @@ void run_strategy(void * arg)
       break;
   }
 
-  depose_balance_double();
+
+  cocobot_trajectory_wait();
+
+  depose_balance();
+  cocobot_game_state_add_points_to_score(12);
+#endif
 
 
   //On prend un rouge
@@ -592,31 +602,67 @@ void run_strategy(void * arg)
   switch(cocobot_game_state_get_color())
   {
     case COCOBOT_GAME_STATE_COLOR_NEG:
-      meca_action(0, MECA_TAKE_DISTRIB);
+      meca_action(1, MECA_TAKE_DISTRIB);
       break;
 
     case COCOBOT_GAME_STATE_COLOR_POS:
-      meca_action(1, MECA_TAKE_DISTRIB);
+      meca_action(0, MECA_TAKE_DISTRIB);
       break;
   }
 
+  /*
   //Puis un second
   prise_et_depose_6(4, 1);
   switch(cocobot_game_state_get_color())
   {
     case COCOBOT_GAME_STATE_COLOR_NEG:
+      cocobot_trajectory_goto_d(100, 5000);
+      cocobot_trajectory_goto_a(0, 5000);
+      cocobot_trajectory_goto_d(-100, 5000);
       cocobot_trajectory_goto_a(0, 5000);
       cocobot_trajectory_wait();
-      meca_action(1, MECA_TAKE_DISTRIB);
+      meca_action(0, MECA_TAKE_DISTRIB);
       break;
 
     case COCOBOT_GAME_STATE_COLOR_POS:
       cocobot_trajectory_goto_a(180, 5000);
+      cocobot_trajectory_goto_d(100, 5000);
+      cocobot_trajectory_goto_a(180, 5000);
+      cocobot_trajectory_goto_d(-100, 5000);
       cocobot_trajectory_wait();
-      meca_action(0, MECA_TAKE_DISTRIB);
+      meca_action(1, MECA_TAKE_DISTRIB);
       break;
   }
+  */
 
+  //on se place dans la zone de départ
+  switch(cocobot_game_state_get_color())
+  {
+    case COCOBOT_GAME_STATE_COLOR_NEG:
+      cocobot_trajectory_goto_xy(-1500 + 450 - 28 - DEMI_LARGEUR_ROBOT, -300, 15000);
+      cocobot_trajectory_goto_xy(-1500 + 450 - 28 - DEMI_LARGEUR_ROBOT, 100 + DEMI_LONGUEUR_ARR_ROBOT + 28, 15000);
+      cocobot_trajectory_goto_a(180, 4000);
+      break;
+
+    case COCOBOT_GAME_STATE_COLOR_POS:
+      cocobot_trajectory_goto_xy(1500 - 450 + 28 + DEMI_LARGEUR_ROBOT, -300, 15000);
+      cocobot_trajectory_goto_xy(1500 - 450 + 28 + DEMI_LARGEUR_ROBOT, 100 + DEMI_LONGUEUR_ARR_ROBOT + 28, 15000);
+      cocobot_trajectory_goto_a(0, 4000);
+      break;
+  }
+  cocobot_trajectory_wait();
+
+  switch(cocobot_game_state_get_color())
+  {
+    case COCOBOT_GAME_STATE_COLOR_NEG:
+      meca_action(0, MECA_DROP_BALANCE);
+      break;
+
+    case COCOBOT_GAME_STATE_COLOR_POS:
+      meca_action(1, MECA_DROP_BALANCE);
+      break;
+  }
+  cocobot_game_state_add_points_to_score(6);
 
 
   //fin !
@@ -650,9 +696,6 @@ int main(void)
   cocobot_position_set_y(0);
   cocobot_position_set_angle(0);
 
-  (void)run_homologation;
-
-  //xTaskCreate(run_homologation, "strat", 600, NULL, 2, NULL );
   xTaskCreate(run_strategy, "strat", 600, NULL, 2, NULL );
 
   vTaskStartScheduler();

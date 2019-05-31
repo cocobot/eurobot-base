@@ -79,11 +79,11 @@ void cocobot_arm_action_prise_distributeur(int arm_id, float angle)
       vTaskDelay(250/portTICK_PERIOD_MS);
       servo_set_angle(4, -110);
       vTaskDelay(250/portTICK_PERIOD_MS);
-      servo_set_angle(4, -100);
+      servo_set_angle(4, -90);
       vTaskDelay(250/portTICK_PERIOD_MS);
       servo_set_angle(4, -110);
       vTaskDelay(250/portTICK_PERIOD_MS);
-      servo_set_angle(4, -100);
+      servo_set_angle(4, -90);
       vTaskDelay(250/portTICK_PERIOD_MS);
    
       break;
