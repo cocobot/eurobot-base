@@ -251,6 +251,35 @@ void run_strat(void * arg)
     cocobot_trajectory_wait();
     cocobot_game_state_add_points_to_score(20);
 
+    //goldenium
+    if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
+    {
+        cocobot_trajectory_goto_a(90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_trajectory_wait();
+        meca_action(1, MECA_REST_EMPTY);
+        cocobot_trajectory_goto_xy_backward(710, 690, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_trajectory_goto_a(180, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_trajectory_wait();
+        meca_action(3, MECA_TAKE_GOLD);
+        cocobot_trajectory_goto_a(90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_trajectory_wait();
+    }
+    else
+    {
+        cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_trajectory_wait();
+        meca_action(1, MECA_REST_EMPTY);
+        cocobot_trajectory_goto_xy_backward(-710, 690, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_trajectory_goto_a(0, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_trajectory_wait();
+        meca_action(3, MECA_TAKE_GOLD);
+        cocobot_trajectory_goto_a(-90, COCOBOT_TRAJECTORY_UNLIMITED_TIME);
+        cocobot_trajectory_wait();
+    }
+
+    cocobot_game_state_add_points_to_score(20);
+
+
     //if(cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_NEG)
     //{
     //    cocobot_trajectory_goto_a(0, 2000);

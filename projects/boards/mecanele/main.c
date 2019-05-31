@@ -50,6 +50,16 @@ static void thread(void * arg)
           cocobot_arm_action_repos_normal(_arm);
           break;
 
+        case UAVCAN_COCOBOT_MECAACTION_REQUEST_TAKE_GOLDENIUM:
+          cocobot_arm_action_prise_goldenium(_arm, 0);
+          pump_set_state(_arm, 2);
+          while(pump_get_state(_arm) != 1)
+          {
+            vTaskDelay(100/portTICK_PERIOD_MS);
+          }
+          cocobot_arm_action_repos_normal(_arm);
+          break;
+
         case UAVCAN_COCOBOT_MECAACTION_REQUEST_TAKE_ACCELL:
           if(_arg == 0)
           {

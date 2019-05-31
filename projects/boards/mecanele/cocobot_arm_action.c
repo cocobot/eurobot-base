@@ -279,6 +279,19 @@ void cocobot_arm_action_prise_goldenium(int arm_id, float angle)
 {
     if (arm_id >= 0 && arm_id <= 3)
     {
+        if(arm_id == 3)
+        {
+            servo_set_angle(10, -75);
+            servo_set_angle(11, 10);
+            vTaskDelay(200/portTICK_PERIOD_MS);
+            servo_set_angle(9, 50);
+        }
+        else if(arm_id == 1)
+        {
+            servo_set_angle(3, 50);
+            servo_set_angle(4, -75);
+            servo_set_angle(5, -10);
+        }
         // TODO: à régler !
         //cocobot_arm_move_arti(arm[arm_id], a1_deg, a2_deg, a3_deg, a4_deg);
     }
