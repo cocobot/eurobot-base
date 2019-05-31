@@ -27,6 +27,21 @@ void stop_meca(void)
   meca_action(0, MECA_STOP);
 }
 
+void meca_take_special(uint8_t arm)
+{
+  meca_action(arm, MECA_TAKE_DISTRIB_SPECIAL);
+
+  ///vTaskDelay(1500 / portTICK_PERIOD_MS); 
+
+  ///float a = cocobot_posuition_get_a();
+  ///cocobot_trajectory_goto_a(a + 5, 2000);
+  ///cocobot_trajectory_wait();
+  ///cocobot_trajectory_goto_a(a - 5, 2000);
+  ///cocobot_trajectory_wait();
+
+  ///meca_action(arm, MECA_TAKE_REST_EMPTY);
+}
+
 /*
 static void cocobot_callage_backward()
 {
@@ -72,7 +87,8 @@ void depose_balance(void)
   cocobot_trajectory_wait();
   cocobot_asserv_normal();
 
-switch(cocobot_game_state_get_color())
+  stop();
+  switch(cocobot_game_state_get_color())
   {
     case COCOBOT_GAME_STATE_COLOR_NEG:
       meca_action(0, MECA_DROP_BALANCE);
@@ -214,6 +230,7 @@ void prise_et_depose_6(uint8_t numero, uint8_t mode)
 
   if(mode == 0)
   {
+    //stop();
     //prise
     switch(cocobot_game_state_get_color())
     {
@@ -409,9 +426,6 @@ void run_strategy(void * arg)
   
   vTaskDelay(1000 / portTICK_PERIOD_MS); 
   cocobot_asserv_set_state(COCOBOT_ASSERV_ENABLE);
-
-  //cocobot_callage_backward();
-  //stop();
 
 
   //déplacement dans la zone de départ

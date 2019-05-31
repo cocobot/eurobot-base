@@ -92,7 +92,6 @@ void com_async(uint64_t timestamp_us)
 
 void meca_action(uint8_t arm_id, uint16_t req)
 {
-
   xSemaphoreTake(_mutex, portMAX_DELAY);
   _arm = arm_id;
   _req = req & 0xFF;

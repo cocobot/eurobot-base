@@ -8,6 +8,7 @@
 #define MECA_TAKE_ACCEL_END   (0x103)
 #define MECA_PUSH_ACCEL       (0x203)
 #define MECA_TAKE_DISTRIB 2
+#define MECA_TAKE_DISTRIB_SPECIAL (0x102)
 #define MECA_STOP 5 //reuse take floor
 
 void meca_init(void);
