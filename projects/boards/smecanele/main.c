@@ -31,6 +31,32 @@ static void thread(void * arg)
         case UAVCAN_COCOBOT_MECAACTION_REQUEST_INIT:
           cocobot_arm_action_init();
           break;
+
+        case UAVCAN_COCOBOT_MECAACTION_REQUEST_TAKE_DISTRIB:
+          pump_set_state(_arm, 1);
+          cocobot_arm_action_prise_distributeur(_arm, 0);
+
+          if(_arg != 1)
+          {
+            vTaskDelay(2000 / portTICK_PERIOD_MS); 
+            cocobot_arm_action_repos_normal(_arm);
+          }
+          break;
+
+        case UAVCAN_COCOBOT_MECAACTION_REQUEST_REST_NORMAL:
+          cocobot_arm_action_repos_normal(_arm);
+          break;
+
+        case UAVCAN_COCOBOT_MECAACTION_REQUEST_REST_EMPTY:
+          cocobot_arm_action_repos_vide(_arm);
+          break;
+
+        case UAVCAN_COCOBOT_MECAACTION_REQUEST_DROP_BALANCE:
+          cocobot_arm_action_depose_balance(_arm, 0);
+          vTaskDelay(750 / portTICK_PERIOD_MS); 
+          pump_set_state(_arm, 0);
+          vTaskDelay(1000 / portTICK_PERIOD_MS); 
+          break;
       }
 
       _meca_busy = 0;

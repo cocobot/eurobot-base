@@ -10,7 +10,7 @@ static cocobot_arm_t arm[4] = {0};
 
 void cocobot_arm_action_init(void)
 {
-  for(int i = 0; i <= 3; i++)
+  for(int i = 0; i <= 2; i++)
   {
       cocobot_arm_action_repos_vide(i);
   }
@@ -21,30 +21,71 @@ void cocobot_arm_action_repos_vide(int arm_id)
   switch(arm_id)
   {
     case 0:
+      servo_set_angle(0, 0);
+      servo_set_angle(1, 0);
+      servo_set_angle(2, 0);
       break;
 
     case 1:
+      servo_set_angle(3, 0);
+      servo_set_angle(4, 0);
+      servo_set_angle(5, 0);
       break;
   }
-  /*
-  if(arm_id == 3)
-  {
-    servo_set_angle(arm_id*3, 80);
-    vTaskDelay(100/portTICK_PERIOD_MS);
-    servo_set_angle(arm_id*3 + 1, -140);
-    vTaskDelay(100/portTICK_PERIOD_MS);
-    servo_set_angle(arm_id*3 + 2, 0);
-    vTaskDelay(100/portTICK_PERIOD_MS);
-    return;
-  }
-  servo_set_angle(arm_id*3, 80);
-  vTaskDelay(100/portTICK_PERIOD_MS);
-  servo_set_angle(arm_id*3 + 1, -150);
-  vTaskDelay(100/portTICK_PERIOD_MS);
-  servo_set_angle(arm_id*3 + 2, 0);
-  vTaskDelay(100/portTICK_PERIOD_MS);
-  */
+}
 
+void cocobot_arm_action_repos_normal(int arm_id)
+{
+  switch(arm_id)
+  {
+    case 0:
+      servo_set_angle(0, 0);
+      servo_set_angle(1, 0);
+      servo_set_angle(2, 0);
+      break;
+
+    case 1:
+      servo_set_angle(3, 0);
+      servo_set_angle(4, 0);
+      servo_set_angle(5, 0);
+      break;
+  }
+}
+
+void cocobot_arm_action_prise_distributeur(int arm_id, float angle)
+{
+  switch(arm_id)
+  {
+    case 0:
+      servo_set_angle(0, 0);
+      servo_set_angle(1, 0);
+      servo_set_angle(2, 0);
+      break;
+
+    case 1:
+      servo_set_angle(3, 0);
+      servo_set_angle(4, 0);
+      servo_set_angle(5, 0);
+      break;
+  }
+}
+
+void cocobot_arm_action_depose_balance(int arm_id, float angle)
+{
+  switch(arm_id)
+  {
+    case 0:
+      servo_set_angle(0, 0);
+      servo_set_angle(1, 0);
+      servo_set_angle(2, 0);
+      break;
+
+    case 1:
+      servo_set_angle(3, 0);
+      servo_set_angle(4, 0);
+      servo_set_angle(5, 0);
+      break;
+  }
 }
 
 /*
@@ -187,18 +228,7 @@ void cocobot_arm_action_prise_bluenium(int arm_id, float angle)
     servo_set_angle(6, 50);
 }
 
-void cocobot_arm_action_depose_balance(int arm_id, float angle)
-{
-  if (arm_id >= 0 && arm_id <= 3)
-  {
-    // TODO: à régler !
-    //cocobot_arm_move_arti(arm[arm_id], a1_deg, a2_deg, a3_deg, a4_deg);
-  }
-  else
-  {
-    printf("Wrong arm_id: %d should be between 0 and 3.\n", arm_id);
-  }
-}
+
 
 void cocobot_arm_action_depose_accelerateur_particules(int arm_id, float angle, float distance)
 {
