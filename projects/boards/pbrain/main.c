@@ -13,7 +13,7 @@
 
 extern cocobot_pathfinder_table_init_s initTable [];
 
-static void stop_meca()
+static void stop_meca(void)
 {
     meca_action(0, MECA_RELEASE);
 }
@@ -367,7 +367,6 @@ int main(void)
     cocobot_asserv_init();
     cocobot_trajectory_init(4);
     cocobot_opponent_detection_init(3);
-    cocobot_game_state_init(NULL);
     cocobot_game_state_init(stop_meca);
     cocobot_pathfinder_init(initTable);
     cocobot_action_scheduler_use_pathfinder(1);
