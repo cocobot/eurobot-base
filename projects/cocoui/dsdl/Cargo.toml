@@ -1,7 +1,0 @@
-[package]
-name = "dsdl"
-version = "0.1.0"
-authors = ["Damien Espitallier <damien.espitallier@gmail.com>"]
-
-[dependencies]
-canars = { path = "../canars" }

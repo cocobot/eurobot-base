@@ -1,9 +1,0 @@
-#program principal brain
-[[shortcut]]
-sequence=ppb
-action="pgm 11"
-
-#restart principal brain
-[[shortcut]]
-sequence=rpb
-action="restart 11"
