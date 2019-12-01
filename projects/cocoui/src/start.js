@@ -4,8 +4,13 @@ const path = require('path')
 const isDev = require('electron-is-dev')
 require('electron-reload')
 const BrowserWindow = electron.BrowserWindow
+const Protocol = require('./server/protocol');
 
-let mainWindow
+//create protocol handler
+const protocol = new Protocol();
+
+//create main window
+let mainWindow = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -27,17 +32,21 @@ function createWindow() {
   })
 }
 
+//register signals
 app.on('ready', createWindow)
-
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
-
 app.on('activate', () => {
   if (mainWindow === null) {
     createWindow()
   }
 })
+process.on('uncaughtException', function (err) {
+  console.error(err.stack);
+  app.quit();
+});
+
 

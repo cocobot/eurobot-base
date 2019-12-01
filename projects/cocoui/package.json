@@ -11,18 +11,27 @@
     }
   },
   "dependencies": {
+    "bootstrap": "^4.4.0",
     "electron": "^7.1.2",
     "electron-is-dev": "^1.1.0",
+    "electron-rebuild": "^1.8.8",
+    "immutable": "^4.0.0-rc.12",
+    "pegjs": "^0.10.0",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
-    "react-scripts": "3.2.0"
+    "react-redux": "^7.1.3",
+    "react-scripts": "3.2.0",
+    "reactstrap": "^8.1.1",
+    "redux": "^4.0.4",
+    "serialport": "^8.0.5"
   },
   "scripts": {
     "electron": "cross-env NODE_ENV=dev nodemon --exec \"\"electron .\"\"",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "install": "electron-rebuild"
   },
   "eslintConfig": {
     "extends": "react-app"
