@@ -166,40 +166,40 @@ config LIBCOCOBOT_COM
 	default n
 	depends on LIBCOCOBOT
 
-config LIBCOCOBOT_COM_USER_HANDLER
-  bool " + Has user handler"
-  depends on LIBCOCOBOT && LIBCOCOBOT_COM
-	default n
-
-config LIBCOCOBOT_COM_ID
-  int " + ID of the board"
-  depends on LIBCOCOBOT && LIBCOCOBOT_COM
-  default 10
-
-config LIBCOCOBOT_COM_MEMORY_POOL_SIZE
-  int " + Memory pool size"
-  depends on LIBCOCOBOT && LIBCOCOBOT_COM
-  default 1024
-
-config LIBCOCOBOT_COM_TIMER
-  int " + Timer ID"
-  depends on LIBCOCOBOT && LIBCOCOBOT_COM
-  default 1
-
-config LIBCOCOBOT_COM_USART
-	bool " + USART"
-	default n
-	depends on LIBCOCOBOT && LIBCOCOBOT_COM
-
-config LIBCOCOBOT_COM_CAN
-	bool " + CAN"
-	default n
-	depends on LIBCOCOBOT && LIBCOCOBOT_COM
-
-config LIBCOCOBOT_COM_RF
-	bool " + RF"
-	default n
-	depends on LIBCOCOBOT && LIBCOCOBOT_COM && SPIRIT1
+#####config LIBCOCOBOT_COM_USER_HANDLER
+#####  bool " + Has user handler"
+#####  depends on LIBCOCOBOT && LIBCOCOBOT_COM
+#####	default n
+#####
+#####config LIBCOCOBOT_COM_ID
+#####  int " + ID of the board"
+#####  depends on LIBCOCOBOT && LIBCOCOBOT_COM
+#####  default 10
+#####
+#####config LIBCOCOBOT_COM_MEMORY_POOL_SIZE
+#####  int " + Memory pool size"
+#####  depends on LIBCOCOBOT && LIBCOCOBOT_COM
+#####  default 1024
+#####
+#####config LIBCOCOBOT_COM_TIMER
+#####  int " + Timer ID"
+#####  depends on LIBCOCOBOT && LIBCOCOBOT_COM
+#####  default 1
+#####
+#####config LIBCOCOBOT_COM_USART
+#####	bool " + USART"
+#####	default n
+#####	depends on LIBCOCOBOT && LIBCOCOBOT_COM
+#####
+#####config LIBCOCOBOT_COM_CAN
+#####	bool " + CAN"
+#####	default n
+#####	depends on LIBCOCOBOT && LIBCOCOBOT_COM
+#####
+#####config LIBCOCOBOT_COM_RF
+#####	bool " + RF"
+#####	default n
+#####	depends on LIBCOCOBOT && LIBCOCOBOT_COM && SPIRIT1
 
 config LIBCOCOBOT_LOADER
 	bool "+ Loader"

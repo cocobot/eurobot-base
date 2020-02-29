@@ -1,7 +1,6 @@
 #ifndef MCUAL_CAN_H
 #define MCUAL_CAN_H
 
-#include <canard.h>
 #include <string.h>
 
 #define MCUAL_CAN_NUM_ACCEPTANCE_FILTERS                            14U
@@ -10,6 +9,10 @@
 #define MCUAL_CAN_ERROR_MSR_INAK_NOT_CLEARED                        1002
 #define MCUAL_CAN_ERROR_UNSUPPORTED_FRAME_FORMAT                    1003
 
+typedef struct
+{
+  int a;
+} mcual_can_frame_t;
 
 /**
  * These parameters define the timings of the CAN controller.
@@ -63,7 +66,7 @@ int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode if
  * @retval      0               No space in the buffer
  * @retval      negative        Error
  */
-int16_t mcual_can_transmit(const CanardCANFrame* const frame);
+int16_t mcual_can_transmit(const mcual_can_frame_t * const frame);
 
 /**
  * @brief Blocking function that returns when the tx queue is empty
@@ -80,7 +83,7 @@ void mcual_can_wait_tx_ended();
  *
  * @retval      1               Transmitted successfully
  */
-int16_t mcual_can_recv(CanardCANFrame* const out_frame);
+int16_t mcual_can_recv(mcual_can_frame_t* const out_frame);
 
 /**
  * @brief Receive a new frame from rx queue.
@@ -93,7 +96,7 @@ int16_t mcual_can_recv(CanardCANFrame* const out_frame);
  * @retval      0               No frame is received
  * @retval      negative        Error
  */
-int16_t mcual_can_recv_no_wait(CanardCANFrame* const out_frame);
+int16_t mcual_can_recv_no_wait(mcual_can_frame_t * const out_frame);
 
 static inline int16_t mcual_can_compute_timings(const uint32_t peripheral_clock_rate,
                                      const uint32_t target_bitrate,
@@ -104,7 +107,6 @@ static inline int16_t mcual_can_compute_timings(const uint32_t peripheral_clock_
         return -MCUAL_CAN_ERROR_UNSUPPORTED_BIT_RATE;
     }
 
-    CANARD_ASSERT(out_timings != NULL);  // NOLINT
     memset(out_timings, 0, sizeof(*out_timings));
 
     /*
@@ -125,7 +127,6 @@ static inline int16_t mcual_can_compute_timings(const uint32_t peripheral_clock_
      *   125  kbps      16      17
      */
     const uint8_t max_quanta_per_bit = (uint8_t)((target_bitrate >= 1000000) ? 10 : 17);    // NOLINT
-    CANARD_ASSERT(max_quanta_per_bit <= (MaxBS1 + MaxBS2));
 
     static const uint16_t MaxSamplePointLocationPermill = 900;
 
@@ -182,7 +183,6 @@ static inline int16_t mcual_can_compute_timings(const uint32_t peripheral_clock_
      */
     uint8_t bs1 = (uint8_t)(((7 * bs1_bs2_sum - 1) + 4) / 8);       // Trying rounding to nearest first  // NOLINT
     uint8_t bs2 = (uint8_t)(bs1_bs2_sum - bs1);  // NOLINT
-    CANARD_ASSERT(bs1_bs2_sum > bs1);
 
     {
         const uint16_t sample_point_permill = (uint16_t)(1000U * (1U + bs1) / (1U + bs1 + bs2));  // NOLINT
@@ -194,7 +194,7 @@ static inline int16_t mcual_can_compute_timings(const uint32_t peripheral_clock_
         }
     }
 
-    const bool valid = (bs1 >= 1) && (bs1 <= MaxBS1) && (bs2 >= 1) && (bs2 <= MaxBS2);
+    const uint8_t valid = (bs1 >= 1) && (bs1 <= MaxBS1) && (bs2 >= 1) && (bs2 <= MaxBS2);
 
     /*
      * Final validation
@@ -208,7 +208,6 @@ static inline int16_t mcual_can_compute_timings(const uint32_t peripheral_clock_
         !valid)
     {
         // This actually means that the algorithm has a logic error, hence assert(0).
-        CANARD_ASSERT(0);  // NOLINT
         return -MCUAL_CAN_ERROR_UNSUPPORTED_BIT_RATE;
     }
 
@@ -221,7 +220,7 @@ static inline int16_t mcual_can_compute_timings(const uint32_t peripheral_clock_
 }
 
 #ifdef AUSBEE_SIM
-void mcual_can_recv_new_frame(CanardCANFrame * frame);
+void mcual_can_recv_new_frame(mcual_can_frame_t * frame);
 #endif //AUSBEE_SIM
 
 

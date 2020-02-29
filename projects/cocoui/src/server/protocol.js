@@ -186,6 +186,7 @@ class Client {
             if(this._buffer.length >= 7) {
               const header = {
                 start: this._buffer.readUInt8(0),
+                dst: this._buffer.readUInt8(0),
                 pid: this._buffer.readUInt16LE(1),
                 len: this._buffer.readUInt16LE(3),
                 crc: this._buffer.readUInt16LE(5),

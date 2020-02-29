@@ -157,7 +157,6 @@ void cocobot_pathfinder_init(cocobot_pathfinder_table_init_s * initTable)
     g_table_updated = 1;
 }
 
-#if 0
 void cocobot_pathfinder_handle_async_com(void)
 {
     if(g_table_updated)
@@ -176,5 +175,4 @@ void cocobot_pathfinder_handle_async_com(void)
                 );
     }
 }
-#endif
 #endif

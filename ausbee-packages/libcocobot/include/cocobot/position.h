@@ -90,8 +90,6 @@ void cocobot_position_set_y(float y);
  */
 void cocobot_position_set_angle(float angle);
 
-void cocobot_position_com_async(uint64_t timestamp);
-
 int32_t cocobot_position_get_left_encoder(void);
 int32_t cocobot_position_get_right_encoder(void);
 

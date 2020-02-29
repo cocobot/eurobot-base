@@ -1,154 +1,56 @@
 #ifndef COCOBOT_COM_H
 #define COCOBOT_COM_H
 
-#include <canard.h>
-#include <uavcan/protocol/NodeStatus.h>
-#include <uavcan/protocol/debug/LogLevel.h>
+#include <mcual.h>
+#include <string.h>
 
-#define COM_DEBUG   UAVCAN_PROTOCOL_DEBUG_LOGLEVEL_DEBUG                                  
-#define COM_INFO    UAVCAN_PROTOCOL_DEBUG_LOGLEVEL_INFO                                  
-#define COM_WARNING UAVCAN_PROTOCOL_DEBUG_LOGLEVEL_WARNING                                  
-#define COM_ERROR   UAVCAN_PROTOCOL_DEBUG_LOGLEVEL_ERROR                                  
+//Format specification
+// - H : u16
+// - F : 32bit float
+// - B : byte
 
-void cocobot_com_init(void);
-void cocobot_com_run(void);
-uint64_t cocobot_com_process_event(void);
-void cocobot_com_flush(void);
-void cocobot_com_set_mode(uint8_t mode);
-int16_t cocobot_com_request_or_respond(uint8_t destination_node_id,
-                                       uint64_t data_type_signature,
-                                       uint8_t data_type_id,
-                                       uint8_t* inout_transfer_id,
-                                       uint8_t priority,
-                                       CanardRequestResponse kind,
-                                       const void* payload,
-                                       uint16_t payload_len);
-int16_t cocobot_com_broadcast(uint64_t data_type_signature,
-                              uint16_t data_type_id,
-                              uint8_t* inout_transfer_id,
-                              uint8_t priority,
-                              const void* payload,
-                              uint16_t payload_len);
-void cocobot_com_release_rx_transfer_payload(CanardRxTransfer* transfer);
+#define COCOBOT_COM_POSITION_DEBUG_PID    (0x8000)
+#define COCOBOT_COM_ASSERV_DIST_DEBUG_PID (0x8001)
+#define COCOBOT_COM_ASSERV_ANGU_DEBUG_PID (0x8002)
+#define COCOBOT_COM_TRAJECTORY_DEBUG_PID  (0x8003)
+#define COCOBOT_COM_PATHFINDER_DEBUG_PID  (0x8004)
+#define COCOBOT_COM_PRINTF_PID            (0x8005)
+#define COCOBOT_COM_GAME_STATE_DEBUG_PID  (0x8006)
+#define COCOBOT_COM_RESET_PID             (0x8007)
+#define COCOBOT_COM_ACTION_SCHEDULER_DEBUG_PID (0x8008)
+#define COCOBOT_COM_GET_USIR_PID          (0x8009)
+#define COCOBOT_COM_SEND_USIR_PID         (0x800A)
+#define COCOBOT_COM_FORCE_USIR_PID        (0x800B)
+#define COCOBOT_COM_GET_ASSERV_PARAMS_PID (0x800C)
+#define COCOBOT_COM_SEND_ASSERV_PARAMS_PID (0x800D)
+#define COCOBOT_COM_SET_ASSERV_PARAMS_PID (0x800E)
 
-//user defined functions
-uint8_t com_should_accept_transfer(uint64_t* out_data_type_signature,
-                                   uint16_t data_type_id,
-                                   CanardTransferType transfer_type,
-                                   uint8_t source_node_id);
-uint8_t com_on_transfer_received(CanardRxTransfer* transfer);
-void com_async(uint64_t timestamp_us);
+#define COCOBOT_COM_SET_SERVO_PID (0x1000)
+#define COCOBOT_COM_MECA_ACTION_PID (0x1001)
 
-void cocobot_com_printf(uint8_t level, char * fmt, ...);
+typedef void (*cocobot_com_handler_t)(uint16_t pid, uint8_t * data, uint32_t len);
 
-#define IF_RESPONSE_RECEIVED(NAME, name, action)\
-  if ((transfer->transfer_type == CanardTransferTypeResponse) && \
-      (transfer->data_type_id == NAME ## _ID)\
-     )\
-  {\
-    name data;\
-    void * dynbuf = NULL;\
-\
-    dynbuf = pvPortMalloc(NAME ## _RESPONSE_MAX_SIZE);\
-    if(dynbuf != NULL)\
-    {\
-      uint8_t * pdynbuf = dynbuf;\
-      if(name ## _decode(transfer, transfer->payload_len, &data, &pdynbuf) >= 0)\
-      {\
-        cocobot_com_release_rx_transfer_payload(transfer);\
-        {\
-          action;\
-        }\
-      }\
-    }\
-    if(dynbuf != NULL)\
-    {\
-      vPortFree(dynbuf);\
-    }\
-    return 1;\
-  }\
+/* Initialization of the com module. Need to be called before any other action 
+ * Argument:
+ *  - usart_id: usart id (from mcual) for the com
+ *  - priority_monitor: priority of the reception task. This task handle user request
+ *  - priority_async: priority of the task sending asynchronous debug messages (like postion, asserv...)
+ *  - handler: function pointer for handling user defined commands
+ */
+void cocobot_com_init(mcual_usart_id_t usart_id, unsigned int priority_monitor, unsigned int priority_async, cocobot_com_handler_t handler);
 
-#define IF_REQUEST_RECEIVED(NAME, name, action)\
-  if ((transfer->transfer_type == CanardTransferTypeRequest) && \
-      (transfer->data_type_id == NAME ## _ID)\
-     )\
-  {\
-    name data;\
-    void * dynbuf = NULL;\
-\
-    dynbuf = pvPortMalloc(NAME ## _REQUEST_MAX_SIZE);\
-    if(dynbuf != NULL)\
-    {\
-      uint8_t * pdynbuf = dynbuf;\
-      if(name ## _decode(transfer, transfer->payload_len, &data, &pdynbuf) >= 0)\
-      {\
-        cocobot_com_release_rx_transfer_payload(transfer);\
-        {\
-          action;\
-        }\
-      }\
-    }\
-    if(dynbuf != NULL)\
-    {\
-      vPortFree(dynbuf);\
-    }\
-    return 1;\
-  }\
+/* Send packet to the user
+ * Argument:
+ *  - pid_id: Identifier for the packet format
+ *  - fmt: define the binary format of the packet. Must be a string (cf Format specification)
+ */
+void cocobot_com_send(uint16_t pid, char * fmt, ...);
 
-#define IF_BROADCAST_RECEIVED(NAME, name, action)\
-  if ((transfer->transfer_type == CanardTransferTypeBroadcast) && \
-      (transfer->data_type_id == NAME ## _ID)\
-     )\
-  {\
-    name data;\
-    void * dynbuf = NULL;\
-\
-    dynbuf = pvPortMalloc(NAME ## _MAX_SIZE);\
-    if(dynbuf != NULL)\
-    {\
-      uint8_t * pdynbuf = dynbuf;\
-      if(name ## _decode(transfer, transfer->payload_len, &data, &pdynbuf) >= 0)\
-      {\
-        cocobot_com_release_rx_transfer_payload(transfer);\
-        {\
-          action;\
-        }\
-      }\
-    }\
-    if(dynbuf != NULL)\
-    {\
-      vPortFree(dynbuf);\
-    }\
-    return 1;\
-  }\
+void cocobot_com_printf(char * fmt, ...);
 
-
-#define IF_SMPLREQ_RECEIVED(NAME, name, action)\
-  if ((transfer->transfer_type == CanardTransferTypeResponse) && \
-      (transfer->data_type_id == NAME ## _ID)\
-     )\
-  {\
-    name data;\
-    void * dynbuf = NULL;\
-\
-    dynbuf = pvPortMalloc(NAME ## _MAX_SIZE);\
-    if(dynbuf != NULL)\
-    {\
-      uint8_t * pdynbuf = dynbuf;\
-      if(name ## _decode(transfer, transfer->payload_len, &data, &pdynbuf) >= 0)\
-      {\
-        cocobot_com_release_rx_transfer_payload(transfer);\
-        {\
-          action;\
-        }\
-      }\
-    }\
-    if(dynbuf != NULL)\
-    {\
-      vPortFree(dynbuf);\
-    }\
-    return 1;\
-  }\
-
+uint32_t cocobot_com_read_B(uint8_t *data , uint32_t len, uint32_t offset, uint8_t * value);
+uint32_t cocobot_com_read_D(uint8_t *data , uint32_t len, uint32_t offset, int32_t * value);
+uint32_t cocobot_com_read_F(uint8_t *data , uint32_t len, uint32_t offset, float * value);
 
 #endif// COCOBOT_COM_H
+

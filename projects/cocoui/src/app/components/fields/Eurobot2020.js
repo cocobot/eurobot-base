@@ -2,6 +2,10 @@ import React from 'react';
 import Pathfinder from '../Pathfinder';
 import Actions from '../Actions';
 
+//temp
+const CUP_POSITION = parseInt(Math.random(3)) + 1;
+
+
 const cSilexGray = "rgb(181, 176, 161)";
 const cSignalYellow = "rgb(247, 181, 0)";
 const cSignalBlue = "rgb(0, 124, 176)";
@@ -46,7 +50,8 @@ class Eurobot2020SmallTower extends React.Component {
 class Eurobot2020Cup extends React.Component {
   render() {
     let x, y, color;
-    let id = parseInt(this.props.id);
+    let defs = [];
+    const id = this.props.id;
 
     switch(id)
     {
@@ -62,6 +67,13 @@ class Eurobot2020Cup extends React.Component {
       case 19:
       case 20:
       case 22:
+      case 34:
+      case 36:
+      case 38:
+      case 40:
+      case 42:
+      case 28:
+      case 33:
         color = cRed;
         break;
 
@@ -77,7 +89,78 @@ class Eurobot2020Cup extends React.Component {
       case 18:
       case 21:
       case 23:
+      case 35:
+      case 37:
+      case 39:
+      case 41:
+      case 43:
+      case 24:
+      case 29:
         color = cGreen;
+        break;
+
+     case 25:
+     case 26:
+     case 27:
+        {
+          color = "url(#Ecup2020_" + id + ")";
+          let c1 = cGreen;
+          let c2 = cGreen;
+          let c3 = cGreen;
+          if(id === 25) {
+            c1 = cRed;
+          }
+          else if(id === 26) {
+            c2 = cRed;
+          }
+          else if(id === 27) {
+            c3 = cRed;
+          }
+          defs.push(
+            <linearGradient key={0} id={"Ecup2020_" + id} gradientTransform="rotate(90)">
+              <stop offset="0%" stop-color={c1} />
+              <stop offset="34%" stop-color={c1} />
+              <stop offset="34%" stop-color={c2} />
+              <stop offset="67%" stop-color={c2} />
+              <stop offset="67%" stop-color={c3} />
+              <stop offset="100%" stop-color={c3} />
+            </linearGradient>
+          );
+        }
+        break;
+
+     case 30:
+     case 31:
+     case 32:
+        {
+          color = "url(#Ecup2020_" + id + ")";
+          let c1 = cRed;
+          let c2 = cRed;
+          let c3 = cRed;
+          if(id === 30) {
+            c3 = cGreen;
+          }
+          else if(id === 31) {
+            c2 = cGreen;
+          }
+          else if(id === 32) {
+            c1 = cGreen;
+          }
+          defs.push(
+            <linearGradient key={0} id={"Ecup2020_" + id} gradientTransform="rotate(90)">
+              <stop offset="0%" stop-color={c1} />
+              <stop offset="34%" stop-color={c1} />
+              <stop offset="34%" stop-color={c2} />
+              <stop offset="67%" stop-color={c2} />
+              <stop offset="67%" stop-color={c3} />
+              <stop offset="100%" stop-color={c3} />
+            </linearGradient>
+          );
+        }
+        break
+
+      default:
+        color = cSilexGray;
         break;
     }
     
@@ -147,6 +230,55 @@ class Eurobot2020Cup extends React.Component {
       case 23:
         x = 1995;
         break;
+
+      case 24:
+        x = 700;
+        break;
+      case 25:
+        x = 775;
+        break;
+      case 26:
+        x = 850;
+        break;
+      case 27:
+        x = 925;
+        break;
+      case 28:
+        x = 1000;
+        break;
+      case 29:
+        x = 2000;
+        break;
+      case 30:
+        x = 2075;
+        break;
+      case 31:
+        x = 2150;
+        break;
+      case 32:
+        x = 2225;
+        break;
+      case 33:
+        x = 2300;
+        break;
+      case 34:
+      case 35:
+      case 36:
+      case 37:
+      case 38:
+        x = -67;
+        break;
+      case 39:
+      case 40:
+      case 41:
+      case 42:
+      case 43:
+        x = 3067;
+        break;
+
+      default:
+        x = 0;
+        break;
     }
 
     switch(id)
@@ -191,11 +323,51 @@ class Eurobot2020Cup extends React.Component {
       case 23:
         y = 1955;
         break;
+
+      case 24:
+      case 25:
+      case 26:
+      case 27:
+      case 28:
+      case 29:
+      case 30:
+      case 31:
+      case 32:
+      case 33:
+        y = -67;
+        break;
+      case 34:
+      case 39:
+        y = 1450;
+        break;
+      case 35:
+      case 40:
+        y = 1525;
+        break;
+      case 36:
+      case 41:
+        y = 1600;
+        break;
+      case 37:
+      case 42:
+        y = 1675;
+        break;
+      case 38:
+      case 43:
+        y = 1750;
+        break;
+
+      default:
+        y = 0;
+        break;
     }
     
 
     return (
      <g transform={"translate("+x+", "+y+")"}>
+        <defs>
+          {defs}
+        </defs>
         <circle r="36" fill={color} strokeWidth="10" stroke="#000000" />
         <circle r="27" fill={color} strokeWidth="5" stroke="#000000" />
       </g>
@@ -206,11 +378,6 @@ class Eurobot2020Cup extends React.Component {
 class Eurobot2020Distributor extends React.Component {
   render() {
     let x, y, color, angle;
-
-    x = 300;
-    y = 300;
-    color = cSignalYellow
-    angle = 0;
 
     switch(this.props.id)
     {
@@ -229,22 +396,45 @@ class Eurobot2020Distributor extends React.Component {
         break;
 
       case 2:
-        x = -22;
-        y = 0;
-        color = cSilexGray;
+        x = -22 - 90 - 22;
+        y = 1809.5;
+        color = cSignalBlue;
         angle = -90;
         break;
+
+      case 3:
+        x = 3000;
+        y = 1809.5;
+        color = cSignalYellow;
+        angle = -90;
+        break;
+
+      default:
+        x = 1500;
+        y = 1000;
+        color = cSilexGray;
+        angle = 0;
     }
 
+    let cups = [];
+    for(let i = 0; i < 5; i += 1)
+    {
+      cups.push(<Eurobot2020Cup key={i} id={24 + this.props.id * 5 + i} />);
+    }
+    console.log(cups.length);
+
     return (
-     <g transform={"translate("+x+", "+y+")"}>
-      <g transform={"rotate("+angle+")"}>
-       <rect height="134" width="419" x="0" y="0" fill={cSilexGray} strokeWidth="2" stroke="#000000"/>);
-       <rect height="22" width="419" x="0" y="0" fill={color} strokeWidth="2" stroke="#000000"/>);
-       <rect height="90" width="22" x="0" y="22" fill={color} strokeWidth="2" stroke="#000000"/>);
-       <rect height="90" width="22" x="397" y="22" fill={color} strokeWidth="2" stroke="#000000"/>);
-       <rect height="22" width="419" x="0" y="112" fill={color} strokeWidth="2" stroke="#000000"/>);
+     <g>
+      <g transform={"translate("+x+", "+y+")"}>
+       <g transform={"rotate("+angle+")"}>
+        <rect height="134" width="419" x="0" y="0" fill={cSilexGray} strokeWidth="2" stroke="#000000"/>);
+        <rect height="22" width="419" x="0" y="0" fill={color} strokeWidth="2" stroke="#000000"/>);
+        <rect height="90" width="22" x="0" y="22" fill={color} strokeWidth="2" stroke="#000000"/>);
+        <rect height="90" width="22" x="397" y="22" fill={color} strokeWidth="2" stroke="#000000"/>);
+        <rect height="22" width="419" x="0" y="112" fill={color} strokeWidth="2" stroke="#000000"/>);
+       </g>
       </g>
+     {cups}
     </g>
     );
   }
@@ -276,7 +466,7 @@ class Eurobot2020 extends React.Component {
   render() {
     return (
       <g>
-        <image href="f2018_cprs.jpg" x="0" y="0" height="2000" width="3000" />
+        <image href="f2020_cprs.jpg" x="0" y="0" height="2000" width="3000" />
         {this.renderBorders()}
 
         <Eurobot2020LightHouse x={0} y={-22} color={cSignalBlue}/>
@@ -297,37 +487,37 @@ class Eurobot2020 extends React.Component {
         <Eurobot2020Distributor id={2} />
         <Eurobot2020Distributor id={3} />
 
-        <Eurobot2020Cup id="0" />
-        <Eurobot2020Cup id="1" />
+        <Eurobot2020Cup id={0} />
+        <Eurobot2020Cup id={1} />
 
-        <Eurobot2020Cup id="2" />
-        <Eurobot2020Cup id="3" />
-        <Eurobot2020Cup id="4" />
-        <Eurobot2020Cup id="5" />
+        <Eurobot2020Cup id={2} />
+        <Eurobot2020Cup id={3} />
+        <Eurobot2020Cup id={4} />
+        <Eurobot2020Cup id={5} />
 
-        <Eurobot2020Cup id="6" />
-        <Eurobot2020Cup id="7" />
+        <Eurobot2020Cup id={6} />
+        <Eurobot2020Cup id={7} />
 
-        <Eurobot2020Cup id="8" />
-        <Eurobot2020Cup id="9" />
+        <Eurobot2020Cup id={8} />
+        <Eurobot2020Cup id={9} />
 
-        <Eurobot2020Cup id="10" />
-        <Eurobot2020Cup id="11" />
+        <Eurobot2020Cup id={10} />
+        <Eurobot2020Cup id={11} />
 
-        <Eurobot2020Cup id="12" />
-        <Eurobot2020Cup id="13" />
-        <Eurobot2020Cup id="14" />
-        <Eurobot2020Cup id="15" />
+        <Eurobot2020Cup id={12} />
+        <Eurobot2020Cup id={13} />
+        <Eurobot2020Cup id={14} />
+        <Eurobot2020Cup id={15} />
 
-        <Eurobot2020Cup id="16" />
-        <Eurobot2020Cup id="17" />
-        <Eurobot2020Cup id="18" />
-        <Eurobot2020Cup id="19" />
+        <Eurobot2020Cup id={16} />
+        <Eurobot2020Cup id={17} />
+        <Eurobot2020Cup id={18} />
+        <Eurobot2020Cup id={19} />
 
-        <Eurobot2020Cup id="20" />
-        <Eurobot2020Cup id="21" />
-        <Eurobot2020Cup id="22" />
-        <Eurobot2020Cup id="23" />
+        <Eurobot2020Cup id={20} />
+        <Eurobot2020Cup id={21} />
+        <Eurobot2020Cup id={22} />
+        <Eurobot2020Cup id={23} />
 
         {this.props.children}
 

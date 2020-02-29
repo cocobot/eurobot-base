@@ -1,8 +1,6 @@
 #ifndef COCOBOT_GAME_STATE_H
 #define COCOBOT_GAME_STATE_H
 
-#include <canard.h>
-
 #define COCOBOT_GAME_DURATION 100000 // in ms
 
 typedef enum
@@ -63,12 +61,6 @@ void cocobot_game_state_set_score(int score);
 
 void cocobot_game_state_wait_for_configuration(void);
 
-uint8_t cocobot_game_state_should_accept_transfer(uint64_t* out_data_type_signature,
-                                              uint16_t data_type_id,
-                                              CanardTransferType transfer_type,
-                                              uint8_t source_node_id);
-
-uint8_t cocobot_game_state_on_transfer_received(CanardRxTransfer* transfer);
-
+void cocobot_game_state_handle_async_com(void);
 
 #endif// COCOBOT_GAME_STATE_H

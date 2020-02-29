@@ -308,7 +308,7 @@ int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode if
 }
 
 
-int16_t mcual_can_transmit(const CanardCANFrame* const frame)
+int16_t mcual_can_transmit(const mcual_can_frame * const frame)
 {
 #ifdef CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
     xQueueSend(can_tx_queue, frame, portMAX_DELAY);

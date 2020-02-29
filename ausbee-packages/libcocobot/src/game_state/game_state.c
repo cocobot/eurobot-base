@@ -145,87 +145,21 @@ void * cocobot_game_state_get_userdata(unsigned int id)
   return _userdata[id];
 }
 
-void cocobot_game_state_com_async(uint64_t timestamp_us)
+void cocobot_game_state_handle_async_com(void)
 {
-  if (timestamp_us >= _next_1hz_service_at)
+  TickType_t now = xTaskGetTickCount();
+  if(now - _last_update_time > 1000 / portTICK_PERIOD_MS)
   {
-    _next_1hz_service_at = timestamp_us + 1000000;
-
-    uavcan_cocobot_GameState gs;
-
-    gs.battery = platform_adc_get_mV(PLATFORM_ADC_VBAT);
-    gs.time = cocobot_game_state_get_elapsed_time();
-    gs.color = cocobot_game_state_get_color() == COCOBOT_GAME_STATE_COLOR_POS;
-    gs.score = cocobot_game_state_getScore();
-
-    void * buf = pvPortMalloc(UAVCAN_COCOBOT_GAMESTATE_MAX_SIZE); 
-    if(buf != NULL) 
-    {
-      static uint8_t transfer_id;
-
-      const int size = uavcan_cocobot_GameState_encode(&gs, buf);
-      cocobot_com_broadcast(UAVCAN_COCOBOT_GAMESTATE_SIGNATURE,
-                            UAVCAN_COCOBOT_GAMESTATE_ID,
-                            &transfer_id,
-                            CANARD_TRANSFER_PRIORITY_LOW,
-                            buf,
-                            (uint16_t)size);
-      vPortFree(buf);
-    }
-  }
-
-  if (timestamp_us >= _next_100ms_service_at)
-  {
-    _next_100ms_service_at = timestamp_us + 100000;
-
-    if(!_config_ready)
-    {
-      uavcan_cocobot_ConfigRequest conf;
-
-      void * buf = pvPortMalloc(UAVCAN_COCOBOT_CONFIG_REQUEST_MAX_SIZE); 
-      if(buf != NULL) 
-      {
-        static uint8_t transfer_id;
-
-        const int size = uavcan_cocobot_ConfigRequest_encode(&conf, buf);
-        cocobot_com_request_or_respond(
-                                       COCOBOT_COM_NODE_ID,
-                                       UAVCAN_COCOBOT_CONFIG_SIGNATURE,
-                                       UAVCAN_COCOBOT_CONFIG_ID,
-                                       &transfer_id,
-                                       CANARD_TRANSFER_PRIORITY_LOW,
-                                       CanardRequest,
-                                       buf,
-                                       (uint16_t)size);
-        vPortFree(buf);
-      }
-    }
+    _last_update_time = now;
+    cocobot_com_send(COCOBOT_COM_GAME_STATE_DEBUG_PID,
+                     "BBDDD",
+                     COCOBOT_ROBOT_ID,  //0 for principal, 1 for secondary 
+                     _color,  //0 for x negative, 1 for x positive 
+                     platform_adc_get_mV(PLATFORM_ADC_VBAT), //battery voltage
+                     cocobot_game_state_get_elapsed_time() / 1000, //elapsed time
+                     _score
+                    );
   }
 }
 
-uint8_t cocobot_game_state_should_accept_transfer(uint64_t* out_data_type_signature,
-                                              uint16_t data_type_id,
-                                              CanardTransferType transfer_type,
-                                              uint8_t source_node_id)
-{
-  if ((transfer_type == CanardTransferTypeResponse) &&
-      (data_type_id == UAVCAN_COCOBOT_CONFIG_ID) &&
-      (source_node_id == COCOBOT_COM_NODE_ID))
-  {
-    *out_data_type_signature = UAVCAN_COCOBOT_CONFIG_SIGNATURE;
-    return true;
-  }
-
-  return false;
-}
-
-uint8_t cocobot_game_state_on_transfer_received(CanardRxTransfer* transfer)
-{
-	IF_RESPONSE_RECEIVED(UAVCAN_COCOBOT_CONFIG, uavcan_cocobot_ConfigResponse,
-      _config = data.config;
-      _config_ready = 1;
-);
-
-  return 0;
-}
 #endif

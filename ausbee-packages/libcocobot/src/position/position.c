@@ -392,63 +392,16 @@ void cocobot_position_set_angle(float angle)
   cocobot_asserv_set_state(saved_state);
 }
 
-
-void cocobot_position_com_async(uint64_t timestamp_us)
+void cocobot_position_handle_async_com(void)
 {
-  if(_request_send_motor)
-  {
-    xSemaphoreTake(mutex, portMAX_DELAY);
-    _request_send_motor = 0;
-
-    const uint16_t left_size = uavcan_cocobot_SetMotorSpeedRequest_encode(&st_left, &buf_left[0]);
-
-    cocobot_com_request_or_respond(COCOBOT_LEFT_MOTOR_NODE_ID,
-                                   UAVCAN_COCOBOT_SETMOTORSPEED_SIGNATURE,
-                                   UAVCAN_COCOBOT_SETMOTORSPEED_ID,
-                                   &transfer_id_left,
-                                   CANARD_TRANSFER_PRIORITY_HIGH,
-                                   CanardRequest,
-                                   &buf_left[0],
-                                   left_size);
-
-    const uint16_t right_size = uavcan_cocobot_SetMotorSpeedRequest_encode(&st_right, &buf_right[0]);
-
-    cocobot_com_request_or_respond(COCOBOT_RIGHT_MOTOR_NODE_ID,
-                                   UAVCAN_COCOBOT_SETMOTORSPEED_SIGNATURE,
-                                   UAVCAN_COCOBOT_SETMOTORSPEED_ID,
-                                   &transfer_id_right,
-                                   CANARD_TRANSFER_PRIORITY_HIGH,
-                                   CanardRequest,
-                                   &buf_right[0],
-                                   right_size);
-    xSemaphoreGive(mutex);
-  }
-
-  if (timestamp_us >= _next_10hz_service_at)
-  {
-    _next_10hz_service_at = timestamp_us + 100000;
-
-    uavcan_cocobot_Position pos;
-
-    pos.x = cocobot_position_get_x();
-    pos.y = cocobot_position_get_y();
-    pos.a = cocobot_position_get_angle();
-
-    void * buf = pvPortMalloc(UAVCAN_COCOBOT_POSITION_MAX_SIZE); 
-    if(buf != NULL) 
-    {
-      static uint8_t transfer_id;
-
-      const int size = uavcan_cocobot_Position_encode(&pos, buf);
-      cocobot_com_broadcast(UAVCAN_COCOBOT_POSITION_SIGNATURE,
-                            UAVCAN_COCOBOT_POSITION_ID,
-                            &transfer_id,
-                            CANARD_TRANSFER_PRIORITY_LOW,
-                            buf,
-                            (uint16_t)size);
-      vPortFree(buf);
-    }
-  }
+  cocobot_com_send(COCOBOT_COM_POSITION_DEBUG_PID,
+                   "FFF",
+                   (double)cocobot_position_get_x(),
+                   (double)cocobot_position_get_y(),
+                   (double)cocobot_position_get_angle()
+                  );
 }
+
+
 
 #endif
