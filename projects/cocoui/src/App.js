@@ -14,9 +14,10 @@ const url_string = window.location.href;
 const url = new URL(url_string);
 const page = url.searchParams.get("page");
 
+console.log(page);
+
 let App = function() {
   //render the layout
-  let page = 'Meca';
   switch(page) {
     case 'Meca':
       ReactDOM.render(<Provider store={State.getStore()}><Meca /></Provider>, document.getElementById('root'));

@@ -213,8 +213,7 @@ static void * mcual_arch_sim_handle_peripherals(void * args)
             for(j = 0; j < r; j += 1)
             {
               //send data to freeRTOS
-#warning TODO
-            //  mcual_usart_recv_from_network(_peripherals_socket[i].usart_id, buf[j]);
+              mcual_usart_recv_from_network(_peripherals_socket[i].usart_id, buf[j]);
             }
           }
         }

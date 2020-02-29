@@ -23,9 +23,12 @@ function createWindow() {
   })
 
   mainWindow.loadURL(
+    (
     isDev
       ? 'http://localhost:3000'
-      : `file://${path.join(__dirname, '../build/index.html')}`,
+      : `file://${path.join(__dirname, '../build/index.html')}`
+    )
+      + '?page=loutre'
   )
 
   mainWindow.on('closed', () => {
@@ -43,9 +46,11 @@ ipcMain.on('window', (event, arg) => {
   });
 
   win.loadURL(
+    (
     isDev
       ? 'http://localhost:3000'
       : `file://${path.join(__dirname, '../build/index.html')}`
+    )
       + '?page=' + arg.id
   );
 });

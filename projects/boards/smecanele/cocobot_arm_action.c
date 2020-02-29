@@ -11,6 +11,7 @@ static cocobot_arm_t arm[4] = {0};
 
 void cocobot_arm_action_init(void)
 {
+  return;
   for(int i = 0; i <= 2; i++)
   {
       cocobot_arm_action_repos_vide(i);
