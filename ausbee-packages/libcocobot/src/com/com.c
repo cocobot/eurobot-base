@@ -54,12 +54,24 @@ void cocobot_com_async_thread(void *arg)
   while(pdTRUE)
   {
     //send debug information if needed
+#ifdef CONFIG_LIBCOCOBOT_ASSERV
     cocobot_position_handle_async_com();
+#endif
+#ifdef CONFIG_LIBCOCOBOT_ASSERV
     cocobot_asserv_handle_async_com();
+#endif
+#ifdef CONFIG_LIBCOCOBOT_TRAJECTORY
     cocobot_trajectory_handle_async_com();
+#endif
+#ifdef CONFIG_LIBCOCOBOT_PATHFINDER
     cocobot_pathfinder_handle_async_com();
+#endif
+#ifdef CONFIG_LIBCOCOBOT_GAME_STATE
     cocobot_game_state_handle_async_com();
+#endif
+#ifdef CONFIG_LIBCOCOBOT_ACTION_SCHEDULER
     cocobot_action_scheduler_handle_async_com();
+#endif
 
     //wait 100ms (minus time used by previous handler)
     vTaskDelayUntil( &xLastWakeTime, 100 / portTICK_PERIOD_MS);
@@ -116,8 +128,12 @@ void cocobot_com_sync_thread(void *arg)
               break;
           }
 
+#ifdef CONFIG_LIBCOCOBOT_OPPONENT_DETECTION
           cocobot_opponent_detection_handle_sync_com(header.pid, data, header.len);
+#endif
+#ifdef CONFIG_LIBCOCOBOT_TRAJECTORY
           cocobot_asserv_handle_sync_com(header.pid, data, header.len);
+#endif
 
           if(_user_handler != NULL)
           {

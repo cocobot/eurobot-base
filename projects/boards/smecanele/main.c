@@ -3,177 +3,123 @@
 #include <platform.h>
 #include <cocobot.h>
 #include <stdio.h>
-#include "cocobot_arm_action.h"
-#include "pcm9685.h"
-#include "servo.h"
-#include "pump.h"
-#include "uavcan/cocobot/Pump.h"
-#include "uavcan/cocobot/ServoCmd.h"
-#include "uavcan/cocobot/MecaAction.h"
 
-static volatile uint8_t _meca_busy = 0;
-static volatile uint8_t _req = 0;
-static volatile uint8_t _arm = 0;
-static volatile uint8_t _arg = 0;
 
 static void thread(void * arg)
 {
   (void)arg;
-  pump_init();
-  cocobot_arm_action_init();
 
   while(1)
   {
-    if(_meca_busy)
-    {
-      switch(_req)
-      {
-        case UAVCAN_COCOBOT_MECAACTION_REQUEST_INIT:
-          cocobot_arm_action_init();
-          break;
-
-        case UAVCAN_COCOBOT_MECAACTION_REQUEST_TAKE_DISTRIB:
-          pump_set_state(_arm, 1);
-          cocobot_arm_action_prise_distributeur(_arm, 0);
-
-          if(_arg != 1)
-          {
-            vTaskDelay(1000 / portTICK_PERIOD_MS); 
-            cocobot_arm_action_repos_normal(_arm);
-          }
-          break;
-
-        case UAVCAN_COCOBOT_MECAACTION_REQUEST_REST_NORMAL:
-          cocobot_arm_action_repos_normal(_arm);
-          break;
-
-        case UAVCAN_COCOBOT_MECAACTION_REQUEST_REST_EMPTY:
-          cocobot_arm_action_repos_vide(_arm);
-          break;
-
-        case UAVCAN_COCOBOT_MECAACTION_REQUEST_DROP_BALANCE:
-          cocobot_arm_action_depose_balance(_arm, 0);
-          cocobot_arm_action_repos_vide(_arm);
-          break;
-
-        case 5: //REUSE TAKE FLOOR
-          pump_set_state(0, 0);
-          pump_set_state(1, 0);
-          servo_set_pwm(0, 0);
-          servo_set_pwm(1, 0);
-          servo_set_pwm(2, 0);
-          servo_set_pwm(3, 0);
-          servo_set_pwm(4, 0);
-          servo_set_pwm(5, 0);
-          break;
-
-      }
-
-      _meca_busy = 0;
-    }
-    vTaskDelay(10/portTICK_PERIOD_MS);
+    //toggle led
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+    platform_led_toggle(PLATFORM_LED0);
   } 
 }
 
+/*
 uint8_t com_should_accept_transfer(uint64_t* out_data_type_signature,
-		uint16_t data_type_id,
-		CanardTransferType transfer_type,
-		uint8_t source_node_id)
+                                   uint16_t data_type_id,
+                                   CanardTransferType transfer_type,
+                                   uint8_t source_node_id)
 {
-	(void)source_node_id;
+  (void)source_node_id;
 
-	//accept servo setpoint cmd
-	if ((transfer_type == CanardTransferTypeRequest) &&
-			(data_type_id == UAVCAN_COCOBOT_SERVOCMD_ID)
-		 )
-	{
-		*out_data_type_signature = UAVCAN_COCOBOT_SERVOCMD_SIGNATURE;
-		return true;
-	}
+  //accept servo setpoint cmd
+  if ((transfer_type == CanardTransferTypeRequest) &&
+      (data_type_id == UAVCAN_COCOBOT_SERVOCMD_ID)
+     )
+  {
+    *out_data_type_signature = UAVCAN_COCOBOT_SERVOCMD_SIGNATURE;
+    return true;
+  }
 
   if ((transfer_type == CanardTransferTypeRequest) &&
-			(data_type_id == UAVCAN_COCOBOT_MECAACTION_ID)
-		 )
-	{
-		*out_data_type_signature = UAVCAN_COCOBOT_MECAACTION_SIGNATURE;
-		return true;
-	}
+      (data_type_id == UAVCAN_COCOBOT_MECAACTION_ID)
+     )
+  {
+    *out_data_type_signature = UAVCAN_COCOBOT_MECAACTION_SIGNATURE;
+    return true;
+  }
 
   if ((transfer_type == CanardTransferTypeRequest) &&
-			(data_type_id == UAVCAN_COCOBOT_PUMP_ID)
-		 )
-	{
-		*out_data_type_signature = UAVCAN_COCOBOT_PUMP_SIGNATURE;
-		return true;
-	}
+      (data_type_id == UAVCAN_COCOBOT_PUMP_ID)
+     )
+  {
+    *out_data_type_signature = UAVCAN_COCOBOT_PUMP_SIGNATURE;
+    return true;
+  }
 
-	return false;
+  return false;
 }
 
 void com_async(uint64_t timestamp_us)
 {
 }
 
+
 uint8_t com_on_transfer_received(CanardRxTransfer* transfer)
 {
-	IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_SERVOCMD, uavcan_cocobot_ServoCmdRequest,
-      if(data.mode)
-      {
-        servo_set_angle(data.servo_id, data.value);
-      }
-      else
-      {
-        servo_set_pwm(data.servo_id, data.value);
-      }
-);
+  IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_SERVOCMD, uavcan_cocobot_ServoCmdRequest,
+                      if(data.mode)
+                      {
+                      servo_set_angle(data.servo_id, data.value);
+                      }
+                      else
+                      {
+                      servo_set_pwm(data.servo_id, data.value);
+                      }
+                     );
 
-	IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_PUMP, uavcan_cocobot_PumpRequest,
-      pump_set_state(data.pump_id, data.action ? 2 : 0);
-);
+  IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_PUMP, uavcan_cocobot_PumpRequest,
+                      pump_set_state(data.pump_id, data.action ? 2 : 0);
+                     );
 
-	IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_MECAACTION, uavcan_cocobot_MecaActionRequest,
-      if(data.req != UAVCAN_COCOBOT_MECAACTION_REQUEST_STATUS)
-      {
-        _arm = data.arm;
-        _req = data.req;
-        _arg = data.a;
-        _meca_busy = 1;
-      }
- 
-      uavcan_cocobot_MecaActionResponse action;
+  IF_REQUEST_RECEIVED(UAVCAN_COCOBOT_MECAACTION, uavcan_cocobot_MecaActionRequest,
+                      if(data.req != UAVCAN_COCOBOT_MECAACTION_REQUEST_STATUS)
+                      {
+                      _arm = data.arm;
+                      _req = data.req;
+                      _arg = data.a;
+                      _meca_busy = 1;
+                      }
 
-      action.busy = _meca_busy;
+                      uavcan_cocobot_MecaActionResponse action;
 
-      void * buf = pvPortMalloc(UAVCAN_COCOBOT_MECAACTION_RESPONSE_MAX_SIZE); 
-      if(buf != NULL) 
-      {
-        static uint8_t transfer_id;
+                      action.busy = _meca_busy;
 
-        const int size = uavcan_cocobot_MecaActionResponse_encode(&action, buf);
-        cocobot_com_request_or_respond(transfer->source_node_id,
-                                       UAVCAN_COCOBOT_MECAACTION_SIGNATURE,
-                                       UAVCAN_COCOBOT_MECAACTION_ID,
-                                       &transfer_id,
-                                       CANARD_TRANSFER_PRIORITY_LOW,
-                                       CanardResponse,
-                                       buf,
-                                       (uint16_t)size);
-        vPortFree(buf);
-      }
+                      void * buf = pvPortMalloc(UAVCAN_COCOBOT_MECAACTION_RESPONSE_MAX_SIZE); 
+                      if(buf != NULL) 
+                      {
+                      static uint8_t transfer_id;
+
+                      const int size = uavcan_cocobot_MecaActionResponse_encode(&action, buf);
+                      cocobot_com_request_or_respond(transfer->source_node_id,
+                                                     UAVCAN_COCOBOT_MECAACTION_SIGNATURE,
+                                                     UAVCAN_COCOBOT_MECAACTION_ID,
+                                                     &transfer_id,
+                                                     CANARD_TRANSFER_PRIORITY_LOW,
+                                                     CanardResponse,
+                                                     buf,
+                                                     (uint16_t)size);
+                      vPortFree(buf);
+                      }
   );
 
-	return 0;
+  return 0;
 }
+*/
 
+
+void com_handler(uint16_t pid, uint8_t * data, uint32_t len)
+{
+}
 
 int main(void) 
 {
   platform_init();
 
-  cocobot_com_init();
-  cocobot_com_run();
-
-  cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_OPERATIONAL);
+  cocobot_com_init(MCUAL_USART1, 1, 1, com_handler);
 
   xTaskCreate(thread, "thread", 1024, NULL, 3, NULL);
   vTaskStartScheduler();
