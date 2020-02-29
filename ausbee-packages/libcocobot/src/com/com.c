@@ -9,6 +9,7 @@
 #include <semphr.h>
 #include <mcual.h>
 
+#define PING_COUNTER_CONFIG 10
 #define COCOBOT_COM_HEADER_START 0xC0
 #define INVALID_PTR ((void *)0xFFFFFFFF)
 
@@ -49,6 +50,8 @@ void cocobot_com_async_thread(void *arg)
 {
   (void)arg;
 
+  int ping_counter = 0;
+
   TickType_t xLastWakeTime;
   xLastWakeTime = xTaskGetTickCount();
   while(pdTRUE)
@@ -72,6 +75,16 @@ void cocobot_com_async_thread(void *arg)
 #ifdef CONFIG_LIBCOCOBOT_ACTION_SCHEDULER
     cocobot_action_scheduler_handle_async_com();
 #endif
+
+    if(ping_counter > PING_COUNTER_CONFIG)
+    {
+      cocobot_com_send(COCOBOT_COM_PING, "");
+      ping_counter = 0;
+    }
+    else
+    {
+      ping_counter += 1;
+    }
 
     //wait 100ms (minus time used by previous handler)
     vTaskDelayUntil( &xLastWakeTime, 100 / portTICK_PERIOD_MS);

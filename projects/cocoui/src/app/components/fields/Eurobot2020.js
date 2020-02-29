@@ -118,12 +118,12 @@ class Eurobot2020Cup extends React.Component {
           }
           defs.push(
             <linearGradient key={0} id={"Ecup2020_" + id} gradientTransform="rotate(90)">
-              <stop offset="0%" stop-color={c1} />
-              <stop offset="34%" stop-color={c1} />
-              <stop offset="34%" stop-color={c2} />
-              <stop offset="67%" stop-color={c2} />
-              <stop offset="67%" stop-color={c3} />
-              <stop offset="100%" stop-color={c3} />
+              <stop offset="0%" stopColor={c1} />
+              <stop offset="34%" stopColor={c1} />
+              <stop offset="34%" stopColor={c2} />
+              <stop offset="67%" stopColor={c2} />
+              <stop offset="67%" stopColor={c3} />
+              <stop offset="100%" stopColor={c3} />
             </linearGradient>
           );
         }
@@ -148,12 +148,12 @@ class Eurobot2020Cup extends React.Component {
           }
           defs.push(
             <linearGradient key={0} id={"Ecup2020_" + id} gradientTransform="rotate(90)">
-              <stop offset="0%" stop-color={c1} />
-              <stop offset="34%" stop-color={c1} />
-              <stop offset="34%" stop-color={c2} />
-              <stop offset="67%" stop-color={c2} />
-              <stop offset="67%" stop-color={c3} />
-              <stop offset="100%" stop-color={c3} />
+              <stop offset="0%" stopColor={c1} />
+              <stop offset="34%" stopColor={c1} />
+              <stop offset="34%" stopColor={c2} />
+              <stop offset="67%" stopColor={c2} />
+              <stop offset="67%" stopColor={c3} />
+              <stop offset="100%" stopColor={c3} />
             </linearGradient>
           );
         }

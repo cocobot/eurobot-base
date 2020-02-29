@@ -9,7 +9,6 @@
 
 void mcual_loader_boot(void)
 {
-  mcual_arch_request("ARCH", 0, "REBOOT");
   exit(0);
 }
 

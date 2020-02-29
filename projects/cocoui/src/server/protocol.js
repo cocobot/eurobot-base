@@ -19,6 +19,7 @@ DECODERS[0x8006] = "{game_state}B(robot_id)B(color)D(battery)D(time)D(score)"
 DECODERS[0x8008] = "{action_scheduler}[S(name)F(x)F(y)F(score)](strategies)"
 DECODERS[0x800a] = "{usirs}[H(us)H(ir)B(force_on)B(alert)B(alert_activated)](usir)"
 DECODERS[0x800d] = "{asserv_params}F(d_ramp_speed)F(d_ramp_accel)F(d_pid_kp)F(d_pid_kd)F(d_pid_ki)F(d_pid_max_i)F(d_pid_max_e)F(a_ramp_speed)F(a_ramp_accel)F(a_pid_kp)F(a_pid_kd)F(a_pid_ki)F(a_pid_max_i)F(a_pid_max_e)";
+DECODERS[0x800f] = "{ping}";
 
 const GRAMMAR = `
 {
@@ -99,6 +100,7 @@ class BootloaderClient {
 
   _onData(data) {
     const asc = data.toString('ascii');
+    console.log("ASC >" + asc);
     if(asc.includes('#RESET')) {
       this._protocol.formatAndSendtoAll({
         pid: 0x8007,
@@ -276,7 +278,6 @@ class Client {
   }
 
   formatAndSend(pkt) {
-    console.log(pkt);
     const getLen = (fmt) => {
       let size = 0;
       for(let i = 0; i < fmt.length; i += 1) {
@@ -388,6 +389,7 @@ class TCPClient extends Client {
   send(data) {
     try
     {
+      console.log("SENBD!");
       this._socket.write(data);
     }
     catch(e) {
@@ -410,7 +412,9 @@ class Protocol {
 
     ipcMain.on('pkt', (event, arg) => {
       this._clients.forEach((client) => {
+        console.log("42 !");
         if(client.getID() == arg.client) {
+          console.log("POUET !");
           client.formatAndSend(arg);
         }
       });

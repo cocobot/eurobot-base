@@ -150,7 +150,7 @@ class TopMenuComponent extends React.Component {
         <Navbar color="dark" dark expand="md">
         <NavbarBrand href="#">CocoUI</NavbarBrand>
           <Nav className="ml-auto" navbar>
-            {this.props.active.entrySeq().map(([x, key]) => {
+            {this.props.active.entrySeq().map(([key, x]) => {
               return this._renderRobot(x, key);
             })}
           </Nav>

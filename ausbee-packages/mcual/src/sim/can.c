@@ -1,3 +1,6 @@
+#include <include/generated/autoconf.h>
+#ifdef CONFIG_MCUAL_CAN
+
 #include <mcual.h>
 #include <FreeRTOS.h>
 #include <queue.h>
@@ -46,3 +49,4 @@ void mcual_can_recv_new_frame(CanardCANFrame * frame)
 {
   xQueueSend(can_rx_queue, frame, 0);
 }
+#endif
