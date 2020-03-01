@@ -1,7 +1,7 @@
 #ifndef COCOBOT_CONFIG_H
 #define COCOBOT_CONFIG_H
 
-#define SERVO_NUMBER  12
+#define SERVO_NUMBER  13
 
 #define SERVO_CALIBRATION \
 {\

@@ -28,7 +28,92 @@ static void thread(void * arg)
       cocobot_com_printf("RUN smecanele order %lu", order);
       switch(order)
       {
-        //TODO VINCENT !
+        case 0: //Init
+          cocobot_arm_action_init();
+          break;
+        case 1: //Front Up
+          cocobot_arm_action_pliers_up(PLIERS_CARRIER_FRONT);
+          break;
+        case 2: //Front Down
+          cocobot_arm_action_pliers_down(PLIERS_CARRIER_FRONT);
+          break;
+        case 3: //F all open
+          cocobot_arm_action_pliers_open(PLIERS_FRONT_LEFT);
+          cocobot_arm_action_pliers_open(PLIERS_FRONT_RIGHT);
+          cocobot_arm_action_pliers_open(PLIERS_FRONT_CENTER);
+          break;
+        case 4: //F all close
+          cocobot_arm_action_pliers_close(PLIERS_FRONT_LEFT);
+          cocobot_arm_action_pliers_close(PLIERS_FRONT_RIGHT);
+          cocobot_arm_action_pliers_close(PLIERS_FRONT_CENTER);
+          break;
+        case 5: //F left O
+          cocobot_arm_action_pliers_open(PLIERS_FRONT_LEFT);
+          break;
+        case 6: //F left C 
+          cocobot_arm_action_pliers_close(PLIERS_FRONT_LEFT);
+          break;
+        case 7: //F center O
+          cocobot_arm_action_pliers_open(PLIERS_FRONT_CENTER);
+          break;
+        case 8: //F center C 
+          cocobot_arm_action_pliers_close(PLIERS_FRONT_CENTER);
+          break;
+        case 9: //F right O
+          cocobot_arm_action_pliers_open(PLIERS_FRONT_RIGHT);
+          break;
+        case 10: //F right C 
+          cocobot_arm_action_pliers_close(PLIERS_FRONT_RIGHT);
+          break;
+        case 11: //Back Up
+          cocobot_arm_action_pliers_up(PLIERS_CARRIER_BACK);
+          break;
+        case 12: //Back Down
+          cocobot_arm_action_pliers_down(PLIERS_CARRIER_BACK);
+          break;
+        case 13: //B all O
+          cocobot_arm_action_pliers_open(PLIERS_BACK_LEFT);
+          cocobot_arm_action_pliers_open(PLIERS_BACK_RIGHT);
+          cocobot_arm_action_pliers_open(PLIERS_BACK_CENTER);
+          break;
+        case 14: //B all close
+          cocobot_arm_action_pliers_close(PLIERS_BACK_LEFT);
+          cocobot_arm_action_pliers_close(PLIERS_BACK_RIGHT);
+          cocobot_arm_action_pliers_close(PLIERS_BACK_CENTER);
+          break;
+        case 15: //B left O
+          cocobot_arm_action_pliers_open(PLIERS_BACK_LEFT);
+          break;
+        case 16: //B left C 
+          cocobot_arm_action_pliers_close(PLIERS_BACK_LEFT);
+          break;
+        case 17: //B center O
+          cocobot_arm_action_pliers_open(PLIERS_BACK_CENTER);
+          break;
+        case 18: //B center C 
+          cocobot_arm_action_pliers_close(PLIERS_BACK_CENTER);
+          break;
+        case 19: //B right O
+          cocobot_arm_action_pliers_open(PLIERS_BACK_RIGHT);
+          break;
+        case 20: //B right C 
+          cocobot_arm_action_pliers_close(PLIERS_BACK_RIGHT);
+          break;
+        case 21: //L Windsock down
+          cocobot_arm_action_windsock_down(WINDSOCK_LEFT);
+          break;
+        case 22: //L Windsock up
+          cocobot_arm_action_windsock_up(WINDSOCK_LEFT);
+          break;
+        case 23: //R Windsock down
+          cocobot_arm_action_windsock_down(WINDSOCK_RIGHT);
+          break;
+        case 24: //R Windsock up
+          cocobot_arm_action_windsock_up(WINDSOCK_RIGHT);
+          break;
+        case 25: //Flag up
+          cocobot_arm_action_flag_up();
+          break;
       }
     }
     else
