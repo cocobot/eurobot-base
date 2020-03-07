@@ -29,6 +29,20 @@
 #define COCOBOT_COM_SET_SERVO_PID (0x1000)
 #define COCOBOT_COM_MECA_ACTION_PID (0x1001)
 
+#define COCOBOT_SMECANELE_ID              0x01
+#define COCOBOT_SBRAIN_ID                 0x02
+#define COCOBOT_SCOM_ID                   0x03
+#define COCOBOT_SLCANON_ID                0x04
+#define COCOBOT_SRCANON_ID                0x05
+
+#define COCOBOT_PMECANELE_ID              0x09
+#define COCOBOT_PBRAIN_ID                 0x0A
+#define COCOBOT_PCOM_ID                   0X0B
+#define COCOBOT_PLCANON_ID                0X0C
+#define COCOBOT_PRCANON_ID                0X0D
+
+#define COCOBOT_COCOUI_ID                 0x11
+
 typedef void (*cocobot_com_handler_t)(uint16_t pid, uint8_t * data, uint32_t len);
 
 /* Initialization of the com module. Need to be called before any other action 

@@ -23,7 +23,7 @@ static void thread(void * arg)
 
   while(1)
   {
-    if(xQueueReceive(order_queue, &order, 50 / portTICK_PERIOD_MS) == pdTRUE)
+    if(xQueueReceive(order_queue, &order, 100 * 50 / portTICK_PERIOD_MS) == pdTRUE)
     {
       cocobot_com_printf("RUN smecanele order %lu", order);
       switch(order)
@@ -33,6 +33,7 @@ static void thread(void * arg)
     }
     else
     {
+      cocobot_com_printf("smecanele is inactive !!");
       //toggle led when inactive
       platform_led_toggle(PLATFORM_LED0);
     }

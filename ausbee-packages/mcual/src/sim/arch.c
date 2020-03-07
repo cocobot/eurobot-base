@@ -19,11 +19,16 @@
 #define PERIPHERAL_TCP_PORT 10000
 #define CLIENT_MAX          10
 
+#define USART_PID(id) (id | 0x8000)
+#define USART_PID_TO_ID(id) (id & 0xFF)
+
+#define CAN_PID(id) (id | 0x9000)
+
 typedef struct
 {
   int socket;
   int init;
-  mcual_usart_id_t usart_id;
+  int peripheral_id;
 } mcual_arch_sim_peripheral_socket_t;
 
 static pthread_t _peripheral_thread;
@@ -84,24 +89,10 @@ void mcual_arch_main(int argc, char *argv[])
   }
 }
 
-void mcual_arch_sim_handle_uart_peripheral_write(mcual_usart_id_t usart_id, uint8_t byte)
+void mcual_arch_sim_connect(const int pid, const char * peripheral_name)
 {
-  pthread_mutex_lock(&_mutex_network);
-
-  //try to find usart slot (if client is connected)
   int i;
-  for(i = 0; i < CLIENT_MAX; i += 1)
-  {
-    if((_peripherals_socket[i].socket != -1) && (_peripherals_socket[i].init) && (_peripherals_socket[i].usart_id == usart_id))
-    {
-      //send data to peripheral
-      pthread_mutex_unlock(&_mutex_network);
-      write(_peripherals_socket[i].socket, &byte, 1);
-      return;
-    }
-  }
 
-  //no opened connection
   int sock = socket(AF_INET, SOCK_STREAM, 0);
   if(sock < 0)
   {
@@ -128,7 +119,7 @@ void mcual_arch_sim_handle_uart_peripheral_write(mcual_usart_id_t usart_id, uint
   saddr.sin_port = htons(_port);
   saddr.sin_addr = *(struct in_addr *) hostinfo->h_addr;
 
-  printf("Trying to connect: %s:%d (UART %d)\n", inet_ntoa(saddr.sin_addr), _port, usart_id);
+  printf("Trying to connect: %s:%d (%s)\n", inet_ntoa(saddr.sin_addr), _port, peripheral_name);
   if(connect(sock,(struct sockaddr *) &saddr, sizeof(struct sockaddr_in)) < 0)
   {
     perror("connect");
@@ -143,23 +134,86 @@ void mcual_arch_sim_handle_uart_peripheral_write(mcual_usart_id_t usart_id, uint
       {
         _peripherals_socket[i].socket = sock;
         _peripherals_socket[i].init = 1;
-        _peripherals_socket[i].usart_id = usart_id;
+        _peripherals_socket[i].peripheral_id = pid;
 
         //send data to peripheral
         FD_SET(sock, &_valid_fds);
 
-        char buf[32];
-        snprintf(buf, sizeof(buf), ">>USART%d<<\n", usart_id);
-        write(_peripherals_socket[i].socket, buf, strlen(buf));
+        write(_peripherals_socket[i].socket, peripheral_name, strlen(peripheral_name));
 
         pthread_mutex_unlock(&_mutex_network);
-        write(_peripherals_socket[i].socket, &byte, 1);
         pthread_kill(_peripheral_thread, SIGUSR2);
         return;
       }
     }
     fprintf(stderr, "No free peripheral available in list\n");
   }
+}
+
+void mcual_arch_sim_handle_uart_peripheral_write(mcual_usart_id_t usart_id, uint8_t byte)
+{
+  pthread_mutex_lock(&_mutex_network);
+
+  //try to find usart slot (if client is connected)
+  int i;
+  for(i = 0; i < CLIENT_MAX; i += 1)
+  {
+    if((_peripherals_socket[i].socket != -1) && (_peripherals_socket[i].init) && (_peripherals_socket[i].peripheral_id == USART_PID(usart_id)))
+    {
+      //send data to peripheral
+      pthread_mutex_unlock(&_mutex_network);
+      char buffer[64];
+      snprintf(buffer, sizeof(buffer), "%02x\r\n",
+              byte
+             );
+      write(_peripherals_socket[i].socket, buffer, strlen(buffer));
+      return;
+
+    }
+  }
+  
+  //no opened connection
+  char buf[32];
+  snprintf(buf, sizeof(buf), "U%d<<", usart_id);
+  mcual_arch_sim_connect(USART_PID(usart_id), buf);
+  pthread_mutex_unlock(&_mutex_network);
+}
+
+void mcual_arch_sim_handle_can_peripheral_write(const mcual_can_frame_t * const frame)
+{
+  pthread_mutex_lock(&_mutex_network);
+
+  //try to find usart slot (if client is connected)
+  int i;
+  for(i = 0; i < CLIENT_MAX; i += 1)
+  {
+    if((_peripherals_socket[i].socket != -1) && (_peripherals_socket[i].init) && (_peripherals_socket[i].peripheral_id == CAN_PID(0)))
+    {
+      //send data to peripheral
+      pthread_mutex_unlock(&_mutex_network);
+      char buffer[64];
+      snprintf(buffer, sizeof(buffer), "%08x:%01x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\r\n",
+              frame->id,
+              frame->data_len,
+              frame->data[0],
+              frame->data[1],
+              frame->data[2],
+              frame->data[3],
+              frame->data[4],
+              frame->data[5],
+              frame->data[6],
+              frame->data[7]
+             );
+
+      write(_peripherals_socket[i].socket, buffer, strlen(buffer));
+      return;
+    }
+  }
+  
+  //no opened connection
+  char buf[32];
+  snprintf(buf, sizeof(buf), "C0<<");
+  mcual_arch_sim_connect(CAN_PID(0), buf);
   pthread_mutex_unlock(&_mutex_network);
 }
 
@@ -209,11 +263,22 @@ static void * mcual_arch_sim_handle_peripherals(void * args)
           }
           else
           {
-            int j;
-            for(j = 0; j < r; j += 1)
+            switch(_peripherals_socket[i].peripheral_id & 0xF000)
             {
-              //send data to freeRTOS
-              mcual_usart_recv_from_network(_peripherals_socket[i].usart_id, buf[j]);
+              case 0x8000: //UART
+                {
+                  int j;
+                  for(j = 0; j < r; j += 1)
+                  {
+                    //send data to freeRTOS
+                    mcual_usart_recv_from_network(USART_PID_TO_ID(_peripherals_socket[i].peripheral_id), buf[j]);
+                  }
+                }
+                break;
+
+              default:
+                fprintf(stderr, "PID ??? %x\r\n", _peripherals_socket[i].peripheral_id);
+                break;
             }
           }
         }

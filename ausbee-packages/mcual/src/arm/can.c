@@ -2,6 +2,7 @@
 #ifdef CONFIG_MCUAL_CAN
 
 #include <stdlib.h>
+#include <stdbool.h>
 #ifdef CONFIG_DEVICE_STM32L496xx
 # include <stm32l4xx.h>
 #else
@@ -26,52 +27,20 @@
 QueueHandle_t can_tx_queue;
 QueueHandle_t can_rx_queue;
 #else
-volatile CanardCANFrame can_tx_buffer[CONFIG_MCUAL_CAN_TX_SIZE];
+volatile mcual_can_frame_t can_tx_buffer[CONFIG_MCUAL_CAN_TX_SIZE];
 volatile int32_t tx_index_read;
 volatile int32_t tx_index_write;
-volatile CanardCANFrame can_rx_buffer[CONFIG_MCUAL_CAN_RX_SIZE];
+volatile mcual_can_frame_t can_rx_buffer[CONFIG_MCUAL_CAN_RX_SIZE];
 volatile int32_t rx_index_read;
 volatile int32_t rx_index_write;
 #endif
 
 static bool isFramePriorityHigher(uint32_t a, uint32_t b)
 {
-    const uint32_t clean_a = a & CANARD_CAN_EXT_ID_MASK;
-    const uint32_t clean_b = b & CANARD_CAN_EXT_ID_MASK;
-
-    /*
-     * STD vs EXT - if 11 most significant bits are the same, EXT loses.
-     */
-    const bool ext_a = (a & CANARD_CAN_FRAME_EFF) != 0;
-    const bool ext_b = (b & CANARD_CAN_FRAME_EFF) != 0;
-    if (ext_a != ext_b)
-    {
-        const uint32_t arb11_a = ext_a ? (clean_a >> 18U) : clean_a;
-        const uint32_t arb11_b = ext_b ? (clean_b >> 18U) : clean_b;
-        if (arb11_a != arb11_b)
-        {
-            return arb11_a < arb11_b;
-        }
-        else
-        {
-            return ext_b;
-        }
-    }
-
-    /*
-     * RTR vs Data frame - if frame identifiers and frame types are the same, RTR loses.
-     */
-    const bool rtr_a = (a & CANARD_CAN_FRAME_RTR) != 0;
-    const bool rtr_b = (b & CANARD_CAN_FRAME_RTR) != 0;
-    if ((clean_a == clean_b) && (rtr_a != rtr_b))
-    {
-        return rtr_b;
-    }
-
     /*
      * Plain ID arbitration - greater value loses.
      */
-    return clean_a < clean_b;
+    return (a & 0xFFF) < (b & 0xFFF);
 }
 
 static bool waitMSRINAKBitStateChange(volatile const CAN_TypeDef * const bxcan, const bool target_state)
@@ -104,57 +73,6 @@ static bool waitMSRINAKBitStateChange(volatile const CAN_TypeDef * const bxcan, 
     return false;
 }
 
-/// Converts libcanard ID value into the bxCAN TX ID register format.
-static uint32_t convertFrameIDCanardToRegister(const uint32_t id)
-{
-    uint32_t out = 0;
-
-    if (id & CANARD_CAN_FRAME_EFF)
-    {
-        out = ((id & CANARD_CAN_EXT_ID_MASK) << 3U) | CAN_TI0R_IDE;
-    }
-    else
-    {
-        out = ((id & CANARD_CAN_STD_ID_MASK) << 21U);
-    }
-
-    if (id & CANARD_CAN_FRAME_RTR)
-    {
-        out |= CAN_TI0R_RTR;
-    }
-
-    return out;
-}
-
-/// Converts bxCAN TX/RX (sic! both RX/TX are supported) ID register value into the libcanard ID format.
-static uint32_t convertFrameIDRegisterToCanard(const uint32_t id)
-{
-//Error with the macro
-/*
-#if (CAN_TI0R_RTR != CAN_RI0R_RTR) ||\
-    (CAN_TI0R_IDE != CAN_RI0R_IDE)
-# error "RIR bits do not match TIR bits, TIR --> libcanard conversion is not possible"
-#endif
-*/
-    uint32_t out = 0;
-
-    if ((id & CAN_RI0R_IDE) == 0)
-    {
-        out = (CANARD_CAN_STD_ID_MASK & (id >> 21U));
-    }
-    else
-    {
-        out = (CANARD_CAN_EXT_ID_MASK & (id >> 3U)) | CANARD_CAN_FRAME_EFF;
-    }
-
-    if ((id & CAN_RI0R_RTR) != 0)
-    {
-        out |= CANARD_CAN_FRAME_RTR;
-    }
-
-    return out;
-}
-
 int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode iface)
 {
     /*
@@ -164,7 +82,7 @@ int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode if
         (iface != mcualCanIfaceModeSilent) &&
         (iface != mcualCanIfaceModeAutomaticTxAbortOnError))
     {
-        return -CANARD_ERROR_INVALID_ARGUMENT;
+        return -1;
     }
 
     if ((timings == NULL) ||
@@ -173,12 +91,12 @@ int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode if
         (timings->bit_segment_1 < 1) || (timings->bit_segment_1 > 16) ||
         (timings->bit_segment_2 < 1) || (timings->bit_segment_2 > 8))
     {
-        return -CANARD_ERROR_INVALID_ARGUMENT;
+        return -2;
     }
 
 #ifdef CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
-    can_tx_queue = xQueueCreate(CONFIG_MCUAL_CAN_TX_SIZE, sizeof(CanardCANFrame));
-    can_rx_queue = xQueueCreate(CONFIG_MCUAL_CAN_RX_SIZE, sizeof(CanardCANFrame));
+    can_tx_queue = xQueueCreate(CONFIG_MCUAL_CAN_TX_SIZE, sizeof(mcual_can_frame_t));
+    can_rx_queue = xQueueCreate(CONFIG_MCUAL_CAN_RX_SIZE, sizeof(mcual_can_frame_t));
 #else
     tx_index_read = 0;
     tx_index_write = 0;
@@ -213,7 +131,7 @@ int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode if
     if (!waitMSRINAKBitStateChange(CAN1, true))                // Wait for synchronization
     {
         CAN1->MCR = CAN_MCR_RESET;
-        return -MCUAL_CAN_ERROR_MSR_INAK_NOT_SET;
+        return -3;
     }
 
 #endif
@@ -224,7 +142,7 @@ int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode if
     if (!waitMSRINAKBitStateChange(BXCAN, true))                // Wait for synchronization
     {
         BXCAN->MCR = CAN_MCR_RESET;
-        return -MCUAL_CAN_ERROR_MSR_INAK_NOT_SET;
+        return -4;
     }
 
     /*
@@ -238,22 +156,17 @@ int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode if
                  ((timings->bit_rate_prescaler - 1U)                & 1023U) |
                  ((iface == mcualCanIfaceModeSilent) ? CAN_BTR_SILM : 0);
 
-    //Todo, to be removed
-    CANARD_ASSERT(0 == BXCAN->IER);             // Making sure the iterrupts are indeed disabled
-
     BXCAN->MCR &= ~CAN_MCR_INRQ;   // Leave init mode
 
     if (!waitMSRINAKBitStateChange(BXCAN, false))
     {
         BXCAN->MCR = CAN_MCR_RESET;
-        return -MCUAL_CAN_ERROR_MSR_INAK_NOT_CLEARED;
+        return -5;
     }
 
     uint32_t fmr = CAN1->FMR & 0xFFFFC0F1U;
     fmr |= 14 << 8U;                // CAN2 start bank = 14 (if CAN2 is present)
     CAN1->FMR = fmr | CAN_FMR_FINIT;
-
-    CANARD_ASSERT(((CAN1->FMR >> 8U) & 0x3FU) == MCUAL_CAN_NUM_ACCEPTANCE_FILTERS);
 
     CAN1->FM1R = 0;                                        // Indentifier Mask mode
     CAN1->FS1R = 0x0FFFFFFF;                               // All 32-bit
@@ -308,7 +221,7 @@ int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode if
 }
 
 
-int16_t mcual_can_transmit(const mcual_can_frame * const frame)
+int16_t mcual_can_transmit(const mcual_can_frame_t * const frame)
 {
 #ifdef CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
     xQueueSend(can_tx_queue, frame, portMAX_DELAY);
@@ -352,7 +265,7 @@ void mcual_can_wait_tx_ended()
 #endif
 }
 
-int16_t mcual_can_recv(CanardCANFrame* const out_frame)
+int16_t mcual_can_recv(mcual_can_frame_t * const out_frame)
 {
 #ifdef CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
     xQueueReceive(can_rx_queue, out_frame, portMAX_DELAY);
@@ -367,7 +280,7 @@ int16_t mcual_can_recv(CanardCANFrame* const out_frame)
     return 1;
 }
 
-int16_t mcual_can_recv_no_wait(CanardCANFrame* const out_frame)
+int16_t mcual_can_recv_no_wait(mcual_can_frame_t * const out_frame)
 {
 #ifdef CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
     if(xQueueReceive(can_rx_queue, out_frame, 0) == pdFALSE)
@@ -396,7 +309,7 @@ int16_t mcual_can_recv_no_wait(CanardCANFrame* const out_frame)
 #endif
 }
 
-static void mcual_can_add_in_mailbox(uint8_t tx_mailbox, volatile CanardCANFrame * frame)
+static void mcual_can_add_in_mailbox(uint8_t tx_mailbox, volatile mcual_can_frame_t * frame)
 {
     volatile CAN_TxMailBox_TypeDef* const mb = &BXCAN->sTxMailBox[tx_mailbox];
 
@@ -411,7 +324,7 @@ static void mcual_can_add_in_mailbox(uint8_t tx_mailbox, volatile CanardCANFrame
                (((uint32_t)frame->data[1]) <<  8U) |
                (((uint32_t)frame->data[0]) <<  0U);
 
-    mb->TIR = convertFrameIDCanardToRegister(frame->id) | CAN_TI0R_TXRQ;    // Go.
+    mb->TIR = frame->id | CAN_TI0R_TXRQ;    // Go.
 
 #if !defined(CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES)
     tx_index_read += 1;
@@ -432,7 +345,7 @@ void CAN1_TX_IRQHandler(void)
 {
     const uint32_t AllTME = CAN_TSR_TME0 | CAN_TSR_TME1 | CAN_TSR_TME2;
     bool is_empty = false;
-    CanardCANFrame frame;  
+    mcual_can_frame_t frame;  
 #if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
     BaseType_t xTaskWokenByReceive = pdFALSE;
     if(!xQueueReceiveFromISR(can_tx_queue, &frame, &xTaskWokenByReceive))
@@ -466,7 +379,7 @@ void CAN1_TX_IRQHandler(void)
                 //if empty
                 if(!tme[i])
                 {
-                    if (!isFramePriorityHigher(frame.id, convertFrameIDRegisterToCanard(BXCAN->sTxMailBox[i].TIR)))
+                    if (!isFramePriorityHigher(frame.id, BXCAN->sTxMailBox[i].TIR))
                     {
                         // There's a mailbox whose priority is higher or equal the priority of the new frame.
                         // Priority inversion would occur! Reject transmission.
@@ -496,7 +409,7 @@ void CAN1_TX_IRQHandler(void)
                     //if empty
                     if(!tme[i])
                     {
-                        if (!isFramePriorityHigher(frame.id, convertFrameIDRegisterToCanard(BXCAN->sTxMailBox[i].TIR)))
+                        if (!isFramePriorityHigher(frame.id, BXCAN->sTxMailBox[i].TIR))
                         {
                             // There's a mailbox whose priority is higher or equal the priority of the new frame.
 #if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
@@ -524,7 +437,7 @@ void CAN1_TX_IRQHandler(void)
                 //if empty
                 if(!tme[i])
                 {
-                    if (!isFramePriorityHigher(frame.id, convertFrameIDRegisterToCanard(BXCAN->sTxMailBox[i].TIR)))
+                    if (!isFramePriorityHigher(frame.id, BXCAN->sTxMailBox[i].TIR))
                     {
                         // There's a mailbox whose priority is higher or equal the priority of the new frame.
 #if CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
@@ -547,9 +460,9 @@ void CAN1_TX_IRQHandler(void)
 
 static void mcual_can_rcev_frame(volatile CAN_FIFOMailBox_TypeDef* const mb)
 {
-    CanardCANFrame frame;
+    mcual_can_frame_t frame;
 
-    frame.id = convertFrameIDRegisterToCanard(mb->RIR);
+    frame.id = mb->RIR;
     frame.data_len = (uint8_t)(mb->RDTR & CAN_RDT0R_DLC);
 
     // Catching to regular (non volatile) memory for faster reads

@@ -5,6 +5,10 @@ const BrowserWindow = electron.BrowserWindow;
 const ipcMain = electron.ipcMain;
 const SerialPort = require('serialport');
 
+const TCPCLIENT_DECODE_UART = true;
+const TCPCLIENT_DECODE_CAN = false;
+const COCOUI_ID = 0x11;
+
 let CLIENT_ID = 0;
 const MAGIC_START = 0xc0;
 const DECODERS = {};
@@ -185,21 +189,21 @@ class Client {
             setTimeout(() => this._parseData(), 0);
           }
           else {
-            if(this._buffer.length >= 7) {
+            if(this._buffer.length >= 8) {
               const header = {
                 start: this._buffer.readUInt8(0),
-                dst: this._buffer.readUInt8(0),
-                pid: this._buffer.readUInt16LE(1),
-                len: this._buffer.readUInt16LE(3),
-                crc: this._buffer.readUInt16LE(5),
+                src: this._buffer.readUInt8(1),
+                pid: this._buffer.readUInt16LE(2),
+                len: this._buffer.readUInt16LE(4),
+                crc: this._buffer.readUInt16LE(6),
                 buffer: Buffer.alloc(0),
               }
               let crc = 0xFFFF;
-              for(let i = 0; i < 5; i += 1) {
+              for(let i = 0; i < 6; i += 1) {
                 crc = this._crc_update(crc, this._buffer.readUInt8(i));
               }
               if(crc == header.crc) {
-                this._buffer = this._buffer.slice(7);
+                this._buffer = this._buffer.slice(8);
                 this._header = header;
                 setTimeout(() => this._parseData(), 0);
               }
@@ -246,7 +250,28 @@ class Client {
         };
         pkt.offset = 0;
         run();
+
+        //add meta data
+        pkt.decoded._src = pkt.src;
+        pkt.decoded._ith = pkt.ith;
+
+        //decode source name
+        switch(pkt.decoded._src) {
+          case 1:
+            pkt.decoded._src_name = "SMecanele";
+            break;
+
+          default:
+            pkt.decoded._src_name = "?? (" + pkt.decoded._src + ")";
+            break;
+        }
+
+        //printf in console for desktop without notification
+        if(pkt.decoded._name == "printf") {
+          console.log("["+pkt.decoded._src_name+"] " + pkt.decoded.msg);
+        }
         
+        //send to interface
         this._emit(pkt.decoded);
       }
       catch(e) {
@@ -333,28 +358,6 @@ class Client {
     console.log(pkt.data);
     this.sendPacket(pkt);
   }
-
-  sendPacket(pkt) {
-    const headerBuffer = Buffer.alloc(7);
-    headerBuffer.writeUInt8(0xC0, 0);
-    headerBuffer.writeUInt16LE(pkt.pid, 1);
-    headerBuffer.writeUInt16LE(pkt.data.length, 3);
-    let crc = 0xFFFF;
-    for(let i = 0; i < 5; i += 1) {
-      crc = this._crc_update(crc, headerBuffer.readUInt8(i));
-    }
-    headerBuffer.writeUInt16LE(crc, 5);
-
-    const crcDataBuffer = Buffer.alloc(2);
-    for(let i = 0; i < pkt.data.length; i += 1) {
-      crc = this._crc_update(crc, pkt.data.readUInt8(i));
-    }
-    crcDataBuffer.writeUInt16LE(crc, 0);
-
-    this.send(headerBuffer);
-    this.send(pkt.data);
-    this.send(crcDataBuffer);
-  }
 }
 
 class SerialClient extends Client {
@@ -371,14 +374,40 @@ class SerialClient extends Client {
   send(data) {
     this._serial.write(data);
   }
+
+  sendPacket(pkt) {
+    const headerBuffer = Buffer.alloc(8);
+    headerBuffer.writeUInt8(0xC0, 0);
+    headerBuffer.writeUInt8(COCOUI_ID, 1);
+    headerBuffer.writeUInt16LE(pkt.pid, 2);
+    headerBuffer.writeUInt16LE(pkt.data.length, 4);
+    let crc = 0xFFFF;
+    for(let i = 0; i < 6; i += 1) {
+      crc = this._crc_update(crc, headerBuffer.readUInt8(i));
+    }
+    headerBuffer.writeUInt16LE(crc, 6);
+
+    const crcDataBuffer = Buffer.alloc(2);
+    for(let i = 0; i < pkt.data.length; i += 1) {
+      crc = this._crc_update(crc, pkt.data.readUInt8(i));
+    }
+    crcDataBuffer.writeUInt16LE(crc, 0);
+
+    this.send(headerBuffer);
+    this.send(pkt.data);
+    this.send(crcDataBuffer);
+  }
 }
 
 class TCPClient extends Client {
   constructor(protocol, socket) {
     super(protocol);
     this._socket = socket;
+    this._pid = null;
+    this._queues = {};
+    this._TCPbuffer = "";
     this._socket.on('close', () => this._onClose());
-    this._socket.on('data', (data) => this._onData(data));
+    this._socket.on('data', (data) => this._decodeTCPData(data));
   }
 
   getName() {
@@ -389,16 +418,167 @@ class TCPClient extends Client {
   send(data) {
     try
     {
-      console.log("SENBD!");
       this._socket.write(data);
     }
     catch(e) {
     }
   } 
 
+  _decodeTCPData(data) {
+    let asc = data.toString('ascii');
+    if(this._pid == null) {
+      //On first packet, we must decode the peripheral indentifier
+      this._pid = asc.substring(0, 2);
+
+      //Then we remove the first 4 octets "PID" followed by "<<" delimiter
+      asc = asc.substring(4);
+    }
+
+    //we must add the data to the saved buffer
+    this._TCPbuffer = this._TCPbuffer + asc;
+
+    while(true) {
+      //split the buffer using \n delimiter
+      let idx = this._TCPbuffer.indexOf("\n");
+      if(idx == -1) {
+        break;
+      }
+      const pkt = this._TCPbuffer.substring(0, idx - 1);
+      this._TCPbuffer = this._TCPbuffer.substring(idx + 1);
+
+      //parse the incoming data
+      switch(this._pid) {
+        case "C0":
+          //CAN packet found
+          if(TCPCLIENT_DECODE_CAN) {
+            this._decodeCAN(pkt);
+          }
+          break;
+
+        case "U1":
+          //UART packet found
+          if(TCPCLIENT_DECODE_UART) {
+            const buf = Buffer.alloc(1);
+            buf.writeUInt8(parseInt(pkt, 16));
+            this._onData(buf);
+          }
+          break;
+
+        default:
+          console.log("Unknown PID = " + this._pid);
+          break;
+      }
+    }
+  }
+
+  _decodeCAN(pkt) {
+    //transform raw string into parsed array of can data
+    const can_data = pkt.split(":").map((x) => parseInt(x, 16));
+
+    //extract source and packet_counter from can ID field
+    const source = can_data[0] >> 7;
+    const packet_counter = can_data[0] & 0x7F;
+
+    let offset = 0;
+    if(packet_counter == 0) {
+      //first packet, we must decode the header from the 4 first octets
+      const pid =  can_data[2] | (can_data[3] << 8);
+      const len =  can_data[4] | (can_data[5] << 8);
+
+      //create an object for the parsed data
+      const obj_data = {
+        src: source,
+        pid: pid,
+        len: len,
+        buffer: Buffer.alloc(len + 2),
+        recv_data: 0,
+        ith: this._pid,
+      }
+
+      //put the data in the queue (erase previous data if not received properly)
+      this._queues[source] = obj_data;
+
+      //mark fisrt 4 octets as used
+      offset = 4;
+    }
+
+    {
+      //store recevied data into the allocated buffer
+      const pkt = this._queues[source];
+      if(pkt !== undefined) {
+        for(offset; offset < can_data[1]; offset += 1, pkt.recv_data += 1) {
+          //be sure to use packet_counter, we can receive data in any order
+          pkt.buffer.writeUInt8(can_data[offset + 2], packet_counter * 8 + offset - 4);
+        }
+      }
+    }
+
+    //check if data is parsable
+    for(let k in this._queues) {
+      const pkt = this._queues[k];
+      if(pkt.recv_data == (pkt.len + 2)) {
+        //data received, time to check the CRC
+        const pkt_crc = pkt.buffer.readUInt16LE(pkt.len);
+
+        //compute crc from data
+        let crc = 0xFFFF;
+        for(let i = 0; i < pkt.len; i += 1) {
+          crc = this._crc_update(crc, pkt.buffer.readUInt8(i));
+        }
+
+        //check crc
+        if(crc == pkt_crc) {
+          //Everything is ok. We can try to parse the packet
+          this._parse(pkt);
+        }
+        else {
+          console.log("CRC ERROR");
+        }
+
+        //Clear the queue
+        this._queues[k] = undefined;
+      }
+    }
+  }
+
   _onClose() {
     console.log("Closed");
   } 
+
+  sendPacket(pkt) {
+    switch(this._pid) {
+      case "U1":
+        this.sendUartPacket(pkt);
+        break;
+
+      default:
+        console.log("ERROR SEND: " + this._pid);
+        break;
+    }
+  }
+
+  sendUartPacket(pkt) {
+    const headerBuffer = Buffer.alloc(8);
+    headerBuffer.writeUInt8(0xC0, 0);
+    headerBuffer.writeUInt8(COCOUI_ID, 1);
+    headerBuffer.writeUInt16LE(pkt.pid, 2);
+    headerBuffer.writeUInt16LE(pkt.data.length, 4);
+    let crc = 0xFFFF;
+    for(let i = 0; i < 6; i += 1) {
+      crc = this._crc_update(crc, headerBuffer.readUInt8(i));
+    }
+    headerBuffer.writeUInt16LE(crc, 6);
+
+    const crcDataBuffer = Buffer.alloc(2);
+    for(let i = 0; i < pkt.data.length; i += 1) {
+      crc = this._crc_update(crc, pkt.data.readUInt8(i));
+    }
+    crcDataBuffer.writeUInt16LE(crc, 0);
+
+    this.send(headerBuffer);
+    this.send(pkt.data);
+    this.send(crcDataBuffer);
+  }
 }
 
 class Protocol {
@@ -412,9 +592,7 @@ class Protocol {
 
     ipcMain.on('pkt', (event, arg) => {
       this._clients.forEach((client) => {
-        console.log("42 !");
         if(client.getID() == arg.client) {
-          console.log("POUET !");
           client.formatAndSend(arg);
         }
       });

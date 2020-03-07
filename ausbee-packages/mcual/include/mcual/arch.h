@@ -12,6 +12,7 @@ void mcual_arch_avr_ccpwrite(volatile uint8_t *address, uint8_t value);
 #ifdef AUSBEE_SIM
 void mcual_arch_sim_init_peripherals(void);
 void mcual_arch_sim_handle_uart_peripheral_write(mcual_usart_id_t usart_id, uint8_t byte);
+void mcual_arch_sim_handle_can_peripheral_write(const mcual_can_frame_t * const frame);
 void mcual_usart_recv_from_network(mcual_usart_id_t usart_id, uint8_t byte);
 void mcual_arch_main(int argc, char *argv[]); 
 #endif //AUSBEE_SIM
