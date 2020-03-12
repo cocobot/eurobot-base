@@ -75,27 +75,27 @@ void cocobot_arm_action_pliers_close(pliers_e pliers)
   switch (pliers)
   {
     case PLIERS_FRONT_RIGHT :
-      servo_set_pwm(2, 250);
+      servo_set_pwm(2, 230);
       vTaskDelay(250/portMAX_DELAY);
       break;
     case PLIERS_FRONT_LEFT :
-      servo_set_pwm(4, 315);
+      servo_set_pwm(4, 325);
       vTaskDelay(250/portMAX_DELAY);
       break;
     case PLIERS_FRONT_CENTER :
-      servo_set_pwm(3, 320);
+      servo_set_pwm(3, 310);
       vTaskDelay(250/portMAX_DELAY);
       break;
     case PLIERS_BACK_RIGHT :
-      servo_set_pwm(11, 330);
+      servo_set_pwm(11, 300);
       vTaskDelay(250/portMAX_DELAY);
       break;
     case PLIERS_BACK_LEFT :
-      servo_set_pwm(10, 330);
+      servo_set_pwm(10, 340);
       vTaskDelay(250/portMAX_DELAY);
       break;
     case PLIERS_BACK_CENTER :
-      servo_set_pwm(12, 250);
+      servo_set_pwm(12, 245);
       vTaskDelay(250/portMAX_DELAY);
       break;
   }
@@ -106,11 +106,11 @@ void cocobot_arm_action_pliers_open(pliers_e pliers)
   switch (pliers)
   {
     case PLIERS_FRONT_RIGHT :
-      servo_set_pwm(2, 190);
+      servo_set_pwm(2, 170);
       vTaskDelay(250/portMAX_DELAY);
       break;
     case PLIERS_FRONT_LEFT :
-      servo_set_pwm(4, 250);
+      servo_set_pwm(4, 280);
       vTaskDelay(250/portMAX_DELAY);
       break;
     case PLIERS_FRONT_CENTER :
@@ -118,11 +118,11 @@ void cocobot_arm_action_pliers_open(pliers_e pliers)
       vTaskDelay(250/portMAX_DELAY);
       break;
     case PLIERS_BACK_RIGHT :
-      servo_set_pwm(11, 350);
+      servo_set_pwm(11, 340);
       vTaskDelay(250/portMAX_DELAY);
       break;
     case PLIERS_BACK_LEFT :
-      servo_set_pwm(10, 280);
+      servo_set_pwm(10, 295);
       vTaskDelay(250/portMAX_DELAY);
       break;
     case PLIERS_BACK_CENTER :

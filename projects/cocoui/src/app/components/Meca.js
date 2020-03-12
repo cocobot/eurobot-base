@@ -207,13 +207,13 @@ class MecaComponent extends React.Component {
         newline: true,
       },
       {
-        name: "B center C",
-        value: 18,
+        name: "B left C",
+        value: 16,
         color: "success",
       },
       {
-        name: "B left C",
-        value: 16,
+        name: "B center C",
+        value: 18,
         color: "success",
       },
       {
