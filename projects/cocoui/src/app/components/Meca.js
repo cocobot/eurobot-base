@@ -99,45 +99,155 @@ class MecaComponent extends React.Component {
         color: "warning",
       },
       {
+        name: "FlagUp",
+        value: 25,
+        color: "warning",
+      },
+      {
         newline: true,
       },
       {
-        name: "Action 1",
+        name: "F Up",
         value: 1,
         color: "primary",
       },
       {
-        name: "Action 2",
+        name: "F Down",
         value: 2,
-        color: "danger",
+        color: "primary",
       },
       {
-        name: "Action 3",
+        name: "F All Open",
         value: 3,
+        color: "primary",
+      },
+      {
+        name: "F All Close",
+        value: 4,
         color: "primary",
       },
       {
         newline: true,
       },
       {
-        name: "Action 4",
-        value: 4,
-        color: "warning",
-      },
-      {
-        name: "Action 5",
+        name: "F left O",
         value: 5,
-        color: "warning",
+        color: "success",
       },
       {
-        name: "Action 6",
+        name: "F center O",
+        value: 7,
+        color: "success",
+      },
+      {
+        name: "F right O",
+        value: 9,
+        color: "success",
+      },
+      {
+        newline: true,
+      },
+      {
+        name: "F left C",
         value: 6,
         color: "success",
+      },
+      {
+        name: "F center C",
+        value: 8,
+        color: "success",
+      },
+      {
+        name: "F right C",
+        value: 10,
+        color: "success",
+      },
+      {
+        newline: true,
+      },
+      {
+        name: "B Up",
+        value: 11,
+        color: "primary",
+      },
+      {
+        name: "B Down",
+        value: 12,
+        color: "primary",
+      },
+      {
+        name: "B All Open",
+        value: 13,
+        color: "primary",
+      },
+      {
+        name: "B All Close",
+        value: 14,
+        color: "primary",
+      },
+      {
+        newline: true,
+      },
+      {
+        name: "B left O",
+        value: 15,
+        color: "success",
+      },
+      {
+        name: "B center O",
+        value: 17,
+        color: "success",
+      },
+      {
+        name: "B rigth O",
+        value: 19,
+        color: "success",
+      },
+      {
+        newline: true,
+      },
+      {
+        name: "B left C",
+        value: 16,
+        color: "success",
+      },
+      {
+        name: "B center C",
+        value: 18,
+        color: "success",
+      },
+      {
+        name: "B rigth C",
+        value: 20,
+        color: "success",
+      },
+      {
+        newline: true,
+      },
+      {
+        name: "L WindS Down",
+        value: 21,
+        color: "danger",
+      },
+      {
+        name: "L WindS Up",
+        value: 22,
+        color: "danger",
+      },
+      {
+        name: "R WindS Down",
+        value: 23,
+        color: "danger",
+      },
+      {
+        name: "R WindS Up",
+        value: 24,
+        color: "danger",
       },
     ];
 
     const servos = [];
-    for(let i = 0; i < 12; i += 1) {
+    for(let i = 0; i < 13; i += 1) {
       servos.push(
         <ServoParameter key={i} id={i} active={this.props.active}/>
       );
