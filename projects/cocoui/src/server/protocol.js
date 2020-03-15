@@ -5,8 +5,8 @@ const BrowserWindow = electron.BrowserWindow;
 const ipcMain = electron.ipcMain;
 const SerialPort = require('serialport');
 
-const TCPCLIENT_DECODE_UART = true;
-const TCPCLIENT_DECODE_CAN = false;
+const TCPCLIENT_DECODE_UART = false;
+const TCPCLIENT_DECODE_CAN = true;
 const COCOUI_ID = 0x11;
 
 let CLIENT_ID = 0;
@@ -104,7 +104,6 @@ class BootloaderClient {
 
   _onData(data) {
     const asc = data.toString('ascii');
-    console.log("ASC >" + asc);
     if(asc.includes('#RESET')) {
       this._protocol.formatAndSendtoAll({
         pid: 0x8007,
@@ -183,7 +182,6 @@ class Client {
             this._buffer = this._buffer.slice(1);
             if(this._sync) {
               console.log("Resync...");
-              console.log(this._buffer);
             }
             this._sync = false;
             setTimeout(() => this._parseData(), 0);
@@ -354,8 +352,6 @@ class Client {
       }
     }
 
-    console.log(offset + "/" + pkt.data.length);
-    console.log(pkt.data);
     this.sendPacket(pkt);
   }
 }
@@ -387,6 +383,7 @@ class SerialClient extends Client {
     }
     headerBuffer.writeUInt16LE(crc, 6);
 
+    crc = 0xFFFF;
     const crcDataBuffer = Buffer.alloc(2);
     for(let i = 0; i < pkt.data.length; i += 1) {
       crc = this._crc_update(crc, pkt.data.readUInt8(i));
@@ -421,6 +418,7 @@ class TCPClient extends Client {
       this._socket.write(data);
     }
     catch(e) {
+      console.log(e);
     }
   } 
 
@@ -532,7 +530,9 @@ class TCPClient extends Client {
           this._parse(pkt);
         }
         else {
-          console.log("CRC ERROR");
+          console.log("CAN CRC ERROR");
+          console.log(" - " + crc.toString(16));
+          console.log(" - " + pkt_crc.toString(16));
         }
 
         //Clear the queue
@@ -549,6 +549,10 @@ class TCPClient extends Client {
     switch(this._pid) {
       case "U1":
         this.sendUartPacket(pkt);
+        break;
+
+      case "C0":
+        this.sendCANPacket(pkt);
         break;
 
       default:
@@ -570,6 +574,7 @@ class TCPClient extends Client {
     headerBuffer.writeUInt16LE(crc, 6);
 
     const crcDataBuffer = Buffer.alloc(2);
+    crc = 0xFFFF;
     for(let i = 0; i < pkt.data.length; i += 1) {
       crc = this._crc_update(crc, pkt.data.readUInt8(i));
     }
@@ -578,6 +583,75 @@ class TCPClient extends Client {
     this.send(headerBuffer);
     this.send(pkt.data);
     this.send(crcDataBuffer);
+  }
+  
+  sendCANPacket(pkt) {
+    //create writer function
+    const send_data = function(can, send_function) {
+      //format data
+      let data = "";
+      const id = (can.packet_counter & 0x7F) | ((COCOUI_ID & 0x1F) << 7);
+      data += id.toString(16);
+      for(let i = 0; i < can.len; i += 1) {
+        if(i == 0) {
+          data += "/"
+        }
+        else {
+          data += ":"
+        }
+        data += can.data.readUInt8(i).toString(16);
+      }
+      data += '\n';
+
+      //send if needed
+      if(can.len > 0) {
+        send_function(data);
+      }
+
+      //create next can buffer object
+      return {
+        packet_counter: can.packet_counter + 1,
+        data: Buffer.alloc(8),
+        len: 0,
+      };
+    }
+
+    //initialize can buffer object
+    let can = {
+      packet_counter: 0,
+      data: Buffer.alloc(8),
+      len: 0,
+    };
+
+    //prepare header
+    can.data.writeUInt16LE(pkt.pid, 0);
+    can.data.writeUInt16LE(pkt.data.length, 2);
+    can.len += 4;
+
+    //send data
+    let crc = 0xFFFF;
+    for(let i = 0; i < pkt.data.length; i += 1) {
+      can.data.writeUInt8(pkt.data[i], can.len);
+      crc = this._crc_update(crc, pkt.data[i]);
+      can.len += 1;
+      if(can.len >= 8) {
+        can = send_data(can, (pkt) => this.send(pkt));
+      }
+    }
+
+    //send CRC LSB
+    can.data.writeUInt8(crc & 0xFF, can.len);
+    can.len += 1;
+    if(can.len >= 8) {
+      can = send_data(can, (pkt) => this.send(pkt));
+    }
+
+    //send CRC MSB
+    can.data.writeUInt8((crc >> 8) & 0xFF, can.len);
+    can.len += 1;
+
+    //send last data if needed
+    send_data(can, (pkt) => this.send(pkt));
   }
 }
 
