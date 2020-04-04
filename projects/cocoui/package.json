@@ -27,6 +27,7 @@
   },
   "scripts": {
     "electron": "cross-env NODE_ENV=dev nodemon --exec \"\"electron .\"\"",
+    "cocoui": "cross-env NODE_ENV=production nodemon --exec \"\"electron .\"\"",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",

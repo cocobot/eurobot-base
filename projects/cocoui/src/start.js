@@ -1,7 +1,6 @@
 const electron = require('electron')
 const app = electron.app
 const path = require('path')
-const isDev = require('electron-is-dev')
 require('electron-reload')
 const BrowserWindow = electron.BrowserWindow
 const Protocol = require('./server/protocol');
@@ -21,6 +20,8 @@ function createWindow() {
       nodeIntegration: true,
     },
   })
+
+  const isDev = process.env.NODE_ENV != "production";
 
   mainWindow.loadURL(
     (
