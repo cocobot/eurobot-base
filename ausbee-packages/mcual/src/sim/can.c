@@ -8,6 +8,11 @@
 
 static QueueHandle_t can_rx_queue;
 
+void mcual_can_recv_from_network(const mcual_can_frame_t * const frame)
+{
+  xQueueSendFromISR(can_rx_queue, frame, NULL);
+}
+
 int16_t mcual_can_init(mcual_can_timings * const timings, mcual_can_ifaceMode iface)
 {
   (void)timings;
@@ -35,8 +40,19 @@ int16_t mcual_can_recv_no_wait(mcual_can_frame_t* const out_frame)
   return 1;
 }
 
-void mcual_can_recv_new_frame(mcual_can_frame_t * frame)
+int16_t mcual_can_recv(mcual_can_frame_t * const out_frame)
 {
-  xQueueSend(can_rx_queue, frame, 0);
+#ifdef CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES
+    xQueueReceive(can_rx_queue, out_frame, portMAX_DELAY);
+#else
+    int16_t r = 0;
+    while(!r)
+    {
+        r = mcual_can_recv_no_wait(out_frame);
+    }
+#endif
+    //todo
+    return 1;
 }
+
 #endif

@@ -10,9 +10,6 @@
 #endif
 #include <mcual.h>
 #include <platform.h>
-#include "../com/dsdl/uavcan/protocol/GetNodeInfo.h"
-#include "../com/dsdl/uavcan/protocol/file/BeginFirmwareUpdate.h"
-#include "../com/dsdl/uavcan/protocol/file/Read.h"
 
 
 typedef enum {

@@ -13,6 +13,10 @@
 #define COCOBOT_COM_HEADER_START 0xC0
 #define INVALID_PTR ((void *)0xFFFFFFFF)
 
+#define COCOBOT_COM_CAN_MAX_RECV_QUEUE 1
+
+#define COM_ERROR_NO_QUEUE_AVAILABLE 0
+
 typedef struct __attribute__((packed)) 
 {
   uint8_t start;
@@ -28,7 +32,16 @@ typedef struct __attribute__((packed))
   uint16_t len;
 } cocobot_com_can_header_t;
 
+typedef struct
+{
+  uint16_t source;
+  uint32_t len;
+  uint16_t pid;
+  uint8_t * data;
+} cocobot_com_can_recv_t;
+
 static SemaphoreHandle_t _mutex;
+static SemaphoreHandle_t _exec_mutex;
 static mcual_usart_id_t _usart;
 static char _printf_buffer[64];
 static cocobot_com_handler_t _user_handler;
@@ -36,6 +49,7 @@ static uint8_t _can_buffer[8];
 static uint8_t _can_counter;
 static uint8_t _can_packet_counter;
 static uint8_t _com_id;
+static cocobot_com_can_recv_t recv_queues[COCOBOT_COM_CAN_MAX_RECV_QUEUE];
 
 
 static void cocobot_com_can_flush(void)
@@ -75,7 +89,6 @@ static void cocobot_com_can_prepare(const cocobot_com_can_header_t * const heade
   }
 
 }
-
 
 static uint16_t cocobot_com_crc16_update(uint16_t crc, uint8_t a)
 {
@@ -142,15 +155,160 @@ void cocobot_com_async_thread(void *arg)
   }
 }
 
-void cocobot_com_sync_thread(void *arg)
+void cocobot_com_handle_packet(uint16_t pid, uint8_t * data, uint16_t len)
+{
+  xSemaphoreTake(_exec_mutex, portMAX_DELAY);
+  switch(pid)
+  {
+    case COCOBOT_COM_RESET_PID:
+      mcual_bootloader();
+      break;
+  }
+
+#ifdef CONFIG_LIBCOCOBOT_TRAJECTORY
+  cocobot_asserv_handle_sync_com(pid, data, len);
+#endif
+
+  if(_user_handler != NULL)
+  {
+    _user_handler(pid, data, len);
+  }
+  xSemaphoreGive(_exec_mutex);
+}
+
+void cocobot_com_can_thread(void *arg)
 {
   (void)arg;
+
+  uint32_t i;
 
 #ifdef CONFIG_OS_USE_FREERTOS
 	mcual_can_timings canbus_timings;
 	mcual_can_compute_timings(mcual_clock_get_frequency_Hz(MCUAL_CLOCK_PERIPHERAL_1), 1000000, &canbus_timings);
 	mcual_can_init(&canbus_timings, mcualCanIfaceModeNormal);
 #endif
+
+  while(pdTRUE)
+  {
+    mcual_can_frame_t frame;
+    mcual_can_recv(&frame);
+
+    int src = (frame.id >> 7) & 0x1F;
+    int packet_counter = frame.id & 0x7F;
+
+    cocobot_com_can_recv_t * queue = NULL;
+
+    //search already allocated queue
+    for(i = 0; i < sizeof(recv_queues)/sizeof(recv_queues[0]); i += 1)
+    {
+      if(recv_queues[i].source == src)
+      {
+        queue = &recv_queues[0];
+      }
+    }
+
+    if(queue == NULL)
+    {
+      //search free queue
+      for(i = 0; i < sizeof(recv_queues)/sizeof(recv_queues[0]); i += 1)
+      {
+        if(recv_queues[i].source == 0)
+        {
+          queue = &recv_queues[0];
+          queue->source = src;
+        }
+      }
+    }
+
+    if(queue == NULL)
+    {
+      //bad configuration ?
+      cocobot_com_send(COCOBOT_COM_ERROR_PID, "B", COM_ERROR_NO_QUEUE_AVAILABLE);
+    }
+    else
+    {
+      uint32_t offset = 0;
+      if(packet_counter == 0)
+      {
+        //deleted previous data
+        if(queue->data != NULL)
+        {
+          vPortFree(queue->data);
+        }
+
+        uint32_t pid = frame.data[0] | (frame.data[1] << 8);
+        uint32_t len = frame.data[2] | (frame.data[3] << 8);
+
+        offset = 4;
+        queue->pid = pid;
+        queue->len = 2 + len;
+        queue->data = pvPortMalloc(queue->len);
+        memset(queue->data, 0, queue->len);
+      }
+
+      if(queue->data == NULL)
+      {
+        //bad synchro
+        continue;
+      }
+
+      for(; offset < frame.data_len; offset += 1)
+      {
+        uint32_t data_offset = offset + packet_counter * 8 - 4;
+        queue->data[data_offset] = frame.data[offset];
+      }
+
+      //check CRC
+      uint16_t crc = 0xFFFF;
+      for(i = 0; i < queue->len - 2; i += 1) 
+      {
+        crc = cocobot_com_crc16_update(crc, queue->data[i]);
+      }
+      
+      uint16_t recv_crc = queue->data[i] | (queue->data[i + 1] << 8);
+
+      if(crc == recv_crc)
+      {
+        cocobot_com_handle_packet(queue->pid, queue->data, queue->len - 2);
+
+        //send data to UART
+        cocobot_com_header_t header;
+        header.start = COCOBOT_COM_HEADER_START;
+        header.pid = queue->pid;
+        header.src = src;
+        header.crc = 0xFFFF;
+        header.len = queue->len - 2;
+        uint8_t * ptr = (uint8_t *)&header;
+        size_t i;
+        for(i = 0; i < sizeof(header) - 2; i += 1)
+        {
+          header.crc = cocobot_com_crc16_update(header.crc, *ptr);
+          ptr += 1;
+        }
+        xSemaphoreTake(_mutex, portMAX_DELAY);
+        ptr = (uint8_t *)&header;
+        for(i = 0; i < sizeof(header); i += 1)
+        {
+          mcual_usart_send(_usart, *ptr);
+          ptr += 1;
+        }
+        for(i = 0; i < queue->len; i += 1)
+        {
+          mcual_usart_send(_usart, queue->data[i]);
+        }
+        xSemaphoreGive(_mutex);
+
+
+        vPortFree(queue->data);
+        queue->data = NULL;
+      }
+    }
+  }
+}
+
+void cocobot_com_uart_thread(void *arg)
+{
+  (void)arg;
 
   cocobot_com_header_t header;
   uint8_t * ptr = (uint8_t *)&header;
@@ -188,27 +346,27 @@ void cocobot_com_sync_thread(void *arg)
           }
 
           //CRC
-          mcual_usart_recv(_usart);
-          mcual_usart_recv(_usart);
+          uint16_t recv_crc = 0;
+          recv_crc |= mcual_usart_recv(_usart);
+          recv_crc |= (mcual_usart_recv(_usart) << 8);
 
-          switch(header.pid)
+          cocobot_com_handle_packet(header.pid, data, header.len);
+
+          //send com data to CAN bus
+          cocobot_com_can_header_t can_header;
+          can_header.len = header.len;
+          can_header.pid = header.pid;
+
+          xSemaphoreTake(_mutex, portMAX_DELAY);
+          cocobot_com_can_prepare(&can_header);
+          for(i = 0; i < header.len; i += 1)
           {
-            case COCOBOT_COM_RESET_PID:
-              mcual_bootloader();
-              break;
+            cocobot_com_can_send(data[i]);
           }
-
-#ifdef CONFIG_LIBCOCOBOT_OPPONENT_DETECTION
-          cocobot_opponent_detection_handle_sync_com(header.pid, data, header.len);
-#endif
-#ifdef CONFIG_LIBCOCOBOT_TRAJECTORY
-          cocobot_asserv_handle_sync_com(header.pid, data, header.len);
-#endif
-
-          if(_user_handler != NULL)
-          {
-            _user_handler(header.pid, data, header.len);
-          }
+          cocobot_com_can_send(recv_crc & 0xFF);
+          cocobot_com_can_send((recv_crc >> 8) & 0xFF);
+          cocobot_com_can_flush();
+          xSemaphoreGive(_mutex);
 
           for(i = 0; i < sizeof(header); i += 1) 
           {
@@ -233,8 +391,9 @@ void cocobot_com_init(mcual_usart_id_t usart_id, unsigned int priority_monitor, 
   _usart = usart_id;
   //create mutex
   _mutex = xSemaphoreCreateMutex();
+  _exec_mutex = xSemaphoreCreateMutex();
   _user_handler = handler;
-  _com_id = COCOBOT_SMECANELE_ID;
+  _com_id = COCOBOT_COM_ID;
 
   //init usart peripheral
   mcual_usart_init(_usart, 115200);
@@ -246,7 +405,8 @@ void cocobot_com_init(mcual_usart_id_t usart_id, unsigned int priority_monitor, 
 #endif
 
   //start tasks
-  xTaskCreate(cocobot_com_sync_thread, "con. sync", 512, NULL, priority_monitor, NULL );
+  xTaskCreate(cocobot_com_uart_thread, "com uart", 512, NULL, priority_monitor, NULL );
+  xTaskCreate(cocobot_com_can_thread, "com can", 512, NULL, priority_monitor, NULL );
   xTaskCreate(cocobot_com_async_thread, "com. async", 512, NULL, priority_async, NULL );
 
 }

@@ -29,6 +29,18 @@ typedef struct
   int socket;
   int init;
   int peripheral_id;
+
+  union
+  {
+    struct
+    {
+      uint16_t id;
+      uint8_t data[8];
+      uint8_t data_len;
+
+      uint32_t temp;
+    }can;
+  } decoder;
 } mcual_arch_sim_peripheral_socket_t;
 
 static pthread_t _peripheral_thread;
@@ -272,6 +284,56 @@ static void * mcual_arch_sim_handle_peripherals(void * args)
                   {
                     //send data to freeRTOS
                     mcual_usart_recv_from_network(USART_PID_TO_ID(_peripherals_socket[i].peripheral_id), buf[j]);
+                  }
+                }
+                break;
+
+              case 0x9000: //can
+                {
+                  int j;
+                  for(j = 0; j < r; j += 1)
+                  {
+                    //decode incoming data
+                    if((buf[j] >= '0') && (buf[j] <= '9'))
+                    {
+                      _peripherals_socket[i].decoder.can.temp *= 16;
+                      _peripherals_socket[i].decoder.can.temp += buf[j] - '0';
+                    }
+                    else if((buf[j] >= 'A') && (buf[j] <= 'F'))
+                    {
+                      _peripherals_socket[i].decoder.can.temp *= 16;
+                      _peripherals_socket[i].decoder.can.temp += buf[j] - 'A' + 10;
+                    }
+                    else if((buf[j] >= 'a') && (buf[j] <= 'f'))
+                    {
+                      _peripherals_socket[i].decoder.can.temp *= 16;
+                      _peripherals_socket[i].decoder.can.temp += buf[j] - 'a' + 10;
+                    }
+                    else if(buf[j] == '/')
+                    {
+                      _peripherals_socket[i].decoder.can.id = _peripherals_socket[i].decoder.can.temp;
+                      _peripherals_socket[i].decoder.can.data_len = 0;
+                      _peripherals_socket[i].decoder.can.temp = 0;
+                    }
+                    else if(buf[j] == ':')
+                    {
+                      _peripherals_socket[i].decoder.can.data[_peripherals_socket[i].decoder.can.data_len] = _peripherals_socket[i].decoder.can.temp;
+                      _peripherals_socket[i].decoder.can.data_len += 1;
+                      _peripherals_socket[i].decoder.can.temp = 0;
+                    }
+                    else if(buf[j] == '\n')
+                    {
+                      _peripherals_socket[i].decoder.can.data[_peripherals_socket[i].decoder.can.data_len] = _peripherals_socket[i].decoder.can.temp;
+                      _peripherals_socket[i].decoder.can.data_len += 1;
+                      _peripherals_socket[i].decoder.can.temp = 0;
+
+                      mcual_can_frame_t frame;
+                      frame.id = _peripherals_socket[i].decoder.can.id;
+                      frame.data_len = _peripherals_socket[i].decoder.can.data_len;
+                      memcpy(frame.data, _peripherals_socket[i].decoder.can.data, sizeof(frame.data));
+
+                      mcual_can_recv_from_network(&frame);
+                    }
                   }
                 }
                 break;

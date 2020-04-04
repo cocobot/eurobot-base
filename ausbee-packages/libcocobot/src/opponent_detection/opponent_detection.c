@@ -6,7 +6,6 @@
 #include <cocobot.h>
 #include <platform.h>
 #include <math.h>
-#include "uavcan/cocobot/Collision.h"
 
 #define COCOBOT_OPPONENT_MIN_CORRELATION  150
 
@@ -19,9 +18,6 @@ typedef struct
 
 
 static cocobot_opponent_detection_usir_t _alerts[4];
-static uavcan_cocobot_CollisionRequest col;
-static uint8_t buf[UAVCAN_COCOBOT_COLLISION_REQUEST_MAX_SIZE];
-static uint8_t transfer_id;
 static uint64_t _next_service_at;
 
 void cocobot_opponent_detection_task(void * arg)

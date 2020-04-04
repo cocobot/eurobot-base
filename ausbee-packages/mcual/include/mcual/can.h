@@ -222,7 +222,7 @@ static inline int16_t mcual_can_compute_timings(const uint32_t peripheral_clock_
 }
 
 #ifdef AUSBEE_SIM
-void mcual_can_recv_new_frame(mcual_can_frame_t * frame);
+void mcual_can_recv_from_network(const mcual_can_frame_t * const frame);
 #endif //AUSBEE_SIM
 
 

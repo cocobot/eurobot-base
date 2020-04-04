@@ -10,8 +10,6 @@
 # include <time.h> //for random seed
 #endif
 #include <platform.h>
-#include "uavcan/cocobot/GameState.h"
-#include "uavcan/cocobot/Config.h"
 
 #define USER_DATA_SIZE 16
 #define SCORE_DIGIT 3
@@ -27,6 +25,7 @@ static uint64_t _next_1hz_service_at;
 static uint64_t _next_100ms_service_at;
 static volatile uint8_t _config_ready = 0;
 static uint8_t _config  = 0;
+static TickType_t _last_update_time = 0; 
 
 void cocobot_game_state_add_points_to_score(int _toAdd)
 {
@@ -150,10 +149,18 @@ void cocobot_game_state_handle_async_com(void)
   TickType_t now = xTaskGetTickCount();
   if(now - _last_update_time > 1000 / portTICK_PERIOD_MS)
   {
+    uint8_t robot_id = 1;
+    //extract robot information from com id
+    if(COCOBOT_COM_ID & 0x08) 
+    {
+      robot_id = 0;
+    }
+
+
     _last_update_time = now;
     cocobot_com_send(COCOBOT_COM_GAME_STATE_DEBUG_PID,
                      "BBDDD",
-                     COCOBOT_ROBOT_ID,  //0 for principal, 1 for secondary 
+                     robot_id,  //0 for principal, 1 for secondary 
                      _color,  //0 for x negative, 1 for x positive 
                      platform_adc_get_mV(PLATFORM_ADC_VBAT), //battery voltage
                      cocobot_game_state_get_elapsed_time() / 1000, //elapsed time

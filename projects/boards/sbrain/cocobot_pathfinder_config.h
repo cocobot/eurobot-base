@@ -55,5 +55,4 @@ typedef enum
 
 void cocobot_pathfinder_conf_remove_game_element(gameElement_e element);
 
-
 #endif

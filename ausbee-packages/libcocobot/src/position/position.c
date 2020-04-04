@@ -8,8 +8,6 @@
 #include <task.h>
 #include <semphr.h>
 #include "generated/autoconf.h"
-#include "uavcan/cocobot/Position.h"
-#include "uavcan/cocobot/SetMotorSpeed.h"
 
 #include <cocobot/encoders.h>
 
@@ -35,16 +33,6 @@ static float last_right_sp = 0;
 static float left_motor_alpha = (((float)CONFIG_LIBCOCOBOT_LEFT_MOTOR_ALPHA) / 1000.0f);
 static float right_motor_alpha = (((float)CONFIG_LIBCOCOBOT_RIGHT_MOTOR_ALPHA) / 1000.0f);
 static uint64_t _next_10hz_service_at;
-static uint8_t _request_send_motor = 0;
-
-#ifdef COCOBOT_CAN_MOTOR
-static uavcan_cocobot_SetMotorSpeedRequest st_left;
-static uavcan_cocobot_SetMotorSpeedRequest st_right;
-static uint8_t buf_left[UAVCAN_COCOBOT_SETMOTORSPEED_REQUEST_MAX_SIZE];
-static uint8_t buf_right[UAVCAN_COCOBOT_SETMOTORSPEED_REQUEST_MAX_SIZE];
-static uint8_t transfer_id_left;
-static uint8_t transfer_id_right;
-#endif
 
 static void cocobot_position_compute(void)
 {
@@ -72,7 +60,6 @@ static void cocobot_position_compute(void)
   robot_angular_velocity = delta_angle;
 }
 
-#include <stdio.h>
 static void cocobot_position_task(void * arg)
 {
   //arg is always NULL. Prevent "variable unused" warning
@@ -103,7 +90,6 @@ void cocobot_position_init(unsigned int task_priority)
   mutex = xSemaphoreCreateMutex();
 
   _next_10hz_service_at = 0;
-  _request_send_motor = 0;
 
   //Be sure that position manager have valid values before continuing the initialization process.
   //Need to run twice in order to intialize speed values
@@ -193,17 +179,14 @@ int32_t cocobot_position_get_right_encoder(void)
 void cocobot_position_set_motor_command(float left_motor_speed, float right_motor_speed)
 {
 #ifdef COCOBOT_CAN_MOTOR
+  uint8_t enable = 0;
+  //detect if motors are enabled
   if((cocobot_asserv_get_state() == COCOBOT_ASSERV_ENABLE))
   {
-    st_left.enable = 1;
-    st_right.enable = 1;
-  }
-  else
-  {
-    st_left.enable = 0;
-    st_right.enable = 0;
+    enable = 1;
   }
 
+  //inverse motor configuration depending on cocobot_config header file
 #ifdef COCOBOT_INVERT_LEFT_MOTOR
   left_motor_speed = -left_motor_speed;
 #endif
@@ -211,11 +194,8 @@ void cocobot_position_set_motor_command(float left_motor_speed, float right_moto
   right_motor_speed = -right_motor_speed;
 #endif
 
-  xSemaphoreTake(mutex, portMAX_DELAY);
-  st_left.rpm = left_motor_speed; 
-  st_right.rpm = right_motor_speed; 
-  _request_send_motor = 1;
-  xSemaphoreGive(mutex);
+  //send data to canon board
+  cocobot_com_send(COCOBOT_COM_SET_MOTOR_PID, "BFF", enable, (double)left_motor_speed, (double)right_motor_speed);
 #else
   if(left_motor_speed > 0xffff)
   {

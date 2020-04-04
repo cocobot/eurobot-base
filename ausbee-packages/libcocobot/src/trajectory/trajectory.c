@@ -544,7 +544,7 @@ static void cocobot_trajectory_compute_estimations(void)
             angle -= 360;
           }
 
-          if((!forward) && (fabsf(angle) < TRAJECTORY_EST_STOP_ANGLE_DEG))
+          if((!forward) && (fabsf((float)angle) < TRAJECTORY_EST_STOP_ANGLE_DEG))
           {
             order->estimated_distance_before_stop = distance;
             float dx = order->estimated_end.x - order->estimated_start.x;
@@ -590,7 +590,7 @@ static void cocobot_trajectory_compute_estimations(void)
           }
 
 
-          if((forward) && (fabsf(angle) < TRAJECTORY_EST_STOP_ANGLE_DEG))
+          if((forward) && (fabsf((float)angle) < TRAJECTORY_EST_STOP_ANGLE_DEG))
           {
             order->estimated_distance_before_stop = distance;
           }
