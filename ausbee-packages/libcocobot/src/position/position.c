@@ -96,10 +96,6 @@ void cocobot_position_init(unsigned int task_priority)
   cocobot_position_compute();
   cocobot_position_compute();
 
-#ifdef AUSBEE_SIM
-  mcual_arch_request("POS", 0, "INIT:%lu:%lu", CONFIG_LIBCOCOBOT_POSITION_TICK_PER_METER, CONFIG_LIBCOCOBOT_POSITION_TICK_PER_180DEG);
-#endif
-
   //Start task
   xTaskCreate(cocobot_position_task, "position", 200, NULL, task_priority, NULL);
 }
@@ -290,9 +286,6 @@ void cocobot_position_set_motor_command(float left_motor_speed, float right_moto
 
 void cocobot_position_set_speed_distance_angle(float linear_speed, float angular_velocity)
 {
-#ifdef AUSBEE_SIM
-  mcual_arch_request("POS", 0, "SPEED:%f:%f", linear_speed * 100, angular_velocity * 100);
-#endif
   float c1 = linear_speed + angular_velocity;
   float c2 = linear_speed - angular_velocity;
 
@@ -331,9 +324,6 @@ void cocobot_position_set_x(float x)
   xSemaphoreTake(mutex, portMAX_DELAY);
   robot_x = MM2TICK(x);
   xSemaphoreGive(mutex);
-#ifdef AUSBEE_SIM
-  mcual_arch_request("POS", 0, "X:%f", x);
-#endif
 
   cocobot_asserv_set_state(saved_state);
 }
@@ -347,9 +337,6 @@ void cocobot_position_set_y(float y)
   xSemaphoreTake(mutex, portMAX_DELAY);
   robot_y = MM2TICK(y);
   xSemaphoreGive(mutex);
-#ifdef AUSBEE_SIM
-  mcual_arch_request("POS", 0, "Y:%f", y);
-#endif
 
   cocobot_asserv_set_state(saved_state);
 }
@@ -365,9 +352,6 @@ void cocobot_position_set_angle(float angle)
   float diff = angle - old_angle;
   robot_angle_offset += DEG2TICK(diff);
   xSemaphoreGive(mutex);
-#ifdef AUSBEE_SIM
-  mcual_arch_request("POS", 0, "A:%f", angle);
-#endif
 
   cocobot_asserv_set_state(saved_state);
 }

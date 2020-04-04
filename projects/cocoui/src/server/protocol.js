@@ -5,14 +5,21 @@ const BrowserWindow = electron.BrowserWindow;
 const ipcMain = electron.ipcMain;
 const SerialPort = require('serialport');
 
-const TCPCLIENT_DECODE_UART = false;
-const TCPCLIENT_DECODE_CAN = true;
+//cocoui server options
+const TCPCLIENT_DECODE_UART = false;  //use simulated uart output for com
+const TCPCLIENT_DECODE_CAN = true;    //use simulated can output for com
+const TCPCLIENT_FORWARD_CAN = true;   //forward can packet to other clients
+
+
 const COCOUI_ID = 0x11;
 
 let CLIENT_ID = 0;
 const MAGIC_START = 0xc0;
 const DECODERS = {};
 let AST = null;
+DECODERS[0x0001] = "{error}B(id)"
+DECODERS[0x1001] = "{set_meca_action}B(order)"
+DECODERS[0x2000] = "{set_motor}B(enable)F(left)F(right)"
 DECODERS[0x8000] = "{position}F(x)F(y)F(angle)"
 DECODERS[0x8001] = "{asserv_dist}F(target)F(distance)F(ramp_out)F(speed_target)F(speed)F(pid_out)F(pid_P)F(pid_I)F(pid_d)"
 DECODERS[0x8002] = "{asserv_angle}F(target)F(angle)F(ramp_out)F(speed_target)F(speed)F(pid_out)F(pid_P)F(pid_I)F(pid_d)"
@@ -237,7 +244,7 @@ class Client {
   _parse(pkt) {
     const decoder = DECODERS[pkt.pid];
     if(decoder == null) {
-      console.log("Unable to decode:");
+      console.log("Unable to decode: 0x" + pkt.pid.toString(16));
       console.log(pkt);
     }
     else {
@@ -259,6 +266,10 @@ class Client {
             pkt.decoded._src_name = "SMecanele";
             break;
 
+          case 2:
+            pkt.decoded._src_name = "SBrain";
+            break;
+
           default:
             pkt.decoded._src_name = "?? (" + pkt.decoded._src + ")";
             break;
@@ -267,6 +278,19 @@ class Client {
         //printf in console for desktop without notification
         if(pkt.decoded._name == "printf") {
           console.log("["+pkt.decoded._src_name+"] " + pkt.decoded.msg);
+        }
+        else if(pkt.decoded._name == "error") {
+          let err = "";
+
+          switch(pkt.decoded.id) {
+            case 0:
+              err = "NO QUEUE AVAILABLE";
+              break;
+
+            default:
+              err = "?? (" + pkt.decoded.id + ")";
+          }
+          console.log("[ERROR]" + "["+pkt.decoded._src_name+"] " + err);
         }
         
         //send to interface
@@ -407,6 +431,13 @@ class TCPClient extends Client {
     this._socket.on('data', (data) => this._decodeTCPData(data));
   }
 
+  /**
+   * @brief Return the peripheral id of the client (null if not received yet)
+   */
+  getPid() {
+    return this._pid;
+  }
+
   getName() {
     const addr = this._socket.address();
     return addr.address + ":" + addr.port;
@@ -451,27 +482,51 @@ class TCPClient extends Client {
           if(TCPCLIENT_DECODE_CAN) {
             this._decodeCAN(pkt);
           }
-          break;
+          if(TCPCLIENT_FORWARD_CAN) {
+            const clients = this._protocol.getClients();
+            const can_data = pkt.split(":").map((x) => parseInt(x, 16));
+            let fmt_can_data = can_data[0].toString(16);
+            for(let i = 0; i < can_data[1]; i += 1) {
+              if(i == 0) {
+                fmt_can_data += "/"
+              }
+              else {
+                fmt_can_data += ":"
+              }
+              fmt_can_data += can_data[i + 2].toString(16);
+            }
+            fmt_can_data += '\n';
+            
+            for(let i = 0; i < clients.length; i += 1) {
+              const client = clients[i];
+              if(client instanceof TCPClient) {
+                  if((client != this) && (client.getPid() == this.getPid())) {
+                    client.send(fmt_can_data);
+                  }
+                }
+              }
+            }
+            break;
 
-        case "U1":
-          //UART packet found
-          if(TCPCLIENT_DECODE_UART) {
-            const buf = Buffer.alloc(1);
-            buf.writeUInt8(parseInt(pkt, 16));
-            this._onData(buf);
-          }
-          break;
+          case "U1":
+            //UART packet found
+            if(TCPCLIENT_DECODE_UART) {
+              const buf = Buffer.alloc(1);
+              buf.writeUInt8(parseInt(pkt, 16));
+              this._onData(buf);
+            }
+            break;
 
-        default:
-          console.log("Unknown PID = " + this._pid);
-          break;
+          default:
+            console.log("Unknown PID = " + this._pid);
+            break;
+        }
       }
     }
-  }
 
-  _decodeCAN(pkt) {
-    //transform raw string into parsed array of can data
-    const can_data = pkt.split(":").map((x) => parseInt(x, 16));
+    _decodeCAN(pkt) {
+      //transform raw string into parsed array of can data
+      const can_data = pkt.split(":").map((x) => parseInt(x, 16));
 
     //extract source and packet_counter from can ID field
     const source = can_data[0] >> 7;
@@ -543,6 +598,7 @@ class TCPClient extends Client {
 
   _onClose() {
     console.log("Closed");
+    this._protocol.removeMe(this);
   } 
 
   sendPacket(pkt) {
@@ -672,6 +728,30 @@ class Protocol {
       });
     });
   }
+
+  /**
+   * @brief Return the list of actives client
+   */
+  getClients() {
+    //return the actual list: /!\ The instance is mutable
+    return this._clients;
+  }
+
+  /**
+   * @brief Remove a client from the list
+   * @param client  Instance of client to be removed
+   */
+  removeMe(client) {
+    const new_list = [];
+    for(let i = 0; i < this._clients.length; i += 1) {
+      if(this._clients[i] != client) {
+        new_list.push(this._clients[i]);
+      }
+    }
+
+    this._clients = new_list;
+  }
+   
 
   _checkSerialPort() {
     SerialPort.list().then((ports) => {

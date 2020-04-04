@@ -264,14 +264,19 @@ static void * mcual_arch_sim_handle_peripherals(void * args)
         {
           //we have a winner !
           char buf[32];
+          memset(buf, 0 , sizeof(buf));
           int r = read(_peripherals_socket[i].socket, buf, sizeof(buf) - 1);
           if(r <= 0)
           {
-            //he is gone :'(
-            close(_peripherals_socket[i].socket);
-            FD_CLR(_peripherals_socket[i].socket, &_valid_fds);
-            _peripherals_socket[i].socket = -1;
-            _peripherals_socket[i].init = 0;
+            if(errno != EINTR)
+            {
+              //Cocoui is gone :'(
+              perror("Cocoui crash ?");
+              close(_peripherals_socket[i].socket);
+              FD_CLR(_peripherals_socket[i].socket, &_valid_fds);
+              _peripherals_socket[i].socket = -1;
+              _peripherals_socket[i].init = 0;
+            }
           }
           else
           {

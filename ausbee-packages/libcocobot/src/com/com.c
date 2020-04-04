@@ -13,7 +13,7 @@
 #define COCOBOT_COM_HEADER_START 0xC0
 #define INVALID_PTR ((void *)0xFFFFFFFF)
 
-#define COCOBOT_COM_CAN_MAX_RECV_QUEUE 1
+#define COCOBOT_COM_CAN_MAX_RECV_QUEUE 2
 
 #define COM_ERROR_NO_QUEUE_AVAILABLE 0
 
@@ -121,24 +121,24 @@ void cocobot_com_async_thread(void *arg)
   while(pdTRUE)
   {
     //send debug information if needed
-#ifdef CONFIG_LIBCOCOBOT_ASSERV
-    cocobot_position_handle_async_com();
-#endif
-#ifdef CONFIG_LIBCOCOBOT_ASSERV
-    cocobot_asserv_handle_async_com();
-#endif
-#ifdef CONFIG_LIBCOCOBOT_TRAJECTORY
-    cocobot_trajectory_handle_async_com();
-#endif
-#ifdef CONFIG_LIBCOCOBOT_PATHFINDER
-    cocobot_pathfinder_handle_async_com();
-#endif
-#ifdef CONFIG_LIBCOCOBOT_GAME_STATE
-    cocobot_game_state_handle_async_com();
-#endif
-#ifdef CONFIG_LIBCOCOBOT_ACTION_SCHEDULER
-    cocobot_action_scheduler_handle_async_com();
-#endif
+//#ifdef CONFIG_LIBCOCOBOT_ASSERV
+//    cocobot_position_handle_async_com();
+//#endif
+//#ifdef CONFIG_LIBCOCOBOT_ASSERV
+//    cocobot_asserv_handle_async_com();
+//#endif
+//#ifdef CONFIG_LIBCOCOBOT_TRAJECTORY
+//    cocobot_trajectory_handle_async_com();
+//#endif
+//#ifdef CONFIG_LIBCOCOBOT_PATHFINDER
+//    cocobot_pathfinder_handle_async_com();
+//#endif
+//#ifdef CONFIG_LIBCOCOBOT_GAME_STATE
+//    cocobot_game_state_handle_async_com();
+//#endif
+//#ifdef CONFIG_LIBCOCOBOT_ACTION_SCHEDULER
+//    cocobot_action_scheduler_handle_async_com();
+//#endif
 
     if(ping_counter > PING_COUNTER_CONFIG)
     {

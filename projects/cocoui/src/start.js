@@ -6,6 +6,9 @@ const BrowserWindow = electron.BrowserWindow
 const Protocol = require('./server/protocol');
 const ipcMain = electron.ipcMain;
 
+//check dev mode
+const isDev = process.env.NODE_ENV != "production";
+
 //create protocol handler
 const protocol = new Protocol();
 
@@ -21,7 +24,6 @@ function createWindow() {
     },
   })
 
-  const isDev = process.env.NODE_ENV != "production";
 
   mainWindow.loadURL(
     (
