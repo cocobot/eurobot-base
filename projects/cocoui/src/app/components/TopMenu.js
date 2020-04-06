@@ -145,6 +145,14 @@ class TopMenuComponent extends React.Component {
   }
 
   render() {
+
+    //const conn_list = [];
+    //this.props.active.entrySeq().forEach(([key, x]) => {
+    //  console.log(key);
+    //  console.log(x);
+    //});
+    //console.log(conn_list);
+
     return (
       <div>
         <Navbar color="dark" dark expand="md">

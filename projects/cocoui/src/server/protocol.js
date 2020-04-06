@@ -27,10 +27,16 @@ DECODERS[0x8003] = "{trajectory_orders}[B(type)F(time)F(a1)F(a2)F(a3)F(a4)F(star
 DECODERS[0x8004] = "{pathfinder}H(length)H(width)[H(type)](nodes)"
 DECODERS[0x8005] = "{printf}S(msg)"
 DECODERS[0x8006] = "{game_state}B(robot_id)B(color)D(battery)D(time)D(score)"
+DECODERS[0x8008] = "{reset}B(board_id)"
 DECODERS[0x8008] = "{action_scheduler}[S(name)F(x)F(y)F(score)](strategies)"
 DECODERS[0x800a] = "{usirs}[H(us)H(ir)B(force_on)B(alert)B(alert_activated)](usir)"
 DECODERS[0x800d] = "{asserv_params}F(d_ramp_speed)F(d_ramp_accel)F(d_pid_kp)F(d_pid_kd)F(d_pid_ki)F(d_pid_max_i)F(d_pid_max_e)F(a_ramp_speed)F(a_ramp_accel)F(a_pid_kp)F(a_pid_kd)F(a_pid_ki)F(a_pid_max_i)F(a_pid_max_e)";
 DECODERS[0x800f] = "{ping}";
+DECODERS[0x8010] = "{bootloader}B(board_id)";
+DECODERS[0x8011] = "{bootloader_crc}B(board_id)B(response)D(sector)D(crc)";
+DECODERS[0x8012] = "{bootloader_erase}B(board_id)B(response)";
+DECODERS[0x8013] = "{bootloader_flash}B(board_id)B(response)D(addr)[B(byte)](data)";
+DECODERS[0x8014] = "{bootloader_boot}B(board_id)";
 
 const GRAMMAR = `
 {
@@ -90,38 +96,6 @@ Freader
 
 `;
 
-class BootloaderClient {
-  constructor(protocol, socket) {
-    this._protocol = protocol;
-    this._socket = socket;
-    
-    this._socket.on('close', () => this._onClose());
-    this._socket.on('data', (data) => this._onData(data));
-
-    this._protocol.setHijackCom(this);
-  }
-
-  recv(data) {
-    this._socket.write(data);
-  }
-
-  _onClose() {
-    this._protocol.setHijackCom(null);
-  }
-
-  _onData(data) {
-    const asc = data.toString('ascii');
-    if(asc.includes('#RESET')) {
-      this._protocol.formatAndSendtoAll({
-        pid: 0x8007,
-        fmt: "",
-        args: [],
-      });
-    }
-    this._protocol.sendToAll(data);
-  }
-}
-
 class Client {
   constructor(protocol) {
     this._protocol = protocol;
@@ -135,6 +109,9 @@ class Client {
 
 
     this._protocol._clients.push(this);
+  }
+
+  bootloaderResponse() {
   }
 
   getID() {
@@ -292,6 +269,11 @@ class Client {
           }
           console.log("[ERROR]" + "["+pkt.decoded._src_name+"] " + err);
         }
+        else if(pkt.decoded._name.startsWith("bootloader")) {
+          this._protocol.getClients().forEach((client) => {
+            client.bootloaderResponse(pkt);
+          });
+        }
         
         //send to interface
         this._emit(pkt.decoded);
@@ -333,6 +315,10 @@ class Client {
             size += 1;
             break;
 
+          case 'H':
+            size += 2;
+            break;
+
           case 'D':
             size += 4;
             break;
@@ -364,11 +350,15 @@ class Client {
           offset += 4;
           break;
 
+        case 'H':
+          pkt.data.writeInt16LE(pkt.args.shift(), offset);
+          offset += 2;
+          break;
+
         case 'D':
           pkt.data.writeInt32LE(pkt.args.shift(), offset);
           offset += 4;
           break;
-
 
 
         default:
@@ -428,7 +418,13 @@ class TCPClient extends Client {
     this._queues = {};
     this._TCPbuffer = "";
     this._socket.on('close', () => this._onClose());
+    this._socket.on('error', () => this.close());
     this._socket.on('data', (data) => this._decodeTCPData(data));
+    this._bootloaderState = {};
+  }
+
+  close() {
+    this._socket.destroy();
   }
 
   /**
@@ -517,12 +513,190 @@ class TCPClient extends Client {
             }
             break;
 
+          case "BT":
+            //bootloader packet found
+          this._decodeBootloader(pkt);
+          break;
+
           default:
             console.log("Unknown PID = " + this._pid);
             break;
         }
       }
     }
+
+  /**
+   * @brief Send flash data to bootloader firmware
+   * @param offset  Offset of the data to be send in this 64 bytes packet
+   */
+  _bootloaderSendFlashData(offset) {
+    const TCPUart = (client) => {
+      if(client instanceof TCPClient) {
+        if(client.getPid() == "U1") {
+          return true;
+        }
+        else {
+          return false;
+        }
+      }
+    }
+    const rerun = () => {
+      this._bootloaderSendFlashData(offset);
+    }
+
+   if(this._bootloaderState == null) {
+     return;
+   }
+
+    this._protocol.getClients().forEach((client) => {
+      if(TCPUart(client)) { return;}
+
+      const addr = this._bootloaderState.flash.addr;
+      const data = this._bootloaderState.flash.data;
+
+      //prefix header
+      let ndata = [this._bootloaderState.board, 0, addr + offset, 0];
+      let fmt = "BBDH";
+
+      //add data
+      for(let j = 0; (j < 64) && ((j + offset) < data.length) ; j += 1) {
+        ndata.push(data[offset + j]);
+        fmt += "B";
+      }
+
+      //set len
+      ndata[3] = ndata.length - 4;
+
+      //send
+      client.formatAndSend({
+                           pid: 0x8013, //FLASH
+                           fmt: fmt,
+                           args: ndata,
+      });
+    });
+    this._bootloaderState.flash.timeout = setTimeout(() => { rerun() }, 500);
+  }
+
+
+  /**
+   * @brief Decode commands from MUAL python bootloader script
+   * @param pkt buffer from onelined command
+   */
+  _decodeBootloader(pkt) {
+    const TCPUart = (client) => {
+      if(client instanceof TCPClient) {
+        if(client.getPid() == "U1") {
+          return true;
+        }
+        else {
+          return false;
+        }
+      }
+    }
+
+    //parse command
+    const cmds = pkt.split(":");
+    switch(cmds[0]) {
+      case "RESET":
+        this._bootloaderState.board = parseInt(cmds[1]);
+        this._protocol.getClients().forEach((client) => {
+          if(TCPUart(client)) { return;}
+
+          client.formatAndSend({
+            pid: 0x8007, //RESET
+            fmt: "B",
+            args: [this._bootloaderState.board],
+          });
+        });
+        break;
+      case "CRC":
+        this._protocol.getClients().forEach((client) => {
+          if(TCPUart(client)) { return;}
+          client.formatAndSend({
+            pid: 0x8011, //CRC
+            fmt: "BBDD",
+            args: [this._bootloaderState.board, 0, 16 * 1024 * parseInt(cmds[1]), 0],
+          });
+        });
+        break;
+     case "ERASE":
+        this._protocol.getClients().forEach((client) => {
+          if(TCPUart(client)) { return;}
+          client.formatAndSend({
+            pid: 0x8012, //ERASE
+            fmt: "BB",
+            args: [this._bootloaderState.board, 0],
+          });
+        });
+        break;
+     case "FLASH":
+        const addr = parseInt(cmds[1]) * 16 * 1024;
+        const data = cmds[2].split('/').map((x) => parseInt(x, 16));
+        this._bootloaderState.flash = {
+          addr: addr,
+          data: data,
+        };
+        this._bootloaderSendFlashData(0);
+        break;
+
+     case "BOOT":
+         this._protocol.getClients().forEach((client) => {
+          if(TCPUart(client)) { return;}
+          client.formatAndSend({
+            pid: 0x8014, //BOOT
+            fmt: "B",
+            args: [this._bootloaderState.board],
+          });
+        });       
+        this._bootloaderState = null;
+        break;
+ 
+      default:
+        console.log("BOOTLOADER ERROR: " + cmds[0]);
+        break;
+    }
+  }
+
+  /**
+   * @brief Handle response from bootloader firmware
+   */
+  bootloaderResponse(pkt) {
+    if(this.getPid() == "BT") {
+      if(this._bootloaderState == null) {
+        return;
+      }
+      if(this._bootloaderState.board != pkt.decoded._src) {
+        return;
+      }
+
+      if(pkt.decoded._name == "bootloader") {
+        this.send("BOOTLOADER " + pkt.decoded._src + " OK\n");
+      }
+      else if(pkt.decoded._name == "bootloader_crc") {
+        if(pkt.decoded.response) {
+          this.send("CRC " +(pkt.decoded.sector / (16 * 1024)).toString(16) + " " + (pkt.decoded.crc & 0xFFFFFFFF).toString(16) + "\n");
+        }
+      }
+      else if(pkt.decoded._name == "bootloader_erase") {
+        if(pkt.decoded.response) {
+          this.send("ERASE OK\n");
+        }
+      }
+      else if(pkt.decoded._name == "bootloader_flash") {
+        const last_addr = pkt.decoded.addr;
+        clearTimeout(this._bootloaderState.flash.timeout);
+
+        console.log("RECV " + (last_addr).toString(16));
+
+        if((last_addr + 64 - this._bootloaderState.flash.addr) >= this._bootloaderState.flash.data.length) {
+          this.send("FLASH OK\n");
+        }
+        else {
+          this._bootloaderSendFlashData(last_addr - this._bootloaderState.flash.addr + 64);
+        }
+      }
+    }
+  }
 
     _decodeCAN(pkt) {
       //transform raw string into parsed array of can data
@@ -598,6 +772,7 @@ class TCPClient extends Client {
 
   _onClose() {
     console.log("Closed");
+    this._bootloaderState = null;
     this._protocol.removeMe(this);
   } 
 
@@ -609,6 +784,9 @@ class TCPClient extends Client {
 
       case "C0":
         this.sendCANPacket(pkt);
+        break;
+
+      case "BT":
         break;
 
       default:
@@ -793,9 +971,6 @@ class Protocol {
   _createTCPServer() {
     this._server = net.createServer((socket) => this._newTCPClient(socket));
     this._server.listen(10000, '127.0.0.1');
-
-    this._bootloader = net.createServer((socket) => this._newTCPBootloaderClient(socket));
-    this._bootloader.listen(10001, '127.0.0.1');
   }
 
   _newTCPClient(socket) {
@@ -806,9 +981,6 @@ class Protocol {
     new SerialClient(this, serial);
   }
 
-  _newTCPBootloaderClient(socket) {
-    new BootloaderClient(this, socket);
-  }
 
   sendToAll(data) {
     for(let i = 0; i < this._clients.length; i += 1) {

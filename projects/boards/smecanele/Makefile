@@ -2,6 +2,7 @@
 #
 #Set ausbee directory path. Can be relative or absolute
 AUSBEE_DIR=../../../ausbee
+BOARD_COM_ID=1
 
 #Get project name
 PROJECT_NAME=$(notdir $(patsubst i%/,%,$(lastword $(CURDIR))))

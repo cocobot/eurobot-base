@@ -5,6 +5,7 @@
 SHELL := /bin/bash
 
 AUSBEE_DIR=../../../ausbee
+BOARD_COM_ID=2
 
 #Get project name
 PROJECT_NAME=$(notdir $(patsubst i%/,%,$(lastword $(CURDIR))))

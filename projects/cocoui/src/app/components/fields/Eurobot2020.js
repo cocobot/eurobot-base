@@ -2,9 +2,6 @@ import React from 'react';
 import Pathfinder from '../Pathfinder';
 import Actions from '../Actions';
 
-//temp
-const CUP_POSITION = parseInt(Math.random(3)) + 1;
-
 
 const cSilexGray = "rgb(181, 176, 161)";
 const cSignalYellow = "rgb(247, 181, 0)";
@@ -421,7 +418,6 @@ class Eurobot2020Distributor extends React.Component {
     {
       cups.push(<Eurobot2020Cup key={i} id={24 + this.props.id * 5 + i} />);
     }
-    console.log(cups.length);
 
     return (
      <g>

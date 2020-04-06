@@ -37,7 +37,11 @@ class State {
   _handlePkt(pkt) {
     this._store.dispatch(saveRobotPacket(pkt));
     switch(pkt.data._name) {
-      case "printf":
+      case "ping":
+        console.log(pkt);
+        break;
+
+   case "printf":
         new Notification('CocoUI', {
           body: pkt.data.msg,
         });
