@@ -15,6 +15,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
+#include <limits.h>
 
 #define PERIPHERAL_TCP_PORT 10000
 #define CLIENT_MAX          10
@@ -49,8 +50,8 @@ static pthread_mutex_t _mutex_network = PTHREAD_MUTEX_INITIALIZER;
 static fd_set _valid_fds;
 
 static char * _ip = "127.0.0.1";
-static int _argc = 0;
-static char ** _argv = NULL;
+int _argc = 0;
+char ** _argv = NULL;
 static int _port = 10000;
 static int _id = 0;
 
@@ -237,6 +238,7 @@ static void * mcual_arch_sim_handle_peripherals(void * args)
   sigset_t sig_mask;
   sigfillset(&sig_mask);
   sigdelset(&sig_mask, SIGUSR2);
+  sigaction(SIGPIPE, &(struct sigaction){SIG_IGN}, NULL);
 
   while(1)
   {
@@ -401,6 +403,31 @@ void mcual_bootloader(void)
   pthread_mutex_unlock(&_mutex_network);
 
   //restart
-  execv(_argv[0], _argv);
+   char cwd[PATH_MAX];
+  char loader_path[PATH_MAX];
+  char argv[PATH_MAX];
+  char * prj;
+  char * tmp;
+  //get current directory
+  getcwd(cwd, sizeof(cwd));
+
+  //extract prj name from exe path
+  memcpy(argv, _argv[0], sizeof(argv));
+  tmp = argv;
+  while((tmp = strtok(tmp, "/")) != NULL)
+  {
+    prj = tmp;
+    tmp = NULL;
+  }
+  prj = strtok(prj, ".");
+
+  //create new path
+  snprintf(loader_path, sizeof(loader_path), "%s/../../loaders/%s/Output/%s.sim", cwd, prj, prj);
+
+  //start executable
+  fprintf(stdout, "START bootloader: %s\n", cwd, loader_path);
+  system(loader_path);
+
+  exit(0);
 }
 

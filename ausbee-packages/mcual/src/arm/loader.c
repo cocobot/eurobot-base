@@ -70,6 +70,12 @@ void mcual_loader_erase_pgm(void)
 void mcual_loader_flash_pgm(uint32_t offset, uint8_t * data, uint32_t size)
 {
   unsigned int i;
+
+  if(offset < PLATFORM_FLASH_PGM_START)
+  {
+    return;
+  }
+
   FLASH->ACR &= ~FLASH_ACR_DCEN;
 
   //prepare flash
@@ -83,7 +89,7 @@ void mcual_loader_flash_pgm(uint32_t offset, uint8_t * data, uint32_t size)
 #endif
 
   //write data
-  uint32_t * ptr = (uint32_t *)(PLATFORM_FLASH_PGM_START + offset);
+  uint32_t * ptr = (uint32_t *)(offset);
 #if CONFIG_DEVICE_STM32L496xx
   for(i = 0; i < size; i += 8, ptr += 2)
 #else
@@ -141,6 +147,25 @@ void mcual_loader_flash_u64(uint32_t offset, uint64_t data)
   //clean up register
   FLASH->CR = 0;
   __enable_irq();
+}
+
+/**
+ * @brief Get the crc value of the 16k following bytes
+ * @param addr  Address of the first byte
+ * @return  The computed crc
+ */
+uint32_t mcual_loader_compute_crc_16k(uint32_t addr)
+{
+  CRC->CR = CRC_CR_RESET;
+
+  uint32_t * ptr = (uint32_t *)(addr);
+  int i;
+  for(i = 0; i < 16 * 1024; i += 4, ptr += 1)
+  {
+    CRC->DR = *ptr;
+  }
+
+  return CRC->DR;
 }
 
 #endif

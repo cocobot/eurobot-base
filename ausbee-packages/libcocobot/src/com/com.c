@@ -142,7 +142,7 @@ void cocobot_com_async_thread(void *arg)
 
     if(ping_counter > PING_COUNTER_CONFIG)
     {
-      cocobot_com_send(COCOBOT_COM_PING, "");
+      cocobot_com_send(COCOBOT_COM_PING_PID, "");
       ping_counter = 0;
     }
     else
@@ -160,11 +160,25 @@ void cocobot_com_handle_packet(uint16_t pid, uint8_t * data, uint16_t len)
   xSemaphoreTake(_exec_mutex, portMAX_DELAY);
   switch(pid)
   {
+#ifndef CONFIG_LIBCOCOBOT_LOADER
     case COCOBOT_COM_RESET_PID:
-      mcual_bootloader();
+      if(len >= 1) {
+        uint8_t id;
+        cocobot_com_read_B(data, len, 0, &id);
+
+        //start bootloader
+        if(id == COCOBOT_COM_ID)
+        {
+          mcual_bootloader();
+        }
+      }
       break;
+#endif
   }
 
+#ifdef CONFIG_LIBCOCOBOT_LOADER
+  cocobot_loader_handle_packet(pid, data, len);
+#endif
 #ifdef CONFIG_LIBCOCOBOT_TRAJECTORY
   cocobot_asserv_handle_sync_com(pid, data, len);
 #endif
@@ -891,6 +905,24 @@ uint32_t cocobot_com_read_D(uint8_t *data , uint32_t len, uint32_t offset, int32
     ptr += 1;
     offset += 1;
   }
+  return offset;
+}
+
+uint32_t cocobot_com_read_H(uint8_t *data , uint32_t len, uint32_t offset, int16_t * value)
+{
+  (void)len; //TODO: check len
+  uint32_t nv = 0;
+  uint8_t * ptr = (uint8_t *) &nv;
+  
+  int i;
+  for(i = 0; i < 2; i += 1)
+  {
+    *ptr = data[offset];
+    ptr += 1;
+    offset += 1;
+  }
+
+  *value = nv;
   return offset;
 }
 

@@ -1,6 +1,6 @@
 #!/bin/python2
 
-import serial
+# import serial
 import random
 import time
 import sys
@@ -90,10 +90,11 @@ class HexFile():
                     
 
 class Loader():
-    def __init__(self, port, hexf):
+    def __init__(self, port, comid, hexf):
         if type(port) is socket._socketobject:
             self.socket = port
-            self.socket.settimeout(0.5)
+            self.socket.settimeout(0.200)
+            self.socket.sendall("BT<<")
         else:
             self.socket = None
             self.serial = serial.Serial(port, '115200', timeout=0.5)
@@ -101,6 +102,7 @@ class Loader():
         self.sync = random.randint(1, 99)
         self.synchronized = False
         self.debug = False
+        self.comid = int(comid)
 
     def send(self, data):
         if self.debug:
@@ -108,7 +110,7 @@ class Loader():
         if self.socket == None:
             self.serial.write(data + '\n')
         else:
-            self.socket.sendall(data + '\n')
+            self.socket.sendall(data + '\r\n')
 
     def recv(self):
         data = ''
@@ -151,30 +153,32 @@ class Loader():
         sys.stdout.write("Trying to sychronize")
         sys.stdout.flush()
         while(True):
-            self.sync = (self.sync + 1) % 100
-            self.send("SYNC %d" % self.sync)
+            self.send("RESET:" + str(self.comid))
             line = self.recv()
-            if line == "SYNC %d OK" % self.sync:
+            if line == "BOOTLOADER %d OK" % self.comid:
                 print(".")
                 print("Synchronization OK")
                 self.synchronized = True
                 break
-            elif line == '':
-                self.send("#RESET")
             else:
                 sys.stdout.write(".")
                 sys.stdout.flush()
                 self.recv()
                 self.synchronized = False
 
-
     def verify(self):
         pids = self.hexf.pages.keys()
         pids.sort()
         for pid in pids:
-            self.send("CRC %d" % pid)
-            line = self.recv().split(' ')
-            crc = int(line[1], 16)
+            self.send("CRC:%d" % pid)
+            line = None
+            while True:
+                line = self.recv().split(' ')
+                if line[0] == 'CRC' and int(line[1], 16) == pid:
+                    break
+                else:
+                    self.send("CRC:%d" % pid)
+            crc = int(line[2], 16) & 0xFFFFFFFF
             if crc != self.hexf.crc[pid]:
                 print("CRC pid %d mismatch(0x%X, 0x%X)" % (pid, crc, self.hexf.crc[pid]))
                 print("Flash needed")
@@ -186,12 +190,14 @@ class Loader():
         pids = self.hexf.pages.keys()
         pids.sort()
         for pid in pids:
-            self.send("FLASH %d" % pid)
+            data = "FLASH:%d:" % pid
+            first = True
             for byte in self.hexf.pages[pid]:
-                if self.socket == None:
-                    self.serial.write(chr(byte))
-                else:
-                    self.socket.sendall(chr(byte))
+                if not first:
+                    data += "/"
+                first = False
+                data +=  hex(byte)
+            self.send(data)
 
             while(True):
                 line = self.recv()
@@ -222,10 +228,10 @@ def bootloader_cocoui():
     print("*** Trying to bootload with CocoUI ***")
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('127.0.0.1', 10001))
+        s.connect(('127.0.0.1', 10000))
         s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         hexf = HexFile(sys.argv[2], 16 * 1024)
-        loader = Loader(s, hexf)
+        loader = Loader(s, sys.argv[1], hexf)
         loader.run()
         return True
     except socket.error, e:
@@ -234,15 +240,16 @@ def bootloader_cocoui():
         return False
 
 
-def bootoader_default_implementation():
-    print("*** Use default python implementation as failback ***") 
-    hexf = HexFile(sys.argv[2], 16 * 1024)
-    loader = Loader(sys.argv[1], hexf)
-    loader.run()
-
+#def bootoader_default_implementation():
+#    print("*** Use default python implementation as failback ***") 
+#    hexf = HexFile(sys.argv[2], 16 * 1024)
+#    loader = Loader(sys.argv[1], hexf)
+#    loader.run()
+#
 
 if len(sys.argv) < 3:
-    print("Usage: %s serialport hexfile" % sys.argv[0])
+    print("Usage: %s board_id hexfile" % sys.argv[0])
 else:
     if not bootloader_cocoui():
-        bootoader_default_implementation()
+        #bootoader_default_implementation()
+        pass

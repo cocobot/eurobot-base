@@ -295,6 +295,17 @@ uint8_t platform_i2c_transmit(mcual_i2c_id_t id, uint8_t addr, uint8_t * txbuf, 
 
   return ret;
 }
+#else
+uint8_t platform_i2c_transmit(mcual_i2c_id_t id, uint8_t addr, uint8_t * txbuf, uint8_t tx_size, uint8_t * rxbuf, uint8_t rx_size)
+{
+  (void)id;
+  (void)addr;
+  (void)txbuf;
+  (void)tx_size;
+  (void)rxbuf;
+  (void)rx_size;
+  return 0;
+}
 #endif
 
 void platform_servo_set_value(uint32_t servo_id, uint32_t value)

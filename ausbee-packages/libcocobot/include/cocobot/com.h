@@ -31,7 +31,12 @@
 #define COCOBOT_COM_GET_ASSERV_PARAMS_PID (0x800C)
 #define COCOBOT_COM_SEND_ASSERV_PARAMS_PID (0x800D)
 #define COCOBOT_COM_SET_ASSERV_PARAMS_PID (0x800E)
-#define COCOBOT_COM_PING                  (0x800F)
+#define COCOBOT_COM_PING_PID              (0x800F)
+#define COCOBOT_COM_BOOTLOADER_PID        (0x8010)
+#define COCOBOT_COM_BOOTLOADER_CRC_PID    (0x8011)
+#define COCOBOT_COM_BOOTLOADER_ERASE_PID  (0x8012)
+#define COCOBOT_COM_BOOTLOADER_FLASH_PID  (0x8013)
+#define COCOBOT_COM_BOOTLOADER_BOOT_PID   (0x8014)
 
 
 #define COCOBOT_SMECANELE_ID              0x01
@@ -70,6 +75,7 @@ void cocobot_com_printf(char * fmt, ...);
 
 uint32_t cocobot_com_read_B(uint8_t *data , uint32_t len, uint32_t offset, uint8_t * value);
 uint32_t cocobot_com_read_D(uint8_t *data , uint32_t len, uint32_t offset, int32_t * value);
+uint32_t cocobot_com_read_H(uint8_t *data , uint32_t len, uint32_t offset, int16_t * value);
 uint32_t cocobot_com_read_F(uint8_t *data , uint32_t len, uint32_t offset, float * value);
 
 #endif// COCOBOT_COM_H

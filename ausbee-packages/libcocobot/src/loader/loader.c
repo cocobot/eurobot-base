@@ -2,242 +2,145 @@
 #ifdef CONFIG_LIBCOCOBOT_LOADER
 
 #include <cocobot.h>
-#ifdef CONFIG_OS_USE_FREERTOS
-# include <FreeRTOS.h>
-# include <task.h>
-#else
-# include <malloc_wrapper.h>
-#endif
+#include <FreeRTOS.h>
+#include <task.h>
 #include <mcual.h>
 #include <platform.h>
+#include <stdio.h>
 
 
+/**
+ * @brief Bootloader mode
+ */
 typedef enum {
-  LOADER_MODE_IDLE,
-  LOADER_MODE_PRELOADING,
-  LOADER_MODE_LOADING,
+  LOADER_MODE_IDLE,     ///< no order. autoboot in 2s
+  LOADER_MODE_LOADING,  ///< firmware uploading
 } loader_mode_t;
 
-static loader_mode_t _mode;
-static uint8_t _request_id;
-static uint8_t  _src_node_id;
-static uint64_t _offset;
-static uint8_t _read_transfer_id;
-static uint64_t _timestamp_us;
-static uint64_t _last_activity_us;
 
-static void cocobot_loader_read(void)
+static loader_mode_t _mode; ///< Bootloader mode, if IDLE -> autoboot in 2s
+
+
+/**
+ * @brief Handle packet from Cocoui
+ * @param pid   PID of the packet
+ * @param data  buffer for packet data
+ * @param len   len of packet data
+ */
+void cocobot_loader_handle_packet(uint16_t pid, uint8_t * data, uint16_t len)
 {
-  //fill the struct
-  uavcan_protocol_file_ReadRequest rr;
-  rr.offset = _offset;
-  rr.path.path.len = 0;
-  rr.path.path.data = NULL;
+  //read board id
+  uint8_t board_id;
+  cocobot_com_read_B(data, len, 0, &board_id);
 
-  //request flash memory if we have enough RAM
-  void * buf = pvPortMalloc(UAVCAN_PROTOCOL_FILE_READ_REQUEST_MAX_SIZE); 
-  if(buf != NULL) {
-    const int size = uavcan_protocol_file_ReadRequest_encode(&rr, buf);
-    cocobot_com_request_or_respond(_src_node_id,
-                                   UAVCAN_PROTOCOL_FILE_READ_SIGNATURE,
-                                   UAVCAN_PROTOCOL_FILE_READ_ID,
-                                   &_read_transfer_id,
-                                   CANARD_TRANSFER_PRIORITY_MEDIUM,
-                                   CanardRequest,
-                                   buf,
-                                   (uint16_t)size);
-    vPortFree(buf);
+  //only load fimware is board valid
+  if(board_id != COCOBOT_COM_ID)
+  {
+    return;
+  }
+
+  switch(pid)
+  {
+    case COCOBOT_COM_RESET_PID:
+      //no reset needed, we already are in bootloader mode
+      cocobot_com_send(COCOBOT_COM_BOOTLOADER_PID, "B", COCOBOT_COM_ID);
+
+      //prevent autoboot
+      _mode = LOADER_MODE_LOADING;
+      break;
+
+    case COCOBOT_COM_BOOTLOADER_CRC_PID:
+      {
+        //addr
+        uint32_t addr;
+        cocobot_com_read_D(data, len, 2, (int32_t *)&addr);
+
+        //send current CRC
+        cocobot_com_send(COCOBOT_COM_BOOTLOADER_CRC_PID, "BBDD", COCOBOT_COM_ID, 1, addr, mcual_loader_compute_crc_16k(addr));
+
+        //prevent autoboot
+        _mode = LOADER_MODE_LOADING;
+      }
+      break;
+
+    case COCOBOT_COM_BOOTLOADER_ERASE_PID:
+      mcual_loader_erase_pgm();
+      //send packet when done
+      cocobot_com_send(COCOBOT_COM_BOOTLOADER_ERASE_PID, "BB", COCOBOT_COM_ID, 1);
+      break;
+
+    case COCOBOT_COM_BOOTLOADER_FLASH_PID:
+      {
+        uint32_t addr;
+        uint16_t dlen;
+
+        //read packet info
+        cocobot_com_read_D(data, len, 2, (int32_t*) &addr);
+        cocobot_com_read_H(data, len, 6, (int16_t *)&dlen);
+
+        if(len < 1024) {
+          uint8_t * buf = pvPortMalloc(dlen); 
+          for(int i = 0; i < dlen; i += 1) {
+            cocobot_com_read_B(data, dlen, 8 + i, &buf[i]);
+          }
+          mcual_loader_flash_pgm(addr, buf, dlen);
+          vPortFree(buf);
+          cocobot_com_send(COCOBOT_COM_BOOTLOADER_FLASH_PID, "BBDH", COCOBOT_COM_ID, 1, addr, 0);
+        }
+      }
+      break;
+
+    case COCOBOT_COM_BOOTLOADER_BOOT_PID:
+      mcual_loader_boot();
+      break;
   }
 }
 
-uint8_t cocobot_loader_should_accept_transfer(uint64_t* out_data_type_signature,
-                                              uint16_t data_type_id,
-                                              CanardTransferType transfer_type,
-                                              uint8_t source_node_id)
+/**
+ * @brief Main task for bootloader
+ * @param arg   Not used
+ */
+void cocobot_loader_task(void * arg)
 {
-  (void)out_data_type_signature;
-  (void)data_type_id;
-  (void)transfer_type;
-  (void)source_node_id;
-  
-  //Always accept Begin Firmware Update
-  if ((transfer_type == CanardTransferTypeRequest) &&
-      (data_type_id == UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_ID))
+  (void)arg;
+  int signalisation = 0;
+  for(;;)
   {
-    *out_data_type_signature = UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_SIGNATURE;
-    return true;
-  }
-
-  //Accept Read file in loading mode only
-  if ((transfer_type == CanardTransferTypeResponse) &&
-      (data_type_id == UAVCAN_PROTOCOL_FILE_READ_ID) &&
-      (_mode == LOADER_MODE_LOADING))
-  {
-    *out_data_type_signature = UAVCAN_PROTOCOL_FILE_READ_SIGNATURE;
-    return true;
-  }
-
-  return false;
-}
-
-uint8_t cocobot_loader_on_transfer_received(CanardRxTransfer* transfer)
-{
-  if ((transfer->transfer_type == CanardTransferTypeRequest) &&
-      (transfer->data_type_id == UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_ID))
-  {
-    uavcan_protocol_file_BeginFirmwareUpdateResponse bfu; 
-    void * dynbuf = NULL;
-
-    bfu.optional_error_message.len = 0;
-    bfu.optional_error_message.data = NULL;
+    TickType_t  timestamp_ms = xTaskGetTickCount();
 
     if(_mode == LOADER_MODE_IDLE)
     {
-      _mode = LOADER_MODE_PRELOADING;
-      bfu.error = UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_RESPONSE_ERROR_OK;
-    }
-    else
-    {
-      //bootloader already in progress. Abort begin request
-      bfu.error = UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_RESPONSE_ERROR_IN_PROGRESS;
-    }
-
-    //release rx memory before tx
-    cocobot_com_release_rx_transfer_payload(transfer);
-
-    //send response if we have enough free memory 
-    void * buf = pvPortMalloc(UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_RESPONSE_MAX_SIZE); 
-    if(buf != NULL) 
-    {
-      const uint32_t size = uavcan_protocol_file_BeginFirmwareUpdateResponse_encode(&bfu, buf);
-      cocobot_com_request_or_respond(transfer->source_node_id,
-                                     UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_SIGNATURE,
-                                     UAVCAN_PROTOCOL_FILE_BEGINFIRMWAREUPDATE_ID,
-                                     &transfer->transfer_id,
-                                     transfer->priority,
-                                     CanardResponse,
-                                     buf,
-                                     (uint16_t)size);
-      vPortFree(buf);
-
-    }
-
-    if(_mode == LOADER_MODE_PRELOADING)
-    {
-      //We are ready ! Time to announce it to everybody
-      _mode = LOADER_MODE_LOADING;
-      _last_activity_us = _timestamp_us;
-      cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_SOFTWARE_UPDATE);
-      cocobot_com_flush();
-      _offset = 0;
-      _src_node_id = transfer->source_node_id;
-
-      mcual_loader_erase_pgm();
- 
-      //start reading
-      cocobot_loader_read();
-    }
-
-    //free memory
-    if(dynbuf != NULL)
-    {
-       vPortFree(dynbuf);
-    }
-
-    return 1;
-  }
-
-  if ((transfer->transfer_type == CanardTransferTypeResponse) &&
-      (transfer->data_type_id == UAVCAN_PROTOCOL_FILE_READ_ID) &&
-      (_mode == LOADER_MODE_LOADING))
-  {
-    uavcan_protocol_file_ReadResponse read; 
-    void * dynbuf = NULL;
-
-    //get file bytes
-    dynbuf = pvPortMalloc(UAVCAN_PROTOCOL_FILE_READ_RESPONSE_MAX_SIZE);
-    if(dynbuf != NULL)
-    {
-      uint8_t * pdynbuf = dynbuf;
-      if(uavcan_protocol_file_ReadResponse_decode(transfer, transfer->payload_len, &read, &pdynbuf) >= 0)
+      //2s and no request -> start pgm
+      if(timestamp_ms > 2000)
       {
-        //release rx memory before tx
-        cocobot_com_release_rx_transfer_payload(transfer);
+        mcual_loader_boot();
+      }
 
-        if(read.error.value == 0)
-        {
-          mcual_loader_flash_pgm(_offset, read.data.data, read.data.len);
-
-          if(read.data.len < UAVCAN_PROTOCOL_FILE_READ_RESPONSE_DATA_MAX_LENGTH)
-          {
-            //ended !
-            mcual_loader_boot();
-          }
-          else
-          {
-            //read next bytes
-            _offset += UAVCAN_PROTOCOL_FILE_READ_RESPONSE_DATA_MAX_LENGTH;
-            cocobot_loader_read();
-            _last_activity_us = _timestamp_us;
-          }
-        }
-        else
-        {
-          //File error. Abort
-          _mode = LOADER_MODE_IDLE;
-          cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_MAINTENANCE);
-        }
+      //500ms and no request -> signal bootloader condition
+      if((timestamp_ms > 500) && !signalisation)
+      {
+        signalisation = 1;
+        cocobot_com_send(COCOBOT_COM_BOOTLOADER_PID, "");
       }
     }
 
-    //free memory
-    if(dynbuf != NULL)
-    {
-      vPortFree(dynbuf);
-    }
-
-    return 1;
+    vTaskDelay(50 / portTICK_PERIOD_MS);
   }
-
-  return 0;
 }
 
+/**
+ * @brief Bootloader initialization function
+ */
 void cocobot_loader_init(void)
 {
   //init static memory
   _mode = LOADER_MODE_IDLE;
-  _request_id = 0;
-  _offset = 0;
-  _src_node_id = 0;
-  _last_activity_us = 0;
+  //_request_id = 0;
+  //_offset = 0;
+  //_src_node_id = 0;
+  //_last_activity_us = 0;
 
-  //set node status as MAINTENANCE (bootloader running but reflash is not in progress)
-  cocobot_com_set_mode(UAVCAN_PROTOCOL_NODESTATUS_MODE_MAINTENANCE);
-
-#ifdef CONFIG_OS_USE_FREERTOS
-#else
-  for(;;)
-  {
-    _timestamp_us = cocobot_com_process_event();
-
-    if(_mode != LOADER_MODE_IDLE)
-    {
-      if(_timestamp_us - _last_activity_us > 1000000UL)
-      {
-          _last_activity_us = _timestamp_us;
-          cocobot_loader_read();
-      }
-    }
-    else
-    {
-      //2s and no request -> start pgm
-      if(_timestamp_us > 2000000)
-      {
-        mcual_loader_boot();
-      }
-    }
-  }
-#endif
+  xTaskCreate(cocobot_loader_task, "loader", 600, NULL, 2, NULL );
 }
 
 #endif

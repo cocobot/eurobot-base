@@ -19,6 +19,7 @@ static SemaphoreHandle_t mutex_i2c;
 #endif
 #endif
 
+#ifndef CONFIG_LIBCOCOBOT_LOADER
 #include <stdarg.h>
 char buf[512];
 void uprintf(char * fmt, ...)
@@ -34,6 +35,7 @@ void uprintf(char * fmt, ...)
     ptr += 1;
   }
 }
+#endif
 
 void HardFault_Handler(void)
 {

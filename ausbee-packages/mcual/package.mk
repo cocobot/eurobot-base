@@ -53,4 +53,4 @@ $(eval $(call pkg-generic,MCUAL))
 
 #create loader rule
 loader: $(OUTPUT_TARGET_HEX)
-	python2 $(MCUAL_LOCAL_FILE_PATH)/scripts/mcual_loader.py $(PROGRAM_SERIAL_INTERFACE) $(OUTPUT_TARGET_HEX)
+	python2 $(MCUAL_LOCAL_FILE_PATH)/scripts/mcual_loader.py $(BOARD_COM_ID) $(OUTPUT_TARGET_HEX)
