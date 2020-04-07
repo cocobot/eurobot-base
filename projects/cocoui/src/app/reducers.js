@@ -10,6 +10,7 @@ const defaultWinState = new Map({
 
 
 const defaultRobotsState = new Map({
+  'secondaire': new Map(),
 });
 
 let defaultOptionsState = new Map({
@@ -40,7 +41,7 @@ export const robots = (state = defaultRobotsState, action) => {
         if(!action.pkt.data.hasOwnProperty(k)) {
           continue;
         }
-        state = state.setIn([action.pkt.client, action.pkt.data._name, k], action.pkt.data[k]);
+        state = state.setIn([action.pkt.data._robot, action.pkt.data._src_name, action.pkt.data._name, k], action.pkt.data[k]);
       }
       break; 
     default:

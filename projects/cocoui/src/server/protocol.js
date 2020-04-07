@@ -19,7 +19,12 @@ const DECODERS = {};
 let AST = null;
 DECODERS[0x0001] = "{error}B(id)"
 DECODERS[0x1001] = "{set_meca_action}B(order)"
+
 DECODERS[0x2000] = "{set_motor}B(enable)F(left)F(right)"
+DECODERS[0x2000] = "{set_motor}B(enable)F(left)F(right)"
+DECODERS[0x2001] = "{set_cfg_motor}B(board_id)F(imax)F(max_speed_rpm)"
+DECODERS[0x2004] = "{motor_dbg}B(board_id)B(master_id)B(enable)F(setpoint_rpm)D(pwm)"
+
 DECODERS[0x8000] = "{position}F(x)F(y)F(angle)"
 DECODERS[0x8001] = "{asserv_dist}F(target)F(distance)F(ramp_out)F(speed_target)F(speed)F(pid_out)F(pid_P)F(pid_I)F(pid_d)"
 DECODERS[0x8002] = "{asserv_angle}F(target)F(angle)F(ramp_out)F(speed_target)F(speed)F(pid_out)F(pid_P)F(pid_I)F(pid_d)"
@@ -241,14 +246,28 @@ class Client {
         switch(pkt.decoded._src) {
           case 1:
             pkt.decoded._src_name = "SMecanele";
+            pkt.decoded._robot = "secondaire";
             break;
 
           case 2:
             pkt.decoded._src_name = "SBrain";
+            pkt.decoded._robot = "secondaire";
+            break;
+
+          case 4:
+            pkt.decoded._src_name = "SLCanon";
+            pkt.decoded._robot = "secondaire";
+            break;
+
+          case 5:
+            pkt.decoded._src_name = "SRCanon";
+            pkt.decoded._robot = "secondaire";
             break;
 
           default:
             pkt.decoded._src_name = "?? (" + pkt.decoded._src + ")";
+            pkt.decoded._robot = "???";
+            console.log("Unknown board: " + pkt.decoded._src);
             break;
         }
 
@@ -513,6 +532,9 @@ class TCPClient extends Client {
             }
             break;
 
+        case "U3":
+          break;
+
           case "BT":
             //bootloader packet found
           this._decodeBootloader(pkt);
@@ -533,6 +555,9 @@ class TCPClient extends Client {
     const TCPUart = (client) => {
       if(client instanceof TCPClient) {
         if(client.getPid() == "U1") {
+          return true;
+        }
+        else if(client.getPid() == "U3") {
           return true;
         }
         else {
@@ -586,6 +611,9 @@ class TCPClient extends Client {
     const TCPUart = (client) => {
       if(client instanceof TCPClient) {
         if(client.getPid() == "U1") {
+          return true;
+        }
+        else if(client.getPid() == "U3") {
           return true;
         }
         else {
@@ -721,6 +749,9 @@ class TCPClient extends Client {
         recv_data: 0,
         ith: this._pid,
       }
+      if(this._bsrc == undefined) {
+        this._bsrc = source;
+      }
 
       //put the data in the queue (erase previous data if not received properly)
       this._queues[source] = obj_data;
@@ -743,6 +774,9 @@ class TCPClient extends Client {
     //check if data is parsable
     for(let k in this._queues) {
       const pkt = this._queues[k];
+      if(pkt === undefined) {
+        continue;
+      }
       if(pkt.recv_data == (pkt.len + 2)) {
         //data received, time to check the CRC
         const pkt_crc = pkt.buffer.readUInt16LE(pkt.len);
@@ -756,6 +790,7 @@ class TCPClient extends Client {
         //check crc
         if(crc == pkt_crc) {
           //Everything is ok. We can try to parse the packet
+          pkt._bsrc = this._bsrc;
           this._parse(pkt);
         }
         else {
@@ -787,6 +822,7 @@ class TCPClient extends Client {
         break;
 
       case "BT":
+      case "U3":
         break;
 
       default:
@@ -899,11 +935,7 @@ class Protocol {
     this._checkSerial = setInterval(() => this._checkSerialPort(), 1000);
 
     ipcMain.on('pkt', (event, arg) => {
-      this._clients.forEach((client) => {
-        if(client.getID() == arg.client) {
-          client.formatAndSend(arg);
-        }
-      });
+      this.formatAndSendtoAll(arg);
     });
   }
 
@@ -990,7 +1022,12 @@ class Protocol {
 
   formatAndSendtoAll(pkt) {
     this._clients.forEach((client) => {
-      client.formatAndSend(pkt);
+      const npkt = {
+        pid: pkt.pid,
+        fmt: pkt.fmt + "",
+        args: [... pkt.args],
+      }
+      client.formatAndSend(npkt);
     });
   }
 }

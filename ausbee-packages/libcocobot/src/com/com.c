@@ -50,14 +50,15 @@ static uint8_t _can_counter;
 static uint8_t _can_packet_counter;
 static uint8_t _com_id;
 static cocobot_com_can_recv_t recv_queues[COCOBOT_COM_CAN_MAX_RECV_QUEUE];
+static uint8_t _last_src;
 
 
-static void cocobot_com_can_flush(void)
+static void cocobot_com_can_flush(uint8_t id)
 {
   if(_can_counter > 0)
   {
     mcual_can_frame_t frame;
-    frame.id = (_can_packet_counter & 0x7F) | ((_com_id & 0x1F) << 7);
+    frame.id = (_can_packet_counter & 0x7F) | ((id & 0x1F) << 7);
     frame.data_len = _can_counter;
     memcpy(frame.data, _can_buffer, sizeof(frame.data));
     mcual_can_transmit(&frame);
@@ -66,13 +67,13 @@ static void cocobot_com_can_flush(void)
   }
 }
 
-static void cocobot_com_can_send(uint8_t data)
+static void cocobot_com_can_send(uint8_t id, uint8_t data)
 {
   _can_buffer[_can_counter] = data; 
   _can_counter += 1;
   if(_can_counter == sizeof(_can_buffer))
   {
-    cocobot_com_can_flush();
+    cocobot_com_can_flush(id);
   }
 }
 
@@ -142,6 +143,10 @@ void cocobot_com_async_thread(void *arg)
 
     if(ping_counter > PING_COUNTER_CONFIG)
     {
+#ifdef AUSBEE_SIM
+      //heartbeat PING
+      fprintf(stderr, "PING");
+#endif
       cocobot_com_send(COCOBOT_COM_PING_PID, "");
       ping_counter = 0;
     }
@@ -155,9 +160,10 @@ void cocobot_com_async_thread(void *arg)
   }
 }
 
-void cocobot_com_handle_packet(uint16_t pid, uint8_t * data, uint16_t len)
+void cocobot_com_handle_packet(uint8_t src, uint16_t pid, uint8_t * data, uint16_t len)
 {
   xSemaphoreTake(_exec_mutex, portMAX_DELAY);
+  _last_src = src;
   switch(pid)
   {
 #ifndef CONFIG_LIBCOCOBOT_LOADER
@@ -188,6 +194,11 @@ void cocobot_com_handle_packet(uint16_t pid, uint8_t * data, uint16_t len)
     _user_handler(pid, data, len);
   }
   xSemaphoreGive(_exec_mutex);
+}
+
+uint8_t cocobot_com_get_src(void)
+{
+  return _last_src;
 }
 
 void cocobot_com_can_thread(void *arg)
@@ -283,7 +294,7 @@ void cocobot_com_can_thread(void *arg)
 
       if(crc == recv_crc)
       {
-        cocobot_com_handle_packet(queue->pid, queue->data, queue->len - 2);
+        cocobot_com_handle_packet(src, queue->pid, queue->data, queue->len - 2);
 
         //send data to UART
         cocobot_com_header_t header;
@@ -364,7 +375,7 @@ void cocobot_com_uart_thread(void *arg)
           recv_crc |= mcual_usart_recv(_usart);
           recv_crc |= (mcual_usart_recv(_usart) << 8);
 
-          cocobot_com_handle_packet(header.pid, data, header.len);
+          cocobot_com_handle_packet(header.src, header.pid, data, header.len);
 
           //send com data to CAN bus
           cocobot_com_can_header_t can_header;
@@ -375,11 +386,11 @@ void cocobot_com_uart_thread(void *arg)
           cocobot_com_can_prepare(&can_header);
           for(i = 0; i < header.len; i += 1)
           {
-            cocobot_com_can_send(data[i]);
+            cocobot_com_can_send(header.src, data[i]);
           }
-          cocobot_com_can_send(recv_crc & 0xFF);
-          cocobot_com_can_send((recv_crc >> 8) & 0xFF);
-          cocobot_com_can_flush();
+          cocobot_com_can_send(header.src, recv_crc & 0xFF);
+          cocobot_com_can_send(header.src, (recv_crc >> 8) & 0xFF);
+          cocobot_com_can_flush(header.src);
           xSemaphoreGive(_mutex);
 
           for(i = 0; i < sizeof(header); i += 1) 
@@ -600,16 +611,16 @@ static uint16_t cocobot_com_send_data(char ** fmt, va_list ap, uint16_t crc, uin
 
           uint8_t * p = (uint8_t *)&v;
           mcual_usart_send(_usart, *(p + 0));
-          cocobot_com_can_send(*(p + 0));
+          cocobot_com_can_send(_com_id, *(p + 0));
           crc = cocobot_com_crc16_update(crc, *(p + 0));
           mcual_usart_send(_usart, *(p + 1));
-          cocobot_com_can_send(*(p + 1));
+          cocobot_com_can_send(_com_id, *(p + 1));
           crc = cocobot_com_crc16_update(crc, *(p + 1));
           mcual_usart_send(_usart, *(p + 2));
-          cocobot_com_can_send(*(p + 2));
+          cocobot_com_can_send(_com_id, *(p + 2));
           crc = cocobot_com_crc16_update(crc, *(p + 2));
           mcual_usart_send(_usart, *(p + 3));
-          cocobot_com_can_send(*(p + 3));
+          cocobot_com_can_send(_com_id, *(p + 3));
           crc = cocobot_com_crc16_update(crc, *(p + 3));
         }
         break;
@@ -634,7 +645,7 @@ static uint16_t cocobot_com_send_data(char ** fmt, va_list ap, uint16_t crc, uin
 
           uint8_t * p = (uint8_t *)&v;
           mcual_usart_send(_usart, *(p + 0));
-          cocobot_com_can_send(*(p + 0));
+          cocobot_com_can_send(_com_id, *(p + 0));
           crc = cocobot_com_crc16_update(crc, *(p + 0));
         }
         break;
@@ -660,10 +671,10 @@ static uint16_t cocobot_com_send_data(char ** fmt, va_list ap, uint16_t crc, uin
 
           uint8_t * p = (uint8_t *)&v;
           mcual_usart_send(_usart, *(p + 0));
-          cocobot_com_can_send(*(p + 0));
+          cocobot_com_can_send(_com_id, *(p + 0));
           crc = cocobot_com_crc16_update(crc, *(p + 0));
           mcual_usart_send(_usart, *(p + 1));
-          cocobot_com_can_send(*(p + 1));
+          cocobot_com_can_send(_com_id, *(p + 1));
           crc = cocobot_com_crc16_update(crc, *(p + 1));
         }
         break;
@@ -691,16 +702,16 @@ static uint16_t cocobot_com_send_data(char ** fmt, va_list ap, uint16_t crc, uin
 
           uint8_t * p = (uint8_t *)&v;
           mcual_usart_send(_usart, *(p + 0));
-          cocobot_com_can_send(*(p + 0));
+          cocobot_com_can_send(_com_id, *(p + 0));
           crc = cocobot_com_crc16_update(crc, *(p + 0));
           mcual_usart_send(_usart, *(p + 1));
-          cocobot_com_can_send(*(p + 1));
+          cocobot_com_can_send(_com_id, *(p + 1));
           crc = cocobot_com_crc16_update(crc, *(p + 1));
           mcual_usart_send(_usart, *(p + 2));
-          cocobot_com_can_send(*(p + 2));
+          cocobot_com_can_send(_com_id, *(p + 2));
           crc = cocobot_com_crc16_update(crc, *(p + 2));
           mcual_usart_send(_usart, *(p + 3));
-          cocobot_com_can_send(*(p + 3));
+          cocobot_com_can_send(_com_id, *(p + 3));
           crc = cocobot_com_crc16_update(crc, *(p + 3));
         }
         break;
@@ -725,10 +736,10 @@ static uint16_t cocobot_com_send_data(char ** fmt, va_list ap, uint16_t crc, uin
           unsigned int len = strlen(v);
           uint8_t * p = (uint8_t *)&len;
           mcual_usart_send(_usart, *(p + 0));
-          cocobot_com_can_send(*(p + 0));
+          cocobot_com_can_send(_com_id, *(p + 0));
           crc = cocobot_com_crc16_update(crc, *(p + 0));
           mcual_usart_send(_usart, *(p + 1));
-          cocobot_com_can_send(*(p + 1));
+          cocobot_com_can_send(_com_id, *(p + 1));
           crc = cocobot_com_crc16_update(crc, *(p + 1));
 
 
@@ -737,12 +748,12 @@ static uint16_t cocobot_com_send_data(char ** fmt, va_list ap, uint16_t crc, uin
           for(i = 0; i < strlen(v); i += 1)
           {
             mcual_usart_send(_usart, *(p + i));
-            cocobot_com_can_send(*(p + i));
+            cocobot_com_can_send(_com_id, *(p + i));
             crc = cocobot_com_crc16_update(crc, *(p + i));
           }
 
           mcual_usart_send(_usart, 0);
-          cocobot_com_can_send(0);
+          cocobot_com_can_send(_com_id, 0);
           crc = cocobot_com_crc16_update(crc, 0);
         }
         break;
@@ -846,11 +857,11 @@ void cocobot_com_send(uint16_t pid, char * fmt, ...)
   va_end(ap);
 
   mcual_usart_send(_usart, crc & 0xFF);
-  cocobot_com_can_send(crc & 0xFF);
+  cocobot_com_can_send(_com_id, crc & 0xFF);
   mcual_usart_send(_usart, (crc >> 8) & 0xFF);
-  cocobot_com_can_send((crc >> 8) & 0xFF);
+  cocobot_com_can_send(_com_id,(crc >> 8) & 0xFF);
   
-  cocobot_com_can_flush();
+  cocobot_com_can_flush(_com_id);
 
   xSemaphoreGive(_mutex);
 }

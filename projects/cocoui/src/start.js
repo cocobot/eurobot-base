@@ -17,7 +17,7 @@ let mainWindow = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 800,
+    width: 1000,
     height: 600,
     webPreferences: {
       nodeIntegration: true,
@@ -54,7 +54,7 @@ ipcMain.on('window', (event, arg) => {
       ? 'http://localhost:3000'
       : `file://${path.join(__dirname, '../build/index.html')}`
     )
-      + '?page=' + arg.id
+      + '?page=' + arg.id + '&robot=' + arg.robot
   );
 });
 

@@ -179,7 +179,19 @@ void mcual_arch_sim_handle_uart_peripheral_write(mcual_usart_id_t usart_id, uint
       snprintf(buffer, sizeof(buffer), "%02x\r\n",
               byte
              );
-      write(_peripherals_socket[i].socket, buffer, strlen(buffer));
+      if(write(_peripherals_socket[i].socket, buffer, strlen(buffer)) < 0)
+      {
+        if(errno != EINTR)
+        {
+          perror("Cocoui crash ?");
+          pthread_mutex_lock(&_mutex_network);
+          FD_CLR(_peripherals_socket[i].socket, &_valid_fds);
+          _peripherals_socket[i].socket = -1;
+          _peripherals_socket[i].init = 0;
+          pthread_mutex_unlock(&_mutex_network);
+          close(_peripherals_socket[i].socket);
+        }
+      }
       return;
 
     }
@@ -218,7 +230,19 @@ void mcual_arch_sim_handle_can_peripheral_write(const mcual_can_frame_t * const 
               frame->data[7]
              );
 
-      write(_peripherals_socket[i].socket, buffer, strlen(buffer));
+      if(write(_peripherals_socket[i].socket, buffer, strlen(buffer)) < 0)
+      {
+        if(errno != EINTR)
+        {
+          perror("Cocoui crash ?");
+          pthread_mutex_lock(&_mutex_network);
+          FD_CLR(_peripherals_socket[i].socket, &_valid_fds);
+          _peripherals_socket[i].socket = -1;
+          _peripherals_socket[i].init = 0;
+          pthread_mutex_unlock(&_mutex_network);
+          close(_peripherals_socket[i].socket);
+        }
+      }
       return;
     }
   }
@@ -363,6 +387,8 @@ static void * mcual_arch_sim_handle_peripherals(void * args)
 void mcual_arch_sim_init_peripherals(void)
 {
   int i;
+
+  sigaction(SIGPIPE, &(struct sigaction){SIG_IGN}, NULL);
 
   for(i = 0; i < CLIENT_MAX; i += 1)
   {

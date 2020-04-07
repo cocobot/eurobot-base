@@ -10,34 +10,25 @@ const electron = window.require("electron");
 const ipcRenderer = electron.ipcRenderer;
 
 class TopMenuComponent extends React.Component {
-  _renderRobot(active, key) {
-    const name = active.getIn(['name']);
-
-    //robot
-    let robot = <Badge color="danger">Robot ?</Badge>;
-    const robotVal = this.props.robots.getIn([key, 'game_state', 'robot_id']);
+  _renderRobot(data, name) {
 
     let color = "light";
-    const colorVal = this.props.robots.getIn([key, 'game_state', 'color']);
+    const colorVal = data.getIn(['game_state', 'color']);
     if(colorVal === 0) {
-      color = "success";
+      color = "blue";
     }
     else if(colorVal === 1) {
       color = "warning";
     }
 
-    if(robotVal === 0) {
-      robot = <Badge color={color}>Robot principal</Badge>;
-    }
-    else if(robotVal === 1) {
-      robot = <Badge color={color}>Robot secondaire</Badge>;
-    }
+    let robot = <Badge color={color}>Robot {name}</Badge>;
+
 
     //battery
-    const batteryVal = (this.props.robots.getIn([key, 'game_state', 'battery']) / 1000.0).toFixed(2);
+    const batteryVal = (data.getIn(['game_state', 'battery']) / 1000.0).toFixed(2);
     let batteryColor = "light";
-    switch(robotVal) {
-      case 0:
+    switch(name) {
+      case "principal":
         if(batteryVal < 18) {
            batteryColor = "danger";
         }
@@ -49,7 +40,7 @@ class TopMenuComponent extends React.Component {
         }
         break;
 
-      case 1:
+      case "secondaire":
         if(batteryVal < 11.3) {
            batteryColor = "danger";
         }
@@ -68,7 +59,7 @@ class TopMenuComponent extends React.Component {
 
     //time
     let time = <Badge color="danger">? s</Badge>;
-    const timeVal = this.props.robots.getIn([key, 'game_state', 'time']);
+    const timeVal = data.getIn(['game_state', 'time']);
     let timeColor = "danger";
     if(timeVal < 50) {
       timeColor = "success";
@@ -80,33 +71,28 @@ class TopMenuComponent extends React.Component {
     
 
     return (
-      <NavItem key={key}>
+      <NavItem key={name}>
         <UncontrolledDropdown nav inNavbar>
           <DropdownToggle nav caret>
-            <small><b>{name}</b><br />
-              {robot}
+            <small><b>{robot}</b><br />
               {battery}
               {time}
-              <Badge color="info">{this.props.robots.getIn([key, 'game_state', 'score'])}</Badge>
+              <Badge color="info">{data.getIn(['game_state', 'score'])}</Badge>
             </small>
           </DropdownToggle>
           <DropdownMenu >
-            <DropdownItem>
-              Default view
-            </DropdownItem>
-            <DropdownItem divider />
-            <DropdownItem onClick={() => this._openUSIRWindow(key)}>
+            <DropdownItem onClick={() => this._openUSIRWindow(name)}>
               USIR
             </DropdownItem>
-            <DropdownItem onClick={() => this._openAsservWindow(key)}>
+            <DropdownItem onClick={() => this._openAsservWindow(name)}>
               Asserv
             </DropdownItem>
-            <DropdownItem onClick={() => this._openMecaWindow(key)}>
+            <DropdownItem onClick={() => this._openMecaWindow(name)}>
               Meca
             </DropdownItem>
             <DropdownItem divider />
-            <DropdownItem onClick={() => this._reset(key)}>
-              Reset
+            <DropdownItem onClick={() => this._openCanonWindow(name)}>
+              Canon
             </DropdownItem>
           </DropdownMenu>
         </UncontrolledDropdown>
@@ -114,12 +100,10 @@ class TopMenuComponent extends React.Component {
     );
   }
 
-  _reset(cid) {
-    ipcRenderer.send('pkt', {
-      pid: 0x8007,
-      fmt: "",
-      args: [],
-      client: cid, 
+  _openCanonWindow(robot) {
+    ipcRenderer.send('window', {
+      id: 'canon',
+      robot: robot, 
     });
   }
 
@@ -145,20 +129,12 @@ class TopMenuComponent extends React.Component {
   }
 
   render() {
-
-    //const conn_list = [];
-    //this.props.active.entrySeq().forEach(([key, x]) => {
-    //  console.log(key);
-    //  console.log(x);
-    //});
-    //console.log(conn_list);
-
     return (
       <div>
         <Navbar color="dark" dark expand="md">
         <NavbarBrand href="#">CocoUI</NavbarBrand>
           <Nav className="ml-auto" navbar>
-            {this.props.active.entrySeq().map(([key, x]) => {
+            {this.props.robots.entrySeq().map(([key, x]) => {
               return this._renderRobot(x, key);
             })}
           </Nav>
@@ -170,7 +146,6 @@ class TopMenuComponent extends React.Component {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    active: state.conns.get('active'),
     robots: state.robots,
   }
 }

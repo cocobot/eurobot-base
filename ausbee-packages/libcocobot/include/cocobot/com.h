@@ -15,6 +15,11 @@
 #define COCOBOT_COM_MECA_ACTION_PID   (0x1001)
 
 #define COCOBOT_COM_SET_MOTOR_PID     (0x2000)
+#define COCOBOT_COM_SET_MOTOR_CFG_PID (0x2001)
+#define COCOBOT_COM_REQ_MOTOR_CFG_PID (0x2002)
+#define COCOBOT_COM_REQ_MOTOR_DBG_PID (0x2003)
+#define COCOBOT_COM_MOTOR_DBG_PID     (0x2004)
+#define COCOBOT_COM_SET_MOTOR_MST_PID (0x2005)
 
 #define COCOBOT_COM_POSITION_DEBUG_PID    (0x8000)
 #define COCOBOT_COM_ASSERV_DIST_DEBUG_PID (0x8001)
@@ -72,6 +77,8 @@ void cocobot_com_init(mcual_usart_id_t usart_id, unsigned int priority_monitor, 
 void cocobot_com_send(uint16_t pid, char * fmt, ...);
 
 void cocobot_com_printf(char * fmt, ...);
+
+uint8_t cocobot_com_get_src(void);
 
 uint32_t cocobot_com_read_B(uint8_t *data , uint32_t len, uint32_t offset, uint8_t * value);
 uint32_t cocobot_com_read_D(uint8_t *data , uint32_t len, uint32_t offset, int32_t * value);
