@@ -77,6 +77,12 @@ void mcual_loader_flash_pgm(uint32_t offset, uint8_t * data, uint32_t size)
   }
 
   FLASH->ACR &= ~FLASH_ACR_DCEN;
+  
+  //unlock flash
+  __disable_irq();
+  FLASH->CR |= FLASH_CR_LOCK;
+  FLASH->KEYR = 0x45670123;
+  FLASH->KEYR = 0xCDEF89AB;
 
   //prepare flash
 #ifdef FLASH_CR_PSIZE_1
