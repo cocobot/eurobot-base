@@ -21,7 +21,6 @@ DECODERS[0x0001] = "{error}B(id)"
 DECODERS[0x1001] = "{set_meca_action}B(order)"
 
 DECODERS[0x2000] = "{set_motor}B(enable)F(left)F(right)"
-DECODERS[0x2000] = "{set_motor}B(enable)F(left)F(right)"
 DECODERS[0x2001] = "{set_cfg_motor}B(board_id)F(imax)F(max_speed_rpm)"
 DECODERS[0x2004] = "{motor_dbg}B(board_id)B(master_id)B(enable)F(setpoint_rpm)D(pwm)"
 

@@ -1,5 +1,6 @@
 //CSS
 import 'bootstrap/dist/css/bootstrap.css';
+import './app/app.css'
 
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -13,12 +14,12 @@ import Canon from './app/components/Canon';
 //parse URL to get page information
 const url_string = window.location.href;
 const url = new URL(url_string);
-//const page = url.searchParams.get("page");
-//const robot = url.searchParams.get("robot");
+const page = url.searchParams.get("page");
+const robot = url.searchParams.get("robot");
 
 //debug
-const page="canon";
-const robot="secondaire";
+//const page="canon";
+//const robot="secondaire";
 
 let App = function() {
   //render the layout

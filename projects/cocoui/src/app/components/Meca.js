@@ -13,15 +13,11 @@ const ipcRenderer = electron.ipcRenderer;
 
 class MecaAction extends React.Component {
   _action() {
-    this.props.active.map((x, key) => {
-        ipcRenderer.send('pkt', {
-          pid: 0x1001,
-          fmt: "B",
-          args: [parseInt(this.props.id)],
-          client: key, 
-        });
-      return {};
-      });
+    ipcRenderer.send('pkt', {
+      pid: 0x1001,
+      fmt: "B",
+      args: [parseInt(this.props.id)],
+    });
   }
 
   render() {
@@ -55,15 +51,10 @@ class ServoParameter extends React.Component {
 
   handleKeyPress(event) {
     if (event.key === 'Enter') {
-      this.props.active.map((x, key) => {
-        ipcRenderer.send('pkt', {
-          pid: 0x1000,
-          fmt: "BD",
-          args: [this.props.id, parseInt(this.state.value)],
-          client: key, 
-        });
-
-        return {};
+      ipcRenderer.send('pkt', {
+        pid: 0x1000,
+        fmt: "BD",
+        args: [this.props.id, parseInt(this.state.value)],
       });
       this.setState({value: ''});
     }

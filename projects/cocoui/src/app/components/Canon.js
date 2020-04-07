@@ -1,4 +1,5 @@
 import React from 'react';
+import State from '../State.js';
 import {ReloadIcon} from './Icons.js';
 import { 
   Container,
@@ -10,8 +11,13 @@ import {
 } from 'reactstrap';
 import { connect } from 'react-redux';
 import { Map } from 'immutable';
+import $ from 'jquery';
 const electron = window.require("electron");
 const ipcRenderer = electron.ipcRenderer;
+window.jQuery = $;
+window.require('flot');
+
+const PLOT_MAX_TIME_ms = 10000;
 
 class CanonConfigComponent extends React.Component {
   constructor(props) {
@@ -188,7 +194,6 @@ class CanonSetpointComponent extends React.Component {
   }
 
   _setOveride(value) {
-    console.log(value);
     if(this.props.robot === "secondaire") {
       let master = 0x02;
     
@@ -226,11 +231,11 @@ class CanonSetpointComponent extends React.Component {
     let override_right = false;
     const left_board_id = this.props.left.getIn(['master_id'], 2) & 0xF7;
     const right_board_id = this.props.right.getIn(['master_id'], 2) & 0xF7;
-    if(left_board_id != 2)
+    if(left_board_id !== 2)
     {
       override_left = true;
     }
-    if(right_board_id != 2)
+    if(right_board_id !== 2)
     {
       override_right = true;
     }
@@ -257,7 +262,7 @@ class CanonSetpointComponent extends React.Component {
             <Input addon type="checkbox" checked={override} onChange={() => this._setOveride(!override)}/>
           </InputGroupText>
         </InputGroupAddon>
-        <Input value="Override brain" />
+        <Input value="Override brain" onChange={() => {}}/>
       </InputGroup>
 
         <InputGroup>
@@ -315,9 +320,11 @@ const CanonSetpoint = connect(
 )(CanonSetpointComponent);
 
 
-class CanonComponent extends React.Component {
+class Canon extends React.Component {
   constructor(props) {
     super(props);
+    this._plot = React.createRef();
+
     this.UPDATE_PERIOD_MS = 500;
     this._requestDebug();
   }
@@ -341,6 +348,7 @@ class CanonComponent extends React.Component {
   }
 
   render() {
+    console.log("REDRAW");
     return (
       <div>
         <div>
@@ -361,22 +369,148 @@ class CanonComponent extends React.Component {
               <CanonConfig side="right" robot={this.props.robot}/>
             </Col>
           </Row>
+          <Row>
+            <Col md="12">
+              <Card>
+                <CardHeader>Graph</CardHeader>
+                <CardBody>
+                  <div ref={this._plot} style={{height: "300px", width: "850px"}}/>
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
         </Container>
       </div>
     );
   }
-}
 
-const mapStateToProps = (state, ownProps) => {
-  return {
-    data: state.robots.getIn([ownProps.robot]),
+  addPlotData(plot) { 
+    const now = Date.now();
+    const robots = State.getStore().getState().robots;
+
+    let left_board_name = "LCanon";
+    let right_board_name = "RCanon";
+
+    if(this.props.robot == "secondaire") {
+      left_board_name = 'S' + left_board_name;
+      right_board_name = 'S' + right_board_name;
+    }
+    else {
+      left_board_name = 'P' + left_board_name;
+      right_board_name = 'P' + right_board_name;
+    }
+
+    this._plotData[0].data.push([now, robots.getIn([this.props.robot, left_board_name, "motor_dbg","setpoint_rpm"], 0)]);
+    this._plotData[1].data.push([now, robots.getIn([this.props.robot, left_board_name, "motor_dbg","pwm"], 0)]);
+    this._plotData[2].data.push([now, robots.getIn([this.props.robot, right_board_name, "motor_dbg","setpoint_rpm"], 0)]);
+    this._plotData[3].data.push([now, robots.getIn([this.props.robot, right_board_name, "motor_dbg","pwm"], 0)]);
+
+    //remove old data
+    while(this._plotData[0].data.length > 0) {
+      const time = this._plotData[0].data[0][0];
+      if(time < now - PLOT_MAX_TIME_ms) {
+        this._plotData[0].data.shift();
+        this._plotData[1].data.shift();
+        this._plotData[2].data.shift();
+        this._plotData[3].data.shift();
+      }
+      else {
+         break;
+      }
+    }
+
+    //find min max
+    let ymin = -1;
+    let ymax = 1;
+    for(let i = 0; i < 2; i += 1) {
+      for(let j = 0; j < this._plotData[i * 2].data.length; j += 1) {
+        const data = this._plotData[i * 2].data[j][1];
+        if(data < ymin) {
+          ymin = data - 1;
+        }
+        if(data > ymax) {
+           ymax = data + 1;
+        }
+      }
+    }
+    plot.getAxes().yaxis.options.min = ymin;
+    plot.getAxes().yaxis.options.max = ymax;
+    
+    //find min max (2nd axis)
+    ymin = -1;
+    ymax = 1;
+    for(let i = 0; i < 2; i += 1) {
+      for(let j = 0; j < this._plotData[i * 2 + 1].data.length; j += 1) {
+        const data = this._plotData[i * 2 + 1].data[j][1];
+        if(data < ymin) {
+          ymin = data - 1;
+        }
+        if(data > ymax) {
+           ymax = data + 1;
+        }
+      }
+    }
+    plot.getAxes().y2axis.options.min = ymin;
+    plot.getAxes().y2axis.options.max = ymax;
+
+
+    plot.getAxes().xaxis.options.min = now - PLOT_MAX_TIME_ms;
+    plot.getAxes().xaxis.options.max = now;
+
+    plot.setData(this._plotData);
+    plot.setupGrid();
+    plot.draw();
+  }
+
+  componentDidMount() {
+    const now = Date.now();
+
+    const opt = {
+      xaxis: {
+					mode: "time",
+					timeBase: "milliseconds",
+          min: now - PLOT_MAX_TIME_ms,
+          max: now,
+      },
+      yaxes: [ 
+        { 
+          axisLabel: 'rpm',
+        }, 
+        { 
+          position: "right",
+          axisLabel: 'pwm',
+        } 
+      ],
+      legend: {
+        show: true,
+        position: "nw",
+      },
+    }
+
+    this._plotData = [];
+
+    this._plotData.push({
+      label: "left setpoint", 
+      data: [],
+    });
+    this._plotData.push({
+      label: "left pwm", 
+      data: [],
+      yaxis: 2,
+    });
+    this._plotData.push({
+      label: "right setpoint", 
+      data: [],
+    });
+    this._plotData.push({
+      label: "right pwm", 
+      data: [],
+      yaxis: 2,
+    });
+
+		let plot = $.plot(this._plot.current, this._plotData, opt);
+    setInterval(() => this.addPlotData(plot), 100);
   }
 }
-
-const Canon = connect(
-  mapStateToProps,
-  null,
-)(CanonComponent);
-
 
 export default Canon;
