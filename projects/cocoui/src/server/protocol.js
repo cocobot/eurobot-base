@@ -254,6 +254,11 @@ class Client {
             pkt.decoded._robot = "secondaire";
             break;
 
+          case 3:
+            pkt.decoded._src_name = "SCom";
+            pkt.decoded._robot = "secondaire";
+            break;
+
           case 4:
             pkt.decoded._src_name = "SLCanon";
             pkt.decoded._robot = "secondaire";
