@@ -3,11 +3,9 @@ import { connect } from 'react-redux';
 import { Map } from 'immutable';
 import { 
   Container,
-  Row, Col,
-  Card, CardHeader, CardBody,
+  Row,
   Navbar, NavbarBrand,
-  InputGroup, InputGroupAddon, Input, InputGroupText,
-  Button, Table
+  Table
 } from 'reactstrap';
 
 
@@ -23,7 +21,7 @@ class BoardsComponent extends React.Component {
       const bdata = data.entrySeq().map(([key, data]) => {
 
         const bdata = data.entrySeq().map(([key, data]) => {
-          if(key.startsWith("_")) { return; }
+          if(key.startsWith("_")) { return undefined; }
           return <li key={key}>{key} = {data}</li>
         });
 

@@ -11,11 +11,15 @@ const ipcRenderer = electron.ipcRenderer;
 
 class TopMenuComponent extends React.Component {
   _renderRobot(data, name) {
+    let brain = "PBrain";
+    if(name === "secondaire") {
+       brain = "SBrain";
+    }
 
     let color = "light";
-    const colorVal = data.getIn(['game_state', 'color']);
+    const colorVal = data.getIn([brain, 'game_state', 'color']);
     if(colorVal === 0) {
-      color = "blue";
+      color = "primary";
     }
     else if(colorVal === 1) {
       color = "warning";
@@ -25,7 +29,7 @@ class TopMenuComponent extends React.Component {
 
 
     //battery
-    const batteryVal = (data.getIn(['game_state', 'battery']) / 1000.0).toFixed(2);
+    const batteryVal = (data.getIn([brain, 'game_state', 'battery']) / 1000.0).toFixed(2);
     let batteryColor = "light";
     switch(name) {
       case "principal":
@@ -59,7 +63,7 @@ class TopMenuComponent extends React.Component {
 
     //time
     let time = <Badge color="danger">? s</Badge>;
-    const timeVal = data.getIn(['game_state', 'time']);
+    const timeVal = data.getIn([brain, 'game_state', 'time']);
     let timeColor = "danger";
     if(timeVal < 50) {
       timeColor = "success";
@@ -77,7 +81,7 @@ class TopMenuComponent extends React.Component {
             <small><b>{robot}</b><br />
               {battery}
               {time}
-              <Badge color="info">{data.getIn(['game_state', 'score'])}</Badge>
+              <Badge color="info">{data.getIn([brain, 'game_state', 'score'])}</Badge>
             </small>
           </DropdownToggle>
           <DropdownMenu >

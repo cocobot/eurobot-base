@@ -134,9 +134,9 @@ void cocobot_com_async_thread(void *arg)
 //#ifdef CONFIG_LIBCOCOBOT_PATHFINDER
 //    cocobot_pathfinder_handle_async_com();
 //#endif
-//#ifdef CONFIG_LIBCOCOBOT_GAME_STATE
-//    cocobot_game_state_handle_async_com();
-//#endif
+#ifdef CONFIG_LIBCOCOBOT_GAME_STATE
+    cocobot_game_state_handle_async_com();
+#endif
 //#ifdef CONFIG_LIBCOCOBOT_ACTION_SCHEDULER
 //    cocobot_action_scheduler_handle_async_com();
 //#endif

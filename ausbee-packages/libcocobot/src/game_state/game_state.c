@@ -156,7 +156,6 @@ void cocobot_game_state_handle_async_com(void)
       robot_id = 0;
     }
 
-
     _last_update_time = now;
     cocobot_com_send(COCOBOT_COM_GAME_STATE_DEBUG_PID,
                      "BBDDD",

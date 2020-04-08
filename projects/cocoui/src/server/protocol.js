@@ -10,7 +10,6 @@ const TCPCLIENT_DECODE_UART = false;  //use simulated uart output for com
 const TCPCLIENT_DECODE_CAN = true;    //use simulated can output for com
 const TCPCLIENT_FORWARD_CAN = true;   //forward can packet to other clients
 
-
 const COCOUI_ID = 0x11;
 
 let CLIENT_ID = 0;
@@ -544,6 +543,7 @@ class TCPClient extends Client {
           case "U1":
             //UART packet found
             if(TCPCLIENT_DECODE_UART) {
+              console.log("local: " + this._socket.remotePort);
               const buf = Buffer.alloc(1);
               buf.writeUInt8(parseInt(pkt, 16));
               this._onData(buf);
