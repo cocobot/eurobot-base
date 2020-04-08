@@ -94,10 +94,20 @@ class TopMenuComponent extends React.Component {
             <DropdownItem onClick={() => this._openCanonWindow(name)}>
               Canon
             </DropdownItem>
+            <DropdownItem onClick={() => this._openBoardsWindow(name)}>
+              Boards
+            </DropdownItem>
           </DropdownMenu>
         </UncontrolledDropdown>
       </NavItem>
     );
+  }
+
+  _openBoardsWindow(robot) {
+    ipcRenderer.send('window', {
+      id: 'boards',
+      robot: robot, 
+    });
   }
 
   _openCanonWindow(robot) {

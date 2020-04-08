@@ -5,10 +5,10 @@
 #include <stdio.h>
 #include "motor_control.h"
 
-#define DEBUG_OFF 0xFFFFFFFF
+#define DEBUG_OFF 0x0FFFFFFF
 
 static uint8_t _master_board_id;
-static int volatile _debug_counter_ms;
+static uint32_t volatile _debug_counter_ms;
 
 /**
  * @brief Handle packet from Cocoui or other boards if libcocobot didn't want it
@@ -151,6 +151,7 @@ void main_loop(void * arg)
       if(debug_cnt > 50) {
         debug_cnt = 0;
 
+        fprintf(stderr, "\ntest dbg\n");
         cocobot_com_send(COCOBOT_COM_MOTOR_DBG_PID, "BBBFD", 
                          COCOBOT_COM_ID, 
                          _master_board_id,

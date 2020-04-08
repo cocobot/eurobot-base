@@ -391,7 +391,7 @@ class Canon extends React.Component {
     let left_board_name = "LCanon";
     let right_board_name = "RCanon";
 
-    if(this.props.robot == "secondaire") {
+    if(this.props.robot === "secondaire") {
       left_board_name = 'S' + left_board_name;
       right_board_name = 'S' + right_board_name;
     }

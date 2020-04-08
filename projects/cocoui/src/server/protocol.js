@@ -18,6 +18,7 @@ const MAGIC_START = 0xc0;
 const DECODERS = {};
 let AST = null;
 DECODERS[0x0001] = "{error}B(id)"
+DECODERS[0x1000] = "{set_servo_pid}B(id)D(pwm)"
 DECODERS[0x1001] = "{set_meca_action}B(order)"
 
 DECODERS[0x2000] = "{set_motor}B(enable)F(left)F(right)"
@@ -267,6 +268,8 @@ class Client {
             pkt.decoded._src_name = "?? (" + pkt.decoded._src + ")";
             pkt.decoded._robot = "???";
             console.log("Unknown board: " + pkt.decoded._src);
+            console.log(pkt);
+            console.trace();
             break;
         }
 
@@ -292,6 +295,10 @@ class Client {
             client.bootloaderResponse(pkt);
           });
         }
+        else if(pkt.decoded._name.startsWith("ping")) {
+          pkt.decoded.timestamp = Date.now();
+        }
+
         
         //send to interface
         this._emit(pkt.decoded);
@@ -441,6 +448,13 @@ class TCPClient extends Client {
     this._bootloaderState = {};
   }
 
+  formatAndSend(pkt) {
+    if(this.isTCPUart() && !TCPCLIENT_DECODE_UART) {
+      return;
+    }
+    super.formatAndSend(pkt);
+  }
+
   close() {
     this._socket.destroy();
   }
@@ -545,6 +559,18 @@ class TCPClient extends Client {
         }
       }
     }
+
+  isTCPUart() {
+    if(this.getPid() == "U1") {
+      return true;
+    }
+    else if(this.getPid() == "U3") {
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
 
   /**
    * @brief Send flash data to bootloader firmware

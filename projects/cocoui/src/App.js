@@ -10,6 +10,7 @@ import State from './app/State.js';
 import Cocoui from './app/components/Cocoui';
 import Meca from './app/components/Meca';
 import Canon from './app/components/Canon';
+import Boards from './app/components/Boards';
 
 //parse URL to get page information
 const url_string = window.location.href;
@@ -18,7 +19,7 @@ const page = url.searchParams.get("page");
 const robot = url.searchParams.get("robot");
 
 //debug
-//const page="canon";
+//const page="boards";
 //const robot="secondaire";
 
 let App = function() {
@@ -31,6 +32,12 @@ let App = function() {
     case 'canon':
       ReactDOM.render(<Provider store={State.getStore()}><Canon robot={robot}/></Provider>, document.getElementById('root'));
       break;
+
+    case 'boards':
+      ReactDOM.render(<Provider store={State.getStore()}><Boards robot={robot}/></Provider>, document.getElementById('root'));
+      break;
+
+
 
     default:
       ReactDOM.render(<Provider store={State.getStore()}><Cocoui /></Provider>, document.getElementById('root'));
