@@ -215,6 +215,9 @@ int32_t platform_adc_get_mV(uint32_t adc)
   {
     case PLATFORM_ADC_VBAT:
       raw *= 11;
+#if AUSBEE_SIM
+      return 21420;
+#endif
       break;
   }
 

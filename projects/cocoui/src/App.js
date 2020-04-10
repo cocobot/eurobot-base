@@ -11,6 +11,7 @@ import Cocoui from './app/components/Cocoui';
 import Meca from './app/components/Meca';
 import Canon from './app/components/Canon';
 import Boards from './app/components/Boards';
+import LowBat from './app/components/LowBat';
 
 //parse URL to get page information
 const url_string = window.location.href;
@@ -26,21 +27,19 @@ let App = function() {
   //render the layout
   switch(page) {
     case 'Meca':
-      ReactDOM.render(<Provider store={State.getStore()}><Meca /></Provider>, document.getElementById('root'));
+      ReactDOM.render(<Provider store={State.getStore()}><Meca /><LowBat /></Provider>, document.getElementById('root'));
       break;
 
     case 'canon':
-      ReactDOM.render(<Provider store={State.getStore()}><Canon robot={robot}/></Provider>, document.getElementById('root'));
+      ReactDOM.render(<Provider store={State.getStore()}><Canon robot={robot}/><LowBat /></Provider>, document.getElementById('root'));
       break;
 
     case 'boards':
-      ReactDOM.render(<Provider store={State.getStore()}><Boards robot={robot}/></Provider>, document.getElementById('root'));
+      ReactDOM.render(<Provider store={State.getStore()}><Boards robot={robot}/><LowBat /></Provider>, document.getElementById('root'));
       break;
 
-
-
     default:
-      ReactDOM.render(<Provider store={State.getStore()}><Cocoui /></Provider>, document.getElementById('root'));
+      ReactDOM.render(<Provider store={State.getStore()}><Cocoui /><LowBat /></Provider>, document.getElementById('root'));
       break;
   }
 }
