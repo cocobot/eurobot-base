@@ -1025,7 +1025,7 @@ class Protocol {
         }
         if(!found) {
           const serial = new SerialPort(name, {
-            baudRate: 115200,
+            baudRate: 1000000,
             autoOpen: false
           });
           serial.open((err) => {
