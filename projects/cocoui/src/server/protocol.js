@@ -606,6 +606,7 @@ class TCPClient extends Client {
       }
     }
     const rerun = () => {
+      console.log("BOOTLOADER TIMEOUT: RERUN offset " + offset.toString(16));
       this._bootloaderSendFlashData(offset);
     }
 
@@ -737,6 +738,7 @@ class TCPClient extends Client {
         return;
       }
 
+      console.log("BOOTLOADER PACKET " + pkt.decoded._name + " from " + pkt.decoded._src_name);
       if(pkt.decoded._name == "bootloader") {
         this.send("BOOTLOADER " + pkt.decoded._src + " OK\n");
       }
