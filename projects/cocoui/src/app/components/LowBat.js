@@ -17,7 +17,7 @@ class LowBat extends React.Component {
       forceHide: false,
     }
 
-    this._verifyNow();
+    setTimeout(() => {this._verifyNow()}, 5);
   }
 
   _verifyNow() {

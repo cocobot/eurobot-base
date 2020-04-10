@@ -27,8 +27,8 @@ DECODERS[0x2004] = "{motor_dbg}B(board_id)B(master_id)B(enable)F(setpoint_rpm)D(
 DECODERS[0x3000] = "{gs_req_cfg}"
 
 DECODERS[0x8000] = "{position}F(x)F(y)F(angle)"
-DECODERS[0x8001] = "{asserv_dist}F(target)F(distance)F(ramp_out)F(speed_target)F(speed)F(pid_out)F(pid_P)F(pid_I)F(pid_d)"
-DECODERS[0x8002] = "{asserv_angle}F(target)F(angle)F(ramp_out)F(speed_target)F(speed)F(pid_out)F(pid_P)F(pid_I)F(pid_d)"
+DECODERS[0x8001] = "{asserv_dist}F(target)F(distance)F(ramp_out)F(speed_target)F(speed)F(pid_out)F(pid_P)F(pid_I)F(pid_D)"
+DECODERS[0x8002] = "{asserv_angle}F(target)F(angle)F(ramp_out)F(speed_target)F(speed)F(pid_out)F(pid_P)F(pid_I)F(pid_D)"
 DECODERS[0x8003] = "{trajectory_orders}[B(type)F(time)F(a1)F(a2)F(a3)F(a4)F(start_x)F(start_y)F(start_angle)F(end_x)F(end_y)F(end_angle)F(estimated_distance_before_stop)](orders)"
 DECODERS[0x8004] = "{pathfinder}H(length)H(width)[H(type)](nodes)"
 DECODERS[0x8005] = "{printf}S(msg)"

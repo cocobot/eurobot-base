@@ -262,6 +262,7 @@ void cocobot_asserv_send_params(void)
 
 }
 
+#include <stdio.h>
 void cocobot_asserv_handle_sync_com(uint16_t pid, uint8_t * data, uint32_t len)
 {
   (void)data;
@@ -270,72 +271,77 @@ void cocobot_asserv_handle_sync_com(uint16_t pid, uint8_t * data, uint32_t len)
   {
     case COCOBOT_COM_SET_ASSERV_PARAMS_PID:
       {
+        uint8_t board_id;
         uint8_t id;
         float value;
         uint32_t offset = 0;
-        offset += cocobot_com_read_B(data, len, offset, &id);
-        offset += cocobot_com_read_F(data, len, offset, &value);
+        offset = cocobot_com_read_B(data, len, offset, &board_id);
+        offset = cocobot_com_read_B(data, len, offset, &id);
+        offset = cocobot_com_read_F(data, len, offset, &value);
 
-        switch(id)
+        if(board_id == COCOBOT_COM_ID)
         {
-          case 0:
-            cocobot_asserv_ramp_set_max_speed(&_ramp_dist, value);
-            break;
+          switch(id)
+          {
+            case 0:
+              cocobot_asserv_ramp_set_max_speed(&_ramp_dist, value);
+              break;
 
-          case 1:
-            cocobot_asserv_ramp_set_max_accel(&_ramp_dist, value);
-            break;
+            case 1:
+              cocobot_asserv_ramp_set_max_accel(&_ramp_dist, value);
+              break;
 
-          case 2:
-            cocobot_asserv_pid_set_kp(&_pid_dist, value);
-            break;
+            case 2:
+              cocobot_asserv_pid_set_kp(&_pid_dist, value);
+              break;
 
-          case 3:
-            cocobot_asserv_pid_set_kd(&_pid_dist, value);
-            break;
+            case 3:
+              cocobot_asserv_pid_set_kd(&_pid_dist, value);
+              break;
 
-          case 4:
-            cocobot_asserv_pid_set_ki(&_pid_dist, value);
-            break;
+            case 4:
+              cocobot_asserv_pid_set_ki(&_pid_dist, value);
+              break;
 
-          case 5:
-            cocobot_asserv_pid_set_max_integral(&_pid_dist, value);
-            break;
+            case 5:
+              cocobot_asserv_pid_set_max_integral(&_pid_dist, value);
+              break;
 
-          case 6:
-            cocobot_asserv_pid_set_max_error_for_integration(&_pid_dist, value);
-            break;
+            case 6:
+              cocobot_asserv_pid_set_max_error_for_integration(&_pid_dist, value);
+              break;
 
-          case 7:
-            cocobot_asserv_ramp_set_max_speed(&_ramp_angu, value);
-            break;
+            case 7:
+              cocobot_asserv_ramp_set_max_speed(&_ramp_angu, value);
+              break;
 
-          case 8:
-            cocobot_asserv_ramp_set_max_accel(&_ramp_angu, value);
-            break;
+            case 8:
+              cocobot_asserv_ramp_set_max_accel(&_ramp_angu, value);
+              break;
 
-          case 9:
-            cocobot_asserv_pid_set_kp(&_pid_angu, value);
-            break;
+            case 9:
+              cocobot_asserv_pid_set_kp(&_pid_angu, value);
+              break;
 
-          case 10:
-            cocobot_asserv_pid_set_kd(&_pid_angu, value);
-            break;
+            case 10:
+              cocobot_asserv_pid_set_kd(&_pid_angu, value);
+              break;
 
-          case 11:
-            cocobot_asserv_pid_set_ki(&_pid_angu, value);
-            break;
+            case 11:
+              cocobot_asserv_pid_set_ki(&_pid_angu, value);
+              break;
 
-          case 12:
-            cocobot_asserv_pid_set_max_integral(&_pid_angu, value);
-            break;
+            case 12:
+              cocobot_asserv_pid_set_max_integral(&_pid_angu, value);
+              break;
 
-          case 13:
-            cocobot_asserv_pid_set_max_error_for_integration(&_pid_angu, value);
-            break;
+            case 13:
+              cocobot_asserv_pid_set_max_error_for_integration(&_pid_angu, value);
+              break;
+          }
+
+          cocobot_asserv_send_params();
         }
-
-        cocobot_asserv_send_params();
       }
       break;
 

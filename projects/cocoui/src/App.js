@@ -10,6 +10,7 @@ import State from './app/State.js';
 import Cocoui from './app/components/Cocoui';
 import Meca from './app/components/Meca';
 import Canon from './app/components/Canon';
+import Asserv from './app/components/Asserv';
 import Boards from './app/components/Boards';
 import LowBat from './app/components/LowBat';
 
@@ -22,6 +23,8 @@ const robot = url.searchParams.get("robot");
 //debug
 //const page="boards";
 //const robot="secondaire";
+//
+
 
 let App = function() {
   //render the layout
@@ -36,6 +39,10 @@ let App = function() {
 
     case 'boards':
       ReactDOM.render(<Provider store={State.getStore()}><Boards robot={robot}/><LowBat /></Provider>, document.getElementById('root'));
+      break;
+
+    case 'asserv':
+      ReactDOM.render(<Provider store={State.getStore()}><Asserv robot={robot}/><LowBat /></Provider>, document.getElementById('root'));
       break;
 
     default:

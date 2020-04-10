@@ -348,7 +348,6 @@ class Canon extends React.Component {
   }
 
   render() {
-    console.log("REDRAW");
     return (
       <div>
         <div>

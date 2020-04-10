@@ -128,10 +128,10 @@ class TopMenuComponent extends React.Component {
     });
   }
 
-  _openAsservWindow(cid) {
+  _openAsservWindow(robot) {
     ipcRenderer.send('window', {
-      id: 'Asserv',
-      client: cid, 
+      id: 'asserv',
+      robot: robot,
     });
   }
 
