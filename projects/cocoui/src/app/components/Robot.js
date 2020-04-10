@@ -109,7 +109,7 @@ class RobotComponent extends React.Component {
     const position = "translate(" + this.props.x * 1000 + "," + this.props.y * 1000 + ") rotate(" + this.props.a * 180.0 / Math.PI + ")";
     return (
       <g>
-        <g transform="translate(1500,2000) scale(1, -1)">
+        <g transform="translate(1500,1000) scale(1, -1)">
           <g opacity="0.8" transform={position}>
             {shape}
           </g>

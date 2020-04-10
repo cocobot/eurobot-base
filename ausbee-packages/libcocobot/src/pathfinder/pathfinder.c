@@ -48,7 +48,7 @@ uint16_t cocobot_pathfinder_execute(int16_t starting_point_x, int16_t starting_p
         //Set start and target point even if unreachable
         g_table[(starting_point_x + (TABLE_LENGTH / 2)) / GRID_SIZE][((TABLE_WIDTH / 2) - starting_point_y)/GRID_SIZE].nodeType |= START_POINT; 
         target_node->nodeType |= TARGET_POINT;
-        //cocobot_com_printf("PATHFINDER: Target not reachable");
+        cocobot_com_printf("PATHFINDER: Target not reachable");
         g_table_updated = 1;
         return DESTINATION_NOT_AVAILABLE;
     }
@@ -95,7 +95,7 @@ uint16_t cocobot_pathfinder_execute(int16_t starting_point_x, int16_t starting_p
         }
         else
         {
-            //cocobot_com_printf("PATHFINDER: No solution");
+            cocobot_com_printf("PATHFINDER: No solution");
             g_table_updated = 1;
             return NO_ROUTE_TO_TARGET;
         }

@@ -40,9 +40,9 @@ class State {
     this._store.dispatch(saveRobotPacket(pkt));
     switch(pkt.data._name) {
       case "printf":
-        new Notification('CocoUI', {
-          body: pkt.data.msg,
-        });
+        //new Notification('CocoUI', {
+        //  body: pkt.data.msg,
+        //});
         break;
 
       default:

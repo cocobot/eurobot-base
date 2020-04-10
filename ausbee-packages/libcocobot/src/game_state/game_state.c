@@ -22,7 +22,6 @@ static uint8_t _starter_removed;
 static TickType_t _start_time = 0;
 static int _score = 0;
 static volatile uint8_t _config_ready = 0;
-static uint8_t _config = 0;
 static TickType_t _last_update_time = 0; 
 
 void cocobot_game_state_add_points_to_score(int _toAdd)
@@ -101,14 +100,6 @@ void cocobot_game_state_wait_for_configuration(void)
 
 cocobot_game_state_color_t cocobot_game_state_get_color(void)
 {
-  if(_config & (1 << 0))
-  {
-    _color = COCOBOT_GAME_STATE_COLOR_POS;
-  }
-  else
-  {
-    _color = COCOBOT_GAME_STATE_COLOR_NEG;
-  }
   return _color;
 }
 

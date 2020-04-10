@@ -56,7 +56,7 @@ class Physics {
   _initializeRobot(name) {
     //Remove old robot from world if needed
     if(this._robots[name] !== undefined) {
-      if(this._robots[name].body !== undefined) {
+      if(this._robots[name].body !== null) {
         World.remove(this._engine.world, this._robots[name].body);
       }
     }
@@ -78,7 +78,7 @@ class Physics {
         break;
 
       case "secondaire":
-        position = {x: 1.190, y: 1.2, a: Math.PI};
+        position = {x: 1.190, y: 0.2, a: Math.PI};
         shape = [{x:0.090, y:-0.150}, {x:0.090, y:0.150}, {x:-0.090, y:0.150}, {x:-0.090, y:-0.150}];
         motorscale = {left: 1, right: -1};
         break;

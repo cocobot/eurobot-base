@@ -13,7 +13,7 @@
 #define COCOBOT_COM_HEADER_START 0xC0
 #define INVALID_PTR ((void *)0xFFFFFFFF)
 
-#define COCOBOT_COM_CAN_MAX_RECV_QUEUE 2
+#define COCOBOT_COM_CAN_MAX_RECV_QUEUE 5
 
 #define COM_ERROR_NO_QUEUE_AVAILABLE 0
 
@@ -47,18 +47,17 @@ static char _printf_buffer[64];
 static cocobot_com_handler_t _user_handler;
 static uint8_t _can_buffer[8];
 static uint8_t _can_counter;
-static uint8_t _can_packet_counter;
+static uint16_t _can_packet_counter;
 static uint8_t _com_id;
 static cocobot_com_can_recv_t recv_queues[COCOBOT_COM_CAN_MAX_RECV_QUEUE];
 static uint8_t _last_src;
-
 
 static void cocobot_com_can_flush(uint8_t id)
 {
   if(_can_counter > 0)
   {
     mcual_can_frame_t frame;
-    frame.id = (_can_packet_counter & 0x7F) | ((id & 0x1F) << 7);
+    frame.id = (_can_packet_counter & 0xFFFF) | ((id & 0x1F) << 16);
     frame.data_len = _can_counter;
     memcpy(frame.data, _can_buffer, sizeof(frame.data));
     mcual_can_transmit(&frame);
@@ -131,9 +130,9 @@ void cocobot_com_async_thread(void *arg)
 //#ifdef CONFIG_LIBCOCOBOT_TRAJECTORY
 //    cocobot_trajectory_handle_async_com();
 //#endif
-//#ifdef CONFIG_LIBCOCOBOT_PATHFINDER
-//    cocobot_pathfinder_handle_async_com();
-//#endif
+#ifdef CONFIG_LIBCOCOBOT_PATHFINDER
+    cocobot_pathfinder_handle_async_com();
+#endif
 #ifdef CONFIG_LIBCOCOBOT_GAME_STATE
     cocobot_game_state_handle_async_com();
 #endif
@@ -224,8 +223,8 @@ void cocobot_com_can_thread(void *arg)
     mcual_can_frame_t frame;
     mcual_can_recv(&frame);
 
-    int src = (frame.id >> 7) & 0x1F;
-    int packet_counter = frame.id & 0x7F;
+    int src = (frame.id >> 16) & 0x1F;
+    int packet_counter = frame.id & 0xFFFF;
 
     cocobot_com_can_recv_t * queue = NULL;
 
@@ -427,7 +426,7 @@ void cocobot_com_init(mcual_usart_id_t usart_id, unsigned int priority_monitor, 
   _com_id = COCOBOT_COM_ID;
 
   //init usart peripheral
-  mcual_usart_init(_usart, 115200);
+  mcual_usart_init(_usart, 1000000);
 
 #ifndef CONFIG_OS_USE_FREERTOS
 	mcual_can_timings canbus_timings;
@@ -569,7 +568,10 @@ static int cocobot_com_compute_len(char ** fmt, va_list ap, uint8_t * ptr)
               va_list ap_cpy;
               va_copy(ap_cpy, ap);
               char * nfmt = *fmt;
-              size += cocobot_com_compute_len(&nfmt, ap_cpy, ptr + elmsize * (i % arrsize));  
+              if(arrsize != 0)
+              {
+                size += cocobot_com_compute_len(&nfmt, ap_cpy, ptr + elmsize * (i % arrsize));  
+              }
               va_end(ap_cpy);
             }
           }
@@ -786,8 +788,10 @@ static uint16_t cocobot_com_send_data(char ** fmt, va_list ap, uint16_t crc, uin
           uint16_t v = end - start;
           uint8_t * p = (uint8_t *)&v;
           mcual_usart_send(_usart, *(p + 0));
+          cocobot_com_can_send(_com_id, *(p + 0));
           crc = cocobot_com_crc16_update(crc, *(p + 0));
           mcual_usart_send(_usart, *(p + 1));
+          cocobot_com_can_send(_com_id, *(p + 1));
           crc = cocobot_com_crc16_update(crc, *(p + 1));
 
  
@@ -796,7 +800,10 @@ static uint16_t cocobot_com_send_data(char ** fmt, va_list ap, uint16_t crc, uin
             va_list ap_cpy;
             va_copy(ap_cpy, ap);
             char * nfmt = *fmt;
-            crc = cocobot_com_send_data(&nfmt, ap_cpy, crc, ptr + elmsize * (i % arrsize));
+            if(arrsize != 0)
+            {      
+              crc = cocobot_com_send_data(&nfmt, ap_cpy, crc, ptr + elmsize * (i % arrsize));
+            }
             va_end(ap_cpy);
           }
           

@@ -24,13 +24,13 @@ void run_strategy(void * arg)
   {
     case COCOBOT_GAME_STATE_COLOR_NEG:
     cocobot_position_set_x(-1190);
-    cocobot_position_set_y(1200);
+    cocobot_position_set_y(200);
     cocobot_position_set_angle(0);
     break;
 
     case COCOBOT_GAME_STATE_COLOR_POS:
     cocobot_position_set_x(1190);
-    cocobot_position_set_y(1200);
+    cocobot_position_set_y(200);
     cocobot_position_set_angle(180);
     break;
   }
@@ -38,16 +38,17 @@ void run_strategy(void * arg)
   //wait start !
   cocobot_game_state_wait_for_starter_removed();
 
+  cocobot_trajectory_goto_xy(0, 0, 30000);
+  cocobot_trajectory_wait();
+
   //set square
   while(1)
   {
-    cocobot_trajectory_goto_xy(-500, 1500, 30000);
-    cocobot_trajectory_goto_xy(500, 1500, 30000);
-    cocobot_trajectory_goto_xy(500, 500, 30000);
-    cocobot_trajectory_goto_xy(-500, 500, 30000);
-    cocobot_trajectory_wait();
 
-    vTaskDelay(2000 / portTICK_PERIOD_MS); 
+   cocobot_pathfinder_execute(cocobot_position_get_x(), cocobot_position_get_y(), -1000, 500, COCOBOT_PATHFINDER_MODE_EXECUTE_TRAJ_FORWARD);
+   cocobot_trajectory_wait();
+   cocobot_pathfinder_execute(cocobot_position_get_x(), cocobot_position_get_y(), 0, 500, COCOBOT_PATHFINDER_MODE_EXECUTE_TRAJ_FORWARD);
+   cocobot_trajectory_wait();
   }
 }
 
@@ -94,7 +95,7 @@ int main(int argc, char *argv[])
   cocobot_trajectory_init(4);
   //cocobot_opponent_detection_init(3);
   cocobot_game_state_init(set_flag_up);
-  //cocobot_pathfinder_init(initTable);
+  cocobot_pathfinder_init(initTable);
   //cocobot_action_scheduler_use_pathfinder(1);
   //meca_init();
 

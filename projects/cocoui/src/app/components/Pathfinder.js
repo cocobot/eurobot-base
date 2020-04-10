@@ -108,11 +108,12 @@ class PathfinderComponent extends React.Component {
 
 
 const mapStateToProps = (state, ownProps) => {
-  const id = state.win.get('id');
+  const robot = "secondaire";
+  const brain = "SBrain";
   return {
-    nodes: state.robots.getIn([id, 'pathfinder', 'nodes'], []),
-    length: state.robots.getIn([id, 'pathfinder', 'length'], 0),
-    width: state.robots.getIn([id, 'pathfinder', 'width'], 0),
+    nodes: state.robots.getIn([robot, brain, 'pathfinder', 'nodes'], []),
+    length: state.robots.getIn([robot, brain, 'pathfinder', 'length'], 0),
+    width: state.robots.getIn([robot, brain, 'pathfinder', 'width'], 0),
     debugPathfinder: state.options.getIn(['debugPathfinder']), 
   }
 }

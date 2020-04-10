@@ -11,7 +11,7 @@
 
 typedef struct
 {
-  uint16_t id;
+  uint32_t id;
   uint8_t data_len;
   uint8_t data[8];
 } mcual_can_frame_t;

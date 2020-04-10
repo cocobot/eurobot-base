@@ -313,7 +313,7 @@ class Client {
           this._protocol._physics.newData(pkt);
         }
 
-        
+       
         //send to interface
         this._emit(pkt.decoded);
       }
@@ -771,8 +771,8 @@ class TCPClient extends Client {
       const can_data = pkt.split(":").map((x) => parseInt(x, 16));
 
     //extract source and packet_counter from can ID field
-    const source = can_data[0] >> 7;
-    const packet_counter = can_data[0] & 0x7F;
+    const source = can_data[0] >> 16;
+    const packet_counter = can_data[0] & 0xFFFF;
 
     let offset = 0;
     if(packet_counter == 0) {
@@ -867,6 +867,7 @@ class TCPClient extends Client {
 
       default:
         console.log("ERROR SEND: " + this._pid);
+        console.log(this);
         break;
     }
   }
@@ -900,7 +901,7 @@ class TCPClient extends Client {
     const send_data = function(can, send_function) {
       //format data
       let data = "";
-      const id = (can.packet_counter & 0x7F) | ((COCOUI_ID & 0x1F) << 7);
+      const id = (can.packet_counter & 0xFFFF) | ((COCOUI_ID & 0x1F) << 16);
       data += id.toString(16);
       for(let i = 0; i < can.len; i += 1) {
         if(i == 0) {

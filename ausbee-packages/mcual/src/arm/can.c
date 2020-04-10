@@ -324,7 +324,7 @@ static void mcual_can_add_in_mailbox(uint8_t tx_mailbox, volatile mcual_can_fram
                (((uint32_t)frame->data[1]) <<  8U) |
                (((uint32_t)frame->data[0]) <<  0U);
 
-    mb->TIR = frame->id | CAN_TI0R_TXRQ;    // Go.
+    mb->TIR = ((frame->id << 3) | CAN_TI0R_IDE | CAN_TI0R_TXRQ;    // Go.
 
 #if !defined(CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES)
     tx_index_read += 1;
@@ -462,7 +462,7 @@ static void mcual_can_rcev_frame(volatile CAN_FIFOMailBox_TypeDef* const mb)
 {
     mcual_can_frame_t frame;
 
-    frame.id = mb->RIR;
+    frame.id = mb->RIR >> 3;
     frame.data_len = (uint8_t)(mb->RDTR & CAN_RDT0R_DLC);
 
     // Catching to regular (non volatile) memory for faster reads
