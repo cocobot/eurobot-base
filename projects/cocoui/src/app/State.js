@@ -1,6 +1,6 @@
-import {saveRobotPacket, removeRobot} from './actions';
+import {saveRobotPacket, removeRobot, savePhysicsData} from './actions';
 import {createStore, combineReducers} from 'redux';
-import {robots, conns, win, options } from './reducers';
+import {robots, conns, win, options, physics } from './reducers';
 
 const electron = window.require("electron");
 
@@ -12,10 +12,12 @@ class State {
         win: win,
         conns: conns,
         options: options,
+        physics: physics,
       })
     );
 
     electron.ipcRenderer.on("pkt", (event, pkt) => this._handlePkt(pkt)); 
+    electron.ipcRenderer.on("physics", (event, physics) => this._handlePhysics(physics)); 
     setInterval(() => this._purgeStore(), 500);
   }
 
@@ -46,6 +48,13 @@ class State {
       default:
         break;
     }
+  }
+
+  /**
+   * @brief Physics simulation results update
+   */
+  _handlePhysics(physics) {
+    this._store.dispatch(savePhysicsData(physics));
   }
 
   getStore() {

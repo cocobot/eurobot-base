@@ -7,6 +7,7 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
+#include <stdio.h>
 #include "generated/autoconf.h"
 
 #include <cocobot/encoders.h>
@@ -157,7 +158,7 @@ float cocobot_position_get_speed_angle(void)
 int32_t cocobot_position_get_left_encoder(void)
 {
   xSemaphoreTake(mutex, portMAX_DELAY);
-  int32_t v = motor_position[0];
+  int32_t v = motor_position[1];
   xSemaphoreGive(mutex);
 
   return v;
@@ -166,7 +167,7 @@ int32_t cocobot_position_get_left_encoder(void)
 int32_t cocobot_position_get_right_encoder(void)
 {
   xSemaphoreTake(mutex, portMAX_DELAY);
-  int32_t v = motor_position[1];
+  int32_t v = motor_position[0];
   xSemaphoreGive(mutex);
 
   return v;
@@ -366,6 +367,37 @@ void cocobot_position_handle_async_com(void)
                   );
 }
 
+void cocobot_position_handle_sync_com(uint16_t pid, uint8_t * data, uint32_t len)
+{
+#if AUSBEE_SIM
+  switch(pid)
+  {
+    case COCOBOT_COM_SIM_SET_CODERS_PID:
+      {
+        uint8_t board;
+        float left;
+        float right;
 
+        //decode packet
+        cocobot_com_read_B(data, len, 0, &board);
+        cocobot_com_read_F(data, len, 1, &left);
+        cocobot_com_read_F(data, len, 5, &right);
+
+        if(board == COCOBOT_COM_ID)
+        {
+          int32_t lvalue = MM2TICK(left * 1000.0); 
+          int32_t rvalue = MM2TICK(right * 1000.0); 
+          mcual_timer_set_value(MCUAL_TIMER2, lvalue); 
+          mcual_timer_set_value(MCUAL_TIMER5, -rvalue); 
+        }
+      }
+      break;
+  }
+#else
+  (void)pid;
+  (void)data;
+  (void)len;
+#endif
+}
 
 #endif

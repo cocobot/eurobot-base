@@ -13,6 +13,9 @@ const defaultRobotsState = new Map({
   'secondaire': new Map(),
 });
 
+const defaultPhysicsState = new Map({
+});
+
 let defaultOptionsState = new Map({
   debugPathfinder: true,
   debugActionScheduler: true,
@@ -105,3 +108,50 @@ export const options = (state = defaultOptionsState, action) => {
   return state;
 }
 
+export const physics = (state = defaultPhysicsState, action) => {
+  //get all keys/values from an JS object as array
+  const getAllKeys = (map) => {
+    const keys = [];
+
+    //iterate all object fields
+    for(let k in map) {
+      //only real fields
+      if(!map.hasOwnProperty(k)) {
+        continue;
+      }
+
+      if(typeof(map[k]) == "object") {
+        //if object, get all fields recursivly
+        const subkeys = getAllKeys(map[k]);  
+        for(let i = 0; i < subkeys.length; i += 1) {
+          //prefix field name
+          const subkey = subkeys[i];
+          subkey.unshift(k);
+          keys.push(subkey);
+        }
+      }
+      else {
+        //value, insert directly in the array
+        keys.push([k, map[k]]);
+      }
+    }
+
+    return keys;
+  }
+
+  switch (action.type) {
+    case 'SAVE_PHYSICS_DATA':
+      //convert JS object to Immutable map
+      const keys = getAllKeys(action.physics);
+      for(let i = 0; i < keys.length; i += 1) {
+        const key = keys[i];
+        const value = key.pop();
+        state = state.setIn(key, value);
+      }
+      break; 
+
+    default:
+      break;
+  }
+  return state;
+}

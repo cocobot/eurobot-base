@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <mcual.h>
 
-uint32_t cnts[MCUAL_TIMER9 + 1];
+volatile uint32_t cnts[MCUAL_TIMER9 + 1];
 
 void mcual_timer_init(mcual_timer_t timer, int32_t freq_Hz)
 {
@@ -38,4 +38,5 @@ void mcual_timer_init_encoder(mcual_timer_t timer)
 
 void mcual_timer_set_value(mcual_timer_t timer, uint32_t cnt)
 {
+  cnts[timer] = cnt;
 }

@@ -3,39 +3,49 @@ import { connect } from 'react-redux';
 
 class RobotComponent extends React.Component {
   render() {
+    if(this.props.x === undefined) {
+       return <g />;
+    }
+
     let shape = null;
     let paths = [];
 
-    if(this.props.robot_id === 0)
-    {
-      shape = (
-        <g>
-          <path d="M125 180 L25 180 L-125 137 L-125 -137 L25 -180 L125 -180" fill="#000000" />
-        </g>
-      );
-    }
-    else if(this.props.robot_id === 1)
-    {
-      //TODO: dim PMI
-      shape = (
-        <g transform="rotate(90) translate(-150, -110)">
-          <rect height="220" width="300" fill="#000000" />
-        </g>
-      );
-    }
-    else
-    {
-      shape = (
-        <g>
-          <circle cx="0" cy="0" r="100" strokeWidth="10" stroke="#FF0000"/>
-          <text fontSize="60" y="20" fill="#FFFFFF">
-            <tspan textAnchor="middle">?</tspan>
-          </text>
-        </g>
-      );
+    switch(this.props.name) {
+      case "principal":
+        shape = (
+                 <g>
+                 <path d="M125 180 L25 180 L-125 137 L-125 -137 L25 -180 L125 -180" fill="#000000" />
+                 </g>
+        );
+        break;
+
+      case "secondaire":
+        shape = (
+                 <g>
+                 <g transform="translate(-90, -150)">
+                 <rect height="300" width="180" fill="#000000" />
+                 </g>
+                 <g transform="scale(1, -1)">
+                 <text fontSize="128" fontWeight="bolder" y="0" x="0" fill="#FF0000">
+                 <tspan textAnchor="middle" dominantBaseline="middle">S</tspan>
+                 </text>
+                 </g>
+                 </g>
+        );
+        break;
+      default:
+        shape = (
+                 <g>
+                 <circle cx="0" cy="0" r="100" strokeWidth="10" stroke="#FF0000"/>
+                 <text fontSize="60" y="20" fill="#FFFFFF">
+                 <tspan textAnchor="middle">?</tspan>
+                 </text>
+                 </g>
+        );
     }
 
 
+    /*
     //path
     let pathd = null;
     for(let i = 0; i < this.props.orders.length; i += 1) {
@@ -93,12 +103,13 @@ class RobotComponent extends React.Component {
       }
     }
     paths.push(<path key={paths.length} d={pathd} strokeWidth="8" stroke="#FF0000" fill="rgba(0, 0, 0, 0)" />);
+    */
 
 
-    const position = "translate(" + this.props.x + "," + this.props.y + ") rotate(" + this.props.angle + ")";
+    const position = "translate(" + this.props.x * 1000 + "," + this.props.y * 1000 + ") rotate(" + this.props.a * 180.0 / Math.PI + ")";
     return (
       <g>
-        <g transform="translate(1500,1000) scale(1, -1)">
+        <g transform="translate(1500,2000) scale(1, -1)">
           <g opacity="0.8" transform={position}>
             {shape}
           </g>
@@ -114,11 +125,9 @@ class RobotComponent extends React.Component {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    x: state.robots.getIn([ownProps.cid, 'position', 'x']),
-    y: state.robots.getIn([ownProps.cid, 'position', 'y']),
-    angle: state.robots.getIn([ownProps.cid, 'position', 'angle']),
-    orders: state.robots.getIn([ownProps.cid, 'trajectory_orders', 'orders'], []),
-    robot_id: state.robots.getIn([ownProps.cid, 'game_state', 'robot_id']),
+    x: state.physics.getIn(['robots', ownProps.name, 'position', 'x']),
+    y: state.physics.getIn(['robots', ownProps.name, 'position', 'y']),
+    a: state.physics.getIn(['robots', ownProps.name, 'position', 'a']),
   }
 }
 

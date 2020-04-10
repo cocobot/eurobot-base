@@ -24,6 +24,8 @@ DECODERS[0x2000] = "{set_motor}B(enable)F(left)F(right)"
 DECODERS[0x2001] = "{set_cfg_motor}B(board_id)F(imax)F(max_speed_rpm)"
 DECODERS[0x2004] = "{motor_dbg}B(board_id)B(master_id)B(enable)F(setpoint_rpm)D(pwm)"
 
+DECODERS[0x3000] = "{gs_req_cfg}"
+
 DECODERS[0x8000] = "{position}F(x)F(y)F(angle)"
 DECODERS[0x8001] = "{asserv_dist}F(target)F(distance)F(ramp_out)F(speed_target)F(speed)F(pid_out)F(pid_P)F(pid_I)F(pid_d)"
 DECODERS[0x8002] = "{asserv_angle}F(target)F(angle)F(ramp_out)F(speed_target)F(speed)F(pid_out)F(pid_P)F(pid_I)F(pid_d)"
@@ -301,6 +303,14 @@ class Client {
         }
         else if(pkt.decoded._name.startsWith("ping")) {
           pkt.decoded.timestamp = Date.now();
+        }
+
+        if(
+           (pkt.decoded._name == "position")    ||
+           (pkt.decoded._name == "gs_req_cfg")  ||
+           (pkt.decoded._name == "set_motor")
+          ) {
+          this._protocol._physics.newData(pkt);
         }
 
         
@@ -959,6 +969,7 @@ class Protocol {
   constructor() {
     this._clients = [];
     this._hijackCom = null;
+    this._physics = null;
 
     this._generateASTs();
     this._createTCPServer();
@@ -967,6 +978,14 @@ class Protocol {
     ipcMain.on('pkt', (event, arg) => {
       this.formatAndSendtoAll(arg);
     });
+  }
+
+  /**
+   * @brief Set physics engine
+   * @param  physics Instance of physics engine
+   */
+  setPhysics(physics) {
+     this._physics = physics;
   }
 
   /**

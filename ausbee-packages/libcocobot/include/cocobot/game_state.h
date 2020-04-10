@@ -63,4 +63,5 @@ void cocobot_game_state_wait_for_configuration(void);
 
 void cocobot_game_state_handle_async_com(void);
 
+void cocobot_game_state_handle_sync_com(uint16_t pid, uint8_t * data, uint32_t len);
 #endif// COCOBOT_GAME_STATE_H

@@ -4,6 +4,7 @@ const path = require('path')
 require('electron-reload')
 const BrowserWindow = electron.BrowserWindow
 const Protocol = require('./server/protocol');
+const Physics = require('./server/physics');
 const ipcMain = electron.ipcMain;
 
 //check dev mode
@@ -11,6 +12,7 @@ const isDev = process.env.NODE_ENV != "production";
 
 //create protocol handler
 const protocol = new Protocol();
+const physics = new Physics(protocol);
 
 //create main window
 let mainWindow = null;

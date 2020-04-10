@@ -93,4 +93,6 @@ void cocobot_position_set_angle(float angle);
 int32_t cocobot_position_get_left_encoder(void);
 int32_t cocobot_position_get_right_encoder(void);
 
+void cocobot_position_handle_sync_com(uint16_t pid, uint8_t * data, uint32_t len);
+
 #endif// COCOBOT_POSITION_H

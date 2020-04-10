@@ -16,15 +16,38 @@ void run_strategy(void * arg)
 {
   (void)arg;
 
-  //DEBUG com.
-  vTaskDelay(2000 / portTICK_PERIOD_MS); //wait smecanle start
-    cocobot_com_send(COCOBOT_COM_MECA_ACTION_PID, "B", 0); //init
+  //wait remote data
+  cocobot_game_state_wait_for_configuration();
+
+  //set initial position
+  switch(cocobot_game_state_get_color())
+  {
+    case COCOBOT_GAME_STATE_COLOR_NEG:
+    cocobot_position_set_x(-1190);
+    cocobot_position_set_y(1200);
+    cocobot_position_set_angle(0);
+    break;
+
+    case COCOBOT_GAME_STATE_COLOR_POS:
+    cocobot_position_set_x(1190);
+    cocobot_position_set_y(1200);
+    cocobot_position_set_angle(180);
+    break;
+  }
+
+  //wait start !
+  cocobot_game_state_wait_for_starter_removed();
+
+  //set square
   while(1)
   {
-      vTaskDelay(500 / portTICK_PERIOD_MS); 
-      cocobot_com_send(COCOBOT_COM_MECA_ACTION_PID, "B", 2); //front down
-      vTaskDelay(500 / portTICK_PERIOD_MS); 
-      cocobot_com_send(COCOBOT_COM_MECA_ACTION_PID, "B", 1); //front up
+    cocobot_trajectory_goto_xy(-500, 1500, 30000);
+    cocobot_trajectory_goto_xy(500, 1500, 30000);
+    cocobot_trajectory_goto_xy(500, 500, 30000);
+    cocobot_trajectory_goto_xy(-500, 500, 30000);
+    cocobot_trajectory_wait();
+
+    vTaskDelay(2000 / portTICK_PERIOD_MS); 
   }
 }
 
@@ -65,20 +88,15 @@ int main(int argc, char *argv[])
   platform_init();
 
   cocobot_com_init(MCUAL_USART1, 1, 1, com_handler);
-  //cocobot_position_init(4);
+  cocobot_position_init(4);
   //cocobot_action_scheduler_init();
-  //cocobot_asserv_init();
-  //cocobot_trajectory_init(4);
+  cocobot_asserv_init();
+  cocobot_trajectory_init(4);
   //cocobot_opponent_detection_init(3);
-  //cocobot_game_state_init(set_flag_up);
+  cocobot_game_state_init(set_flag_up);
   //cocobot_pathfinder_init(initTable);
   //cocobot_action_scheduler_use_pathfinder(1);
   //meca_init();
-
-  ////set initial position
-  //cocobot_position_set_x(0);
-  //cocobot_position_set_y(0);
-  //cocobot_position_set_angle(0);
 
 
   xTaskCreate(run_strategy, "strat", 600, NULL, 2, NULL );

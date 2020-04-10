@@ -122,12 +122,12 @@ void cocobot_com_async_thread(void *arg)
   while(pdTRUE)
   {
     //send debug information if needed
-//#ifdef CONFIG_LIBCOCOBOT_ASSERV
-//    cocobot_position_handle_async_com();
-//#endif
-//#ifdef CONFIG_LIBCOCOBOT_ASSERV
-//    cocobot_asserv_handle_async_com();
-//#endif
+#ifdef CONFIG_LIBCOCOBOT_ASSERV
+    cocobot_position_handle_async_com();
+#endif
+#ifdef CONFIG_LIBCOCOBOT_ASSERV
+    cocobot_asserv_handle_async_com();
+#endif
 //#ifdef CONFIG_LIBCOCOBOT_TRAJECTORY
 //    cocobot_trajectory_handle_async_com();
 //#endif
@@ -187,6 +187,12 @@ void cocobot_com_handle_packet(uint8_t src, uint16_t pid, uint8_t * data, uint16
 #endif
 #ifdef CONFIG_LIBCOCOBOT_TRAJECTORY
   cocobot_asserv_handle_sync_com(pid, data, len);
+#endif
+#ifdef CONFIG_LIBCOCOBOT_ASSERV
+  cocobot_position_handle_sync_com(pid, data, len);
+#endif
+#ifdef CONFIG_LIBCOCOBOT_GAME_STATE
+  cocobot_game_state_handle_sync_com(pid, data, len);
 #endif
 
   if(_user_handler != NULL)

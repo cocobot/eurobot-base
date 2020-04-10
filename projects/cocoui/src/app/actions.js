@@ -26,3 +26,9 @@ export const updateDebugActionScheduler = (value) => {
   }
 }
 
+export const savePhysicsData = (physics) => {
+  return {
+    type: 'SAVE_PHYSICS_DATA',
+    physics
+  }
+}

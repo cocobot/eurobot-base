@@ -358,7 +358,6 @@ class Eurobot2020Cup extends React.Component {
         y = 0;
         break;
     }
-    
 
     return (
      <g transform={"translate("+x+", "+y+")"}>

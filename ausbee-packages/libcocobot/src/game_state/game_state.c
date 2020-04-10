@@ -21,10 +21,8 @@ static void * _userdata[USER_DATA_SIZE];
 static uint8_t _starter_removed;
 static TickType_t _start_time = 0;
 static int _score = 0;
-static uint64_t _next_1hz_service_at;
-static uint64_t _next_100ms_service_at;
 static volatile uint8_t _config_ready = 0;
-static uint8_t _config  = 0;
+static uint8_t _config = 0;
 static TickType_t _last_update_time = 0; 
 
 void cocobot_game_state_add_points_to_score(int _toAdd)
@@ -58,21 +56,9 @@ static void cocobot_game_state_match_ended_event(TimerHandle_t xTimer)
 void cocobot_game_state_init(cocobot_game_state_funny_action_t funny_action)
 {
   _funny_action = funny_action;
-
   _starter_removed = 0;
-  _next_1hz_service_at = 0;
-  _next_100ms_service_at = 0;
-
   _config_ready = 0;
-
-#ifdef AUSBEE_SIM
-  //random color in simu
-  srand(time(NULL));
   _color = COCOBOT_GAME_STATE_COLOR_NEG;
-  _color = rand() % 2; 
-#else 
-  _color = COCOBOT_GAME_STATE_COLOR_NEG;
-#endif
 
   //create timer for the game duration
   _end_match_timer = xTimerCreate("end_match", COCOBOT_GAME_DURATION / portTICK_PERIOD_MS, pdFALSE, NULL, cocobot_game_state_match_ended_event);
@@ -107,6 +93,8 @@ void cocobot_game_state_wait_for_configuration(void)
 {
   while(!_config_ready)
   {
+    cocobot_com_send(COCOBOT_COM_GAME_STATE_REQ_CFG_PID, "");
+
     vTaskDelay(100 / portTICK_PERIOD_MS); 
   }
 }
@@ -165,6 +153,24 @@ void cocobot_game_state_handle_async_com(void)
                      cocobot_game_state_get_elapsed_time() / 1000, //elapsed time
                      _score
                     );
+  }
+}
+
+void cocobot_game_state_handle_sync_com(uint16_t pid, uint8_t * data, uint32_t len)
+{
+  switch(pid)
+  {
+    case COCOBOT_COM_GAME_STATE_SET_CFG_PID:
+      {
+        uint8_t color;
+
+        //decode packet
+        cocobot_com_read_B(data, len, 0, &color);
+
+        _color = color;
+        _config_ready = 1;
+      }
+      break;
   }
 }
 
