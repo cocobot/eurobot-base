@@ -297,10 +297,8 @@ void cocobot_com_can_thread(void *arg)
       
       uint16_t recv_crc = queue->data[i] | (queue->data[i + 1] << 8);
 
-      if(crc == recv_crc)
+      if((crc == recv_crc) && (offset + packet_counter * 8 - 4 >= queue->len))
       {
-        cocobot_com_handle_packet(src, queue->pid, queue->data, queue->len - 2);
-
         //send data to UART
         cocobot_com_header_t header;
         header.start = COCOBOT_COM_HEADER_START;
@@ -328,6 +326,7 @@ void cocobot_com_can_thread(void *arg)
         }
         xSemaphoreGive(_mutex);
 
+        cocobot_com_handle_packet(src, queue->pid, queue->data, queue->len - 2);
 
         vPortFree(queue->data);
         queue->data = NULL;

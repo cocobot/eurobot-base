@@ -6,9 +6,12 @@ const ipcMain = electron.ipcMain;
 const SerialPort = require('serialport');
 
 //cocoui server options
-const TCPCLIENT_DECODE_UART = false;  //use simulated uart output for com
-const TCPCLIENT_DECODE_CAN = true;    //use simulated can output for com
+const TCPCLIENT_DECODE_UART = true;  //use simulated uart output for com
+const TCPCLIENT_ONLY_FIRST_UART = true;  //only decode first uart found
+const TCPCLIENT_DECODE_CAN = false;    //use simulated can output for com
 const TCPCLIENT_FORWARD_CAN = true;   //forward can packet to other clients
+
+const MAX_FLASH_DATA_PER_PACKET = 64; //Pack bytes for bootloader
 
 const COCOUI_ID = 0x11;
 
@@ -16,6 +19,7 @@ let CLIENT_ID = 0;
 const MAGIC_START = 0xc0;
 const DECODERS = {};
 let AST = null;
+let firstUARTfound = false;
 DECODERS[0x0001] = "{error}B(id)"
 DECODERS[0x1000] = "{set_servo_pid}B(id)D(pwm)"
 DECODERS[0x1001] = "{set_meca_action}B(order)"
@@ -456,6 +460,7 @@ class TCPClient extends Client {
     this._pid = null;
     this._queues = {};
     this._TCPbuffer = "";
+    this._firstUART = false;
     this._socket.on('close', () => this._onClose());
     this._socket.on('error', () => this.close());
     this._socket.on('data', (data) => this._decodeTCPData(data));
@@ -463,7 +468,10 @@ class TCPClient extends Client {
   }
 
   formatAndSend(pkt) {
-    if(this.isTCPUart() && !TCPCLIENT_DECODE_UART) {
+    if(this.isTCPUart() && (!TCPCLIENT_DECODE_UART || (TCPCLIENT_ONLY_FIRST_UART && ! this._firstUART))) {
+      return;
+    }
+    if(this.isTCPCAN() && !TCPCLIENT_DECODE_CAN) {
       return;
     }
     super.formatAndSend(pkt);
@@ -553,7 +561,12 @@ class TCPClient extends Client {
           case "U1":
             //UART packet found
             if(TCPCLIENT_DECODE_UART) {
-              console.log("local: " + this._socket.remotePort);
+              if(firstUARTfound && TCPCLIENT_ONLY_FIRST_UART && !this._firstUART) {
+                return;
+              }
+              firstUARTfound = true;
+              this._firstUART = true;
+
               const buf = Buffer.alloc(1);
               buf.writeUInt8(parseInt(pkt, 16));
               this._onData(buf);
@@ -575,6 +588,15 @@ class TCPClient extends Client {
       }
     }
 
+  isTCPCAN() {
+    if(this.getPid() == "C0") {
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+
   isTCPUart() {
     if(this.getPid() == "U1") {
       return true;
@@ -589,19 +611,29 @@ class TCPClient extends Client {
 
   /**
    * @brief Send flash data to bootloader firmware
-   * @param offset  Offset of the data to be send in this 64 bytes packet
+   * @param offset  Offset of the data to be send in this MAX_FLASH_DATA_PER_PACKET bytes packet
    */
   _bootloaderSendFlashData(offset) {
-    const TCPUart = (client) => {
+    const TCPisInvalid = (client) => {
       if(client instanceof TCPClient) {
-        if(client.getPid() == "U1") {
-          return true;
-        }
-        else if(client.getPid() == "U3") {
-          return true;
+        if(TCPCLIENT_DECODE_CAN) {
+          if(client.getPid() == "U1") {
+            return true;
+          }
+          else if(client.getPid() == "U3") {
+            return true;
+          }
+          else {
+            return false;
+          }
         }
         else {
-          return false;
+          if(client.getPid() == "C0") {
+            return true;
+          }
+          else {
+            return false;
+          }
         }
       }
     }
@@ -615,7 +647,7 @@ class TCPClient extends Client {
    }
 
     this._protocol.getClients().forEach((client) => {
-      if(TCPUart(client)) { return;}
+      if(TCPisInvalid(client)) { return;}
 
       const addr = this._bootloaderState.flash.addr;
       const data = this._bootloaderState.flash.data;
@@ -625,13 +657,18 @@ class TCPClient extends Client {
       let fmt = "BBDH";
 
       //add data
-      for(let j = 0; (j < 64) && ((j + offset) < data.length) ; j += 1) {
+      for(let j = 0; (j < MAX_FLASH_DATA_PER_PACKET) && ((j + offset) < data.length) ; j += 1) {
         ndata.push(data[offset + j]);
         fmt += "B";
       }
 
       //set len
       ndata[3] = ndata.length - 4;
+
+      if(addr + offset == 0x800D000) {
+         console.log(ndata);
+         console.log(fmt);
+      }
 
       //send
       client.formatAndSend({
@@ -649,16 +686,26 @@ class TCPClient extends Client {
    * @param pkt buffer from onelined command
    */
   _decodeBootloader(pkt) {
-    const TCPUart = (client) => {
+    const TCPisInvalid = (client) => {
       if(client instanceof TCPClient) {
-        if(client.getPid() == "U1") {
-          return true;
-        }
-        else if(client.getPid() == "U3") {
-          return true;
+        if(TCPCLIENT_DECODE_CAN) {
+          if(client.getPid() == "U1") {
+            return true;
+          }
+          else if(client.getPid() == "U3") {
+            return true;
+          }
+          else {
+            return false;
+          }
         }
         else {
-          return false;
+          if(client.getPid() == "C0") {
+            return true;
+          }
+          else {
+            return false;
+          }
         }
       }
     }
@@ -669,7 +716,7 @@ class TCPClient extends Client {
       case "RESET":
         this._bootloaderState.board = parseInt(cmds[1]);
         this._protocol.getClients().forEach((client) => {
-          if(TCPUart(client)) { return;}
+          if(TCPisInvalid(client)) { return;}
 
           client.formatAndSend({
             pid: 0x8007, //RESET
@@ -680,7 +727,7 @@ class TCPClient extends Client {
         break;
       case "CRC":
         this._protocol.getClients().forEach((client) => {
-          if(TCPUart(client)) { return;}
+          if(TCPisInvalid(client)) { return;}
           client.formatAndSend({
             pid: 0x8011, //CRC
             fmt: "BBDD",
@@ -690,7 +737,7 @@ class TCPClient extends Client {
         break;
      case "ERASE":
         this._protocol.getClients().forEach((client) => {
-          if(TCPUart(client)) { return;}
+          if(TCPisInvalid(client)) { return;}
           client.formatAndSend({
             pid: 0x8012, //ERASE
             fmt: "BB",
@@ -710,7 +757,7 @@ class TCPClient extends Client {
 
      case "BOOT":
          this._protocol.getClients().forEach((client) => {
-          if(TCPUart(client)) { return;}
+          if(TCPisInvalid(client)) { return;}
           client.formatAndSend({
             pid: 0x8014, //BOOT
             fmt: "B",
@@ -738,7 +785,7 @@ class TCPClient extends Client {
         return;
       }
 
-      console.log("BOOTLOADER PACKET " + pkt.decoded._name + " from " + pkt.decoded._src_name);
+     // console.log("BOOTLOADER PACKET " + pkt.decoded._name + " from " + pkt.decoded._src_name);
       if(pkt.decoded._name == "bootloader") {
         this.send("BOOTLOADER " + pkt.decoded._src + " OK\n");
       }
@@ -756,13 +803,11 @@ class TCPClient extends Client {
         const last_addr = pkt.decoded.addr;
         clearTimeout(this._bootloaderState.flash.timeout);
 
-        console.log("RECV " + (last_addr).toString(16));
-
-        if((last_addr + 64 - this._bootloaderState.flash.addr) >= this._bootloaderState.flash.data.length) {
+        if((last_addr + MAX_FLASH_DATA_PER_PACKET - this._bootloaderState.flash.addr) >= this._bootloaderState.flash.data.length) {
           this.send("FLASH OK\n");
         }
         else {
-          this._bootloaderSendFlashData(last_addr - this._bootloaderState.flash.addr + 64);
+          this._bootloaderSendFlashData(last_addr - this._bootloaderState.flash.addr + MAX_FLASH_DATA_PER_PACKET);
         }
       }
     }

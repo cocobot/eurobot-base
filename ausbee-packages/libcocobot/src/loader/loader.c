@@ -78,15 +78,8 @@ void cocobot_loader_handle_packet(uint16_t pid, uint8_t * data, uint16_t len)
         cocobot_com_read_D(data, len, 2, (int32_t*) &addr);
         cocobot_com_read_H(data, len, 6, (int16_t *)&dlen);
 
-        if(len < 1024) {
-          uint8_t * buf = pvPortMalloc(dlen); 
-          for(int i = 0; i < dlen; i += 1) {
-            cocobot_com_read_B(data, dlen, 8 + i, &buf[i]);
-          }
-          mcual_loader_flash_pgm(addr, buf, dlen);
-          vPortFree(buf);
-          cocobot_com_send(COCOBOT_COM_BOOTLOADER_FLASH_PID, "BBDH", COCOBOT_COM_ID, 1, addr, 0);
-        }
+        mcual_loader_flash_pgm(addr, data + 8, dlen);
+        cocobot_com_send(COCOBOT_COM_BOOTLOADER_FLASH_PID, "BBDH", COCOBOT_COM_ID, 1, addr, 0);
       }
       break;
 

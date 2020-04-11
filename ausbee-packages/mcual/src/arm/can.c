@@ -324,7 +324,7 @@ static void mcual_can_add_in_mailbox(uint8_t tx_mailbox, volatile mcual_can_fram
                (((uint32_t)frame->data[1]) <<  8U) |
                (((uint32_t)frame->data[0]) <<  0U);
 
-    mb->TIR = ((frame->id << 3) | CAN_TI0R_IDE | CAN_TI0R_TXRQ;    // Go.
+    mb->TIR = ((frame->id << 3) | CAN_TI0R_IDE | CAN_TI0R_TXRQ);    // Go.
 
 #if !defined(CONFIG_MCUAL_CAN_USE_FREERTOS_QUEUES)
     tx_index_read += 1;
